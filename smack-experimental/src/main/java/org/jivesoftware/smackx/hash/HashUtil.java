@@ -54,10 +54,6 @@ public final class HashUtil {
             this.name = name;
         }
 
-        public boolean equalsName(String otherName) {
-            return name.equals(otherName);
-        }
-
         @Override
         public String toString() {
             return this.name;
@@ -69,7 +65,7 @@ public final class HashUtil {
                     return a;
                 }
             }
-            throw new IllegalArgumentException("No ALGORITHM enum with this name found.");
+            throw new IllegalArgumentException("No ALGORITHM enum with this name (" + s + ") found.");
         }
     }
 
