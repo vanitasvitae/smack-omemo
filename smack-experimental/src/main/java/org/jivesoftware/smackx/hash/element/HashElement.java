@@ -20,7 +20,7 @@ package org.jivesoftware.smackx.hash.element;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smack.util.stringencoder.Base64;
-import org.jivesoftware.smackx.hash.HashUtil;
+import org.jivesoftware.smackx.hash.HashManager;
 
 import static org.jivesoftware.smack.util.Objects.requireNonNull;
 
@@ -31,40 +31,66 @@ import static org.jivesoftware.smack.util.Objects.requireNonNull;
  */
 public class HashElement implements ExtensionElement {
 
-
-
     public static final String ELEMENT = "hash";
-    public static final String NAMESPACE = "urn:xmpp:hashes:2";
-    public static final String ALGO = "algo";
+    public static final String ATTR_ALGO = "algo";
 
-    private final HashUtil.ALGORITHM algorithm;
+    private final HashManager.ALGORITHM algorithm;
     private final byte[] hash;
     private final String hashB64;
 
-    public HashElement(HashUtil.ALGORITHM type, byte[] hash) {
-        this.algorithm = requireNonNull(type);
+    /**
+     * Create a HashElement from pre-calculated values.
+     * @param algorithm The algorithm which was used.
+     * @param hash the checksum as byte array.
+     */
+    public HashElement(HashManager.ALGORITHM algorithm, byte[] hash) {
+        this.algorithm = requireNonNull(algorithm);
         this.hash = requireNonNull(hash);
         hashB64 = Base64.encodeToString(hash);
     }
 
-    public HashElement(HashUtil.ALGORITHM type, String hashB64) {
-        this.algorithm = type;
+    /**
+     * Create a HashElement from pre-calculated values.
+     * @param algorithm the algorithm that was used.
+     * @param hashB64 the checksum in base 64.
+     */
+    public HashElement(HashManager.ALGORITHM algorithm, String hashB64) {
+        this.algorithm = algorithm;
         this.hash = Base64.decode(hashB64);
         this.hashB64 = hashB64;
     }
 
-    public static HashElement fromData(HashUtil.ALGORITHM algorithm, byte[] data) {
-        return new HashElement(algorithm, HashUtil.hash(algorithm, data));
+    /**
+     * Create a new HashElement that contains the hash sum calculated using 'algorithm' based on the data in 'data'.
+     *
+     * @param algorithm algorithm which will be used to calculate data's checksum.
+     * @param data data of which we will calculate the checksum.
+     * @return HashElement with the checksum of data.
+     */
+    public static HashElement fromData(HashManager.ALGORITHM algorithm, byte[] data) {
+        return new HashElement(algorithm, HashManager.hash(algorithm, data));
     }
 
-    public HashUtil.ALGORITHM getAlgorithm() {
+    /**
+     * Return the hash algorithm used in this HashElement.
+     * @return algorithm
+     */
+    public HashManager.ALGORITHM getAlgorithm() {
         return algorithm;
     }
 
+    /**
+     * Return the checksum as a byte array.
+     * @return
+     */
     public byte[] getHash() {
         return hash;
     }
 
+    /**
+     * Return the checksum as a base16 (hex) string.
+     * @return
+     */
     public String getHashB64() {
         return hashB64;
     }
@@ -77,7 +103,7 @@ public class HashElement implements ExtensionElement {
     @Override
     public CharSequence toXML() {
         XmlStringBuilder sb = new XmlStringBuilder(this);
-        sb.attribute(ALGO, algorithm.toString());
+        sb.attribute(ATTR_ALGO, algorithm.toString());
         sb.rightAngleBracket();
         sb.append(hashB64);
         sb.closeElement(this);
@@ -86,6 +112,6 @@ public class HashElement implements ExtensionElement {
 
     @Override
     public String getNamespace() {
-        return NAMESPACE;
+        return HashManager.NAMESPACE_V2;
     }
 }

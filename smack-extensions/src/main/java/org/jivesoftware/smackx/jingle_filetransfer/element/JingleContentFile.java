@@ -24,6 +24,8 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 public class JingleContentFile implements ExtensionElement {
     public static final String ELEMENT = "file";
 
+
+
     @Override
     public String getElementName() {
         return ELEMENT;
