@@ -17,19 +17,25 @@
 package org.jivesoftware.smackx.jingle_filetransfer.element;
 
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadType;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
+
+import java.util.List;
 
 /**
  * Description.
  */
-public class JingleFileTransferContentDescription extends JingleContentDescription {
+public class JingleContentDescriptionFileTransfer extends JingleContentDescription {
 
-    protected JingleFileTransferContentDescription() {
-        super(null);
+    private FileTransfer fileTransfer;
+
+    protected JingleContentDescriptionFileTransfer(List<JingleContentDescriptionPayloadType> payloadTypes, FileTransfer fileTransfer) {
+        super(payloadTypes);
+        this.fileTransfer = fileTransfer;
     }
 
     @Override
     public String getNamespace() {
-        return JingleFileTransferManager.NAMESPACE;
+        return JingleFileTransferManager.NAMESPACE_V5;
     }
 }

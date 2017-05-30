@@ -28,7 +28,7 @@ import java.util.WeakHashMap;
  */
 public final class JingleFileTransferManager extends Manager {
 
-    public static final String NAMESPACE = "urn:xmpp:jingle:apps:file-transfer:5";
+    public static final String NAMESPACE_V5 = "urn:xmpp:jingle:apps:file-transfer:5";
 
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
 
