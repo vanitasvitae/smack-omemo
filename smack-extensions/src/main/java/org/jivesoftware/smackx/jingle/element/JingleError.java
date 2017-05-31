@@ -17,10 +17,10 @@
 
 package org.jivesoftware.smackx.jingle.element;
 
-import java.util.Locale;
-
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
+
+import java.util.Locale;
 
 public final class JingleError implements ExtensionElement {
 
@@ -39,7 +39,7 @@ public final class JingleError implements ExtensionElement {
     /**
      * Creates a new error with the specified code and errorName.
      *
-     * @param message a message describing the error.
+     * @param errorName name describing the error.
      */
     private JingleError(final String errorName) {
         this.errorName = errorName;

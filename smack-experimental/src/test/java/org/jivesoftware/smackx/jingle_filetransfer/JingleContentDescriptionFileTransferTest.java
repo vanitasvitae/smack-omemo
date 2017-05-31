@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Test the JingleContentDescriptionFileTransfer element and provider.
@@ -71,7 +72,6 @@ public class JingleContentDescriptionFileTransferTest extends SmackTestSuite {
 
         JingleContentDescriptionFileTransfer descriptionFileTransfer =
                 new JingleContentDescriptionFileTransfer(payloads);
-
         assertEquals(xml, descriptionFileTransfer.toXML().toString());
 
         JingleContentDescription parsed = new JingleContentDescriptionFileTransferProvider()
@@ -86,6 +86,9 @@ public class JingleContentDescriptionFileTransferTest extends SmackTestSuite {
         assertEquals(sizeInt, payload.getSize());
         assertEquals(range, payload.getRange());
         assertEquals(hashElement, payload.getHash());
+
+        JingleContentDescriptionFileTransfer descriptionFileTransfer1 = new JingleContentDescriptionFileTransfer(null);
+        assertNotNull(descriptionFileTransfer1.getJinglePayloadTypes());
     }
 
     @Test

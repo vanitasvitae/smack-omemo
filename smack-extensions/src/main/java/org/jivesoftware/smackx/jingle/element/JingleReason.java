@@ -16,11 +16,11 @@
  */
 package org.jivesoftware.smackx.jingle.element;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The Jingle 'reason' element.
@@ -96,7 +96,7 @@ public class JingleReason implements NamedElement {
         XmlStringBuilder xml = new XmlStringBuilder(this);
         xml.rightAngleBracket();
 
-        xml.emptyElement(reason);
+        xml.emptyElement(reason.asString);
 
         xml.closeElement(this);
         return xml;

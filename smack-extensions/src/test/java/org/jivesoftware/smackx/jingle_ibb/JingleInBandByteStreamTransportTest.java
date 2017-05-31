@@ -63,5 +63,8 @@ public class JingleInBandByteStreamTransportTest extends SmackTestSuite {
 
         JingleInBandByteStreamTransport transport3 = new JingleInBandByteStreamTransport((short) -1024);
         assertEquals(JingleInBandByteStreamTransport.DEFAULT_BLOCK_SIZE, transport3.getBlockSize());
+
+        assertEquals(transport3.getNamespace(), JingleInBandByteStreamManager.NAMESPACE_V1);
+        assertEquals(transport3.getElementName(), "transport");
     }
 }
