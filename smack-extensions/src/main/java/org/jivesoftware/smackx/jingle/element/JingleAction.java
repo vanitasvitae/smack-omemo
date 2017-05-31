@@ -36,7 +36,7 @@ public enum JingleAction {
     session_accept,
     session_info,
     session_initiate,
-    sessio_terminate,
+    session_terminate,
     transport_accept,
     transport_info,
     transport_reject,

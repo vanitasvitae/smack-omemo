@@ -18,10 +18,10 @@ package org.jivesoftware.smackx.jingle_ibb;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_ibb.provider.JingleInBandByteStreamTransportProvider;
 
-import java.util.Random;
 import java.util.WeakHashMap;
 
 /**
@@ -52,6 +52,6 @@ public final class JingleInBandByteStreamManager extends Manager {
      * @return
      */
     public static String generateSessionId() {
-        return Integer.toString(64,new Random().nextInt());
+        return StringUtils.randomString(24);
     }
 }

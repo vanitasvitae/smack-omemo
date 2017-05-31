@@ -29,7 +29,7 @@ import static junit.framework.TestCase.assertNull;
 /**
  * Test the JingleContentFile class.
  */
-public class FileTransferPayloadTest extends SmackTestSuite {
+public class JingleFileTransferPayloadTest extends SmackTestSuite {
 
     @Test
     public void rangeTest() throws Exception {

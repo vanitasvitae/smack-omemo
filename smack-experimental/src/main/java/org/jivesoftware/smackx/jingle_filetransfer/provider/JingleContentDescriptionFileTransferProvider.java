@@ -20,7 +20,7 @@ import org.jivesoftware.smackx.hash.element.HashElement;
 import org.jivesoftware.smackx.hash.provider.HashElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadType;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_filetransfer.element.FileTransferPayload;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayload;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleContentDescriptionFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
 import org.jxmpp.util.XmppDateTime;
@@ -64,7 +64,7 @@ public class JingleContentDescriptionFileTransferProvider
             if (tag == START_TAG) {
                 switch (elem) {
 
-                    case FileTransferPayload.ELEMENT:
+                    case JingleFileTransferPayload.ELEMENT:
                         date = null;
                         desc = null;
                         mediaType = null;
@@ -75,23 +75,23 @@ public class JingleContentDescriptionFileTransferProvider
                         hash = null;
                         break;
 
-                    case FileTransferPayload.ELEM_DATE:
+                    case JingleFileTransferPayload.ELEM_DATE:
                         date = XmppDateTime.parseXEP0082Date(parser.nextText());
                         break;
 
-                    case FileTransferPayload.ELEM_DESC:
+                    case JingleFileTransferPayload.ELEM_DESC:
                         desc = parser.nextText();
                         break;
 
-                    case FileTransferPayload.ELEM_MEDIA_TYPE:
+                    case JingleFileTransferPayload.ELEM_MEDIA_TYPE:
                         mediaType = parser.nextText();
                         break;
 
-                    case FileTransferPayload.ELEM_NAME:
+                    case JingleFileTransferPayload.ELEM_NAME:
                         name = parser.nextText();
                         break;
 
-                    case FileTransferPayload.ELEM_SIZE:
+                    case JingleFileTransferPayload.ELEM_SIZE:
                         size = Integer.parseInt(parser.nextText());
                         break;
 
@@ -125,8 +125,8 @@ public class JingleContentDescriptionFileTransferProvider
                         range = new Range(offset, length, inRangeHash);
                         break;
 
-                    case FileTransferPayload.ELEMENT:
-                        payloads.add(new FileTransferPayload(date, desc, hash, mediaType, name, size, range));
+                    case JingleFileTransferPayload.ELEMENT:
+                        payloads.add(new JingleFileTransferPayload(date, desc, hash, mediaType, name, size, range));
                         break;
 
                     case JingleContentDescriptionFileTransfer.ELEMENT:
