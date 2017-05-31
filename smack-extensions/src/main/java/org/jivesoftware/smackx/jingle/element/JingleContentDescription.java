@@ -62,6 +62,7 @@ public abstract class JingleContentDescription implements ExtensionElement {
 
         xml.append(payloads);
 
+        xml.closeElement(this);
         return xml;
     }
 

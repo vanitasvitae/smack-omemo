@@ -114,4 +114,17 @@ public class HashElement implements ExtensionElement {
     public String getNamespace() {
         return HashManager.NAMESPACE_V2;
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null || !(other instanceof HashElement)) {
+            return false;
+        }
+        return this.hashCode() == other.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        return toXML().toString().hashCode();
+    }
 }

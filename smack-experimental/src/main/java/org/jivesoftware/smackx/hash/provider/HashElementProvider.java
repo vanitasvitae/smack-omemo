@@ -22,7 +22,7 @@ import org.jivesoftware.smackx.hash.element.HashElement;
 import org.xmlpull.v1.XmlPullParser;
 
 /**
- * Provider for HashElements
+ * Provider for HashElements.
  */
 public class HashElementProvider extends ExtensionElementProvider<HashElement> {
 

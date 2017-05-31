@@ -27,11 +27,8 @@ import java.util.List;
  */
 public class JingleContentDescriptionFileTransfer extends JingleContentDescription {
 
-    private FileTransfer fileTransfer;
-
-    protected JingleContentDescriptionFileTransfer(List<JingleContentDescriptionPayloadType> payloadTypes, FileTransfer fileTransfer) {
+    public JingleContentDescriptionFileTransfer(List<JingleContentDescriptionPayloadType> payloadTypes) {
         super(payloadTypes);
-        this.fileTransfer = fileTransfer;
     }
 
     @Override

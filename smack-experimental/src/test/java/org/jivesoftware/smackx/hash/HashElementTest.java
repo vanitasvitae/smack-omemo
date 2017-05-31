@@ -26,6 +26,8 @@ import org.junit.Test;
 import static junit.framework.TestCase.assertEquals;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA_256;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test toXML and parse of HashElement and HashElementProvider.
@@ -44,6 +46,11 @@ public class HashElementTest extends SmackTestSuite {
         assertEquals(SHA_256, parsed.getAlgorithm());
         assertEquals("f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=", parsed.getHashB64());
         assertArrayEquals(HashManager.sha_256(message.getBytes(StringUtils.UTF8)), parsed.getHash());
+
+        assertFalse(parsed.equals(expected));
+        assertFalse(parsed.equals(null));
+        assertEquals(element, parsed);
+        assertTrue(element.equals(parsed));
     }
 
 }

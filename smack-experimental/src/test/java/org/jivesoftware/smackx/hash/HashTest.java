@@ -26,8 +26,8 @@ import static junit.framework.TestCase.assertEquals;
 
 /**
  * Test HashManager functionality.
- * The test sums got calculated using 'echo "Hello World!" | {md5sum, sha1sum, sha224sum, sha256sum, sha384sum, sha512sum,
- * sha3-224sum -l, sha3-256sum -l, sha3-384sum -l, sha3-512sum -l, b2sum -l 160, b2sum -l 256, b2sum -l 384, b2sum -l 512}
+ * The test sums got calculated using 'echo "Hello World!" | { md5sum, sha1sum, sha224sum, sha256sum, sha384sum, sha512sum,
+ * sha3-224sum -l, sha3-256sum -l, sha3-384sum -l, sha3-512sum -l, b2sum -l 160, b2sum -l 256, b2sum -l 384, b2sum -l 512 }
  */
 public class HashTest extends SmackTestSuite {
 
@@ -48,7 +48,7 @@ public class HashTest extends SmackTestSuite {
     private static final String b2_512sum =      "54b113f499799d2f3c0711da174e3bc724737ad18f63feb286184f0597e1466436705d6c8e8c7d3d3b88f5a22e83496e0043c44a3c2b1700e0e02259f8ac468e";
 
     private byte[] array() {
-        if(testArray == null) {
+        if (testArray == null) {
             try {
                 testArray = testString.getBytes(StringUtils.UTF8);
             } catch (UnsupportedEncodingException e) {

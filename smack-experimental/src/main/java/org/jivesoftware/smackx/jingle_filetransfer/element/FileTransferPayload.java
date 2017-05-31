@@ -16,16 +16,16 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.element;
 
-import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.hash.element.HashElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadType;
 
 import java.util.Date;
 
 /**
  * Content of type File.
  */
-public class FileTransfer implements NamedElement {
+public class FileTransferPayload extends JingleContentDescriptionPayloadType {
     public static final String ELEMENT = "file";
     public static final String ELEM_DATE = "date";
     public static final String ELEM_DESC = "desc";
@@ -41,7 +41,7 @@ public class FileTransfer implements NamedElement {
     private final int size;
     private final Range range;
 
-    public FileTransfer(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
+    public FileTransferPayload(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
         this.date = date;
         this.desc = desc;
         this.hash = hash;
@@ -49,6 +49,34 @@ public class FileTransfer implements NamedElement {
         this.name = name;
         this.size = size;
         this.range = range;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public String getDescription() {
+        return desc;
+    }
+
+    public HashElement getHash() {
+        return hash;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public Range getRange() {
+        return range;
     }
 
     @Override
