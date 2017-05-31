@@ -109,7 +109,8 @@ public final class JingleFileTransferManager extends Manager {
         cb.setDescription(descriptionFileTransfer)
                 .addTransport(transport)
                 .setCreator(JingleContent.Creator.initiator)
-                .setSenders(JingleContent.Senders.initiator);
+                .setSenders(JingleContent.Senders.initiator)
+                .setName("file");
         JingleContent content = cb.build();
 
         final String sid = JingleInBandByteStreamManager.generateSessionId();
