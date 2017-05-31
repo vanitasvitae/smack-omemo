@@ -23,6 +23,7 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamSession;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.hash.HashManager;
 import org.jivesoftware.smackx.hash.element.HashElement;
 import org.jivesoftware.smackx.jingle.JingleManager;
@@ -67,6 +68,8 @@ public final class JingleFileTransferManager extends Manager {
      */
     private JingleFileTransferManager(XMPPConnection connection) {
         super(connection);
+        ServiceDiscoveryManager sdm = ServiceDiscoveryManager.getInstanceFor(connection);
+        sdm.addFeature(NAMESPACE_V5);
         JingleContentProviderManager.addJingleContentDescriptionProvider(
                 NAMESPACE_V5, new JingleContentDescriptionFileTransferProvider());
     }

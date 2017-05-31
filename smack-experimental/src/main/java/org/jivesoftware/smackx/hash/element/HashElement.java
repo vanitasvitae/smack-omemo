@@ -112,7 +112,7 @@ public class HashElement implements ExtensionElement {
 
     @Override
     public String getNamespace() {
-        return HashManager.NAMESPACE_V2;
+        return HashManager.NAMESPACE.V2.toString();
     }
 
     @Override

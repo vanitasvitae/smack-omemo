@@ -16,30 +16,32 @@
  */
 package org.jivesoftware.smackx.hash;
 
-import org.bouncycastle.jcajce.provider.digest.Blake2b;
-import org.bouncycastle.jcajce.provider.digest.SHA224;
-import org.bouncycastle.jcajce.provider.digest.SHA256;
-import org.bouncycastle.jcajce.provider.digest.SHA3;
-import org.bouncycastle.jcajce.provider.digest.SHA384;
-import org.bouncycastle.jcajce.provider.digest.SHA512;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.util.MD5;
-import org.jivesoftware.smack.util.SHA1;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Security;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.WeakHashMap;
 
+import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.BLAKE2B160;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.BLAKE2B256;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.BLAKE2B384;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.BLAKE2B512;
+import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.MD5;
+import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA3_224;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA3_256;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA3_384;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA3_512;
+import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA_1;
+import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA_224;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA_256;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA_384;
 import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA_512;
@@ -48,8 +50,29 @@ import static org.jivesoftware.smackx.hash.HashManager.ALGORITHM.SHA_512;
  * Manager that can be used to determine support for hash functions.
  */
 public final class HashManager extends Manager {
-    public static final String NAMESPACE_V2 = "urn:xmpp:hashes:2";
+
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+    public static final String PROVIDER = "BC";
+
     public static final String PREFIX_NS_ALGO = "urn:xmpp:hash-function-text-names:";
+
+    public enum NAMESPACE {
+        V1 ("urn:xmpp:hashes:1"),
+        V2 ("urn:xmpp:hashes:2");
+
+        final String name;
+
+        NAMESPACE(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
+    }
 
     public static final List<ALGORITHM> RECOMMENDED = Collections.unmodifiableList(Arrays.asList(
             SHA_256, SHA_384, SHA_512,
@@ -68,7 +91,7 @@ public final class HashManager extends Manager {
     private HashManager(XMPPConnection connection) {
         super(connection);
         ServiceDiscoveryManager sdm = ServiceDiscoveryManager.getInstanceFor(connection);
-        sdm.addFeature(NAMESPACE_V2);
+        sdm.addFeature(NAMESPACE.V2.toString());
         addAlgorithmsToFeatures(RECOMMENDED);
     }
 
@@ -144,7 +167,7 @@ public final class HashManager extends Manager {
          */
         public static ALGORITHM valueOfName(String s) {
             for (ALGORITHM a : ALGORITHM.values()) {
-                if (s.equals(a.toString())) {
+                if (a.toString().equals(s)) {
                     return a;
                 }
             }
@@ -159,110 +182,118 @@ public final class HashManager extends Manager {
      * @return
      */
     public static byte[] hash(ALGORITHM algorithm, byte[] data) {
-        byte[] hash;
-        switch (algorithm) {
-            case MD5:
-                hash = md5(data);
-                break;
-            case SHA_1:
-                hash = sha_1(data);
-                break;
-            case SHA_224:
-                hash = sha_224(data);
-                break;
-            case SHA_256:
-                hash = sha_256(data);
-                break;
-            case SHA_384:
-                hash = sha_384(data);
-                break;
-            case SHA_512:
-                hash = sha_512(data);
-                break;
-            case SHA3_224:
-                hash = sha3_224(data);
-                break;
-            case SHA3_256:
-                hash = sha3_256(data);
-                break;
-            case SHA3_384:
-                hash = sha3_384(data);
-                break;
-            case SHA3_512:
-                hash = sha3_512(data);
-                break;
-            case BLAKE2B160:
-                hash = blake2b160(data);
-                break;
-            case BLAKE2B256:
-                hash = blake2b256(data);
-                break;
-            case BLAKE2B384:
-                hash = blake2b384(data);
-                break;
-            case BLAKE2B512:
-                hash = blake2b512(data);
-                break;
-            default:
-                throw new AssertionError("Invalid enum value.");
+        return getMessageDigest(algorithm).digest(data);
+    }
+
+    public static MessageDigest getMessageDigest(ALGORITHM algorithm) {
+        MessageDigest md;
+        try {
+            switch (algorithm) {
+                case MD5:
+                    md = MessageDigest.getInstance("MD5", PROVIDER);
+                    break;
+                case SHA_1:
+                    md = MessageDigest.getInstance("SHA-1", PROVIDER);
+                    break;
+                case SHA_224:
+                    md = MessageDigest.getInstance("SHA-224", PROVIDER);
+                    break;
+                case SHA_256:
+                    md = MessageDigest.getInstance("SHA-256", PROVIDER);
+                    break;
+                case SHA_384:
+                    md = MessageDigest.getInstance("SHA-384", PROVIDER);
+                    break;
+                case SHA_512:
+                    md = MessageDigest.getInstance("SHA-512", PROVIDER);
+                    break;
+                case SHA3_224:
+                    md = MessageDigest.getInstance("SHA3-224", PROVIDER);
+                    break;
+                case SHA3_256:
+                    md = MessageDigest.getInstance("SHA3-256", PROVIDER);
+                    break;
+                case SHA3_384:
+                    md = MessageDigest.getInstance("SHA3-384", PROVIDER);
+                    break;
+                case SHA3_512:
+                    md = MessageDigest.getInstance("SHA3-512", PROVIDER);
+                    break;
+                case BLAKE2B160:
+                    md = MessageDigest.getInstance("BLAKE2b-160", PROVIDER);
+                    break;
+                case BLAKE2B256:
+                    md = MessageDigest.getInstance("BLAKE2b-256", PROVIDER);
+                    break;
+                case BLAKE2B384:
+                    md = MessageDigest.getInstance("BLAKE2b-384", PROVIDER);
+                    break;
+                case BLAKE2B512:
+                    md = MessageDigest.getInstance("BLAKE2b-512", PROVIDER);
+                    break;
+                default:
+                    throw new AssertionError("Invalid enum value.");
+            }
+            return md;
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            throw new AssertionError(e);
         }
-        return hash;
     }
 
     public static byte[] md5(byte[] data) {
-        return MD5.bytes(data);
+        return getMessageDigest(MD5).digest(data);
     }
 
     public static byte[] sha_1(byte[] data) {
-        return SHA1.bytes(data);
+        return getMessageDigest(SHA_1).digest(data);
     }
 
     public static byte[] sha_224(byte[] data) {
-        return new SHA224.Digest().digest(data);
+        return getMessageDigest(SHA_224).digest(data);
     }
 
     public static byte[] sha_256(byte[] data) {
-        return new SHA256.Digest().digest(data);
+        return getMessageDigest(SHA_256).digest(data);
     }
 
     public static byte[] sha_384(byte[] data) {
-        return new SHA384.Digest().digest(data);
+        return getMessageDigest(SHA_384).digest(data);
     }
 
     public static byte[] sha_512(byte[] data) {
-        return new SHA512.Digest().digest(data);
+        return getMessageDigest(SHA_512).digest(data);
     }
 
     public static byte[] sha3_224(byte[] data) {
-        return new SHA3.Digest224().digest(data);
+        return getMessageDigest(SHA3_224).digest(data);
     }
 
     public static byte[] sha3_256(byte[] data) {
-        return new SHA3.Digest256().digest(data);
+        return getMessageDigest(SHA3_256).digest(data);
     }
 
     public static byte[] sha3_384(byte[] data) {
-        return new SHA3.Digest384().digest(data);
+        return getMessageDigest(SHA3_384).digest(data);
     }
 
     public static byte[] sha3_512(byte[] data) {
-        return new SHA3.Digest512().digest(data);
+        return getMessageDigest(SHA3_512).digest(data);
     }
 
     public static byte[] blake2b160(byte[] data) {
-        return new Blake2b.Blake2b160().digest(data);
+        return getMessageDigest(BLAKE2B160).digest(data);
     }
 
     public static byte[] blake2b256(byte[] data) {
-        return new Blake2b.Blake2b256().digest(data);
+        return getMessageDigest(BLAKE2B256).digest(data);
     }
 
     public static byte[] blake2b384(byte[] data) {
-        return new Blake2b.Blake2b384().digest(data);
+        return getMessageDigest(BLAKE2B384).digest(data);
     }
 
     public static byte[] blake2b512(byte[] data) {
-        return new Blake2b.Blake2b512().digest(data);
+        return getMessageDigest(BLAKE2B512).digest(data);
     }
 
     /**
