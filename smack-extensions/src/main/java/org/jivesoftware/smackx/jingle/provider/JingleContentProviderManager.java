@@ -34,8 +34,8 @@ public class JingleContentProviderManager {
         return jingleContentDescriptionProviders.get(namespace);
     }
 
-    public static JingleContentTransportProvider<?> addJingleContentDescriptionProvider(String namespace,
-                                                                                        JingleContentTransportProvider<?> provider) {
+    public static JingleContentTransportProvider<?> addJingleContentTransportProvider(String namespace,
+                                                                                      JingleContentTransportProvider<?> provider) {
         return jingleContentTransportProviders.put(namespace, provider);
     }
 
