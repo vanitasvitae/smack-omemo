@@ -20,6 +20,7 @@ import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.hash.element.HashElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadType;
 
+import java.io.File;
 import java.util.Date;
 
 /**
@@ -119,6 +120,68 @@ public class JingleFileTransferPayload extends JingleContentDescriptionPayloadTy
 
         sb.closeElement(this);
         return sb;
+    }
+
+    public static Builder getBuilder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private Date date;
+        private String desc;
+        private HashElement hash;
+        private String mediaType;
+        private String name;
+        private int size;
+        private Range range;
+
+        private Builder() {
+        }
+
+        public Builder setDate(Date date) {
+            this.date = date;
+            return this;
+        }
+
+        public Builder setDescription(String desc) {
+            this.desc = desc;
+            return this;
+        }
+
+        public Builder setHash(HashElement hash) {
+            this.hash = hash;
+            return this;
+        }
+
+        public Builder setMediaType(String mediaType) {
+            this.mediaType = mediaType;
+            return this;
+        }
+
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder setSize(int size) {
+            this.size = size;
+            return this;
+        }
+
+        public Builder setRange(Range range) {
+            this.range = range;
+            return this;
+        }
+
+        public JingleFileTransferPayload build() {
+            return new JingleFileTransferPayload(date, desc, hash, mediaType, name, size, range);
+        }
+
+        public Builder setFile(File file) {
+            return setDate(new Date(file.lastModified()))
+                    .setName(file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("/") + 1))
+                    .setSize((int) file.length());
+        }
     }
 
 }

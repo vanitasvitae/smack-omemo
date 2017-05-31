@@ -61,17 +61,6 @@ public class HashElement implements ExtensionElement {
     }
 
     /**
-     * Create a new HashElement that contains the hash sum calculated using 'algorithm' based on the data in 'data'.
-     *
-     * @param algorithm algorithm which will be used to calculate data's checksum.
-     * @param data data of which we will calculate the checksum.
-     * @return HashElement with the checksum of data.
-     */
-    public static HashElement fromData(HashManager.ALGORITHM algorithm, byte[] data) {
-        return new HashElement(algorithm, HashManager.hash(algorithm, data));
-    }
-
-    /**
      * Return the hash algorithm used in this HashElement.
      * @return algorithm
      */

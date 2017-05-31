@@ -20,6 +20,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.hash.element.HashElement;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -93,6 +94,14 @@ public final class HashManager extends Manager {
         ServiceDiscoveryManager sdm = ServiceDiscoveryManager.getInstanceFor(connection);
         sdm.addFeature(NAMESPACE.V2.toString());
         addAlgorithmsToFeatures(RECOMMENDED);
+    }
+
+    public static HashElement calculateHashElement(ALGORITHM algorithm, byte[] data) {
+        return new HashElement(algorithm, hash(algorithm, data));
+    }
+
+    public static HashElement assembleHashElement(ALGORITHM algorithm, byte[] hash) {
+        return new HashElement(algorithm, hash);
     }
 
     /**

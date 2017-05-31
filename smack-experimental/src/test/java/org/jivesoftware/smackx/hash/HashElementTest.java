@@ -37,7 +37,7 @@ public class HashElementTest extends SmackTestSuite {
     @Test
     public void stanzaTest() throws Exception {
         String message = "Hello World!";
-        HashElement element = HashElement.fromData(SHA_256, message.getBytes(StringUtils.UTF8));
+        HashElement element = HashManager.calculateHashElement(SHA_256, message.getBytes(StringUtils.UTF8));
         String expected = "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=</hash>";
         assertEquals(expected, element.toXML().toString());
 

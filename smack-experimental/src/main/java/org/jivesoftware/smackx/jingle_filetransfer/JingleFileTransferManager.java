@@ -25,7 +25,6 @@ import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.hash.HashManager;
-import org.jivesoftware.smackx.hash.element.HashElement;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -94,14 +93,10 @@ public final class JingleFileTransferManager extends Manager {
      * @param file
      */
     public void sendFile(File file, final FullJid recipient) throws IOException, SmackException.NotConnectedException, InterruptedException {
-        final byte[] bytes = DirtyHelper.readFile(file);
-        if (bytes == null) {
-            LOGGER.log(Level.SEVERE, "bytes are null.");
-            return;
-        }
+        final DirtyHelper.BytesAndDigest bd = DirtyHelper.readFile(file, HashManager.ALGORITHM.SHA_256);
         Date lastModified = new Date(file.lastModified());
         JingleFileTransferPayload payload = new JingleFileTransferPayload(
-                lastModified, "A file", HashElement.fromData(HashManager.ALGORITHM.SHA_256, bytes),
+                lastModified, "A file", HashManager.assembleHashElement(HashManager.ALGORITHM.SHA_256, bd.getDigest()),
                 "application/octet-stream", file.getName(), (int) file.length(), null);
         ArrayList<JingleContentDescriptionPayloadType> payloadTypes = new ArrayList<>();
         payloadTypes.add(payload);
@@ -142,7 +137,7 @@ public final class JingleFileTransferManager extends Manager {
                         }
 
                         try {
-                            session.getOutputStream().write(bytes);
+                            session.getOutputStream().write(bd.getBytes());
                         } catch (IOException e) {
                             LOGGER.log(Level.SEVERE, "Fail while writing: " + e, e);
                         }
