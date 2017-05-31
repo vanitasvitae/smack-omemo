@@ -18,6 +18,8 @@ package org.jivesoftware.smackx.jingle_filetransfer;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
+import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleContentDescriptionFileTransferProvider;
 
 import java.util.WeakHashMap;
 
@@ -33,11 +35,14 @@ public final class JingleFileTransferManager extends Manager {
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
 
     /**
-     * Private constructor.
+     * Private constructor. This registers a JingleContentDescriptionFileTransferProvider with the
+     * JingleContentProviderManager.
      * @param connection connection
      */
     private JingleFileTransferManager(XMPPConnection connection) {
         super(connection);
+        JingleContentProviderManager.addJingleContentDescriptionProvider(
+                NAMESPACE_V5, new JingleContentDescriptionFileTransferProvider());
     }
 
     /**
