@@ -25,6 +25,7 @@ import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.hash.HashManager;
+import org.jivesoftware.smackx.hash.element.HashElement;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -88,15 +89,22 @@ public final class JingleFileTransferManager extends Manager {
         return manager;
     }
 
+    public JingleFileTransferPayload createPayloadFromFile(File file) {
+        JingleFileTransferPayload.Builder payloadBuilder = JingleFileTransferPayload.getBuilder();
+
+        return payloadBuilder.build();
+    }
+
     /**
      * QnD method.
      * @param file
      */
     public void sendFile(File file, final FullJid recipient) throws IOException, SmackException.NotConnectedException, InterruptedException {
-        final DirtyHelper.BytesAndDigest bd = DirtyHelper.readFile(file, HashManager.ALGORITHM.SHA_256);
+        final byte[] bytes = new byte[(int) file.length()];
+        HashElement hashElement = FileAndHashReader.readAndCalculateHash(file, bytes, HashManager.ALGORITHM.SHA_256);
         Date lastModified = new Date(file.lastModified());
         JingleFileTransferPayload payload = new JingleFileTransferPayload(
-                lastModified, "A file", HashManager.assembleHashElement(HashManager.ALGORITHM.SHA_256, bd.getDigest()),
+                lastModified, "A file", hashElement,
                 "application/octet-stream", file.getName(), (int) file.length(), null);
         ArrayList<JingleContentDescriptionPayloadType> payloadTypes = new ArrayList<>();
         payloadTypes.add(payload);
@@ -137,7 +145,7 @@ public final class JingleFileTransferManager extends Manager {
                         }
 
                         try {
-                            session.getOutputStream().write(bd.getBytes());
+                            session.getOutputStream().write(bytes);
                         } catch (IOException e) {
                             LOGGER.log(Level.SEVERE, "Fail while writing: " + e, e);
                         }
