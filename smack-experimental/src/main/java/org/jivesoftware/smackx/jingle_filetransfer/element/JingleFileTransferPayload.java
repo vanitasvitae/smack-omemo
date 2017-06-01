@@ -90,34 +90,15 @@ public class JingleFileTransferPayload extends JingleContentDescriptionPayloadTy
         XmlStringBuilder sb = new XmlStringBuilder(this);
         sb.rightAngleBracket();
 
-        if (date != null) {
-            sb.element(ELEM_DATE, date);
-        }
-
-        if (desc != null) {
-            sb.element(ELEM_DESC, desc);
-        }
-
-        if (mediaType != null) {
-            sb.element(ELEM_MEDIA_TYPE, mediaType);
-        }
-
-        if (name != null) {
-            sb.element(ELEM_NAME, name);
-        }
-
-        if (range != null) {
-            sb.element(range);
-        }
-
+        sb.optElement(ELEM_DATE, date);
+        sb.optElement(ELEM_DESC, desc);
+        sb.optElement(ELEM_MEDIA_TYPE, mediaType);
+        sb.optElement(ELEM_NAME, name);
+        sb.optElement(range);
         if (size > 0) {
             sb.element(ELEM_SIZE, Integer.toString(size));
         }
-
-        if (hash != null) {
-            sb.element(hash);
-        }
-
+        sb.optElement(hash);
         sb.closeElement(this);
         return sb;
     }
