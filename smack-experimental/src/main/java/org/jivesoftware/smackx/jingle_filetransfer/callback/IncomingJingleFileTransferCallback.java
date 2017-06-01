@@ -16,12 +16,14 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.callback;
 
+import java.io.File;
+
 /**
  * Callback that allows the user to accept or cancel file transfers.
  */
 public interface IncomingJingleFileTransferCallback {
 
-    void acceptFileTransfer();
+    void acceptFileTransfer(File target);
 
     void cancelFileTransfer();
 }

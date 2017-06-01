@@ -16,13 +16,13 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.listener;
 
+import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingJingleFileTransferCallback;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayload;
 
 /**
  * Listener for incoming file transfers.
  */
 public interface IncomingJingleFileTransferListener {
 
-    void onIncomingJingleFileTransfer(JingleFileTransferPayload file, IncomingJingleFileTransferCallback callback);
+    void onIncomingJingleFileTransfer(Jingle jingle, IncomingJingleFileTransferCallback callback);
 }

@@ -20,7 +20,7 @@ import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jxmpp.jid.Jid;
 
 /**
- * Class that represents a jingle session in the context of Jingle File Transfer
+ * Class that represents a jingle session in the context of Jingle File Transfer.
  */
 public class JingleFileTransferSession extends JingleSession {
 

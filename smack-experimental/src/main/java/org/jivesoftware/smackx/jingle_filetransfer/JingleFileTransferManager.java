@@ -26,6 +26,7 @@ import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.hash.HashManager;
 import org.jivesoftware.smackx.hash.element.HashElement;
+import org.jivesoftware.smackx.jingle.JingleHandler;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -35,6 +36,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadTyp
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleContentDescriptionFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayload;
+import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleContentDescriptionFileTransferProvider;
 import org.jivesoftware.smackx.jingle_ibb.JingleInBandByteStreamManager;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandByteStreamTransport;
@@ -44,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,13 +56,14 @@ import java.util.logging.Logger;
  *
  * @author Paul Schaub
  */
-public final class JingleFileTransferManager extends Manager {
+public final class JingleFileTransferManager extends Manager implements JingleHandler {
 
     private static final Logger LOGGER = Logger.getLogger(JingleFileTransferManager.class.getName());
 
     public static final String NAMESPACE_V5 = "urn:xmpp:jingle:apps:file-transfer:5";
 
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
+    private final HashSet<IncomingJingleFileTransferListener> incomingJingleFileTransferListeners = new HashSet<>();
 
     /**
      * Private constructor. This registers a JingleContentDescriptionFileTransferProvider with the
@@ -70,8 +74,13 @@ public final class JingleFileTransferManager extends Manager {
         super(connection);
         ServiceDiscoveryManager sdm = ServiceDiscoveryManager.getInstanceFor(connection);
         sdm.addFeature(NAMESPACE_V5);
+
+        JingleManager.getInstanceFor(connection).registerDescriptionHandler(
+                NAMESPACE_V5, this);
+
         JingleContentProviderManager.addJingleContentDescriptionProvider(
                 NAMESPACE_V5, new JingleContentDescriptionFileTransferProvider());
+
     }
 
     /**
@@ -87,6 +96,14 @@ public final class JingleFileTransferManager extends Manager {
             INSTANCES.put(connection, manager);
         }
         return manager;
+    }
+
+    public void addIncomingFileTransferListener(IncomingJingleFileTransferListener listener) {
+        incomingJingleFileTransferListeners.add(listener);
+    }
+
+    public void removeIncomingFileTransferListener(IncomingJingleFileTransferListener listener) {
+        incomingJingleFileTransferListeners.remove(listener);
     }
 
     public JingleFileTransferPayload createPayloadFromFile(File file) {
@@ -156,5 +173,43 @@ public final class JingleFileTransferManager extends Manager {
         });
 
         connection().sendStanza(jingle);
+    }
+
+    @Override
+    public IQ handleRequest(Jingle jingle) {
+
+        for (int i = 0; i < jingle.getContents().size() && i < 1; i++) { //TODO: Remove && i<1 later
+            JingleContent content = jingle.getContents().get(i);
+            switch (jingle.getAction()) {
+                case content_accept:
+                case content_add:
+                case content_modify:
+                case content_reject:
+                case content_remove:
+                case description_info:
+                case session_accept:
+                case session_info:
+                case session_initiate:
+                    // File Offer
+                    if (content.getSenders() == JingleContent.Senders.initiator) {
+
+                    }
+                    //File Request
+                    else if (content.getSenders() == JingleContent.Senders.responder) {
+
+                    }
+                    //Both or none
+                    else {
+                        throw new AssertionError("Undefined (see XEP-0234 §4.1)");
+                    }
+                    break;
+                case session_terminate:
+                case transport_accept:
+                case transport_info:
+                case transport_reject:
+                case transport_replace:
+            }
+        }
+        return null;
     }
 }
