@@ -32,10 +32,14 @@ import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadType;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
+import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingJingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleContentDescriptionFileTransfer;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayload;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayloadElement;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.FileOfferHandler;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.FileRequestHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleContentDescriptionFileTransferProvider;
 import org.jivesoftware.smackx.jingle_ibb.JingleInBandByteStreamManager;
@@ -56,7 +60,7 @@ import java.util.logging.Logger;
  *
  * @author Paul Schaub
  */
-public final class JingleFileTransferManager extends Manager implements JingleHandler {
+public final class JingleFileTransferManager extends Manager implements JingleHandler, FileOfferHandler, FileRequestHandler {
 
     private static final Logger LOGGER = Logger.getLogger(JingleFileTransferManager.class.getName());
 
@@ -106,10 +110,12 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         incomingJingleFileTransferListeners.remove(listener);
     }
 
-    public JingleFileTransferPayload createPayloadFromFile(File file) {
-        JingleFileTransferPayload.Builder payloadBuilder = JingleFileTransferPayload.getBuilder();
-
-        return payloadBuilder.build();
+    public JingleFileTransferPayloadElement.Builder fileTransferPayloadBuilderFromFile(File file) {
+        JingleFileTransferPayloadElement.Builder payloadBuilder = JingleFileTransferPayloadElement.getBuilder();
+        payloadBuilder.setDate(new Date(file.lastModified()));
+        payloadBuilder.setName(file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf(File.pathSeparator) + 1));
+        payloadBuilder.setSize((int) file.length());
+        return payloadBuilder;
     }
 
     /**
@@ -120,10 +126,10 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         final byte[] bytes = new byte[(int) file.length()];
         HashElement hashElement = FileAndHashReader.readAndCalculateHash(file, bytes, HashManager.ALGORITHM.SHA_256);
         Date lastModified = new Date(file.lastModified());
-        JingleFileTransferPayload payload = new JingleFileTransferPayload(
+        JingleFileTransferPayloadElement payload = new JingleFileTransferPayloadElement(
                 lastModified, "A file", hashElement,
                 "application/octet-stream", file.getName(), (int) file.length(), null);
-        ArrayList<JingleContentDescriptionPayloadType> payloadTypes = new ArrayList<>();
+        ArrayList<JingleContentDescriptionPayloadElement> payloadTypes = new ArrayList<>();
         payloadTypes.add(payload);
 
         JingleContentDescriptionFileTransfer descriptionFileTransfer = new JingleContentDescriptionFileTransfer(payloadTypes);
@@ -192,17 +198,17 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                 case session_initiate:
                     // File Offer
                     if (content.getSenders() == JingleContent.Senders.initiator) {
-
+                        handleFileOffer(jingle);
                     }
                     //File Request
                     else if (content.getSenders() == JingleContent.Senders.responder) {
-
+                        return handleFileRequest(jingle);
                     }
                     //Both or none
                     else {
                         throw new AssertionError("Undefined (see XEP-0234 §4.1)");
                     }
-                    break;
+                    //break;
                 case session_terminate:
                 case transport_accept:
                 case transport_info:
@@ -210,6 +216,55 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                 case transport_replace:
             }
         }
+        return null;
+    }
+
+    @Override
+    public void handleFileOffer(final Jingle jingle) {
+        IncomingJingleFileTransferCallback callback = new IncomingJingleFileTransferCallback() {
+            @Override
+            public void acceptFileTransfer(File target) throws SmackException.NotConnectedException, InterruptedException {
+                JingleContent content = jingle.getContents().get(0);
+
+                //TODO: Find more suitable way to select transport methods.
+                JingleContentTransport preferredTransport = null;
+                for (JingleContentTransport t : content.getJingleTransports()) {
+                    if (t.getNamespace().equals(JingleInBandByteStreamManager.NAMESPACE_V1)) {
+                        preferredTransport = t;
+                    }
+                }
+
+                if (preferredTransport != null) {
+                    Jingle.Builder acceptBuilder = Jingle.getBuilder();
+                    acceptBuilder.setResponder(connection().getUser());
+                    acceptBuilder.setSessionId(jingle.getSid());
+                    acceptBuilder.setAction(JingleAction.session_accept);
+
+                    JingleContent.Builder contentBuilder = JingleContent.getBuilder();
+                    contentBuilder.setCreator(content.getCreator());
+                    contentBuilder.setName(content.getName());
+                    contentBuilder.setSenders(content.getSenders());
+                    contentBuilder.setDescription(content.getDescription());
+                    contentBuilder.addTransport(preferredTransport);
+
+                    acceptBuilder.addJingleContent(contentBuilder.build());
+                    connection().sendStanza(acceptBuilder.build());
+                }
+            }
+
+            @Override
+            public void cancelFileTransfer() {
+                // Tear down the session.
+            }
+        };
+
+        for (IncomingJingleFileTransferListener l : incomingJingleFileTransferListeners) {
+            l.onIncomingJingleFileTransfer(jingle, callback);
+        }
+    }
+
+    @Override
+    public IQ handleFileRequest(Jingle jingle) {
         return null;
     }
 }

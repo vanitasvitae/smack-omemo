@@ -41,6 +41,18 @@ public class JingleSession {
         return hashCode;
     }
 
+    public String getSid() {
+        return sid;
+    }
+
+    public Jid getInitiator() {
+        return initiator;
+    }
+
+    public Jid getResponder() {
+        return responder;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof JingleSession)) {

@@ -16,7 +16,12 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.JingleSession;
+import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jxmpp.jid.Jid;
 
 /**
@@ -30,22 +35,45 @@ public class JingleFileTransferSession extends JingleSession {
 
     /**
      * A user might choose to abort all active transfers.
+     * @return Jingle IQ that will abort all active transfers of this session.
      */
-    public void abortAllActiveFileTransfers() {
-
+    IQ abortAllActiveFileTransfers() {
+        Jingle.Builder builder = Jingle.getBuilder();
+        builder.setResponder(getResponder().asFullJidOrThrow());
+        builder.setInitiator(getInitiator().asFullJidOrThrow());
+        builder.setAction(JingleAction.session_terminate);
+        builder.setSessionId(getSid());
+        builder.setReason(JingleReason.Reason.cancel);
+        return builder.build();
     }
 
     /**
      * A user might want to abort the transfer of a single file.
+     * @param content content which's transfer will be aborted.
+     * @return Jingle IQ that will abort the transfer of the given content.
      */
-    public void abortSingleFileTransfer() {
-
+    IQ abortSingleFileTransfer(JingleContent content) {
+        Jingle.Builder builder = Jingle.getBuilder();
+        builder.setResponder(getResponder().asFullJidOrThrow());
+        builder.setInitiator(getInitiator().asFullJidOrThrow());
+        builder.setAction(JingleAction.content_remove);
+        builder.setSessionId(getSid());
+        builder.addJingleContent(content);
+        builder.setReason(JingleReason.Reason.cancel);
+        return builder.build();
     }
 
     /**
      * Successfully end session after all files have been transferred.
+     * @return Jingle IQ that will end the session.
      */
-    void endSession() {
-
+    IQ endSession() {
+        Jingle.Builder builder = Jingle.getBuilder();
+        builder.setResponder(getResponder().asFullJidOrThrow());
+        builder.setInitiator(getInitiator().asFullJidOrThrow());
+        builder.setAction(JingleAction.session_terminate);
+        builder.setSessionId(getSid());
+        builder.setReason(JingleReason.Reason.success);
+        return builder.build();
     }
 }

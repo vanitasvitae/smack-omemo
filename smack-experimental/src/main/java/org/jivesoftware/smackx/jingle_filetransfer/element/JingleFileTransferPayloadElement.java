@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jingle_filetransfer.element;
 
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.hash.element.HashElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadType;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadElement;
 
 import java.io.File;
 import java.util.Date;
@@ -26,7 +26,7 @@ import java.util.Date;
 /**
  * Content of type File.
  */
-public class JingleFileTransferPayload extends JingleContentDescriptionPayloadType {
+public class JingleFileTransferPayloadElement extends JingleContentDescriptionPayloadElement {
     public static final String ELEMENT = "file";
     public static final String ELEM_DATE = "date";
     public static final String ELEM_DESC = "desc";
@@ -42,7 +42,7 @@ public class JingleFileTransferPayload extends JingleContentDescriptionPayloadTy
     private final int size;
     private final Range range;
 
-    public JingleFileTransferPayload(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
+    public JingleFileTransferPayloadElement(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
         this.date = date;
         this.desc = desc;
         this.hash = hash;
@@ -107,6 +107,11 @@ public class JingleFileTransferPayload extends JingleContentDescriptionPayloadTy
         return new Builder();
     }
 
+    @Override
+    public String getNamespace() {
+        return null;
+    }
+
     public static final class Builder {
         private Date date;
         private String desc;
@@ -154,8 +159,8 @@ public class JingleFileTransferPayload extends JingleContentDescriptionPayloadTy
             return this;
         }
 
-        public JingleFileTransferPayload build() {
-            return new JingleFileTransferPayload(date, desc, hash, mediaType, name, size, range);
+        public JingleFileTransferPayloadElement build() {
+            return new JingleFileTransferPayloadElement(date, desc, hash, mediaType, name, size, range);
         }
 
         public Builder setFile(File file) {

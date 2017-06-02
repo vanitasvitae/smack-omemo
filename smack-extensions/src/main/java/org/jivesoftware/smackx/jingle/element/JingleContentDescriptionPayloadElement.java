@@ -16,13 +16,13 @@
  */
 package org.jivesoftware.smackx.jingle.element;
 
-import org.jivesoftware.smack.packet.NamedElement;
+import org.jivesoftware.smack.packet.ExtensionElement;
 
 /**
  * An element found usually in 'description' elements.
  *
  */
-public abstract class JingleContentDescriptionPayloadType implements NamedElement {
+public abstract class JingleContentDescriptionPayloadElement implements ExtensionElement {
 
     public static final String ELEMENT = "payload-type";
 

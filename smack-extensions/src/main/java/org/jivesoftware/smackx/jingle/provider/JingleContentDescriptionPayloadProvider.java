@@ -14,25 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.element;
+package org.jivesoftware.smackx.jingle.provider;
 
-import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
+import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadElement;
-import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
-
-import java.util.List;
+import org.xmlpull.v1.XmlPullParser;
 
 /**
- * Description.
+ * Provider for JingleContentDescriptionPayloadElements.
  */
-public class JingleContentDescriptionFileTransfer extends JingleContentDescription {
-
-    public JingleContentDescriptionFileTransfer(List<JingleContentDescriptionPayloadElement> payloadTypes) {
-        super(payloadTypes);
-    }
+public abstract class JingleContentDescriptionPayloadProvider<D extends JingleContentDescriptionPayloadElement>
+                extends ExtensionElementProvider<D> {
 
     @Override
-    public String getNamespace() {
-        return JingleFileTransferManager.NAMESPACE_V5;
-    }
+    public abstract D parse(XmlPullParser parser, int initialDepth) throws Exception;
 }
