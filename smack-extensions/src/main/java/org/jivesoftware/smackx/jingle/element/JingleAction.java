@@ -33,6 +33,7 @@ public enum JingleAction {
     content_reject,
     content_remove,
     description_info,
+    security_info,
     session_accept,
     session_info,
     session_initiate,

@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
@@ -68,6 +69,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
 
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
     private final HashSet<IncomingJingleFileTransferListener> incomingJingleFileTransferListeners = new HashSet<>();
+    private final HashMap<String, JingleFileTransferSession> sessions = new HashMap<>();
 
     /**
      * Private constructor. This registers a JingleContentDescriptionFileTransferProvider with the
@@ -188,32 +190,47 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
             JingleContent content = jingle.getContents().get(i);
             switch (jingle.getAction()) {
                 case content_accept:
+                    // Remote accepts our content-add request.
                 case content_add:
+                    // Remote wants to add content to the session.
                 case content_modify:
+                    // Remote wants to change the directionality of the session
                 case content_reject:
+                    // Remote rejects our content-add request
                 case content_remove:
+                    // Remote wants to remove a content from the session/abort a single transfer
                 case description_info:
+                    // Additional parameters of exchanged media
+                case security_info:
+                    // Remote wants to exchange security information
                 case session_accept:
+                    // Remote accepts our session-initiate
                 case session_info:
+                    // Remote sends session-info (eg. hash)
                 case session_initiate:
-                    // File Offer
+                    // Remote offers file
                     if (content.getSenders() == JingleContent.Senders.initiator) {
                         handleFileOffer(jingle);
                     }
-                    //File Request
+                    // Remote requests file
                     else if (content.getSenders() == JingleContent.Senders.responder) {
                         return handleFileRequest(jingle);
                     }
-                    //Both or none
+                    //Both or none - illegal
                     else {
                         throw new AssertionError("Undefined (see XEP-0234 §4.1)");
                     }
                     //break;
                 case session_terminate:
+                    // Remote wants to terminate our current session
                 case transport_accept:
+                    // Remote accepts our transport-replace
                 case transport_info:
+                    // Remote exchanges transport methods
                 case transport_reject:
+                    // Remote rejects our transport-replace
                 case transport_replace:
+                    // Remote wants to replace the transport
             }
         }
         return null;
@@ -248,6 +265,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                     contentBuilder.addTransport(preferredTransport);
 
                     acceptBuilder.addJingleContent(contentBuilder.build());
+
                     connection().sendStanza(acceptBuilder.build());
                 }
             }
