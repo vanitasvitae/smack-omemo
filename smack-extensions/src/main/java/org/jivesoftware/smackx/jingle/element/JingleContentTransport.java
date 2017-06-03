@@ -63,12 +63,12 @@ public abstract class JingleContentTransport implements ExtensionElement {
             xml.closeEmptyElement();
 
         } else {
+
             xml.rightAngleBracket();
-
             xml.append(candidates);
-
             xml.closeElement(this);
         }
+
         return xml;
     }
 

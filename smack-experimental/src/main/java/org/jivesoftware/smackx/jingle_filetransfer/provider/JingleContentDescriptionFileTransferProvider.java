@@ -16,7 +16,7 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.provider;
 
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleContentDescriptionFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayloadElement;
@@ -34,7 +34,7 @@ public class JingleContentDescriptionFileTransferProvider
         extends JingleContentDescriptionProvider<JingleContentDescriptionFileTransfer> {
     @Override
     public JingleContentDescriptionFileTransfer parse(XmlPullParser parser, int initialDepth) throws Exception {
-        ArrayList<JingleContentDescriptionPayloadElement> payloads = new ArrayList<>();
+        ArrayList<JingleContentDescriptionChildElement> payloads = new ArrayList<>();
         while (true) {
             int tag = parser.nextTag();
             String name = parser.getName();

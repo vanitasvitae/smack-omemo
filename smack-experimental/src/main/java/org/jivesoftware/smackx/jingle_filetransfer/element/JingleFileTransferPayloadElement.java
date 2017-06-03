@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jingle_filetransfer.element;
 
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.hash.element.HashElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 
 import java.io.File;
 import java.util.Date;
@@ -26,7 +26,7 @@ import java.util.Date;
 /**
  * Content of type File.
  */
-public class JingleFileTransferPayloadElement extends JingleContentDescriptionPayloadElement {
+public class JingleFileTransferPayloadElement extends JingleContentDescriptionChildElement {
     public static final String ELEMENT = "file";
     public static final String ELEM_DATE = "date";
     public static final String ELEM_DESC = "desc";
@@ -105,11 +105,6 @@ public class JingleFileTransferPayloadElement extends JingleContentDescriptionPa
 
     public static Builder getBuilder() {
         return new Builder();
-    }
-
-    @Override
-    public String getNamespace() {
-        return null;
     }
 
     public static final class Builder {

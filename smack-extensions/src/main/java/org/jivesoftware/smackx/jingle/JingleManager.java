@@ -16,15 +16,10 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
-
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.iqrequest.IQRequestHandler.Mode;
 import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
+import org.jivesoftware.smack.iqrequest.IQRequestHandler.Mode;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -32,6 +27,11 @@ import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
+
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public final class JingleManager extends Manager {
 
@@ -102,7 +102,7 @@ public final class JingleManager extends Manager {
         return jingleSessionHandlers.put(fullJidAndSessionId, sessionHandler);
     }
 
-    public JingleSessionHandler unregisterJingleSessionhandler(FullJid otherJid, String sessionId, JingleSessionHandler sessionHandler) {
+    public JingleSessionHandler unregisterJingleSessionHandler(FullJid otherJid, String sessionId, JingleSessionHandler sessionHandler) {
         FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(otherJid, sessionId);
         return jingleSessionHandlers.remove(fullJidAndSessionId);
     }

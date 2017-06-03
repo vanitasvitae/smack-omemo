@@ -32,7 +32,7 @@ import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingJingleFileTransferCallback;
@@ -131,7 +131,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         JingleFileTransferPayloadElement payload = new JingleFileTransferPayloadElement(
                 lastModified, "A file", hashElement,
                 "application/octet-stream", file.getName(), (int) file.length(), null);
-        ArrayList<JingleContentDescriptionPayloadElement> payloadTypes = new ArrayList<>();
+        ArrayList<JingleContentDescriptionChildElement> payloadTypes = new ArrayList<>();
         payloadTypes.add(payload);
 
         JingleContentDescriptionFileTransfer descriptionFileTransfer = new JingleContentDescriptionFileTransfer(payloadTypes);

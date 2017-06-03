@@ -21,7 +21,6 @@ import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.hash.HashManager;
 import org.jivesoftware.smackx.hash.element.HashElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayloadElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleContentDescriptionFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Range;

@@ -30,9 +30,9 @@ public abstract class JingleContentDescription implements ExtensionElement {
 
     public static final String ELEMENT = "description";
 
-    private final List<JingleContentDescriptionPayloadElement> payloads;
+    private final List<JingleContentDescriptionChildElement> payloads;
 
-    protected JingleContentDescription(List<JingleContentDescriptionPayloadElement> payloads) {
+    protected JingleContentDescription(List<JingleContentDescriptionChildElement> payloads) {
         if (payloads != null) {
             this.payloads = Collections.unmodifiableList(payloads);
         }
@@ -46,7 +46,7 @@ public abstract class JingleContentDescription implements ExtensionElement {
         return ELEMENT;
     }
 
-    public List<JingleContentDescriptionPayloadElement> getJinglePayloadTypes() {
+    public List<JingleContentDescriptionChildElement> getJinglePayloadTypes() {
         return payloads;
     }
 

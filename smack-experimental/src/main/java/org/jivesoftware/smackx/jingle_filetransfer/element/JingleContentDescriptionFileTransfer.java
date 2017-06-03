@@ -17,7 +17,7 @@
 package org.jivesoftware.smackx.jingle_filetransfer.element;
 
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionPayloadElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
 
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class JingleContentDescriptionFileTransfer extends JingleContentDescription {
 
-    public JingleContentDescriptionFileTransfer(List<JingleContentDescriptionPayloadElement> payloadTypes) {
+    public JingleContentDescriptionFileTransfer(List<JingleContentDescriptionChildElement> payloadTypes) {
         super(payloadTypes);
     }
 
