@@ -21,10 +21,11 @@ import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.hash.HashManager;
 import org.jivesoftware.smackx.hash.element.HashElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayloadElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleContentDescriptionFileTransfer;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
-import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleContentDescriptionFileTransferProvider;
+import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
 import org.junit.Test;
 import org.jxmpp.util.XmppDateTime;
 
@@ -37,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Test the JingleContentDescriptionFileTransfer element and provider.
  */
-public class JingleContentDescriptionFileTransferTest extends SmackTestSuite {
+public class JingleFileTransferContentDescriptionTest extends SmackTestSuite {
 
     @Test
     public void parserTest() throws Exception {
@@ -65,19 +66,19 @@ public class JingleContentDescriptionFileTransferTest extends SmackTestSuite {
         HashElement hashElement = new HashElement(algorithm, hashB64);
         Range range = new Range();
         Date date = XmppDateTime.parseDate(dateString);
-        JingleFileTransferPayloadElement jingleFileTransferPayloadElement = new JingleFileTransferPayloadElement(date, descriptionString, hashElement, mediaTypeString, nameString, sizeInt, range);
-        ArrayList<JingleContentDescriptionPayloadElement> payloads = new ArrayList<>();
-        payloads.add(jingleFileTransferPayloadElement);
+        JingleFileTransferChildElement jingleFileTransferChildElement = new JingleFileTransferChildElement(date, descriptionString, hashElement, mediaTypeString, nameString, sizeInt, range);
+        ArrayList<JingleContentDescriptionChildElement> payloads = new ArrayList<>();
+        payloads.add(jingleFileTransferChildElement);
 
-        JingleContentDescriptionFileTransfer descriptionFileTransfer =
-                new JingleContentDescriptionFileTransfer(payloads);
+        JingleFileTransferContentDescription descriptionFileTransfer =
+                new JingleFileTransferContentDescription(payloads);
         assertEquals(xml, descriptionFileTransfer.toXML().toString());
 
-        JingleContentDescription parsed = new JingleContentDescriptionFileTransferProvider()
+        JingleContentDescription parsed = new JingleFileTransferContentDescriptionProvider()
                 .parse(TestUtils.getParser(xml));
         assertEquals(xml, parsed.toXML().toString());
 
-        JingleFileTransferPayloadElement payload = (JingleFileTransferPayloadElement) parsed.getJinglePayloadTypes().get(0);
+        JingleFileTransferChildElement payload = (JingleFileTransferChildElement) parsed.getJinglePayloadTypes().get(0);
         assertEquals(date, payload.getDate());
         assertEquals(descriptionString, payload.getDescription());
         assertEquals(mediaTypeString, payload.getMediaType());
@@ -86,7 +87,7 @@ public class JingleContentDescriptionFileTransferTest extends SmackTestSuite {
         assertEquals(range, payload.getRange());
         assertEquals(hashElement, payload.getHash());
 
-        JingleContentDescriptionFileTransfer descriptionFileTransfer1 = new JingleContentDescriptionFileTransfer(null);
+        JingleFileTransferContentDescription descriptionFileTransfer1 = new JingleFileTransferContentDescription(null);
         assertNotNull(descriptionFileTransfer1.getJinglePayloadTypes());
     }
 
@@ -106,12 +107,12 @@ public class JingleContentDescriptionFileTransferTest extends SmackTestSuite {
                         "</range>" +
                     "</file>" +
                 "</description>";
-        JingleFileTransferPayloadElement payload = new JingleFileTransferPayloadElement(null, null, null, null, null, -1, range);
-        ArrayList<JingleContentDescriptionPayloadElement> list = new ArrayList<>();
+        JingleFileTransferChildElement payload = new JingleFileTransferChildElement(null, null, null, null, null, -1, range);
+        ArrayList<JingleContentDescriptionChildElement> list = new ArrayList<>();
         list.add(payload);
-        JingleContentDescriptionFileTransfer fileTransfer = new JingleContentDescriptionFileTransfer(list);
+        JingleFileTransferContentDescription fileTransfer = new JingleFileTransferContentDescription(list);
         assertEquals(xml, fileTransfer.toXML().toString());
-        JingleContentDescriptionFileTransfer parsed = new JingleContentDescriptionFileTransferProvider()
+        JingleFileTransferContentDescription parsed = new JingleFileTransferContentDescriptionProvider()
                 .parse(TestUtils.getParser(xml));
         assertEquals(xml, parsed.toXML().toString());
     }

@@ -36,12 +36,12 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildEleme
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingJingleFileTransferCallback;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleContentDescriptionFileTransfer;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferPayloadElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileOfferHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileRequestHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
-import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleContentDescriptionFileTransferProvider;
+import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
 import org.jivesoftware.smackx.jingle_ibb.JingleInBandByteStreamManager;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandByteStreamTransport;
 import org.jxmpp.jid.FullJid;
@@ -85,7 +85,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                 NAMESPACE_V5, this);
 
         JingleContentProviderManager.addJingleContentDescriptionProvider(
-                NAMESPACE_V5, new JingleContentDescriptionFileTransferProvider());
+                NAMESPACE_V5, new JingleFileTransferContentDescriptionProvider());
 
     }
 
@@ -112,8 +112,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         incomingJingleFileTransferListeners.remove(listener);
     }
 
-    public JingleFileTransferPayloadElement.Builder fileTransferPayloadBuilderFromFile(File file) {
-        JingleFileTransferPayloadElement.Builder payloadBuilder = JingleFileTransferPayloadElement.getBuilder();
+    public JingleFileTransferChildElement.Builder fileTransferPayloadBuilderFromFile(File file) {
+        JingleFileTransferChildElement.Builder payloadBuilder = JingleFileTransferChildElement.getBuilder();
         payloadBuilder.setDate(new Date(file.lastModified()));
         payloadBuilder.setName(file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf(File.pathSeparator) + 1));
         payloadBuilder.setSize((int) file.length());
@@ -128,13 +128,13 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         final byte[] bytes = new byte[(int) file.length()];
         HashElement hashElement = FileAndHashReader.readAndCalculateHash(file, bytes, HashManager.ALGORITHM.SHA_256);
         Date lastModified = new Date(file.lastModified());
-        JingleFileTransferPayloadElement payload = new JingleFileTransferPayloadElement(
+        JingleFileTransferChildElement payload = new JingleFileTransferChildElement(
                 lastModified, "A file", hashElement,
                 "application/octet-stream", file.getName(), (int) file.length(), null);
         ArrayList<JingleContentDescriptionChildElement> payloadTypes = new ArrayList<>();
         payloadTypes.add(payload);
 
-        JingleContentDescriptionFileTransfer descriptionFileTransfer = new JingleContentDescriptionFileTransfer(payloadTypes);
+        JingleFileTransferContentDescription descriptionFileTransfer = new JingleFileTransferContentDescription(payloadTypes);
         final JingleInBandByteStreamTransport transport = new JingleInBandByteStreamTransport();
         JingleContent.Builder cb = JingleContent.getBuilder();
         cb.setDescription(descriptionFileTransfer)
@@ -220,7 +220,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                     else {
                         throw new AssertionError("Undefined (see XEP-0234 §4.1)");
                     }
-                    //break;
+                    break;
                 case session_terminate:
                     // Remote wants to terminate our current session
                 case transport_accept:

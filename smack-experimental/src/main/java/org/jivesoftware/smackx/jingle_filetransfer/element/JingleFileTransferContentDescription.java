@@ -25,9 +25,9 @@ import java.util.List;
 /**
  * Description.
  */
-public class JingleContentDescriptionFileTransfer extends JingleContentDescription {
+public class JingleFileTransferContentDescription extends JingleContentDescription {
 
-    public JingleContentDescriptionFileTransfer(List<JingleContentDescriptionChildElement> payloadTypes) {
+    public JingleFileTransferContentDescription(List<JingleContentDescriptionChildElement> payloadTypes) {
         super(payloadTypes);
     }
 

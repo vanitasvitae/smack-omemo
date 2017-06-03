@@ -26,7 +26,7 @@ import java.util.Date;
 /**
  * Content of type File.
  */
-public class JingleFileTransferPayloadElement extends JingleContentDescriptionChildElement {
+public class JingleFileTransferChildElement extends JingleContentDescriptionChildElement {
     public static final String ELEMENT = "file";
     public static final String ELEM_DATE = "date";
     public static final String ELEM_DESC = "desc";
@@ -42,7 +42,7 @@ public class JingleFileTransferPayloadElement extends JingleContentDescriptionCh
     private final int size;
     private final Range range;
 
-    public JingleFileTransferPayloadElement(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
+    public JingleFileTransferChildElement(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
         this.date = date;
         this.desc = desc;
         this.hash = hash;
@@ -154,8 +154,8 @@ public class JingleFileTransferPayloadElement extends JingleContentDescriptionCh
             return this;
         }
 
-        public JingleFileTransferPayloadElement build() {
-            return new JingleFileTransferPayloadElement(date, desc, hash, mediaType, name, size, range);
+        public JingleFileTransferChildElement build() {
+            return new JingleFileTransferChildElement(date, desc, hash, mediaType, name, size, range);
         }
 
         public Builder setFile(File file) {
