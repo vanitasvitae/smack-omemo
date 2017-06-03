@@ -16,14 +16,14 @@
  */
 package org.jivesoftware.smackx.jingle.element;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smack.util.XmlStringBuilder;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Jingle content element.
@@ -140,7 +140,7 @@ public final class JingleContent implements NamedElement {
 
     @Override
     public XmlStringBuilder toXML() {
-        XmlStringBuilder xml = new XmlStringBuilder();
+        XmlStringBuilder xml = new XmlStringBuilder(this);
         xml.attribute(CREATOR_ATTRIBUTE_NAME, creator);
         xml.optAttribute(DISPOSITION_ATTRIBUTE_NAME, disposition);
         xml.attribute(NAME_ATTRIBUTE_NAME, name);

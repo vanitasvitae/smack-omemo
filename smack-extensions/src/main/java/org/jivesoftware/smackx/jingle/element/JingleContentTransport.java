@@ -16,11 +16,11 @@
  */
 package org.jivesoftware.smackx.jingle.element;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A jingle transport extension.
@@ -58,11 +58,17 @@ public abstract class JingleContentTransport implements ExtensionElement {
     public final XmlStringBuilder toXML() {
         XmlStringBuilder xml = new XmlStringBuilder(this);
         addExtraAttributes(xml);
-        xml.rightAngleBracket();
 
-        xml.append(candidates);
+        if (candidates.isEmpty()) {
+            xml.closeEmptyElement();
 
-        xml.closeElement(this);
+        } else {
+
+            xml.rightAngleBracket();
+            xml.append(candidates);
+            xml.closeElement(this);
+        }
+
         return xml;
     }
 
