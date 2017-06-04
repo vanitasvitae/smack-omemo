@@ -16,13 +16,14 @@
  */
 package org.jivesoftware.smackx.jingle_ibb;
 
+import java.util.WeakHashMap;
+
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_ibb.provider.JingleInBandByteStreamTransportProvider;
-
-import java.util.WeakHashMap;
 
 /**
  * Manager for Jingle In-Band-ByteStreams.
@@ -36,6 +37,7 @@ public final class JingleInBandByteStreamManager extends Manager {
     private JingleInBandByteStreamManager(XMPPConnection connection) {
         super(connection);
         JingleContentProviderManager.addJingleContentTransportProvider(NAMESPACE_V1, new JingleInBandByteStreamTransportProvider());
+        ServiceDiscoveryManager.getInstanceFor(connection).addFeature(NAMESPACE_V1);
     }
 
     public static JingleInBandByteStreamManager getInstanceFor(XMPPConnection connection) {

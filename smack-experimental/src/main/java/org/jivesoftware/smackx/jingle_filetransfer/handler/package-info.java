@@ -14,18 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.callback;
-
-import java.io.File;
-
-import org.jivesoftware.smack.SmackException;
 
 /**
- * Callback that allows the user to accept or cancel file transfers.
+ * Smack's API for <a href="https://xmpp.org/extensions/xep-0234.html">XEP-0234: Jingle File Transfer</a>.
  */
-public interface IncomingJingleFileTransferCallback {
-
-    void acceptFileTransfer(File target) throws SmackException.NotConnectedException, InterruptedException;
-
-    void cancelFileTransfer() throws SmackException.NotConnectedException, InterruptedException;
-}
+package org.jivesoftware.smackx.jingle_filetransfer.handler;

@@ -19,6 +19,7 @@ package org.jivesoftware.smackx.jingle;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
@@ -31,6 +32,7 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
+import org.jivesoftware.smackx.jingle_ibb.JingleInBandByteStreamManager;
 import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
 
@@ -60,6 +62,7 @@ public final class JingleManager extends Manager {
                         new AbstractIqRequestHandler(Jingle.ELEMENT, Jingle.NAMESPACE, Type.set, Mode.async) {
                             @Override
                             public IQ handleIQRequest(IQ iqRequest) {
+                                LOGGER.log(Level.INFO, "handleIQRequest");
                                 final Jingle jingle = (Jingle) iqRequest;
 
                                 if (jingle.getAction() != JingleAction.session_initiate) {
@@ -92,6 +95,7 @@ public final class JingleManager extends Manager {
                                 return jingleDescriptionHandler.handleJingleRequest(jingle);
                             }
                         });
+        JingleInBandByteStreamManager.getInstanceFor(connection);
     }
 
     public JingleHandler registerDescriptionHandler(String namespace, JingleHandler handler) {

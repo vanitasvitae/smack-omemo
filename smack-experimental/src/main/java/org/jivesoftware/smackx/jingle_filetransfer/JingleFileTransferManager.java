@@ -17,7 +17,9 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -32,7 +34,9 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamListener;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
+import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.hash.HashManager;
@@ -46,6 +50,7 @@ import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleError;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingJingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
@@ -80,10 +85,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         super(connection);
         ServiceDiscoveryManager sdm = ServiceDiscoveryManager.getInstanceFor(connection);
         sdm.addFeature(NAMESPACE_V5);
-
         JingleManager.getInstanceFor(connection).registerDescriptionHandler(
                 NAMESPACE_V5, this);
-
         JingleContentProviderManager.addJingleContentDescriptionProvider(
                 NAMESPACE_V5, new JingleFileTransferContentDescriptionProvider());
 
@@ -121,20 +124,60 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
     }
 
     @Override
-    public IQ handleJingleRequest(Jingle jingle) {
-        JingleSession session = new JingleSession(jingle.getInitiator(), jingle.getResponder(), jingle.getSid());
+    public IQ handleJingleRequest(final Jingle jingle) {
+        LOGGER.log(Level.INFO, "handleJingleRequest");
+        final JingleSession session = new JingleSession(jingle.getInitiator(), jingle.getResponder(), jingle.getSid());
         sessions.put(jingle.getSid(), session);
+        JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(jingle.getInitiator(), session.getSid(), this);
 
         for (IncomingJingleFileTransferListener l : incomingJingleFileTransferListeners) {
             l.onIncomingJingleFileTransfer(jingle, new IncomingJingleFileTransferCallback() {
                 @Override
-                public void acceptFileTransfer(File target) {
+                public void acceptFileTransfer(final File target) throws SmackException.NotConnectedException, InterruptedException {
 
+                    InBandBytestreamManager.getByteStreamManager(connection()).addIncomingBytestreamListener(new InBandBytestreamListener() {
+                        @Override
+                        public void incomingBytestreamRequest(InBandBytestreamRequest request) {
+                            try {
+                                if (!target.exists()) {
+                                    target.createNewFile();
+                                }
+                                int s = ((JingleFileTransferChildElement)jingle.getContents().get(0).getDescription().getJinglePayloadTypes().get(0))
+                                        .getSize();
+                                byte[] recv = new byte[s];
+                                FileOutputStream o = new FileOutputStream(target);
+                                InputStream i = request.accept().getInputStream();
+                                i.read(recv);
+                                i.close();
+                                o.write(recv);
+                                o.close();
+                            } catch (IOException | SmackException.NotConnectedException | InterruptedException e) {
+                                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                            }
+                        }
+                    });
+
+                    Jingle.Builder jb = Jingle.getBuilder();
+                    jb.setAction(JingleAction.session_accept)
+                            .setSessionId(jingle.getSid())
+                            .setInitiator(jingle.getInitiator())
+                            .setResponder(jingle.getResponder())
+                            .addJingleContent(jingle.getContents().get(0));
+                    Jingle j = jb.build();
+                    j.setTo(jingle.getFrom());
+                    j.setType(IQ.Type.set);
+                    connection().sendStanza(j);
                 }
 
                 @Override
-                public void cancelFileTransfer() {
-
+                public void cancelFileTransfer() throws SmackException.NotConnectedException, InterruptedException {
+                    Jingle.Builder jb = Jingle.getBuilder();
+                    jb.setInitiator(jingle.getInitiator())
+                            .setResponder(jingle.getResponder())
+                            .setSessionId(jingle.getSid())
+                            .setAction(JingleAction.session_terminate)
+                            .setReason(JingleReason.Reason.decline);
+                    connection().sendStanza(jb.build());
                 }
             });
         }
@@ -144,6 +187,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
 
     @Override
     public IQ handleJingleSessionRequest(Jingle jingle, String sessionId) {
+        LOGGER.log(Level.INFO, "handleJingleSessionRequest");
         JingleSession session = sessions.get(sessionId);
 
         if (session == null) {
@@ -155,13 +199,35 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         }
 
         for (int i = 0; i < jingle.getContents().size() && i < 1; i++) { //TODO: Remove && i<1 later
-            JingleContent content = jingle.getContents().get(i);
             switch (jingle.getAction()) {
                 case session_initiate:
                     throw new AssertionError("Session is already initiated.");
                 case session_accept:
+                    try {
+                        connection().sendStanza(IQ.createResultIQ(jingle));
+                    } catch (SmackException.NotConnectedException | InterruptedException e) {
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    }
+                    LOGGER.log(Level.INFO, "Received session-accept");
                     // Remote accepts our session-initiate
-                    session.setState(JingleSession.State.active);
+                    InBandBytestreamSession ibs;
+                    try {
+                        ibs = InBandBytestreamManager.getByteStreamManager(connection())
+                                .establishSession(jingle.getResponder(), sessionId);
+                    } catch (SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+                        LOGGER.log(Level.SEVERE, "Fail in handle request: " + e, e);
+                        return null;
+                    }
+
+                    try {
+                        LOGGER.log(Level.INFO, "Writing bytes...");
+                        OutgoingJingleFileTransferSession outgoing = (OutgoingJingleFileTransferSession) session;
+                        ibs.getOutputStream().write(outgoing.getBytes());
+                        ibs.close();
+                        LOGGER.log(Level.INFO, "Bytes written.");
+                    } catch (IOException e) {
+                        LOGGER.log(Level.SEVERE, "Fail while writing: " + e, e);
+                    }
                     // ACK
                     return IQ.createResultIQ(jingle);
                 case session_info:
@@ -233,32 +299,13 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                 .addJingleContent(content)
                 .setSessionId(sid);
         Jingle jingle = jb.build();
+        jingle.setTo(recipient);
+        jingle.setType(IQ.Type.set);
 
-        JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(recipient, sid, new JingleSessionHandler() {
-            @Override
-            public IQ handleJingleSessionRequest(Jingle jingle, String sessionId) {
-                if (sessionId.equals(sid)) {
-                    if (jingle.getAction() == JingleAction.session_accept) {
-
-                        InBandBytestreamSession session;
-                        try {
-                            session = InBandBytestreamManager.getByteStreamManager(connection())
-                                    .establishSession(recipient, sid);
-                        } catch (SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
-                            LOGGER.log(Level.SEVERE, "Fail in handle request: " + e, e);
-                            return null;
-                        }
-
-                        try {
-                            session.getOutputStream().write(bytes);
-                        } catch (IOException e) {
-                            LOGGER.log(Level.SEVERE, "Fail while writing: " + e, e);
-                        }
-                    }
-                }
-                return null;
-            }
-        });
+        OutgoingJingleFileTransferSession session = new OutgoingJingleFileTransferSession(jingle);
+        session.setBytes(bytes);
+        sessions.put(sid, session);
+        JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(jingle.getResponder(), session.getSid(), this);
 
         connection().sendStanza(jingle);
     }
