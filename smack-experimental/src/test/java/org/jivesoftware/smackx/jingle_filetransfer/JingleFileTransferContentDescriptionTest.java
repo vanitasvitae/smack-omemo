@@ -78,7 +78,7 @@ public class JingleFileTransferContentDescriptionTest extends SmackTestSuite {
                 .parse(TestUtils.getParser(xml));
         assertEquals(xml, parsed.toXML().toString());
 
-        JingleFileTransferChildElement payload = (JingleFileTransferChildElement) parsed.getJinglePayloadTypes().get(0);
+        JingleFileTransferChildElement payload = (JingleFileTransferChildElement) parsed.getJingleContentDescriptionChildren().get(0);
         assertEquals(date, payload.getDate());
         assertEquals(descriptionString, payload.getDescription());
         assertEquals(mediaTypeString, payload.getMediaType());
@@ -88,7 +88,7 @@ public class JingleFileTransferContentDescriptionTest extends SmackTestSuite {
         assertEquals(hashElement, payload.getHash());
 
         JingleFileTransferContentDescription descriptionFileTransfer1 = new JingleFileTransferContentDescription(null);
-        assertNotNull(descriptionFileTransfer1.getJinglePayloadTypes());
+        assertNotNull(descriptionFileTransfer1.getJingleContentDescriptionChildren());
     }
 
     @Test

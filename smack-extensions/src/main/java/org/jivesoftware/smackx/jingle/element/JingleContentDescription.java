@@ -46,7 +46,7 @@ public abstract class JingleContentDescription implements ExtensionElement {
         return ELEMENT;
     }
 
-    public List<JingleContentDescriptionChildElement> getJinglePayloadTypes() {
+    public List<JingleContentDescriptionChildElement> getJingleContentDescriptionChildren() {
         return payloads;
     }
 

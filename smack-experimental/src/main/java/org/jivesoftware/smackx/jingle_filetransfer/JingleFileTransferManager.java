@@ -142,12 +142,26 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                                 if (!target.exists()) {
                                     target.createNewFile();
                                 }
-                                int s = ((JingleFileTransferChildElement)jingle.getContents().get(0).getDescription().getJinglePayloadTypes().get(0))
-                                        .getSize();
+                                JingleFileTransferChildElement payload = (JingleFileTransferChildElement) jingle.getContents().get(0).getDescription().getJingleContentDescriptionChildren().get(0);
+                                JingleInBandByteStreamTransport transport = (JingleInBandByteStreamTransport) jingle.getContents().get(0).getJingleTransports().get(0);
+                                int s = payload.getSize();
+                                int bs = transport.getBlockSize();
                                 byte[] recv = new byte[s];
+
                                 FileOutputStream o = new FileOutputStream(target);
-                                InputStream i = request.accept().getInputStream();
-                                i.read(recv);
+                                InBandBytestreamSession ibs = request.accept();
+                                InputStream i = ibs.getInputStream();
+                                int read = 0;
+                                int count = 0;
+                                while (read > -1 && read < s) {
+                                    byte[] buf = new byte[bs];
+                                    int r = i.read(buf);
+                                    read += r;
+
+                                    LOGGER.log(Level.INFO, "Read " + r + " (" + read + ") bytes of " + s + " (" + count + " of size " + bs + ")");
+                                    System.arraycopy(buf, 0, recv,bs * count, r);
+                                    count++;
+                                }
                                 i.close();
                                 o.write(recv);
                                 o.close();
@@ -210,10 +224,11 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                     }
                     LOGGER.log(Level.INFO, "Received session-accept");
                     // Remote accepts our session-initiate
+                    InBandBytestreamManager ibm = InBandBytestreamManager.getByteStreamManager(connection());
+                    ibm.setMaximumBlockSize(4096);
                     InBandBytestreamSession ibs;
                     try {
-                        ibs = InBandBytestreamManager.getByteStreamManager(connection())
-                                .establishSession(jingle.getResponder(), sessionId);
+                        ibs = ibm.establishSession(jingle.getResponder(), sessionId);
                     } catch (SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
                         LOGGER.log(Level.SEVERE, "Fail in handle request: " + e, e);
                         return null;
