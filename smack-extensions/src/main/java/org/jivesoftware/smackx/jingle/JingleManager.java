@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.iqrequest.IQRequestHandler.Mode;
 import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
+import org.jivesoftware.smack.iqrequest.IQRequestHandler.Mode;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -102,7 +102,7 @@ public final class JingleManager extends Manager {
         return jingleSessionHandlers.put(fullJidAndSessionId, sessionHandler);
     }
 
-    public JingleSessionHandler unregisterJingleSessionhandler(FullJid otherJid, String sessionId, JingleSessionHandler sessionHandler) {
+    public JingleSessionHandler unregisterJingleSessionHandler(FullJid otherJid, String sessionId, JingleSessionHandler sessionHandler) {
         FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(otherJid, sessionId);
         return jingleSessionHandlers.remove(fullJidAndSessionId);
     }
