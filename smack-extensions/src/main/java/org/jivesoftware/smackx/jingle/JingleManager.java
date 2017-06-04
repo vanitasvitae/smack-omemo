@@ -72,7 +72,7 @@ public final class JingleManager extends Manager {
                                         // TODO handle non existing jingle session handler.
                                         return null;
                                     }
-                                    return jingleSessionHandler.handleRequest(jingle, sid);
+                                    return jingleSessionHandler.handleJingleSessionRequest(jingle, sid);
                                 }
 
                                 if (jingle.getContents().size() > 1) {
@@ -88,7 +88,7 @@ public final class JingleManager extends Manager {
                                     // TODO handle non existing content description handler.
                                     return null;
                                 }
-                                return jingleDescriptionHandler.handleRequest(jingle);
+                                return jingleDescriptionHandler.handleJingleRequest(jingle);
                             }
                         });
     }
