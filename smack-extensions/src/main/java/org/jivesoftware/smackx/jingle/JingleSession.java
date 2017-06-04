@@ -16,16 +16,28 @@
  */
 package org.jivesoftware.smackx.jingle;
 
+import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jxmpp.jid.Jid;
 
 // TODO: Is this class still required? If not, then remove it.
 public class JingleSession {
+
+    public enum State {
+        pending,
+        active,
+        ;
+    }
 
     private final Jid initiator;
 
     private final Jid responder;
 
     private final String sid;
+
+    private State state = State.pending;
 
     public JingleSession(Jid initiator, Jid responder, String sid) {
         this.initiator = initiator;
@@ -53,6 +65,14 @@ public class JingleSession {
         return responder;
     }
 
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    public State getState() {
+        return state;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof JingleSession)) {
@@ -62,5 +82,14 @@ public class JingleSession {
         JingleSession otherJingleSession = (JingleSession) other;
         return initiator.equals(otherJingleSession.initiator) && responder.equals(otherJingleSession.responder)
                         && sid.equals(otherJingleSession.sid);
+    }
+
+    IQ terminateSuccessfully() {
+        Jingle.Builder builder = Jingle.getBuilder();
+        builder.setAction(JingleAction.session_terminate);
+        builder.setSessionId(getSid());
+        builder.setReason(JingleReason.Reason.success);
+
+        return builder.build();
     }
 }

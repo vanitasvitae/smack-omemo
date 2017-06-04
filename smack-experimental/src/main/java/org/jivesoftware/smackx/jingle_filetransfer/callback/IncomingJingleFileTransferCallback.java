@@ -16,8 +16,6 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.callback;
 
-import org.jivesoftware.smack.SmackException;
-
 import java.io.File;
 
 /**
@@ -25,7 +23,7 @@ import java.io.File;
  */
 public interface IncomingJingleFileTransferCallback {
 
-    void acceptFileTransfer(File target) throws SmackException.NotConnectedException, InterruptedException;
+    void acceptFileTransfer(File target);
 
     void cancelFileTransfer();
 }

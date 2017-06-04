@@ -16,6 +16,11 @@
  */
 package org.jivesoftware.smackx.jingle;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
@@ -23,15 +28,11 @@ import org.jivesoftware.smack.iqrequest.IQRequestHandler.Mode;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
-
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
 public final class JingleManager extends Manager {
 
@@ -61,7 +62,7 @@ public final class JingleManager extends Manager {
                             public IQ handleIQRequest(IQ iqRequest) {
                                 final Jingle jingle = (Jingle) iqRequest;
 
-                                if (jingle.getContents().isEmpty()) {
+                                if (jingle.getAction() != JingleAction.session_initiate) {
                                     Jid from = jingle.getFrom();
                                     assert (from != null);
                                     FullJid fullFrom = from.asFullJidOrThrow();
