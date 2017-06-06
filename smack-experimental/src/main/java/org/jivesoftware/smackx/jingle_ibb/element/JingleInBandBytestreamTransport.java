@@ -18,12 +18,12 @@ package org.jivesoftware.smackx.jingle_ibb.element;
 
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
-import org.jivesoftware.smackx.jingle_ibb.JingleInBandByteStreamManager;
+import org.jivesoftware.smackx.jingle_ibb.JingleInBandBytestreamTransportManager;
 
 /**
  * Jingle In-Band-ByteStream transport.
  */
-public class JingleInBandByteStreamTransport extends JingleContentTransport {
+public class JingleInBandBytestreamTransport extends JingleContentTransport {
 
     public static final String ATTR_BLOCK_SIZE = "block-size";
     public static final String ATTR_SID = "sid";
@@ -32,15 +32,15 @@ public class JingleInBandByteStreamTransport extends JingleContentTransport {
     private final short blockSize;
     private final String sid;
 
-    public JingleInBandByteStreamTransport() {
+    public JingleInBandBytestreamTransport() {
         this(DEFAULT_BLOCK_SIZE);
     }
 
-    public JingleInBandByteStreamTransport(short blockSize) {
-        this(blockSize, JingleInBandByteStreamManager.generateSessionId());
+    public JingleInBandBytestreamTransport(short blockSize) {
+        this(blockSize, JingleInBandBytestreamTransportManager.generateSessionId());
     }
 
-    public JingleInBandByteStreamTransport(short blockSize, String sid) {
+    public JingleInBandBytestreamTransport(short blockSize, String sid) {
         super(null);
         if (blockSize > 0) {
             this.blockSize = blockSize;
@@ -66,12 +66,12 @@ public class JingleInBandByteStreamTransport extends JingleContentTransport {
 
     @Override
     public String getNamespace() {
-        return JingleInBandByteStreamManager.NAMESPACE_V1;
+        return JingleInBandBytestreamTransportManager.NAMESPACE_V1;
     }
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof JingleInBandByteStreamTransport)) {
+        if (other == null || !(other instanceof JingleInBandBytestreamTransport)) {
             return false;
         }
 

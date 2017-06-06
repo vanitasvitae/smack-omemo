@@ -14,27 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer;
+package org.jivesoftware.smackx.jingle;
 
-import org.jivesoftware.smackx.jingle.JingleSession;
-import org.jivesoftware.smackx.jingle.element.Jingle;
+import java.io.InputStream;
 
 /**
- * Created by vanitas on 04.06.17.
+ * Created by vanitas on 06.06.17.
  */
-public class OutgoingJingleFileTransferSession extends JingleSession {
+public class JingleInputStream {
+    private final InputStream inputStream;
+    private final int blockSize;
 
-    private byte[] bytes;
-
-    public OutgoingJingleFileTransferSession(Jingle jingle) {
-        super(jingle.getInitiator(), jingle.getResponder(), jingle.getSid());
+    public JingleInputStream(InputStream inputStream, int blockSize) {
+        this.inputStream = inputStream;
+        this.blockSize = blockSize;
     }
 
-    public void setBytes(byte[] bytes) {
-        this.bytes = bytes;
+    public InputStream getInputStream() {
+        return inputStream;
     }
 
-    public byte[] getBytes() {
-        return bytes;
+    public int getBlockSize() {
+        return blockSize;
     }
 }

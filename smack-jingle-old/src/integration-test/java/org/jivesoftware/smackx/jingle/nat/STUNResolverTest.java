@@ -21,7 +21,6 @@ import de.javawi.jstun.util.UtilityException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.test.SmackTestCase;
 import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.JingleSessionRequest;
 import org.jivesoftware.smackx.jingle.listeners.JingleSessionListener;
 import org.jivesoftware.smackx.jingle.listeners.JingleSessionRequestListener;

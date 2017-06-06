@@ -20,7 +20,6 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.TCPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.JingleSessionRequest;
 import org.jivesoftware.smackx.jingle.listeners.JingleSessionRequestListener;
 import org.jivesoftware.smackx.jingle.media.JingleMediaManager;

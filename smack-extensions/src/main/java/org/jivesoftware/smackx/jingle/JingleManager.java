@@ -16,10 +16,11 @@
  */
 package org.jivesoftware.smackx.jingle;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
@@ -28,11 +29,13 @@ import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
 import org.jivesoftware.smack.iqrequest.IQRequestHandler.Mode;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
+import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
-import org.jivesoftware.smackx.jingle_ibb.JingleInBandByteStreamManager;
+import org.jivesoftware.smackx.jingle.element.JingleError;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
 
@@ -52,64 +55,73 @@ public final class JingleManager extends Manager {
     }
 
     private final Map<String, JingleHandler> descriptionHandlers = new ConcurrentHashMap<>();
+    private final Map<FullJidAndSessionId, JingleSession> jingleSessions = new ConcurrentHashMap<>();
+    private final Map<String, JingleContentTransportManager> transportManagers = new HashMap<>();
 
-    private final Map<FullJidAndSessionId, JingleSessionHandler> jingleSessionHandlers = new ConcurrentHashMap<>();
-
-    private JingleManager(XMPPConnection connection) {
+    private JingleManager(final XMPPConnection connection) {
         super(connection);
 
         connection.registerIQRequestHandler(
-                        new AbstractIqRequestHandler(Jingle.ELEMENT, Jingle.NAMESPACE, Type.set, Mode.async) {
-                            @Override
-                            public IQ handleIQRequest(IQ iqRequest) {
-                                LOGGER.log(Level.INFO, "handleIQRequest");
-                                final Jingle jingle = (Jingle) iqRequest;
+                new AbstractIqRequestHandler(Jingle.ELEMENT, Jingle.NAMESPACE, Type.set, Mode.async) {
+                    @Override
+                    public IQ handleIQRequest(IQ iqRequest) {
+                        final Jingle jingle = (Jingle) iqRequest;
 
-                                if (jingle.getAction() != JingleAction.session_initiate) {
-                                    Jid from = jingle.getFrom();
-                                    assert (from != null);
-                                    FullJid fullFrom = from.asFullJidOrThrow();
-                                    String sid = jingle.getSid();
-                                    FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(fullFrom, sid);
-                                    JingleSessionHandler jingleSessionHandler = jingleSessionHandlers.get(fullJidAndSessionId);
-                                    if (jingleSessionHandler == null) {
-                                        // TODO handle non existing jingle session handler.
-                                        return null;
-                                    }
-                                    return jingleSessionHandler.handleJingleSessionRequest(jingle, sid);
-                                }
+                        if (jingle.getAction() != JingleAction.session_initiate) {
 
-                                if (jingle.getContents().size() > 1) {
-                                    LOGGER.severe("Jingle IQs with more then one content element are currently not supported by Smack");
-                                    return null;
-                                }
+                            Jid from = jingle.getFrom();
+                            assert (from != null);
+                            FullJid fullFrom = from.asFullJidOrThrow();
+                            FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(fullFrom, jingle.getSid());
+                            JingleSession jingleSession = jingleSessions.get(fullJidAndSessionId);
 
-                                JingleContent content = jingle.getContents().get(0);
-                                JingleContentDescription description = content.getDescription();
-                                JingleHandler jingleDescriptionHandler = descriptionHandlers.get(
-                                                description.getNamespace());
-                                if (jingleDescriptionHandler == null) {
-                                    // TODO handle non existing content description handler.
-                                    return null;
-                                }
-                                return jingleDescriptionHandler.handleJingleRequest(jingle);
+                            if (jingleSession == null) {
+                                // Handle unknown session (XEP-0166 §10)
+                                XMPPError.Builder errorBuilder = XMPPError.getBuilder();
+                                errorBuilder.setCondition(XMPPError.Condition.item_not_found)
+                                        .addExtension(JingleError.UNKNOWN_SESSION);
+                                return IQ.createErrorResponse(jingle, errorBuilder);
                             }
-                        });
-        JingleInBandByteStreamManager.getInstanceFor(connection);
+                            return jingleSession.handleRequest(jingle);
+                        }
+
+                        if (jingle.getContents().size() > 1) {
+                            LOGGER.severe("Jingle IQs with more then one content element are currently not supported by Smack");
+                            return null;
+                        }
+
+                        JingleContent content = jingle.getContents().get(0);
+                        JingleContentDescription description = content.getDescription();
+                        JingleHandler jingleDescriptionHandler = descriptionHandlers.get(
+                                description.getNamespace());
+                        if (jingleDescriptionHandler == null) {
+                            //Unsupported Application
+                            Jingle.Builder builder = Jingle.getBuilder();
+                            builder.setAction(JingleAction.session_terminate)
+                                    .setSessionId(jingle.getSid())
+                                    .setReason(JingleReason.Reason.unsupported_applications);
+                            Jingle response = builder.build();
+                            response.setTo(jingle.getFrom());
+                            response.setFrom(connection.getUser());
+                            return response;
+                        }
+
+                        return jingleDescriptionHandler.handleJingleRequest(jingle);
+                    }
+                });
+    }
+
+    public void registerJingleSession(JingleSession session) {
+        FullJidAndSessionId jidAndSid = new FullJidAndSessionId(session.getRemote(), session.getSid());
+        jingleSessions.put(jidAndSid, session);
+    }
+
+    public void unregisterJingleSession(JingleSession session) {
+        jingleSessions.values().removeAll(Collections.singleton(session));
     }
 
     public JingleHandler registerDescriptionHandler(String namespace, JingleHandler handler) {
         return descriptionHandlers.put(namespace, handler);
-    }
-
-    public JingleSessionHandler registerJingleSessionHandler(FullJid otherJid, String sessionId, JingleSessionHandler sessionHandler) {
-        FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(otherJid, sessionId);
-        return jingleSessionHandlers.put(fullJidAndSessionId, sessionHandler);
-    }
-
-    public JingleSessionHandler unregisterJingleSessionHandler(FullJid otherJid, String sessionId, JingleSessionHandler sessionHandler) {
-        FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(otherJid, sessionId);
-        return jingleSessionHandlers.remove(fullJidAndSessionId);
     }
 
     private static final class FullJidAndSessionId {
@@ -135,7 +147,7 @@ public final class JingleManager extends Manager {
             }
             FullJidAndSessionId otherFullJidAndSessionId = (FullJidAndSessionId) other;
             return fullJid.equals(otherFullJidAndSessionId.fullJid)
-                            && sessionId.equals(otherFullJidAndSessionId.sessionId);
+                    && sessionId.equals(otherFullJidAndSessionId.sessionId);
         }
     }
 }

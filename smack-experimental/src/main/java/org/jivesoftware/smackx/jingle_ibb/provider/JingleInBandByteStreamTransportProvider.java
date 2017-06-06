@@ -17,23 +17,23 @@
 package org.jivesoftware.smackx.jingle_ibb.provider;
 
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
-import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandByteStreamTransport;
+import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandBytestreamTransport;
 import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Parse JingleByteStreamTransport elements.
  */
-public class JingleInBandByteStreamTransportProvider extends JingleContentTransportProvider<JingleInBandByteStreamTransport> {
+public class JingleInBandByteStreamTransportProvider extends JingleContentTransportProvider<JingleInBandBytestreamTransport> {
     @Override
-    public JingleInBandByteStreamTransport parse(XmlPullParser parser, int initialDepth) throws Exception {
-        String blockSizeString = parser.getAttributeValue(null, JingleInBandByteStreamTransport.ATTR_BLOCK_SIZE);
-        String sid = parser.getAttributeValue(null, JingleInBandByteStreamTransport.ATTR_SID);
+    public JingleInBandBytestreamTransport parse(XmlPullParser parser, int initialDepth) throws Exception {
+        String blockSizeString = parser.getAttributeValue(null, JingleInBandBytestreamTransport.ATTR_BLOCK_SIZE);
+        String sid = parser.getAttributeValue(null, JingleInBandBytestreamTransport.ATTR_SID);
 
         short blockSize = -1;
         if (blockSizeString != null) {
             blockSize = Short.valueOf(blockSizeString);
         }
 
-        return new JingleInBandByteStreamTransport(blockSize, sid);
+        return new JingleInBandBytestreamTransport(blockSize, sid);
     }
 }
