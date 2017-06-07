@@ -1,5 +1,6 @@
 package org.jivesoftware.smackx.jingle_s5b;
 
+import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
@@ -7,6 +8,7 @@ import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransport;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransportCandidate;
+import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransportInfo;
 import org.jivesoftware.smackx.jingle_s5b.provider.JingleSocks5BytestreamTransportProvider;
 import org.junit.Test;
 import org.jxmpp.jid.impl.JidCreate;
@@ -17,7 +19,7 @@ import org.jxmpp.jid.impl.JidCreate;
 public class JingleSocks5BytestreamTransportTest extends SmackTestSuite {
 
     @Test
-    public void providerTest() throws Exception {
+    public void candidatesProviderTest() throws Exception {
         String xml =
                 "<transport " +
                         "xmlns='urn:xmpp:jingle:transports:s5b:1' " +
@@ -84,5 +86,62 @@ public class JingleSocks5BytestreamTransportTest extends SmackTestSuite {
         assertEquals(JingleSocks5BytestreamTransportCandidate.Type.proxy, candidate3.getType());
 
         assertEquals(xml, transport.toXML().toString());
+    }
+
+    @Test
+    public void infoProviderTest() throws Exception {
+        String candidateError =
+                "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='vj3hs98y'>" +
+                    "<candidate-error/>" +
+                "</transport>";
+        JingleSocks5BytestreamTransport candidateErrorTransport = new JingleSocks5BytestreamTransportProvider()
+                .parse(TestUtils.getParser(candidateError));
+        assertNull(candidateErrorTransport.getDestinationAddress());
+        assertEquals(1, candidateErrorTransport.getInfos().size());
+        assertEquals("vj3hs98y", candidateErrorTransport.getStreamId());
+        assertEquals(JingleSocks5BytestreamTransportInfo.CandidateError(),
+                candidateErrorTransport.getInfos().get(0));
+        assertEquals(candidateError, candidateErrorTransport.toXML().toString());
+
+        String proxyError =
+                "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='vj3hs98y'>" +
+                        "<proxy-error/>" +
+                        "</transport>";
+        JingleSocks5BytestreamTransport proxyErrorTransport = new JingleSocks5BytestreamTransportProvider()
+                .parse(TestUtils.getParser(proxyError));
+        assertNull(proxyErrorTransport.getDestinationAddress());
+        assertEquals(1, proxyErrorTransport.getInfos().size());
+        assertEquals("vj3hs98y", proxyErrorTransport.getStreamId());
+        assertEquals(JingleSocks5BytestreamTransportInfo.ProxyError(),
+                proxyErrorTransport.getInfos().get(0));
+        assertEquals(proxyError, proxyErrorTransport.toXML().toString());
+
+        String candidateUsed =
+                "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='vj3hs98y'>" +
+                        "<candidate-used cid='hr65dqyd'/>" +
+                        "</transport>";
+        JingleSocks5BytestreamTransport candidateUsedTransport = new JingleSocks5BytestreamTransportProvider()
+                .parse(TestUtils.getParser(candidateUsed));
+        assertEquals(1, candidateUsedTransport.getInfos().size());
+        assertEquals(JingleSocks5BytestreamTransportInfo.CandidateUsed("hr65dqyd"),
+                candidateUsedTransport.getInfos().get(0));
+        assertEquals("hr65dqyd",
+                ((JingleSocks5BytestreamTransportInfo.CandidateUsed)
+                        candidateUsedTransport.getInfos().get(0)).getCandidateId());
+        assertEquals(candidateUsed, candidateUsedTransport.toXML().toString());
+
+        String candidateActivated =
+                "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='vj3hs98y'>" +
+                        "<candidate-activated cid='hr65dqyd'/>" +
+                        "</transport>";
+        JingleSocks5BytestreamTransport candidateActivatedTransport = new JingleSocks5BytestreamTransportProvider()
+                .parse(TestUtils.getParser(candidateActivated));
+        assertEquals(1, candidateActivatedTransport.getInfos().size());
+        assertEquals(JingleSocks5BytestreamTransportInfo.CandidateActivated("hr65dqyd"),
+                candidateActivatedTransport.getInfos().get(0));
+        assertEquals("hr65dqyd",
+                ((JingleSocks5BytestreamTransportInfo.CandidateActivated)
+                        candidateActivatedTransport.getInfos().get(0)).getCandidateId());
+        assertEquals(candidateActivated, candidateActivatedTransport.toXML().toString());
     }
 }

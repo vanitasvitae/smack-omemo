@@ -18,6 +18,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransport;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransportCandidate;
+import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransportInfo;
 import org.xmlpull.v1.XmlPullParser;
 
 /**
@@ -28,7 +29,6 @@ public class JingleSocks5BytestreamTransportProvider extends JingleContentTransp
     private static final Logger LOGGER = Logger.getLogger(JingleSocks5BytestreamTransportProvider.class.getName());
     @Override
     public JingleSocks5BytestreamTransport parse(XmlPullParser parser, int initialDepth) throws Exception {
-        String namespace = JingleSocks5BytestreamTransport.NAMESPACE_V1;
         JingleSocks5BytestreamTransport.Builder builder = JingleSocks5BytestreamTransport.getBuilder();
 
         String streamId = parser.getAttributeValue(null, JingleSocks5BytestreamTransport.ATTR_SID);
@@ -45,28 +45,57 @@ public class JingleSocks5BytestreamTransportProvider extends JingleContentTransp
             builder.setMode(mode.equals(udp.toString()) ? udp : tcp);
         }
 
-        JingleSocks5BytestreamTransportCandidate.Builder cb = null;
+        JingleSocks5BytestreamTransportCandidate.Builder cb;
         while (true) {
             int tag = parser.nextTag();
             String name = parser.getName();
-            if (tag == START_TAG && name.equals(JingleSocks5BytestreamTransportCandidate.ELEMENT)) {
-                LOGGER.log(Level.SEVERE, "Payload");
-                cb = JingleSocks5BytestreamTransportCandidate.getBuilder();
-                cb.setCandidateId(parser.getAttributeValue(null, ATTR_CID));
-                cb.setHost(parser.getAttributeValue(null, ATTR_HOST));
-                cb.setJid(parser.getAttributeValue(null, ATTR_JID));
-                cb.setPriority(Integer.parseInt(parser.getAttributeValue(null, ATTR_PRIORITY)));
+            if (tag == START_TAG) {
+                switch (name) {
 
-                String portString = parser.getAttributeValue(null, ATTR_PORT);
-                if (portString != null) {
-                    cb.setPort(Integer.parseInt(portString));
-                }
+                    case JingleSocks5BytestreamTransportCandidate.ELEMENT:
+                    LOGGER.log(Level.SEVERE, "Payload");
+                    cb = JingleSocks5BytestreamTransportCandidate.getBuilder();
+                    cb.setCandidateId(parser.getAttributeValue(null, ATTR_CID));
+                    cb.setHost(parser.getAttributeValue(null, ATTR_HOST));
+                    cb.setJid(parser.getAttributeValue(null, ATTR_JID));
+                    cb.setPriority(Integer.parseInt(parser.getAttributeValue(null, ATTR_PRIORITY)));
 
-                String typeString = parser.getAttributeValue(null, ATTR_TYPE);
-                if (typeString != null) {
-                    cb.setType(JingleSocks5BytestreamTransportCandidate.Type.fromString(typeString));
+                    String portString = parser.getAttributeValue(null, ATTR_PORT);
+                    if (portString != null) {
+                        cb.setPort(Integer.parseInt(portString));
+                    }
+
+                    String typeString = parser.getAttributeValue(null, ATTR_TYPE);
+                    if (typeString != null) {
+                        cb.setType(JingleSocks5BytestreamTransportCandidate.Type.fromString(typeString));
+                    }
+                    builder.addTransportCandidate(cb.build());
+                    break;
+
+                    case JingleSocks5BytestreamTransportInfo.CandidateActivated.ELEMENT:
+                        LOGGER.log(Level.INFO, "Candidate-Activated found");
+                        builder.addTransportInfo(JingleSocks5BytestreamTransportInfo.CandidateActivated(
+                                parser.getAttributeValue(null,
+                                        JingleSocks5BytestreamTransportInfo.CandidateActivated.ATTR_CID)));
+                        break;
+
+                    case JingleSocks5BytestreamTransportInfo.CandidateUsed.ELEMENT:
+                        LOGGER.log(Level.INFO, "Candidate-Used found");
+                        builder.addTransportInfo(JingleSocks5BytestreamTransportInfo.CandidateUsed(
+                                parser.getAttributeValue(null,
+                                        JingleSocks5BytestreamTransportInfo.CandidateUsed.ATTR_CID)));
+                        break;
+
+                    case JingleSocks5BytestreamTransportInfo.CandidateError.ELEMENT:
+                        LOGGER.log(Level.INFO, "Candidate-Error found");
+                        builder.addTransportInfo(JingleSocks5BytestreamTransportInfo.CandidateError());
+                        break;
+
+                    case JingleSocks5BytestreamTransportInfo.ProxyError.ELEMENT:
+                        LOGGER.log(Level.INFO, "Proxy-Error found");
+                        builder.addTransportInfo(JingleSocks5BytestreamTransportInfo.ProxyError());
+                        break;
                 }
-                builder.addTransportCandidate(cb.build());
             }
 
             if (tag == END_TAG && name.equals(JingleContentTransport.ELEMENT)) {
