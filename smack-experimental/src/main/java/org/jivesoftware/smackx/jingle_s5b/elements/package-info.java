@@ -14,27 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle;
-
-import java.io.InputStream;
 
 /**
- * Wrapper object that binds together an inputStream with a blockSize.
+ * Smack's API for <a href="https://xmpp.org/extensions/xep-0261.html">XEP-0260: Jingle SOCKS5 Bytestreams</a>.
+ * Element classes.
  */
-public class JingleInputStream {
-    private final InputStream inputStream;
-    private final int blockSize;
-
-    public JingleInputStream(InputStream inputStream, int blockSize) {
-        this.inputStream = inputStream;
-        this.blockSize = blockSize;
-    }
-
-    public InputStream getInputStream() {
-        return inputStream;
-    }
-
-    public int getBlockSize() {
-        return blockSize;
-    }
-}
+package org.jivesoftware.smackx.jingle_s5b.elements;
