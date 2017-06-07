@@ -23,6 +23,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandBytestreamTransport;
 import org.jivesoftware.smackx.jingle_ibb.provider.JingleInBandByteStreamTransportProvider;
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class JingleInBandByteStreamTransportTest extends SmackTestSuite {
 
     @Test
     public void parserTest() throws Exception {
-        String sid = JingleInBandBytestreamTransportManager.generateSessionId();
+        String sid = JingleTransportManager.generateSessionId();
         short size = 8192;
 
         String xml = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='8192' sid='" + sid + "'/>";

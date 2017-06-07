@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2017 Paul Schaub
+ * Copyright 2017 Florian Schmaus
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle;
-
-import java.io.OutputStream;
-
-import org.jivesoftware.smackx.jingle.element.Jingle;
 
 /**
- * Interface with methods that JingleContentTransportManagers must implement.
+ * Stanzas and Extension Elements for <a href="https://xmpp.org/extensions/xep-0166.html">XEP-0166: Jingle</a>.
+ * Exceptions.
  */
-public interface JingleContentTransportManager {
-
-    void acceptInputStream(Jingle jingle, JingleTransportInputStreamCallback callback);
-
-    OutputStream createOutputStream(Jingle jingle);
-}
+package org.jivesoftware.smackx.jingle.exception;

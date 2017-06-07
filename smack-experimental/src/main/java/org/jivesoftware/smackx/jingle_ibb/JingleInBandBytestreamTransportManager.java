@@ -22,30 +22,27 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamListener;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamSession;
-import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.jingle.JingleContentTransportManager;
+import org.jivesoftware.smackx.jingle.AbstractJingleContentTransportManager;
 import org.jivesoftware.smackx.jingle.JingleInputStream;
 import org.jivesoftware.smackx.jingle.JingleTransportInputStreamCallback;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
-import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
+import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandBytestreamTransport;
 import org.jivesoftware.smackx.jingle_ibb.provider.JingleInBandByteStreamTransportProvider;
 
 /**
  * Manager for Jingle In-Band-Bytestreams.
  */
-public final class JingleInBandBytestreamTransportManager extends Manager implements JingleContentTransportManager {
+public final class JingleInBandBytestreamTransportManager extends AbstractJingleContentTransportManager<JingleInBandBytestreamTransport> {
 
     private static final Logger LOGGER = Logger.getLogger(JingleInBandBytestreamTransportManager.class.getName());
     public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:ibb:1";
@@ -54,8 +51,11 @@ public final class JingleInBandBytestreamTransportManager extends Manager implem
 
     private JingleInBandBytestreamTransportManager(XMPPConnection connection) {
         super(connection);
-        JingleContentProviderManager.addJingleContentTransportProvider(NAMESPACE_V1, new JingleInBandByteStreamTransportProvider());
-        ServiceDiscoveryManager.getInstanceFor(connection).addFeature(NAMESPACE_V1);
+    }
+
+    @Override
+    protected JingleContentTransportProvider<JingleInBandBytestreamTransport> createJingleContentTransportProvider() {
+        return new JingleInBandByteStreamTransportProvider();
     }
 
     public static JingleInBandBytestreamTransportManager getInstanceFor(XMPPConnection connection) {
@@ -65,6 +65,11 @@ public final class JingleInBandBytestreamTransportManager extends Manager implem
             INSTANCES.put(connection, manager);
         }
         return manager;
+    }
+
+    @Override
+    public String getNamespace() {
+        return NAMESPACE_V1;
     }
 
     @Override
@@ -116,13 +121,5 @@ public final class JingleInBandBytestreamTransportManager extends Manager implem
         }
 
         return ibs.getOutputStream();
-    }
-
-    /**
-     * Generate a random session id.
-     * @return
-     */
-    public static String generateSessionId() {
-        return StringUtils.randomString(24);
     }
 }

@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.jingle_ibb.element;
 
 import org.jivesoftware.smack.util.XmlStringBuilder;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle_ibb.JingleInBandBytestreamTransportManager;
 
@@ -37,7 +38,7 @@ public class JingleInBandBytestreamTransport extends JingleContentTransport {
     }
 
     public JingleInBandBytestreamTransport(short blockSize) {
-        this(blockSize, JingleInBandBytestreamTransportManager.generateSessionId());
+        this(blockSize, JingleTransportManager.generateSessionId());
     }
 
     public JingleInBandBytestreamTransport(short blockSize, String sid) {

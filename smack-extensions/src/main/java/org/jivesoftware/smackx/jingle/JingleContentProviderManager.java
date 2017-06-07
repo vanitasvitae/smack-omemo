@@ -14,10 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.provider;
+package org.jivesoftware.smackx.jingle;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
+import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 
 public class JingleContentProviderManager {
 

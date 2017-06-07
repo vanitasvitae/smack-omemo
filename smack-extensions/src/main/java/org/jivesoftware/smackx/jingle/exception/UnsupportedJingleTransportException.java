@@ -14,13 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.element;
-
-import org.jivesoftware.smack.packet.NamedElement;
+package org.jivesoftware.smackx.jingle.exception;
 
 /**
- * Abstract JingleContentTransportInfo element.
+ * Exception gets thrown when we miss a JingleContentTransportManager for a certain transport namespace.
  */
-public abstract class JingleContentTransportInfo implements NamedElement {
+public class UnsupportedJingleTransportException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
+    public UnsupportedJingleTransportException(String message) {
+        super(message);
+    }
 }

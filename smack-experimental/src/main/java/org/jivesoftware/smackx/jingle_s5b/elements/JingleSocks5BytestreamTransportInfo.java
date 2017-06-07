@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.jingle_s5b.elements;
 
 import org.jivesoftware.smack.util.XmlStringBuilder;
@@ -33,7 +49,7 @@ public abstract class JingleSocks5BytestreamTransportInfo extends JingleContentT
         return PEI;
     }
 
-    public static class CandidateActivated extends JingleSocks5BytestreamTransportInfo {
+    public static final class CandidateActivated extends JingleSocks5BytestreamTransportInfo {
         public static final String ELEMENT = "candidate-activated";
         public static final String ATTR_CID = "cid";
 
@@ -73,7 +89,7 @@ public abstract class JingleSocks5BytestreamTransportInfo extends JingleContentT
         }
     }
 
-    public static class CandidateUsed extends JingleSocks5BytestreamTransportInfo {
+    public static final class CandidateUsed extends JingleSocks5BytestreamTransportInfo {
         public static final String ELEMENT = "candidate-used";
         public static final String ATTR_CID = "cid";
 
@@ -113,7 +129,7 @@ public abstract class JingleSocks5BytestreamTransportInfo extends JingleContentT
         }
     }
 
-    public static class CandidateError extends JingleSocks5BytestreamTransportInfo {
+    public static final class CandidateError extends JingleSocks5BytestreamTransportInfo {
         public static final String ELEMENT = "candidate-error";
 
         private CandidateError() {
@@ -144,7 +160,7 @@ public abstract class JingleSocks5BytestreamTransportInfo extends JingleContentT
         }
     }
 
-    public static class ProxyError extends JingleSocks5BytestreamTransportInfo {
+    public static final class ProxyError extends JingleSocks5BytestreamTransportInfo {
         public static final String ELEMENT = "proxy-error";
 
         private ProxyError() {

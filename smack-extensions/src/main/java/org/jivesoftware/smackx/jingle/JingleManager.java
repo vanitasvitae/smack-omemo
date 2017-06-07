@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.jingle;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,7 +55,6 @@ public final class JingleManager extends Manager {
 
     private final Map<String, JingleHandler> descriptionHandlers = new ConcurrentHashMap<>();
     private final Map<FullJidAndSessionId, JingleSession> jingleSessions = new ConcurrentHashMap<>();
-    private final Map<String, JingleContentTransportManager> transportManagers = new HashMap<>();
 
     private JingleManager(final XMPPConnection connection) {
         super(connection);
