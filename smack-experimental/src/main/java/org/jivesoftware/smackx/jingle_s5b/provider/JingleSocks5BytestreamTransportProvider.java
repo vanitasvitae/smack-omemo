@@ -28,24 +28,18 @@ public class JingleSocks5BytestreamTransportProvider extends JingleContentTransp
     private static final Logger LOGGER = Logger.getLogger(JingleSocks5BytestreamTransportProvider.class.getName());
     @Override
     public JingleSocks5BytestreamTransport parse(XmlPullParser parser, int initialDepth) throws Exception {
-        parser.next();
         String namespace = JingleSocks5BytestreamTransport.NAMESPACE_V1;
         JingleSocks5BytestreamTransport.Builder builder = JingleSocks5BytestreamTransport.getBuilder();
 
-        int count = parser.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            LOGGER.log(Level.INFO, i + " " + parser.getNamespace() + " " + parser.getAttributeName(i));
-            LOGGER.log(Level.INFO, parser.getAttributeValue(parser.getNamespace(), parser.getAttributeName(i)));
-        }
         String streamId = parser.getAttributeValue(null, JingleSocks5BytestreamTransport.ATTR_SID);
         LOGGER.log(Level.INFO, "streamId: " + streamId);
         builder.setStreamId(streamId);
 
-        String dstAddr = parser.getAttributeValue(namespace, JingleSocks5BytestreamTransport.ATTR_DSTADDR);
+        String dstAddr = parser.getAttributeValue(null, JingleSocks5BytestreamTransport.ATTR_DSTADDR);
         LOGGER.log(Level.INFO, "dstAddr: " + dstAddr);
         builder.setDestinationAddress(dstAddr);
 
-        String mode = parser.getAttributeValue(namespace, JingleSocks5BytestreamTransport.ATTR_MODE);
+        String mode = parser.getAttributeValue(null, JingleSocks5BytestreamTransport.ATTR_MODE);
         LOGGER.log(Level.INFO, "Mode: " + mode);
         if (mode != null) {
             builder.setMode(mode.equals(udp.toString()) ? udp : tcp);

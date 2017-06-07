@@ -1,6 +1,5 @@
 package org.jivesoftware.smackx.jingle_s5b.elements;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.util.Objects;
@@ -8,11 +7,10 @@ import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidate;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.jid.parts.Domainpart;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 /**
- * Created by vanitas on 07.06.17.
+ * TransportCandidate for Jingle Socks5Bytestream transports.
  */
 public class JingleSocks5BytestreamTransportCandidate extends JingleContentTransportCandidate {
 
@@ -94,7 +92,8 @@ public class JingleSocks5BytestreamTransportCandidate extends JingleContentTrans
 
     @Override
     public CharSequence toXML() {
-        XmlStringBuilder xml = new XmlStringBuilder(this);
+        XmlStringBuilder xml = new XmlStringBuilder();
+        xml.halfOpenElement(this);
         xml.attribute(ATTR_CID, cid);
         xml.attribute(ATTR_HOST, host);
         xml.attribute(ATTR_JID, jid);
@@ -103,7 +102,8 @@ public class JingleSocks5BytestreamTransportCandidate extends JingleContentTrans
         }
         xml.attribute(ATTR_PRIORITY, priority);
         xml.optAttribute(ATTR_TYPE, type);
-        xml.closeElement(this);
+
+        xml.closeEmptyElement();
         return xml;
     }
 
@@ -112,7 +112,6 @@ public class JingleSocks5BytestreamTransportCandidate extends JingleContentTrans
     }
 
     public static class Builder {
-
         private String cid;
         private String host;
         private Jid jid;
@@ -134,13 +133,7 @@ public class JingleSocks5BytestreamTransportCandidate extends JingleContentTrans
         }
 
         public Builder setJid(String jid) throws XmppStringprepException {
-            LOGGER.log(Level.INFO, "setJid");
-            try {
-                this.jid = JidCreate.from(jid);
-            } catch (XmppStringprepException | IllegalArgumentException e) {
-                this.jid = JidCreate.domainBareFrom(Domainpart.from(jid));
-            }
-            LOGGER.log(Level.INFO, "setJid result: " + this.jid);
+            this.jid = JidCreate.from(jid);
             return this;
         }
 
@@ -173,6 +166,57 @@ public class JingleSocks5BytestreamTransportCandidate extends JingleContentTrans
                 throw new IllegalArgumentException("Priority MUST be present and NOT less than 0.");
             }
             return new JingleSocks5BytestreamTransportCandidate(cid, host, jid, port, priority, type);
+        }
+    }
+
+    public static class CandidateUsed extends JingleContentTransportCandidate {
+
+        public static final String ELEMENT = "candidate-used";
+        public static final String ATTR_CID = "cid";
+
+        private final String candidateId;
+
+        public CandidateUsed(String candidateId) {
+            this.candidateId = candidateId;
+        }
+
+        @Override
+        public CharSequence toXML() {
+            XmlStringBuilder xml = new XmlStringBuilder();
+            xml.halfOpenElement(this);
+            xml.attribute(ATTR_CID, candidateId);
+            xml.closeEmptyElement();
+            return xml;
+        }
+    }
+
+    public static class CandidateActivated extends JingleContentTransportCandidate {
+
+        public static final String ELEMENT = "candidate-activated";
+        public static final String ATTR_CID = "cid";
+
+        private final String candidateId;
+
+        public CandidateActivated(String candidateId) {
+            this.candidateId = candidateId;
+        }
+
+        @Override
+        public CharSequence toXML() {
+            XmlStringBuilder xml = new XmlStringBuilder();
+            xml.halfOpenElement(this);
+            xml.attribute(ATTR_CID, candidateId);
+            xml.closeEmptyElement();
+            return xml;
+        }
+    }
+
+    public static class CandidateError extends JingleContentTransportCandidate {
+        public static final String ELEMENT = "candidate-error";
+
+        @Override
+        public CharSequence toXML() {
+            return new XmlStringBuilder(this).closeEmptyElement();
         }
     }
 }

@@ -22,11 +22,22 @@ public class JingleSocks5BytestreamTransport extends JingleContentTransport {
     private final String dstAddr;
     private final Bytestream.Mode mode;
 
-    protected JingleSocks5BytestreamTransport(List<JingleContentTransportCandidate> candidates, String streamId, String dstAddr, Bytestream.Mode mode) {
+    private final String candidateUsed;
+    private final String candidateActivated;
+    private final boolean candidateError;
+    private final boolean proxyError;
+
+    protected JingleSocks5BytestreamTransport(List<JingleContentTransportCandidate> candidates, String streamId, String dstAddr, Bytestream.Mode mode,
+                                              String candidateUsed, String candidateActivated, boolean candidateError, boolean proxyError) {
         super(candidates);
         this.streamId = streamId;
         this.dstAddr = dstAddr;
         this.mode = mode;
+
+        this.candidateUsed = candidateUsed;
+        this.candidateActivated = candidateActivated;
+        this.candidateError = candidateError;
+        this.proxyError = proxyError;
     }
 
     public String getStreamId() {
@@ -58,6 +69,12 @@ public class JingleSocks5BytestreamTransport extends JingleContentTransport {
     }
 
     public static class Builder {
+
+        private String candidateUsed;
+        private String candidateActivated;
+        private boolean proxyError;
+        private boolean candidateError;
+
         private String streamId;
         private String dstAddr;
         private Bytestream.Mode mode = Bytestream.Mode.tcp;
@@ -83,9 +100,29 @@ public class JingleSocks5BytestreamTransport extends JingleContentTransport {
             return this;
         }
 
+        public Builder setCandidateUsed(String candidateId) {
+            this.candidateUsed = candidateId;
+            return this;
+        }
+
+        public Builder setCandidateActivated(String candidateId) {
+            this.candidateActivated = candidateId;
+            return this;
+        }
+
+        public Builder setCandidateError() {
+            this.candidateError = true;
+            return this;
+        }
+
+        public Builder setProxyError() {
+            this.proxyError = true;
+            return this;
+        }
+
         public JingleSocks5BytestreamTransport build() {
             StringUtils.requireNotNullOrEmpty(streamId, "sid MUST be neither null, nor empty.");
-            return new JingleSocks5BytestreamTransport(candidates, streamId, dstAddr, mode);
+            return new JingleSocks5BytestreamTransport(candidates, streamId, dstAddr, mode, candidateUsed, candidateActivated, candidateError, proxyError);
         }
     }
 }

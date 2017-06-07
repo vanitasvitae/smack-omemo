@@ -82,5 +82,7 @@ public class JingleSocks5BytestreamTransportTest extends SmackTestSuite {
         assertEquals(7625, candidate3.getPort());
         assertEquals(7878787, candidate3.getPriority());
         assertEquals(JingleSocks5BytestreamTransportCandidate.Type.proxy, candidate3.getType());
+
+        assertEquals(xml, transport.toXML().toString());
     }
 }
