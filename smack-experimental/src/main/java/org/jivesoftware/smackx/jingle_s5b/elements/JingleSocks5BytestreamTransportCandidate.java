@@ -20,6 +20,8 @@ import java.util.logging.Logger;
 
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smack.util.XmlStringBuilder;
+import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidate;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
@@ -53,6 +55,15 @@ public final class JingleSocks5BytestreamTransportCandidate extends JingleConten
         this.port = port;
         this.priority = priority;
         this.type = type;
+    }
+
+    public JingleSocks5BytestreamTransportCandidate(Bytestream.StreamHost streamHost, int priority) {
+        this.cid = JingleTransportManager.generateSessionId();
+        this.host = streamHost.getAddress();
+        this.jid = streamHost.getJID();
+        this.port = streamHost.getPort();
+        this.priority = priority;
+        this.type = Type.proxy;
     }
 
     public enum Type {

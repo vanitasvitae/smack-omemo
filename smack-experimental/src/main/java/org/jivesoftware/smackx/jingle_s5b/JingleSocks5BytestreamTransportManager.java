@@ -17,24 +17,20 @@
 package org.jivesoftware.smackx.jingle_s5b;
 
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
-import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.disco.packet.DiscoverInfo;
-import org.jivesoftware.smackx.disco.packet.DiscoverItems;
 import org.jivesoftware.smackx.jingle.AbstractJingleContentTransportManager;
 import org.jivesoftware.smackx.jingle.JingleTransportInputStreamCallback;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransport;
 import org.jivesoftware.smackx.jingle_s5b.provider.JingleSocks5BytestreamTransportProvider;
+import org.jxmpp.jid.Jid;
 
 /**
  * Manager for JingleSocks5BytestreamTransports.
@@ -45,34 +41,15 @@ public final class JingleSocks5BytestreamTransportManager extends AbstractJingle
         super(connection);
     }
 
-    public ArrayList<Bytestream.StreamHost> getProxyIdentities() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
-        final ArrayList<Bytestream.StreamHost> streamHosts = new ArrayList<>();
-        DiscoverInfo.Feature bytestreams = new DiscoverInfo.Feature(Bytestream.NAMESPACE);
-        ServiceDiscoveryManager dm = ServiceDiscoveryManager.getInstanceFor(connection());
-        DiscoverItems disco = dm.discoverItems(connection().getXMPPServiceDomain());
+    public List<Bytestream.StreamHost> getAvailableStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        Socks5BytestreamManager s5m = Socks5BytestreamManager.getBytestreamManager(connection());
+        List<Jid> proxies = s5m.determineProxies();
+        return s5m.determineStreamHostInfos(proxies);
+    }
 
-        for (DiscoverItems.Item item : disco.getItems()) {
-            DiscoverInfo info = dm.discoverInfo(item.getEntityID());
-            if (!info.getFeatures().contains(bytestreams)) {
-                continue;
-            }
-            List<DiscoverInfo.Identity> identities = info.getIdentities("proxy", "bytestreams");
-            if (identities.isEmpty()) {
-                continue;
-            }
-            Bytestream b = new Bytestream();
-            b.setTo(item.getEntityID());
-            connection().sendIqWithResponseCallback(b, new StanzaListener() {
-                @Override
-                public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException {
-                    Bytestream result = (Bytestream) packet;
-                    if (result != null) {
-                        streamHosts.addAll(result.getStreamHosts());
-                    }
-                }
-            });
-        }
-        return streamHosts;
+    public List<Bytestream.StreamHost> getLocalStreamHosts() {
+        return Socks5BytestreamManager.getBytestreamManager(connection())
+                .getLocalStreamHost();
     }
 
     @Override

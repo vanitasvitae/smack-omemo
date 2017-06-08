@@ -536,7 +536,7 @@ public final class Socks5BytestreamManager extends Manager implements Bytestream
      * @throws NotConnectedException 
      * @throws InterruptedException 
      */
-    private List<Jid> determineProxies() throws NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException {
+    public List<Jid> determineProxies() throws NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException {
         XMPPConnection connection = connection();
         ServiceDiscoveryManager serviceDiscoveryManager = ServiceDiscoveryManager.getInstanceFor(connection);
 
@@ -585,7 +585,7 @@ public final class Socks5BytestreamManager extends Manager implements Bytestream
      * @param proxies a list of SOCKS5 proxy JIDs
      * @return a list of stream hosts containing the IP address an the port
      */
-    private List<StreamHost> determineStreamHostInfos(List<Jid> proxies) {
+    public List<StreamHost> determineStreamHostInfos(List<Jid> proxies) {
         XMPPConnection connection = connection();
         List<StreamHost> streamHosts = new ArrayList<StreamHost>();
 
@@ -632,7 +632,7 @@ public final class Socks5BytestreamManager extends Manager implements Bytestream
      * @return the stream host information of the local SOCKS5 proxy or null if local SOCKS5 proxy
      *         is not running
      */
-    private List<StreamHost> getLocalStreamHost() {
+    public List<StreamHost> getLocalStreamHost() {
         XMPPConnection connection = connection();
         // get local proxy singleton
         Socks5Proxy socks5Server = Socks5Proxy.getSocks5Proxy();
