@@ -38,6 +38,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandBytestreamTransport;
 import org.jivesoftware.smackx.jingle_ibb.provider.JingleInBandByteStreamTransportProvider;
+import org.jxmpp.jid.Jid;
 
 /**
  * Manager for Jingle In-Band-Bytestreams.
@@ -121,5 +122,10 @@ public final class JingleInBandBytestreamTransportManager extends AbstractJingle
         }
 
         return ibs.getOutputStream();
+    }
+
+    @Override
+    public JingleInBandBytestreamTransport createJingleContentTransport(Jid otherUser) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        return new JingleInBandBytestreamTransport();
     }
 }

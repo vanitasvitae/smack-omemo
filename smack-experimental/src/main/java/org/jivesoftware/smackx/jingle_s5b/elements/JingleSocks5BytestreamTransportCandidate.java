@@ -58,7 +58,7 @@ public final class JingleSocks5BytestreamTransportCandidate extends JingleConten
     }
 
     public JingleSocks5BytestreamTransportCandidate(Bytestream.StreamHost streamHost, int priority) {
-        this.cid = JingleTransportManager.generateSessionId();
+        this.cid = JingleTransportManager.generateRandomId();
         this.host = streamHost.getAddress();
         this.jid = streamHost.getJID();
         this.port = streamHost.getPort();
@@ -115,6 +115,10 @@ public final class JingleSocks5BytestreamTransportCandidate extends JingleConten
 
     public Type getType() {
         return type;
+    }
+
+    public Bytestream.StreamHost getStreamHost() {
+        return new Bytestream.StreamHost(jid, host, port);
     }
 
     @Override

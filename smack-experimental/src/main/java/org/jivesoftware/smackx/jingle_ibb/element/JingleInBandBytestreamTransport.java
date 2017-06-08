@@ -38,7 +38,7 @@ public class JingleInBandBytestreamTransport extends JingleContentTransport {
     }
 
     public JingleInBandBytestreamTransport(short blockSize) {
-        this(blockSize, JingleTransportManager.generateSessionId());
+        this(blockSize, JingleTransportManager.generateRandomId());
     }
 
     public JingleInBandBytestreamTransport(short blockSize, String sid) {

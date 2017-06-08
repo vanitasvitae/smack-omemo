@@ -35,7 +35,7 @@ public class JingleInBandByteStreamTransportTest extends SmackTestSuite {
 
     @Test
     public void parserTest() throws Exception {
-        String sid = JingleTransportManager.generateSessionId();
+        String sid = JingleTransportManager.generateRandomId();
         short size = 8192;
 
         String xml = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='8192' sid='" + sid + "'/>";

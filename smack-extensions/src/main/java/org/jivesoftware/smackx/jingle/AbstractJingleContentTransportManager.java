@@ -19,11 +19,14 @@ package org.jivesoftware.smackx.jingle;
 import java.io.OutputStream;
 
 import org.jivesoftware.smack.Manager;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
+import org.jxmpp.jid.Jid;
 
 /**
  * Interface with methods that JingleContentTransportManagers must implement.
@@ -44,4 +47,6 @@ public abstract class AbstractJingleContentTransportManager<D extends JingleCont
     public abstract void acceptInputStream(Jingle jingle, JingleTransportInputStreamCallback callback);
 
     public abstract OutputStream createOutputStream(Jingle jingle);
+
+    public abstract D createJingleContentTransport(Jid remote) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException;
 }

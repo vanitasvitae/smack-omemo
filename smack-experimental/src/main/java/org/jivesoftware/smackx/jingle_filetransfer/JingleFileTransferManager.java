@@ -27,24 +27,25 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.hash.HashManager;
 import org.jivesoftware.smackx.hash.element.HashElement;
+import org.jivesoftware.smackx.jingle.AbstractJingleContentTransportManager;
+import org.jivesoftware.smackx.jingle.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
-import org.jivesoftware.smackx.jingle.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingJingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
 import org.jivesoftware.smackx.jingle_ibb.JingleInBandBytestreamTransportManager;
-import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandBytestreamTransport;
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -112,7 +113,9 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
      * QnD method.
      * @param file
      */
-    public void sendFile(File file, final FullJid recipient) throws IOException, SmackException.NotConnectedException, InterruptedException {
+    public void sendFile(File file, final FullJid recipient) throws IOException, SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
+        AbstractJingleContentTransportManager<?> preferedTransportManager = JingleInBandBytestreamTransportManager.getInstanceFor(connection());
+
         JingleFileTransferSession session = new JingleFileTransferSession(connection(), recipient, connection().getUser(), recipient);
         JingleFileTransferChildElement.Builder b = JingleFileTransferChildElement.getBuilder();
         b.setFile(file);
@@ -132,7 +135,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         bb.setDescription(new JingleFileTransferContentDescription(payloads))
                 .setCreator(JingleContent.Creator.initiator)
                 .setName(StringUtils.randomString(24))
-                .addTransport(new JingleInBandBytestreamTransport());
+                .addTransport(preferedTransportManager.createJingleContentTransport());
 
         Jingle jingle = (Jingle) session.initiate(Collections.singletonList(bb.build()));
         jingle.setTo(recipient);

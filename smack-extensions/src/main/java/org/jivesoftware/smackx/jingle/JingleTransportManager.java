@@ -62,7 +62,7 @@ public final class JingleTransportManager extends Manager {
         contentTransportManagers.remove(manager.getNamespace());
     }
 
-    public static String generateSessionId() {
+    public static String generateRandomId() {
         return StringUtils.randomString(24);
     }
 }
