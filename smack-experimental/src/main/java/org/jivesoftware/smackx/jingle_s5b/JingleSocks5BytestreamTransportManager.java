@@ -17,8 +17,18 @@
 package org.jivesoftware.smackx.jingle_s5b;
 
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.disco.packet.DiscoverInfo;
+import org.jivesoftware.smackx.disco.packet.DiscoverItems;
 import org.jivesoftware.smackx.jingle.AbstractJingleContentTransportManager;
 import org.jivesoftware.smackx.jingle.JingleTransportInputStreamCallback;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -33,6 +43,36 @@ public final class JingleSocks5BytestreamTransportManager extends AbstractJingle
 
     private JingleSocks5BytestreamTransportManager(XMPPConnection connection) {
         super(connection);
+    }
+
+    public ArrayList<Bytestream.StreamHost> getProxyIdentities() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        final ArrayList<Bytestream.StreamHost> streamHosts = new ArrayList<>();
+        DiscoverInfo.Feature bytestreams = new DiscoverInfo.Feature(Bytestream.NAMESPACE);
+        ServiceDiscoveryManager dm = ServiceDiscoveryManager.getInstanceFor(connection());
+        DiscoverItems disco = dm.discoverItems(connection().getXMPPServiceDomain());
+
+        for (DiscoverItems.Item item : disco.getItems()) {
+            DiscoverInfo info = dm.discoverInfo(item.getEntityID());
+            if (!info.getFeatures().contains(bytestreams)) {
+                continue;
+            }
+            List<DiscoverInfo.Identity> identities = info.getIdentities("proxy", "bytestreams");
+            if (identities.isEmpty()) {
+                continue;
+            }
+            Bytestream b = new Bytestream();
+            b.setTo(item.getEntityID());
+            connection().sendIqWithResponseCallback(b, new StanzaListener() {
+                @Override
+                public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException {
+                    Bytestream result = (Bytestream) packet;
+                    if (result != null) {
+                        streamHosts.addAll(result.getStreamHosts());
+                    }
+                }
+            });
+        }
+        return streamHosts;
     }
 
     @Override
