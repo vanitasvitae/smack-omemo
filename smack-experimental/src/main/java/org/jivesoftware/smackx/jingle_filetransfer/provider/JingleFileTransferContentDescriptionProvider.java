@@ -16,20 +16,20 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.provider;
 
-import org.jivesoftware.smackx.hash.element.HashElement;
-import org.jivesoftware.smackx.hash.provider.HashElementProvider;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
-import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
-import org.jxmpp.util.XmppDateTime;
-import org.xmlpull.v1.XmlPullParser;
+import static org.xmlpull.v1.XmlPullParser.END_TAG;
+import static org.xmlpull.v1.XmlPullParser.START_TAG;
 
 import java.util.ArrayList;
 
-import static org.xmlpull.v1.XmlPullParser.END_TAG;
-import static org.xmlpull.v1.XmlPullParser.START_TAG;
+import org.jivesoftware.smackx.hashes.element.HashElement;
+import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
+import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
+import org.jxmpp.util.XmppDateTime;
+import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Provider for JingleContentDescriptionFileTransfer elements.

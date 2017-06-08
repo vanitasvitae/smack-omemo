@@ -31,8 +31,8 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.hash.HashManager;
-import org.jivesoftware.smackx.hash.element.HashElement;
+import org.jivesoftware.smackx.hashes.HashManager;
+import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.AbstractJingleContentTransportManager;
 import org.jivesoftware.smackx.jingle.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
@@ -46,6 +46,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferCon
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
 import org.jivesoftware.smackx.jingle_ibb.JingleInBandBytestreamTransportManager;
+import org.jivesoftware.smackx.jingle_s5b.JingleSocks5BytestreamTransportManager;
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -114,7 +115,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
      * @param file
      */
     public void sendFile(File file, final FullJid recipient) throws IOException, SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
-        AbstractJingleContentTransportManager<?> preferedTransportManager = JingleInBandBytestreamTransportManager.getInstanceFor(connection());
+        AbstractJingleContentTransportManager<?> preferredTransportManager = JingleSocks5BytestreamTransportManager.getInstanceFor(connection());
 
         JingleFileTransferSession session = new JingleFileTransferSession(connection(), recipient, connection().getUser(), recipient);
         JingleFileTransferChildElement.Builder b = JingleFileTransferChildElement.getBuilder();
@@ -135,7 +136,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         bb.setDescription(new JingleFileTransferContentDescription(payloads))
                 .setCreator(JingleContent.Creator.initiator)
                 .setName(StringUtils.randomString(24))
-                .addTransport(preferedTransportManager.createJingleContentTransport());
+                .addTransport(preferredTransportManager.createJingleContentTransport(recipient));
 
         Jingle jingle = (Jingle) session.initiate(Collections.singletonList(bb.build()));
         jingle.setTo(recipient);

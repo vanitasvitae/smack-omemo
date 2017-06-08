@@ -16,12 +16,12 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.element;
 
-import org.jivesoftware.smack.util.XmlStringBuilder;
-import org.jivesoftware.smackx.hash.element.HashElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
-
 import java.io.File;
 import java.util.Date;
+
+import org.jivesoftware.smack.util.XmlStringBuilder;
+import org.jivesoftware.smackx.hashes.element.HashElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 
 /**
  * Content of type File.

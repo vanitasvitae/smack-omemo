@@ -17,16 +17,15 @@
 package org.jivesoftware.smackx.jingle_s5b;
 
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
-import org.jivesoftware.smackx.hash.HashManager;
+import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.jingle.AbstractJingleContentTransportManager;
 import org.jivesoftware.smackx.jingle.JingleTransportInputStreamCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
@@ -42,8 +41,19 @@ import org.jxmpp.jid.Jid;
  */
 public final class JingleSocks5BytestreamTransportManager extends AbstractJingleContentTransportManager<JingleSocks5BytestreamTransport> {
 
+    private static final WeakHashMap<XMPPConnection, JingleSocks5BytestreamTransportManager> INSTANCES = new WeakHashMap<>();
+
     private JingleSocks5BytestreamTransportManager(XMPPConnection connection) {
         super(connection);
+    }
+
+    public static JingleSocks5BytestreamTransportManager getInstanceFor(XMPPConnection connection) {
+        JingleSocks5BytestreamTransportManager manager = INSTANCES.get(connection);
+        if (manager == null) {
+            manager = new JingleSocks5BytestreamTransportManager(connection);
+            INSTANCES.put(connection, manager);
+        }
+        return manager;
     }
 
     public List<Bytestream.StreamHost> getAvailableStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
@@ -101,13 +111,7 @@ public final class JingleSocks5BytestreamTransportManager extends AbstractJingle
                         sid +
                         connection().getUser().asFullJidIfPossible().toString() +
                         otherUser.asFullJidIfPossible().toString();
-        try {
-            builder.setDestinationAddress(
-                    new String(HashManager.sha_1(digestString.getBytes(StringUtils.UTF8)), StringUtils.UTF8));
-        } catch (UnsupportedEncodingException e) {
-            throw new AssertionError(e);
-        }
-
+        builder.setDestinationAddress(HashManager.sha_1HexString(digestString));
         return builder.build();
     }
 }

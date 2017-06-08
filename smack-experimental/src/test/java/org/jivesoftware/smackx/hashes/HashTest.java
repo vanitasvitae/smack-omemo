@@ -73,13 +73,13 @@ public class HashTest extends SmackTestSuite {
 
     @Test
     public void md5Test() {
-        String actual = HashManager.hex(HashManager.md5(array()));
+        String actual = HashManager.md5HexString(array());
         assertEquals(md5sum, actual);
     }
 
     @Test
     public void sha1Test() {
-        String actual = HashManager.hex(HashManager.sha_1(array()));
+        String actual = HashManager.sha_1HexString(array());
         assertEquals(sha1sum, actual);
     }
 

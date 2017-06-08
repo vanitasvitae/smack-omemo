@@ -16,15 +16,15 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
-import org.jivesoftware.smack.test.util.SmackTestSuite;
-import org.jivesoftware.smackx.hash.HashManager;
-import org.jivesoftware.smackx.hash.element.HashElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
-import org.junit.Test;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
+
+import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smackx.hashes.HashManager;
+import org.jivesoftware.smackx.hashes.element.HashElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
+import org.junit.Test;
 
 /**
  * Test the JingleContentFile class.

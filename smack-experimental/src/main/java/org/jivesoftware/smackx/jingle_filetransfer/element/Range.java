@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jingle_filetransfer.element;
 
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
-import org.jivesoftware.smackx.hash.element.HashElement;
+import org.jivesoftware.smackx.hashes.element.HashElement;
 
 /**
  * RangeElement which specifies, which range of a file shall be transferred.

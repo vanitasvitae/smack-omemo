@@ -16,13 +16,13 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
-import org.jivesoftware.smackx.hash.HashManager;
-import org.jivesoftware.smackx.hash.element.HashElement;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.DigestInputStream;
+
+import org.jivesoftware.smackx.hashes.HashManager;
+import org.jivesoftware.smackx.hashes.element.HashElement;
 
 /**
  * FileReader that reads a file into a byte array while returning the hash of the file.

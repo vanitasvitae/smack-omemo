@@ -16,24 +16,24 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
-import org.jivesoftware.smack.test.util.SmackTestSuite;
-import org.jivesoftware.smack.test.util.TestUtils;
-import org.jivesoftware.smackx.hash.HashManager;
-import org.jivesoftware.smackx.hash.element.HashElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
-import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
-import org.junit.Test;
-import org.jxmpp.util.XmppDateTime;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smack.test.util.TestUtils;
+import org.jivesoftware.smackx.hashes.HashManager;
+import org.jivesoftware.smackx.hashes.element.HashElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
+import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
+import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
+import org.junit.Test;
+import org.jxmpp.util.XmppDateTime;
 
 /**
  * Test the JingleContentDescriptionFileTransfer element and provider.
