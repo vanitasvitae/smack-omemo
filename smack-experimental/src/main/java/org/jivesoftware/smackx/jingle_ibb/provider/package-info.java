@@ -14,12 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle;
 
 /**
- * Created by vanitas on 06.06.17.
+ * Smack's API for <a href="https://xmpp.org/extensions/xep-0261.html">XEP-0261: Jingle In-Band Bytestreams</a>.
+ * Provider classes.
  */
-public interface JingleTransportInputStreamCallback {
-
-    void onInputStream(JingleInputStream inputStream);
-}
+package org.jivesoftware.smackx.jingle_ibb.provider;

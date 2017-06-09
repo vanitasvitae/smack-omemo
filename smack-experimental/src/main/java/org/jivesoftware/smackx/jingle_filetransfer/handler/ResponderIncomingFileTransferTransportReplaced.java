@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2017 Paul Schaub
+ * Copyright © 2017 Paul Schaub
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jivesoftware.smackx.jingle_filetransfer.handler;
 
 /**
- * Smack's API for <a href="https://xmpp.org/extensions/xep-0261.html">XEP-0261: Jingle In-Band Bytestreams</a>.
- * Provider classes.
+ * This handler represents the state of the responders jingle session after the responder sent session-replace.
  */
-package org.jivesoftware.smackx.jingle_ibb2.provider;
+public class ResponderIncomingFileTransferTransportReplaced {
+}

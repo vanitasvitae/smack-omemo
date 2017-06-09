@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright © 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.jingle_filetransfer.handler;
 
 import java.io.File;
@@ -14,18 +30,19 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.BytestreamListener;
 import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jxmpp.jid.FullJid;
 
 /**
- * Created by vanitas on 09.06.17.
+ * This handler represents the state of the responders jingle session after the responder sent session-accept.
  */
-public class IncomingFileTransferResponded implements JingleSessionHandler, BytestreamListener {
+public class ResponderIncomingFileTransferAccepted implements JingleSessionHandler, BytestreamListener {
 
-    private static final Logger LOGGER = Logger.getLogger(IncomingFileTransferResponded.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ResponderIncomingFileTransferAccepted.class.getName());
 
     private final WeakReference<JingleFileTransferManager> manager;
     private final File target;
@@ -33,10 +50,10 @@ public class IncomingFileTransferResponded implements JingleSessionHandler, Byte
     private final FullJid initiator;
     private final String sessionId;
 
-    public IncomingFileTransferResponded(JingleFileTransferManager manager, Jingle initiate, File target) {
+    public ResponderIncomingFileTransferAccepted(JingleFileTransferManager manager, Jingle initiate, File target) {
         this.manager = new WeakReference<>(manager);
         this.target = target;
-        this.size = ((JingleFileTransferChildElement) initiate.getContents().get(0).getDescription()
+        this.size = ((JingleFileTransferChild) initiate.getContents().get(0).getDescription()
                 .getJingleContentDescriptionChildren().get(0)).getSize();
         this.initiator = initiate.getInitiator();
         this.sessionId = initiate.getSid();
@@ -93,8 +110,8 @@ public class IncomingFileTransferResponded implements JingleSessionHandler, Byte
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Caught Exception while closing streams: " + e, e);
             }
+            InBandBytestreamManager.getByteStreamManager(manager.get().getConnection()).removeIncomingBytestreamListener(this);
         }
-        return;
     }
 
     @Override

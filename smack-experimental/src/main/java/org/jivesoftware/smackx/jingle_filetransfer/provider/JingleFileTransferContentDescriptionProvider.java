@@ -25,7 +25,7 @@ import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
 import org.jxmpp.util.XmppDateTime;
@@ -41,7 +41,7 @@ public class JingleFileTransferContentDescriptionProvider
     public JingleFileTransferContentDescription parse(XmlPullParser parser, int initialDepth) throws Exception {
         ArrayList<JingleContentDescriptionChildElement> payloads = new ArrayList<>();
         boolean inRange = false;
-        JingleFileTransferChildElement.Builder builder = JingleFileTransferChildElement.getBuilder();
+        JingleFileTransferChild.Builder builder = JingleFileTransferChild.getBuilder();
         HashElement inRangeHash = null;
 
         int offset = 0;
@@ -54,23 +54,23 @@ public class JingleFileTransferContentDescriptionProvider
 
             if (tag == START_TAG) {
                 switch (elem) {
-                    case JingleFileTransferChildElement.ELEM_DATE:
+                    case JingleFileTransferChild.ELEM_DATE:
                         builder.setDate(XmppDateTime.parseXEP0082Date(parser.nextText()));
                         break;
 
-                    case JingleFileTransferChildElement.ELEM_DESC:
+                    case JingleFileTransferChild.ELEM_DESC:
                         builder.setDescription(parser.nextText());
                         break;
 
-                    case JingleFileTransferChildElement.ELEM_MEDIA_TYPE:
+                    case JingleFileTransferChild.ELEM_MEDIA_TYPE:
                         builder.setMediaType(parser.nextText());
                         break;
 
-                    case JingleFileTransferChildElement.ELEM_NAME:
+                    case JingleFileTransferChild.ELEM_NAME:
                         builder.setName(parser.nextText());
                         break;
 
-                    case JingleFileTransferChildElement.ELEM_SIZE:
+                    case JingleFileTransferChild.ELEM_SIZE:
                         builder.setSize(Integer.parseInt(parser.nextText()));
                         break;
 
@@ -105,9 +105,9 @@ public class JingleFileTransferContentDescriptionProvider
                         inRangeHash = null;
                         break;
 
-                    case JingleFileTransferChildElement.ELEMENT:
+                    case JingleFileTransferChild.ELEMENT:
                         payloads.add(builder.build());
-                        builder = JingleFileTransferChildElement.getBuilder();
+                        builder = JingleFileTransferChild.getBuilder();
                         break;
 
                     case JingleFileTransferContentDescription.ELEMENT:

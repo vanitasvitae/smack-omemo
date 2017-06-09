@@ -29,7 +29,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.jingle.JingleBytestreamManager;
+import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
 import org.jivesoftware.smackx.jingle.JingleManager;
@@ -38,14 +38,14 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
-import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingJingleFileTransferCallback;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleFileTransferCallback;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
-import org.jivesoftware.smackx.jingle_filetransfer.handler.IncomingFileTransferResponded;
-import org.jivesoftware.smackx.jingle_filetransfer.handler.OutgoingFileTransferInitiator;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.ResponderIncomingFileTransferAccepted;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.InitiatorOutgoingFileTransferInitiated;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_ibb2.JingleIBBTransportManager;
+import org.jivesoftware.smackx.jingle_ibb.JingleIBBTransportManager;
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -105,7 +105,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         incomingJingleFileTransferListeners.remove(listener);
     }
 
-    void notifyIncomingFileTransferListeners(Jingle jingle, IncomingJingleFileTransferCallback callback) {
+    void notifyIncomingFileTransferListeners(Jingle jingle, JingleFileTransferCallback callback) {
         for (IncomingJingleFileTransferListener l : incomingJingleFileTransferListeners) {
             l.onIncomingJingleFileTransfer(jingle, callback);
         }
@@ -120,10 +120,10 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
      * @param file
      */
     public void sendFile(File file, final FullJid recipient) throws IOException, SmackException, InterruptedException, XMPPException {
-        JingleBytestreamManager<?> tm = JingleTransportManager.getInstanceFor(connection())
+        AbstractJingleTransportManager<?> tm = JingleTransportManager.getInstanceFor(connection())
                 .getAvailableJingleBytestreamManagers().iterator().next();
 
-        JingleFileTransferChildElement.Builder b = JingleFileTransferChildElement.getBuilder();
+        JingleFileTransferChild.Builder b = JingleFileTransferChild.getBuilder();
         b.setFile(file);
         b.setDescription("File");
         b.setMediaType("application/octet-stream");
@@ -136,7 +136,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                 new JingleManager.FullJidAndSessionId(recipient, initiate.getSid());
 
         jingleManager.registerJingleSessionHandler(recipient, initiate.getSid(),
-                new OutgoingFileTransferInitiator(this, fullJidAndSessionId, file));
+                new InitiatorOutgoingFileTransferInitiated(this, fullJidAndSessionId, file));
 
         connection().sendStanza(initiate);
     }
@@ -155,8 +155,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         JingleTransportManager tm = JingleTransportManager.getInstanceFor(connection());
         String transportNamespace = jingle.getContents().get(0).getJingleTransports().get(0).getNamespace();
 
-        JingleBytestreamManager<?> transportManager = null;
-        for (JingleBytestreamManager<?> b : tm.getAvailableJingleBytestreamManagers()) {
+        AbstractJingleTransportManager<?> transportManager = null;
+        for (AbstractJingleTransportManager<?> b : tm.getAvailableJingleBytestreamManagers()) {
             if (b.getNamespace().equals(transportNamespace)) {
                 transportManager = b;
             }
@@ -167,20 +167,20 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
             return null;
         }
 
-        final JingleBytestreamManager<?> finalTransportManager = transportManager;
+        final AbstractJingleTransportManager<?> finalTransportManager = transportManager;
 
-        notifyIncomingFileTransferListeners(jingle, new IncomingJingleFileTransferCallback() {
+        notifyIncomingFileTransferListeners(jingle, new JingleFileTransferCallback() {
             @Override
-            public void acceptFileTransfer(File target) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, UnsupportedJingleTransportException, SmackException.NoResponseException {
+            public void accept(File target) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, UnsupportedJingleTransportException, SmackException.NoResponseException {
                 connection().sendStanza(finalTransportManager.createSessionAccept(jingle));
-                IncomingFileTransferResponded responded = new IncomingFileTransferResponded(JingleFileTransferManager.this, jingle, target);
+                ResponderIncomingFileTransferAccepted responded = new ResponderIncomingFileTransferAccepted(JingleFileTransferManager.this, jingle, target);
                 jingleManager.registerJingleSessionHandler(jingle.getFrom().asFullJidIfPossible(), jingle.getSid(),
                         responded);
                 finalTransportManager.setIncomingRespondedSessionListener(jingle, responded);
             }
 
             @Override
-            public void cancelFileTransfer() throws SmackException.NotConnectedException, InterruptedException {
+            public void decline() throws SmackException.NotConnectedException, InterruptedException {
                 //TODO
             }
         });

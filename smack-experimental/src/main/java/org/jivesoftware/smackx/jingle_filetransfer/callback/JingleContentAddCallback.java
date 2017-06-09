@@ -16,18 +16,11 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.callback;
 
-import java.io.File;
-
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
-
 /**
- * Callback that allows the user to accept or cancel file transfers.
+ * Callback for the client to decide whether to accept or decline a content-add action.
  */
-public interface IncomingJingleFileTransferCallback {
+public interface JingleContentAddCallback {
+    void accept();
 
-    void acceptFileTransfer(File target) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, UnsupportedJingleTransportException, SmackException.NoResponseException;
-
-    void cancelFileTransfer() throws SmackException.NotConnectedException, InterruptedException;
+    void decline();
 }

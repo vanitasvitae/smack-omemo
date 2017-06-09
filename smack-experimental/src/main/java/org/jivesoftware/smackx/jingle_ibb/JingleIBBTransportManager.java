@@ -1,4 +1,20 @@
-package org.jivesoftware.smackx.jingle_ibb2;
+/**
+ *
+ * Copyright 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.jivesoftware.smackx.jingle_ibb;
 
 import java.io.IOException;
 import java.util.WeakHashMap;
@@ -10,21 +26,21 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.BytestreamListener;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
-import org.jivesoftware.smackx.jingle.JingleBytestreamManager;
+import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
-import org.jivesoftware.smackx.jingle_ibb2.element.JingleIBBTransport;
-import org.jivesoftware.smackx.jingle_ibb2.provider.JingleIBBTransportProvider;
+import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
+import org.jivesoftware.smackx.jingle_ibb.provider.JingleIBBTransportProvider;
 import org.jxmpp.jid.FullJid;
 
 /**
  * BytestreamManager for Jingle InBandBytestream Transports.
  */
-public final class JingleIBBTransportManager extends JingleBytestreamManager<JingleIBBTransport> {
+public final class JingleIBBTransportManager extends AbstractJingleTransportManager<JingleIBBTransport> {
 
     private static final WeakHashMap<XMPPConnection, JingleIBBTransportManager> INSTANCES = new WeakHashMap<>();
 

@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright © 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.jingle_filetransfer.handler;
 
 import java.io.File;
@@ -8,7 +24,7 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
-import org.jivesoftware.smackx.jingle.JingleBytestreamManager;
+import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
@@ -18,15 +34,15 @@ import org.jivesoftware.smackx.jingle_filetransfer.FileAndHashReader;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
 
 /**
- * Created by vanitas on 09.06.17.
+ * This handler represents the state of the initiators jingle session after session-initiate was sent.
  */
-public class OutgoingFileTransferInitiator implements JingleSessionHandler {
+public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHandler {
 
     private final WeakReference<JingleFileTransferManager> manager;
     private final JingleManager.FullJidAndSessionId fullJidAndSessionId;
     private final File file;
 
-    public OutgoingFileTransferInitiator(JingleFileTransferManager manager, JingleManager.FullJidAndSessionId fullJidAndSessionId, File file) {
+    public InitiatorOutgoingFileTransferInitiated(JingleFileTransferManager manager, JingleManager.FullJidAndSessionId fullJidAndSessionId, File file) {
         this.fullJidAndSessionId = fullJidAndSessionId;
         this.file = file;
         this.manager = new WeakReference<>(manager);
@@ -34,7 +50,7 @@ public class OutgoingFileTransferInitiator implements JingleSessionHandler {
 
     @Override
     public IQ handleJingleSessionRequest(Jingle jingle, String sessionId) {
-        JingleBytestreamManager<?> bm;
+        AbstractJingleTransportManager<?> bm;
         try {
             bm = JingleTransportManager.getInstanceFor(manager.get().getConnection())
                     .getJingleContentTransportManager(jingle);

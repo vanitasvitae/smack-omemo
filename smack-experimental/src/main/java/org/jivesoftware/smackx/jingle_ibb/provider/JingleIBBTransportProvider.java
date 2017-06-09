@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_ibb2.provider;
+package org.jivesoftware.smackx.jingle_ibb.provider;
 
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
-import org.jivesoftware.smackx.jingle_ibb2.element.JingleIBBTransport;
+import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
 import org.xmlpull.v1.XmlPullParser;
 
 /**

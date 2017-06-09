@@ -26,7 +26,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildEleme
 /**
  * Content of type File.
  */
-public class JingleFileTransferChildElement extends JingleContentDescriptionChildElement {
+public class JingleFileTransferChild extends JingleContentDescriptionChildElement {
     public static final String ELEMENT = "file";
     public static final String ELEM_DATE = "date";
     public static final String ELEM_DESC = "desc";
@@ -42,7 +42,7 @@ public class JingleFileTransferChildElement extends JingleContentDescriptionChil
     private final int size;
     private final Range range;
 
-    public JingleFileTransferChildElement(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
+    public JingleFileTransferChild(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
         this.date = date;
         this.desc = desc;
         this.hash = hash;
@@ -154,8 +154,8 @@ public class JingleFileTransferChildElement extends JingleContentDescriptionChil
             return this;
         }
 
-        public JingleFileTransferChildElement build() {
-            return new JingleFileTransferChildElement(date, desc, hash, mediaType, name, size, range);
+        public JingleFileTransferChild build() {
+            return new JingleFileTransferChild(date, desc, hash, mediaType, name, size, range);
         }
 
         public Builder setFile(File file) {

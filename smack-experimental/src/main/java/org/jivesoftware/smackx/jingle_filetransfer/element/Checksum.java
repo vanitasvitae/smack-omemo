@@ -32,13 +32,13 @@ public class Checksum implements ExtensionElement {
 
     private final JingleContent.Creator creator;
     private final String name;
-    private JingleFileTransferChildElement file;
+    private final JingleFileTransferChild file;
 
-    public Checksum(JingleContent.Creator creator, String name, JingleFileTransferChildElement file) {
+    public Checksum(JingleContent.Creator creator, String name, JingleFileTransferChild file) {
         this.creator = creator;
         this.name = name;
-        Objects.requireNonNull(file.getHash(), "file MUST contain at least one hash element.");
         this.file = Objects.requireNonNull(file, "file MUST NOT be null.");
+        Objects.requireNonNull(file.getHash(), "file MUST contain at least one hash element.");
     }
 
     @Override

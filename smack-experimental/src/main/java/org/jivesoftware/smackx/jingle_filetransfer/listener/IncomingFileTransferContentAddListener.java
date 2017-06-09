@@ -16,9 +16,14 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.listener;
 
+import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleContentAddCallback;
+
 /**
  * Listener for content-add actions.
  */
-public interface IncomingFileTransferContentAddListener extends IncomingJingleFileTransferListener {
+public interface IncomingFileTransferContentAddListener {
+
+    void onJingleContentAdd(Jingle jingle, JingleContentAddCallback callback);
 
 }

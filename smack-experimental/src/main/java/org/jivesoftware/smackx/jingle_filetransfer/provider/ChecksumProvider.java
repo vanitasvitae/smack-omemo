@@ -16,9 +16,16 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.provider;
 
+import static org.xmlpull.v1.XmlPullParser.END_TAG;
+import static org.xmlpull.v1.XmlPullParser.START_TAG;
+
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
+import org.jivesoftware.smackx.hashes.element.HashElement;
+import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Checksum;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
+import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
 import org.xmlpull.v1.XmlPullParser;
 
 /**
@@ -33,8 +40,50 @@ public class ChecksumProvider extends ExtensionElementProvider<Checksum> {
             creator = JingleContent.Creator.valueOf(creatorString);
         }
         String name = parser.getAttributeValue(null, Checksum.ATTR_NAME);
-        //TODO JingleFileTransferPayload file = new JingleFileTransferPayloadProvider().parse(parser);
 
-        return new Checksum(creator, name, null);
+
+        JingleFileTransferChild.Builder cb = JingleFileTransferChild.getBuilder();
+        HashElement hashElement = null;
+        Range range = null;
+
+        boolean go = true;
+        while (go) {
+            int tag = parser.nextTag();
+            String n = parser.getText();
+
+            if (tag == START_TAG) {
+                switch (n) {
+                    case HashElement.ELEMENT:
+                        hashElement = new HashElementProvider().parse(parser);
+                        break;
+
+                    case Range.ELEMENT:
+                        String offset = parser.getAttributeValue(null, Range.ATTR_OFFSET);
+                        String length = parser.getAttributeValue(null, Range.ATTR_LENGTH);
+                        int o = offset == null ? 0 : Integer.parseInt(offset);
+                        int l = length == null ? -1 : Integer.parseInt(length);
+                        range = new Range(o, l);
+                }
+            } else if (tag == END_TAG) {
+                switch (n) {
+                    case Range.ELEMENT:
+                        if (hashElement != null && range != null) {
+                            range = new Range(range.getOffset(), range.getLength(), hashElement);
+                            hashElement = null;
+                        }
+                        break;
+
+                    case JingleFileTransferChild.ELEMENT:
+                        if (hashElement != null) {
+                            cb.setHash(hashElement);
+                        }
+                        if (range != null) {
+                            cb.setRange(range);
+                        }
+                        go = false;
+                }
+            }
+        }
+        return new Checksum(creator, name, cb.build());
     }
 }

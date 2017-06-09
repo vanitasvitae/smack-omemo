@@ -18,4 +18,4 @@
 /**
  * Smack's API for <a href="https://xmpp.org/extensions/xep-0261.html">XEP-0261: Jingle In-Band Bytestreams</a>.
  */
-package org.jivesoftware.smackx.jingle_ibb2;
+package org.jivesoftware.smackx.jingle_ibb;

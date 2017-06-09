@@ -29,7 +29,7 @@ import org.junit.Test;
 /**
  * Test the JingleContentFile class.
  */
-public class JingleFileTransferChildElementTest extends SmackTestSuite {
+public class JingleFileTransferChildTest extends SmackTestSuite {
 
     @Test
     public void rangeTest() throws Exception {

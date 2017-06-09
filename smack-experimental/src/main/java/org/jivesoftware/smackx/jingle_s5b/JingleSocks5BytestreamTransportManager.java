@@ -31,7 +31,7 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.hashes.HashManager;
-import org.jivesoftware.smackx.jingle.JingleBytestreamManager;
+import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
@@ -46,7 +46,7 @@ import org.jxmpp.jid.Jid;
 /**
  * Manager for JingleSocks5BytestreamTransports.
  */
-public final class JingleSocks5BytestreamTransportManager extends JingleBytestreamManager<JingleSocks5BytestreamTransport> {
+public final class JingleSocks5BytestreamTransportManager extends AbstractJingleTransportManager<JingleSocks5BytestreamTransport> {
 
     private static final WeakHashMap<XMPPConnection, JingleSocks5BytestreamTransportManager> INSTANCES = new WeakHashMap<>();
 

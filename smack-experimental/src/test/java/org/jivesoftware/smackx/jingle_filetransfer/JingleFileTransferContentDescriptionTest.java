@@ -28,7 +28,7 @@ import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
@@ -66,9 +66,9 @@ public class JingleFileTransferContentDescriptionTest extends SmackTestSuite {
         HashElement hashElement = new HashElement(algorithm, hashB64);
         Range range = new Range();
         Date date = XmppDateTime.parseDate(dateString);
-        JingleFileTransferChildElement jingleFileTransferChildElement = new JingleFileTransferChildElement(date, descriptionString, hashElement, mediaTypeString, nameString, sizeInt, range);
+        JingleFileTransferChild jingleFileTransferChild = new JingleFileTransferChild(date, descriptionString, hashElement, mediaTypeString, nameString, sizeInt, range);
         ArrayList<JingleContentDescriptionChildElement> payloads = new ArrayList<>();
-        payloads.add(jingleFileTransferChildElement);
+        payloads.add(jingleFileTransferChild);
 
         JingleFileTransferContentDescription descriptionFileTransfer =
                 new JingleFileTransferContentDescription(payloads);
@@ -78,7 +78,7 @@ public class JingleFileTransferContentDescriptionTest extends SmackTestSuite {
                 .parse(TestUtils.getParser(xml));
         assertEquals(xml, parsed.toXML().toString());
 
-        JingleFileTransferChildElement payload = (JingleFileTransferChildElement) parsed.getJingleContentDescriptionChildren().get(0);
+        JingleFileTransferChild payload = (JingleFileTransferChild) parsed.getJingleContentDescriptionChildren().get(0);
         assertEquals(date, payload.getDate());
         assertEquals(descriptionString, payload.getDescription());
         assertEquals(mediaTypeString, payload.getMediaType());
@@ -107,7 +107,7 @@ public class JingleFileTransferContentDescriptionTest extends SmackTestSuite {
                         "</range>" +
                     "</file>" +
                 "</description>";
-        JingleFileTransferChildElement payload = new JingleFileTransferChildElement(null, null, null, null, null, -1, range);
+        JingleFileTransferChild payload = new JingleFileTransferChild(null, null, null, null, null, -1, range);
         ArrayList<JingleContentDescriptionChildElement> list = new ArrayList<>();
         list.add(payload);
         JingleFileTransferContentDescription fileTransfer = new JingleFileTransferContentDescription(list);

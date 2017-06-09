@@ -34,7 +34,7 @@ public final class JingleTransportManager extends Manager {
 
     public static final WeakHashMap<XMPPConnection, JingleTransportManager> INSTANCES = new WeakHashMap<>();
 
-    private final HashMap<String, JingleBytestreamManager<?>> contentTransportManagers = new HashMap<>();
+    private final HashMap<String, AbstractJingleTransportManager<?>> contentTransportManagers = new HashMap<>();
 
     private JingleTransportManager(XMPPConnection connection) {
         super(connection);
@@ -49,27 +49,27 @@ public final class JingleTransportManager extends Manager {
         return manager;
     }
 
-    public JingleBytestreamManager<?> getJingleContentTransportManager(String namespace) throws UnsupportedJingleTransportException {
-        JingleBytestreamManager<?> manager = contentTransportManagers.get(namespace);
+    public AbstractJingleTransportManager<?> getJingleContentTransportManager(String namespace) throws UnsupportedJingleTransportException {
+        AbstractJingleTransportManager<?> manager = contentTransportManagers.get(namespace);
         if (manager == null) {
             throw new UnsupportedJingleTransportException("Cannot find registered JingleContentTransportManager for " + namespace);
         }
         return manager;
     }
 
-    public JingleBytestreamManager<?> getJingleContentTransportManager(Jingle jingle) throws UnsupportedJingleTransportException {
+    public AbstractJingleTransportManager<?> getJingleContentTransportManager(Jingle jingle) throws UnsupportedJingleTransportException {
         return getJingleContentTransportManager(jingle.getContents().get(0).getJingleTransports().get(0).getNamespace());
     }
 
-    public void registerJingleContentTransportManager(JingleBytestreamManager<?> manager) {
+    public void registerJingleContentTransportManager(AbstractJingleTransportManager<?> manager) {
         contentTransportManagers.put(manager.getNamespace(), manager);
     }
 
-    public void unregisterJingleContentTransportManager(JingleBytestreamManager<?> manager) {
+    public void unregisterJingleContentTransportManager(AbstractJingleTransportManager<?> manager) {
         contentTransportManagers.remove(manager.getNamespace());
     }
 
-    public Collection<JingleBytestreamManager<?>> getAvailableJingleBytestreamManagers() {
+    public Collection<AbstractJingleTransportManager<?>> getAvailableJingleBytestreamManagers() {
         return Collections.unmodifiableCollection(contentTransportManagers.values());
     }
 
