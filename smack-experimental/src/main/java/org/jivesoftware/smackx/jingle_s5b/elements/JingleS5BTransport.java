@@ -29,7 +29,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfo;
 /**
  * Socks5Bytestream transport element.
  */
-public class JingleSocks5BytestreamTransport extends JingleContentTransport {
+public class JingleS5BTransport extends JingleContentTransport {
     public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:s5b:1";
     public static final String ATTR_DSTADDR = "dstaddr";
     public static final String ATTR_MODE = "mode";
@@ -39,7 +39,7 @@ public class JingleSocks5BytestreamTransport extends JingleContentTransport {
     private final String dstAddr;
     private final Bytestream.Mode mode;
 
-    protected JingleSocks5BytestreamTransport(List<JingleContentTransportCandidate> candidates, List<JingleContentTransportInfo> infos, String streamId, String dstAddr, Bytestream.Mode mode) {
+    protected JingleS5BTransport(List<JingleContentTransportCandidate> candidates, List<JingleContentTransportInfo> infos, String streamId, String dstAddr, Bytestream.Mode mode) {
         super(candidates, infos);
         this.streamId = streamId;
         this.dstAddr = dstAddr;
@@ -96,7 +96,7 @@ public class JingleSocks5BytestreamTransport extends JingleContentTransport {
             return this;
         }
 
-        public Builder addTransportCandidate(JingleSocks5BytestreamTransportCandidate candidate) {
+        public Builder addTransportCandidate(JingleS5BTransportCandidate candidate) {
             this.candidates.add(candidate);
             return this;
         }
@@ -107,24 +107,24 @@ public class JingleSocks5BytestreamTransport extends JingleContentTransport {
         }
 
         public Builder setCandidateUsed(String candidateId) {
-            return addTransportInfo(JingleSocks5BytestreamTransportInfo.CandidateUsed(candidateId));
+            return addTransportInfo(JingleS5BTransportInfo.CandidateUsed(candidateId));
         }
 
         public Builder setCandidateActivated(String candidateId) {
-            return addTransportInfo(JingleSocks5BytestreamTransportInfo.CandidateActivated(candidateId));
+            return addTransportInfo(JingleS5BTransportInfo.CandidateActivated(candidateId));
         }
 
         public Builder setCandidateError() {
-            return addTransportInfo(JingleSocks5BytestreamTransportInfo.CandidateError());
+            return addTransportInfo(JingleS5BTransportInfo.CandidateError());
         }
 
         public Builder setProxyError() {
-            return addTransportInfo(JingleSocks5BytestreamTransportInfo.ProxyError());
+            return addTransportInfo(JingleS5BTransportInfo.ProxyError());
         }
 
-        public JingleSocks5BytestreamTransport build() {
+        public JingleS5BTransport build() {
             StringUtils.requireNotNullOrEmpty(streamId, "sid MUST be neither null, nor empty.");
-            return new JingleSocks5BytestreamTransport(candidates, infos, streamId, dstAddr, mode);
+            return new JingleS5BTransport(candidates, infos, streamId, dstAddr, mode);
         }
     }
 }

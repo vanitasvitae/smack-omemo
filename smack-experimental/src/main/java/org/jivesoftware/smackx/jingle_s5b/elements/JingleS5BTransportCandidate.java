@@ -30,9 +30,9 @@ import org.jxmpp.stringprep.XmppStringprepException;
 /**
  * TransportCandidate for Jingle Socks5Bytestream transports.
  */
-public final class JingleSocks5BytestreamTransportCandidate extends JingleContentTransportCandidate {
+public final class JingleS5BTransportCandidate extends JingleContentTransportCandidate {
 
-    private static final Logger LOGGER = Logger.getLogger(JingleSocks5BytestreamTransportCandidate.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JingleS5BTransportCandidate.class.getName());
 
     public static final String ATTR_CID = "cid";
     public static final String ATTR_HOST = "host";
@@ -48,7 +48,7 @@ public final class JingleSocks5BytestreamTransportCandidate extends JingleConten
     private final int priority;
     private final Type type;
 
-    public JingleSocks5BytestreamTransportCandidate(String candidateId, String host, Jid jid, int port, int priority, Type type) {
+    public JingleS5BTransportCandidate(String candidateId, String host, Jid jid, int port, int priority, Type type) {
         this.cid = candidateId;
         this.host = host;
         this.jid = jid;
@@ -57,7 +57,7 @@ public final class JingleSocks5BytestreamTransportCandidate extends JingleConten
         this.type = type;
     }
 
-    public JingleSocks5BytestreamTransportCandidate(Bytestream.StreamHost streamHost, int priority) {
+    public JingleS5BTransportCandidate(Bytestream.StreamHost streamHost, int priority) {
         this.cid = JingleTransportManager.generateRandomId();
         this.host = streamHost.getAddress();
         this.jid = streamHost.getJID();
@@ -189,14 +189,14 @@ public final class JingleSocks5BytestreamTransportCandidate extends JingleConten
             return this;
         }
 
-        public JingleSocks5BytestreamTransportCandidate build() {
+        public JingleS5BTransportCandidate build() {
             Objects.requireNonNull(cid);
             Objects.requireNonNull(host);
             Objects.requireNonNull(jid);
             if (priority < 0) {
                 throw new IllegalArgumentException("Priority MUST be present and NOT less than 0.");
             }
-            return new JingleSocks5BytestreamTransportCandidate(cid, host, jid, port, priority, type);
+            return new JingleS5BTransportCandidate(cid, host, jid, port, priority, type);
         }
     }
 }
