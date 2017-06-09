@@ -140,7 +140,7 @@ public final class JingleS5BTransportManager extends AbstractJingleTransportMana
     public Jingle createSessionAccept(Jingle request)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         JingleContent receivedContent = request.getContents().get(0);
-        JingleS5BTransport receviedTransport = (JingleS5BTransport) receivedContent.getJingleTransports().get(0);
+        JingleS5BTransport receivedTransport = (JingleS5BTransport) receivedContent.getJingleTransports().get(0);
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setResponder(connection().getUser())
                 .setAction(JingleAction.session_accept)
@@ -151,7 +151,7 @@ public final class JingleS5BTransportManager extends AbstractJingleTransportMana
                 .setCreator(receivedContent.getCreator())
                 .setName(receivedContent.getName())
                 .setDescription(receivedContent.getDescription())
-                .addTransport(createJingleContentTransport(request.getInitiator(), receviedTransport));
+                .addTransport(createJingleContentTransport(request.getInitiator(), receivedTransport));
         jb.addJingleContent(cb.build());
 
         Jingle jingle = jb.build();

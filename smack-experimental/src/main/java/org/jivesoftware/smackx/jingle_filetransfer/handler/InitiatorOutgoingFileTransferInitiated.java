@@ -61,26 +61,7 @@ public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHand
 
         switch (jingle.getAction()) {
             case session_accept:
-                BytestreamSession session;
-
-                try {
-                    session = bm.outgoingInitiatedSession(jingle);
-                } catch (Exception e) {
-                    //TODO
-                    return null;
-                }
-
-                HashElement fileHash;
-                byte[] buf = new byte[(int) file.length()];
-
-                try {
-                    fileHash = FileAndHashReader.readAndCalculateHash(file, buf, HashManager.ALGORITHM.SHA_256);
-                    session.getOutputStream().write(buf);
-                    session.close();
-                } catch (IOException e) {
-                    //TODO:
-                    return null;
-                }
+                startTransfer(bm, jingle);
                 break;
             case session_terminate:
                 break;
@@ -89,5 +70,28 @@ public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHand
 
         }
         return IQ.createResultIQ(jingle);
+    }
+
+    public void startTransfer(AbstractJingleTransportManager<?> transportManager, Jingle jingle) {
+    BytestreamSession session;
+
+        try {
+            session = transportManager.outgoingInitiatedSession(jingle);
+        } catch (Exception e) {
+            //TODO
+            return;
+        }
+
+        HashElement fileHash;
+        byte[] buf = new byte[(int) file.length()];
+
+        try {
+            fileHash = FileAndHashReader.readAndCalculateHash(file, buf, HashManager.ALGORITHM.SHA_256);
+            session.getOutputStream().write(buf);
+            session.close();
+        } catch (IOException e) {
+            //TODO:
+            return;
+        }
     }
 }
