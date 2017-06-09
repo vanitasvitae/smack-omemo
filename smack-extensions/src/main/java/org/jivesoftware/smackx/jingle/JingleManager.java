@@ -16,7 +16,6 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +53,7 @@ public final class JingleManager extends Manager {
     }
 
     private final Map<String, JingleHandler> descriptionHandlers = new ConcurrentHashMap<>();
-    private final Map<FullJidAndSessionId, JingleSession> jingleSessions = new ConcurrentHashMap<>();
+    private final Map<FullJidAndSessionId, JingleSessionHandler> jingleSessionHandlers = new ConcurrentHashMap<>();
 
     private JingleManager(final XMPPConnection connection) {
         super(connection);
@@ -71,16 +70,16 @@ public final class JingleManager extends Manager {
                             assert (from != null);
                             FullJid fullFrom = from.asFullJidOrThrow();
                             FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(fullFrom, jingle.getSid());
-                            JingleSession jingleSession = jingleSessions.get(fullJidAndSessionId);
+                            JingleSessionHandler jingleSessionHandler = jingleSessionHandlers.get(fullJidAndSessionId);
 
-                            if (jingleSession == null) {
+                            if (jingleSessionHandler == null) {
                                 // Handle unknown session (XEP-0166 §10)
                                 XMPPError.Builder errorBuilder = XMPPError.getBuilder();
                                 errorBuilder.setCondition(XMPPError.Condition.item_not_found)
                                         .addExtension(JingleError.UNKNOWN_SESSION);
                                 return IQ.createErrorResponse(jingle, errorBuilder);
                             }
-                            return jingleSession.handleRequest(jingle);
+                            return jingleSessionHandler.handleJingleSessionRequest(jingle, jingle.getSid());
                         }
 
                         if (jingle.getContents().size() > 1) {
@@ -104,31 +103,39 @@ public final class JingleManager extends Manager {
                             return response;
                         }
 
-                        return jingleDescriptionHandler.handleJingleRequest(jingle);
+                        return jingleDescriptionHandler.handleJingleSessionInitiate(jingle);
                     }
                 });
     }
 
-    public void registerJingleSession(JingleSession session) {
-        FullJidAndSessionId jidAndSid = new FullJidAndSessionId(session.getRemote(), session.getSid());
-        jingleSessions.put(jidAndSid, session);
+    public void registerJingleSessionHandler(FullJid jid, String sessionId, JingleSessionHandler sessionHandler) {
+        jingleSessionHandlers.put(new FullJidAndSessionId(jid, sessionId), sessionHandler);
     }
 
-    public void unregisterJingleSession(JingleSession session) {
-        jingleSessions.values().removeAll(Collections.singleton(session));
+    public void unregisterJingleSession(FullJid jid, String sessionId) {
+        jingleSessionHandlers.remove(new FullJidAndSessionId(jid, sessionId));
     }
 
     public JingleHandler registerDescriptionHandler(String namespace, JingleHandler handler) {
         return descriptionHandlers.put(namespace, handler);
     }
 
-    private static final class FullJidAndSessionId {
+    public static final class FullJidAndSessionId {
         final FullJid fullJid;
         final String sessionId;
 
-        private FullJidAndSessionId(FullJid fullJid, String sessionId) {
+        public FullJidAndSessionId(FullJid fullJid, String sessionId) {
             this.fullJid = fullJid;
             this.sessionId = sessionId;
+        }
+
+        public FullJid getFullJid() {
+            return fullJid;
+        }
+
+
+        public String getSessionId() {
+            return sessionId;
         }
 
         @Override

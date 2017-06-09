@@ -16,30 +16,37 @@
  */
 package org.jivesoftware.smackx.jingle_s5b;
 
-import java.io.OutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.bytestreams.BytestreamListener;
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.hashes.HashManager;
-import org.jivesoftware.smackx.jingle.AbstractJingleContentTransportManager;
-import org.jivesoftware.smackx.jingle.JingleTransportInputStreamCallback;
+import org.jivesoftware.smackx.jingle.JingleBytestreamManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransport;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleSocks5BytestreamTransportCandidate;
 import org.jivesoftware.smackx.jingle_s5b.provider.JingleSocks5BytestreamTransportProvider;
+import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
 
 /**
  * Manager for JingleSocks5BytestreamTransports.
  */
-public final class JingleSocks5BytestreamTransportManager extends AbstractJingleContentTransportManager<JingleSocks5BytestreamTransport> {
+public final class JingleSocks5BytestreamTransportManager extends JingleBytestreamManager<JingleSocks5BytestreamTransport> {
 
     private static final WeakHashMap<XMPPConnection, JingleSocks5BytestreamTransportManager> INSTANCES = new WeakHashMap<>();
 
@@ -59,13 +66,40 @@ public final class JingleSocks5BytestreamTransportManager extends AbstractJingle
     public List<Bytestream.StreamHost> getAvailableStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         Socks5BytestreamManager s5m = Socks5BytestreamManager.getBytestreamManager(connection());
         List<Jid> proxies = s5m.determineProxies();
-        return s5m.determineStreamHostInfos(proxies);
+        return determineStreamHostInfos(proxies);
     }
 
     public List<Bytestream.StreamHost> getLocalStreamHosts() {
         return Socks5BytestreamManager.getBytestreamManager(connection())
                 .getLocalStreamHost();
     }
+
+    public List<Bytestream.StreamHost> determineStreamHostInfos(List<Jid> proxies) {
+        XMPPConnection connection = connection();
+        List<Bytestream.StreamHost> streamHosts = new ArrayList<>();
+
+        Iterator<Jid> iterator = proxies.iterator();
+        while (iterator.hasNext()) {
+            Jid proxy = iterator.next();
+            Bytestream request = new Bytestream();
+            request.setType(IQ.Type.get);
+            request.setTo(proxy);
+            try {
+                Bytestream response = connection.createStanzaCollectorAndSend(request).nextResultOrThrow();
+                streamHosts.addAll(response.getStreamHosts());
+            }
+            catch (Exception e) {
+                iterator.remove();
+            }
+        }
+
+        return streamHosts;
+    }
+
+    public void connectToStreamHost() {
+
+    }
+
 
     @Override
     protected JingleContentTransportProvider<JingleSocks5BytestreamTransport> createJingleContentTransportProvider() {
@@ -78,19 +112,29 @@ public final class JingleSocks5BytestreamTransportManager extends AbstractJingle
     }
 
     @Override
-    public void acceptInputStream(Jingle jingle, JingleTransportInputStreamCallback callback) {
-
-    }
-
-    @Override
-    public OutputStream createOutputStream(Jingle jingle) {
+    public Jingle createSessionInitiate(FullJid targetJID, JingleContentDescription application, String sessionId) throws XMPPException, IOException, InterruptedException, SmackException {
         return null;
     }
 
     @Override
-    public JingleSocks5BytestreamTransport createJingleContentTransport(Jid otherUser) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
-        JingleSocks5BytestreamTransport.Builder builder = JingleSocks5BytestreamTransport.getBuilder();
+    public Jingle createSessionAccept(Jingle request) {
+        return null;
+    }
 
+    @Override
+    public BytestreamSession outgoingInitiatedSession(Jingle jingle) throws Exception {
+        return null;
+    }
+
+    @Override
+    public void setIncomingRespondedSessionListener(Jingle jingle, BytestreamListener listener) {
+
+    }
+
+    public JingleSocks5BytestreamTransport createJingleContentTransport(Jid remote, JingleContentTransport received_) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        JingleSocks5BytestreamTransport received = (JingleSocks5BytestreamTransport) received_;
+
+        JingleSocks5BytestreamTransport.Builder builder = JingleSocks5BytestreamTransport.getBuilder();
         List<Bytestream.StreamHost> localStreams = getLocalStreamHosts();
         List<Bytestream.StreamHost> availableStreams = getAvailableStreamHosts();
 
@@ -104,14 +148,23 @@ public final class JingleSocks5BytestreamTransportManager extends AbstractJingle
             builder.addTransportCandidate(candidate);
         }
 
-        builder.setMode(Bytestream.Mode.tcp);
-        String sid = JingleTransportManager.generateRandomId();
+        String sid = (received == null ? JingleTransportManager.generateRandomId() : received.getStreamId());
         builder.setStreamId(sid);
+        builder.setMode(received == null ? Bytestream.Mode.tcp : received.getMode());
+
         String digestString =
                         sid +
                         connection().getUser().asFullJidIfPossible().toString() +
-                        otherUser.asFullJidIfPossible().toString();
+                        remote.asFullJidIfPossible().toString();
         builder.setDestinationAddress(HashManager.sha_1HexString(digestString));
         return builder.build();
     }
+
+    public static class Session {
+        private ArrayList<Bytestream.StreamHost> ourStreamHosts;
+        private ArrayList<Bytestream.StreamHost> theirStreamHosts;
+
+
+    }
+
 }

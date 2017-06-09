@@ -14,13 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.handler;
-
-import org.jivesoftware.smackx.jingle.element.Jingle;
 
 /**
- * Created by vanitas on 02.06.17.
+ * Smack's API for <a href="https://xmpp.org/extensions/xep-0261.html">XEP-0261: Jingle In-Band Bytestreams</a>.
+ * Provider classes.
  */
-public interface FileOfferHandler {
-    void handleFileOffer(Jingle jingle);
-}
+package org.jivesoftware.smackx.jingle_ibb2.provider;

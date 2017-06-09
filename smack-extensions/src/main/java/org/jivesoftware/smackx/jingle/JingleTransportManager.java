@@ -16,12 +16,15 @@
  */
 package org.jivesoftware.smackx.jingle;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
 
 /**
@@ -31,7 +34,7 @@ public final class JingleTransportManager extends Manager {
 
     public static final WeakHashMap<XMPPConnection, JingleTransportManager> INSTANCES = new WeakHashMap<>();
 
-    private final HashMap<String, AbstractJingleContentTransportManager<?>> contentTransportManagers = new HashMap<>();
+    private final HashMap<String, JingleBytestreamManager<?>> contentTransportManagers = new HashMap<>();
 
     private JingleTransportManager(XMPPConnection connection) {
         super(connection);
@@ -46,20 +49,28 @@ public final class JingleTransportManager extends Manager {
         return manager;
     }
 
-    public AbstractJingleContentTransportManager<?> getJingleContentTransportManager(String namespace) throws UnsupportedJingleTransportException {
-        AbstractJingleContentTransportManager<?> manager = contentTransportManagers.get(namespace);
+    public JingleBytestreamManager<?> getJingleContentTransportManager(String namespace) throws UnsupportedJingleTransportException {
+        JingleBytestreamManager<?> manager = contentTransportManagers.get(namespace);
         if (manager == null) {
             throw new UnsupportedJingleTransportException("Cannot find registered JingleContentTransportManager for " + namespace);
         }
         return manager;
     }
 
-    public void registerJingleContentTransportManager(AbstractJingleContentTransportManager<?> manager) {
+    public JingleBytestreamManager<?> getJingleContentTransportManager(Jingle jingle) throws UnsupportedJingleTransportException {
+        return getJingleContentTransportManager(jingle.getContents().get(0).getJingleTransports().get(0).getNamespace());
+    }
+
+    public void registerJingleContentTransportManager(JingleBytestreamManager<?> manager) {
         contentTransportManagers.put(manager.getNamespace(), manager);
     }
 
-    public void unregisterJingleContentTransportManager(AbstractJingleContentTransportManager<?> manager) {
+    public void unregisterJingleContentTransportManager(JingleBytestreamManager<?> manager) {
         contentTransportManagers.remove(manager.getNamespace());
+    }
+
+    public Collection<JingleBytestreamManager<?>> getAvailableJingleBytestreamManagers() {
+        return Collections.unmodifiableCollection(contentTransportManagers.values());
     }
 
     public static String generateRandomId() {

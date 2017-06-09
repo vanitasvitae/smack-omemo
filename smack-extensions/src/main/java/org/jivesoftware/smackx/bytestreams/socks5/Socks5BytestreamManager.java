@@ -585,7 +585,7 @@ public final class Socks5BytestreamManager extends Manager implements Bytestream
      * @param proxies a list of SOCKS5 proxy JIDs
      * @return a list of stream hosts containing the IP address an the port
      */
-    public List<StreamHost> determineStreamHostInfos(List<Jid> proxies) {
+    private List<StreamHost> determineStreamHostInfos(List<Jid> proxies) {
         XMPPConnection connection = connection();
         List<StreamHost> streamHosts = new ArrayList<StreamHost>();
 

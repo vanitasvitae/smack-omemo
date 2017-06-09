@@ -24,14 +24,14 @@ import static junit.framework.TestCase.assertTrue;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
-import org.jivesoftware.smackx.jingle_ibb.element.JingleInBandBytestreamTransport;
-import org.jivesoftware.smackx.jingle_ibb.provider.JingleInBandByteStreamTransportProvider;
+import org.jivesoftware.smackx.jingle_ibb2.element.JingleIBBTransport;
+import org.jivesoftware.smackx.jingle_ibb2.provider.JingleIBBTransportProvider;
 import org.junit.Test;
 
 /**
- * Test JingleInBandByteStreamTransport provider and element.
+ * Test JingleIBBTransport provider and element.
  */
-public class JingleInBandByteStreamTransportTest extends SmackTestSuite {
+public class JingleIBBTransportTest extends SmackTestSuite {
 
     @Test
     public void parserTest() throws Exception {
@@ -40,32 +40,32 @@ public class JingleInBandByteStreamTransportTest extends SmackTestSuite {
 
         String xml = "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' block-size='8192' sid='" + sid + "'/>";
 
-        JingleInBandBytestreamTransport transport = new JingleInBandBytestreamTransport(size, sid);
+        JingleIBBTransport transport = new JingleIBBTransport(size, sid);
         assertEquals(xml, transport.toXML().toString());
         assertEquals(size, transport.getBlockSize());
         assertEquals(sid, transport.getSessionId());
 
-        JingleInBandBytestreamTransport parsed = new JingleInBandByteStreamTransportProvider()
+        JingleIBBTransport parsed = new JingleIBBTransportProvider()
                 .parse(TestUtils.getParser(xml));
         assertEquals(transport, parsed);
         assertTrue(transport.equals(parsed));
         assertEquals(xml, parsed.toXML().toString());
 
-        JingleInBandBytestreamTransport transport1 = new JingleInBandBytestreamTransport((short) 1024);
+        JingleIBBTransport transport1 = new JingleIBBTransport((short) 1024);
         assertEquals((short) 1024, transport1.getBlockSize());
         assertNotSame(transport, transport1);
         assertNotSame(transport.getSessionId(), transport1.getSessionId());
 
         assertFalse(transport.equals(null));
 
-        JingleInBandBytestreamTransport transport2 = new JingleInBandBytestreamTransport();
-        assertEquals(JingleInBandBytestreamTransport.DEFAULT_BLOCK_SIZE, transport2.getBlockSize());
+        JingleIBBTransport transport2 = new JingleIBBTransport();
+        assertEquals(JingleIBBTransport.DEFAULT_BLOCK_SIZE, transport2.getBlockSize());
         assertFalse(transport1.equals(transport2));
 
-        JingleInBandBytestreamTransport transport3 = new JingleInBandBytestreamTransport((short) -1024);
-        assertEquals(JingleInBandBytestreamTransport.DEFAULT_BLOCK_SIZE, transport3.getBlockSize());
+        JingleIBBTransport transport3 = new JingleIBBTransport((short) -1024);
+        assertEquals(JingleIBBTransport.DEFAULT_BLOCK_SIZE, transport3.getBlockSize());
 
-        assertEquals(transport3.getNamespace(), JingleInBandBytestreamTransportManager.NAMESPACE_V1);
+        assertEquals(transport3.getNamespace(), JingleIBBTransport.NAMESPACE_V1);
         assertEquals(transport3.getElementName(), "transport");
     }
 }

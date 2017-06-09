@@ -1,47 +1,31 @@
-/**
- *
- * Copyright 2017 Paul Schaub
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package org.jivesoftware.smackx.jingle_ibb.element;
+package org.jivesoftware.smackx.jingle_ibb2.element;
 
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
-import org.jivesoftware.smackx.jingle_ibb.JingleInBandBytestreamTransportManager;
 
 /**
- * Jingle In-Band-ByteStream transport.
+ * Transport Element for JingleInBandBytestream transports.
  */
-public class JingleInBandBytestreamTransport extends JingleContentTransport {
-
+public class JingleIBBTransport extends JingleContentTransport {
+    public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:ibb:1";
     public static final String ATTR_BLOCK_SIZE = "block-size";
     public static final String ATTR_SID = "sid";
+
     public static final short DEFAULT_BLOCK_SIZE = 4096;
 
     private final short blockSize;
     private final String sid;
 
-    public JingleInBandBytestreamTransport() {
+    public JingleIBBTransport() {
         this(DEFAULT_BLOCK_SIZE);
     }
 
-    public JingleInBandBytestreamTransport(short blockSize) {
+    public JingleIBBTransport(short blockSize) {
         this(blockSize, JingleTransportManager.generateRandomId());
     }
 
-    public JingleInBandBytestreamTransport(short blockSize, String sid) {
+    public JingleIBBTransport(short blockSize, String sid) {
         super(null);
         if (blockSize > 0) {
             this.blockSize = blockSize;
@@ -67,16 +51,16 @@ public class JingleInBandBytestreamTransport extends JingleContentTransport {
 
     @Override
     public String getNamespace() {
-        return JingleInBandBytestreamTransportManager.NAMESPACE_V1;
+        return NAMESPACE_V1;
     }
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof JingleInBandBytestreamTransport)) {
+        if (other == null || !(other instanceof JingleIBBTransport)) {
             return false;
         }
 
-        return this.hashCode() == other.hashCode();
+        return this == other || this.hashCode() == other.hashCode();
     }
 
     @Override
