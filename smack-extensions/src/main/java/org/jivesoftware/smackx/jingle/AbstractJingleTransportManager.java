@@ -54,7 +54,7 @@ public abstract class AbstractJingleTransportManager<D extends JingleContentTran
 
     public abstract Jingle createSessionInitiate(FullJid targetJID, JingleContentDescription application, String sessionId) throws XMPPException, IOException, InterruptedException, SmackException;
 
-    public abstract Jingle createSessionAccept(Jingle request);
+    public abstract Jingle createSessionAccept(Jingle request) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException;
 
     public abstract BytestreamSession outgoingInitiatedSession(Jingle jingle) throws Exception;
 

@@ -41,11 +41,11 @@ import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportExcept
 import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
-import org.jivesoftware.smackx.jingle_filetransfer.handler.ResponderIncomingFileTransferAccepted;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.InitiatorOutgoingFileTransferInitiated;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.ResponderIncomingFileTransferAccepted;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_ibb.JingleIBBTransportManager;
+import org.jivesoftware.smackx.jingle_s5b.JingleS5BTransportManager;
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -77,9 +77,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                 NAMESPACE_V5, this);
         JingleContentProviderManager.addJingleContentDescriptionProvider(
                 NAMESPACE_V5, new JingleFileTransferContentDescriptionProvider());
-        JingleIBBTransportManager.getInstanceFor(connection);
-        //JingleInBandBytestreamTransportManager.getInstanceFor(connection);
-        //JingleSocks5BytestreamTransportManager.getInstanceFor(connection);
+        //JingleIBBTransportManager.getInstanceFor(connection);
+        JingleS5BTransportManager.getInstanceFor(connection);
     }
 
     /**

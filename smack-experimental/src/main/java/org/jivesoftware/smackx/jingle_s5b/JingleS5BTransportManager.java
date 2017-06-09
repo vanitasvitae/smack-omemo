@@ -34,6 +34,8 @@ import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
@@ -112,13 +114,51 @@ public final class JingleS5BTransportManager extends AbstractJingleTransportMana
     }
 
     @Override
-    public Jingle createSessionInitiate(FullJid targetJID, JingleContentDescription application, String sessionId) throws XMPPException, IOException, InterruptedException, SmackException {
-        return null;
+    public Jingle createSessionInitiate(FullJid targetJID, JingleContentDescription application, String sessionId)
+            throws XMPPException, IOException, InterruptedException, SmackException {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setAction(JingleAction.session_initiate)
+                .setInitiator(connection().getUser())
+                .setSessionId(sessionId);
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.addTransport(createJingleContentTransport(targetJID, null))
+                .setSenders(JingleContent.Senders.initiator)
+                .setName(JingleTransportManager.generateRandomId())
+                .setCreator(JingleContent.Creator.initiator)
+                .setDescription(application);
+        jb.addJingleContent(cb.build());
+
+        Jingle jingle = jb.build();
+        jingle.setTo(targetJID);
+        jingle.setFrom(connection().getUser());
+        jingle.setType(IQ.Type.set);
+        return jingle;
     }
 
     @Override
-    public Jingle createSessionAccept(Jingle request) {
-        return null;
+    public Jingle createSessionAccept(Jingle request)
+            throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        JingleContent receivedContent = request.getContents().get(0);
+        JingleS5BTransport receviedTransport = (JingleS5BTransport) receivedContent.getJingleTransports().get(0);
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setResponder(connection().getUser())
+                .setAction(JingleAction.session_accept)
+                .setSessionId(request.getSid());
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.setSenders(receivedContent.getSenders())
+                .setCreator(receivedContent.getCreator())
+                .setName(receivedContent.getName())
+                .setDescription(receivedContent.getDescription())
+                .addTransport(createJingleContentTransport(request.getInitiator(), receviedTransport));
+        jb.addJingleContent(cb.build());
+
+        Jingle jingle = jb.build();
+        jingle.setTo(request.getFrom());
+        jingle.setFrom(connection().getUser());
+        jingle.setType(IQ.Type.set);
+        return jingle;
     }
 
     @Override
@@ -128,7 +168,7 @@ public final class JingleS5BTransportManager extends AbstractJingleTransportMana
 
     @Override
     public void setIncomingRespondedSessionListener(Jingle jingle, BytestreamListener listener) {
-
+        Socks5BytestreamManager.getBytestreamManager(connection()).addIncomingBytestreamListener(listener, jingle.getInitiator());
     }
 
     public JingleS5BTransport createJingleContentTransport(Jid remote, JingleContentTransport received_) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
