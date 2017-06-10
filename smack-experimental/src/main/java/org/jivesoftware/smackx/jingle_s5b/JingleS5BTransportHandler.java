@@ -22,8 +22,11 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
     }
 
     @Override
-    public void establishOutgoingSession(JingleManager.FullJidAndSessionId target, JingleContentTransport transport, JingleTransportEstablishedCallback callback) {
-
+    public void establishOutgoingSession(JingleManager.FullJidAndSessionId target, JingleContentTransport hopefullyS5BTransport, JingleTransportEstablishedCallback callback) {
+        if (!hopefullyS5BTransport.getNamespace().equals(JingleS5BTransport.NAMESPACE_V1)) {
+            throw new IllegalArgumentException("Transport must be a JingleS5BTransport.");
+        }
+        JingleS5BTransport transport = (JingleS5BTransport) hopefullyS5BTransport;
     }
 
     @Override

@@ -22,10 +22,14 @@ import java.util.logging.Logger;
 
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
+import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
+import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
@@ -45,7 +49,7 @@ public class ResponderIncomingFileTransferAccepted implements JingleSessionHandl
     private final FullJid initiator;
     private final String sessionId;
 
-    public ResponderIncomingFileTransferAccepted(JingleFileTransferManager manager, Jingle initiate, File target) {
+    public ResponderIncomingFileTransferAccepted(final JingleFileTransferManager manager, final Jingle initiate, final File target) {
         this.manager = new WeakReference<>(manager);
         this.target = target;
         this.size = ((JingleFileTransferChild) initiate.getContents().get(0).getDescription()
@@ -57,6 +61,21 @@ public class ResponderIncomingFileTransferAccepted implements JingleSessionHandl
         }
         this.initiator = initiate.getInitiator();
         this.sessionId = initiate.getSid();
+
+        transportManager.createJingleTransportHandler(this).establishIncomingSession(
+                new JingleManager.FullJidAndSessionId(initiate.getFrom().asFullJidIfPossible(), initiate.getSid()),
+                initiate.getContents().get(0).getJingleTransports().get(0),
+                new JingleTransportEstablishedCallback() {
+                    @Override
+                    public void onSessionEstablished(BytestreamSession bytestreamSession) {
+                        manager.receiveFile(initiate, bytestreamSession, target);
+                    }
+
+                    @Override
+                    public void onSessionFailure(JingleTransportFailureException reason) {
+
+                    }
+                });
     }
 
     @Override

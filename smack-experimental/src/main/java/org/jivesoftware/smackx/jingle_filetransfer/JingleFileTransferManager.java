@@ -47,6 +47,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
@@ -120,10 +121,6 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         }
     }
 
-    public void addFileTransferRejectedListener() {
-
-    }
-
     /**
      * QnD method.
      * @param file
@@ -189,64 +186,26 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
             return null;
         }
 
-        JingleTransportManager tm = JingleTransportManager.getInstanceFor(connection());
-        String transportNamespace = jingle.getContents().get(0).getJingleTransports().get(0).getNamespace();
-
-        AbstractJingleTransportManager<?> transportManager = null;
-        for (AbstractJingleTransportManager<?> b : tm.getAvailableJingleBytestreamManagers()) {
-            if (b.getNamespace().equals(transportNamespace)) {
-                transportManager = b;
-            }
-        }
-
-        if (transportManager == null) {
-            //TODO unsupported-transport?
-            return null;
-        }
-
-        final AbstractJingleTransportManager<?> finalTransportManager = transportManager;
-
         notifyIncomingFileTransferListeners(jingle, new JingleFileTransferCallback() {
             @Override
-            public void accept(final File target) throws Exception {
+            public void acceptFileTransfer(final File target) throws Exception {
                 connection().sendStanza(sessionAccept(jingle));
-
-                JingleManager.FullJidAndSessionId fullJidAndSessionId =
-                        new JingleManager.FullJidAndSessionId(
-                                jingle.getFrom().asFullJidIfPossible(), jingle.getSid());
-
-
                 ResponderIncomingFileTransferAccepted responded = new ResponderIncomingFileTransferAccepted(
                         JingleFileTransferManager.this, jingle, target);
-
                 jingleManager.registerJingleSessionHandler(jingle.getFrom().asFullJidIfPossible(), jingle.getSid(),
                         responded);
-
-                finalTransportManager.createJingleTransportHandler(responded).establishIncomingSession(fullJidAndSessionId,
-                        jingle.getContents().get(0).getJingleTransports().get(0),
-                        new JingleTransportEstablishedCallback() {
-                            @Override
-                            public void onSessionEstablished(BytestreamSession bytestreamSession) {
-                                receiveFile(jingle, bytestreamSession, target);
-                            }
-
-                            @Override
-                            public void onSessionFailure(JingleTransportFailureException reason) {
-
-                            }
-                        });
             }
 
             @Override
-            public void decline() throws SmackException.NotConnectedException, InterruptedException {
-                //TODO
+            public void declineFileTransfer() throws SmackException.NotConnectedException, InterruptedException {
+                connection().sendStanza(decline(jingle));
             }
         });
 
         return IQ.createResultIQ(jingle);
     }
 
-    protected Jingle sessionInitiate(FullJid recipient, JingleContentDescription contentDescription, JingleContentTransport transport) {
+    public Jingle sessionInitiate(FullJid recipient, JingleContentDescription contentDescription, JingleContentTransport transport) {
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setSessionId(StringUtils.randomString(24))
                 .setAction(JingleAction.session_initiate)
@@ -267,7 +226,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         return jingle;
     }
 
-    protected Jingle sessionAccept(Jingle request) throws Exception {
+    public Jingle sessionAccept(Jingle request) throws Exception {
         JingleContent content = request.getContents().get(0);
 
         Jingle.Builder jb = Jingle.getBuilder();
@@ -292,6 +251,18 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         jingle.setFrom(connection().getUser());
         jingle.setTo(request.getFrom());
 
+        return jingle;
+    }
+
+    public Jingle decline(Jingle request) {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setResponder(connection().getUser())
+                .setAction(JingleAction.session_terminate)
+                .setReason(JingleReason.Reason.decline)
+                .setSessionId(request.getSid());
+        Jingle jingle = jb.build();
+        jingle.setTo(request.getFrom());
+        jingle.setFrom(connection().getUser());
         return jingle;
     }
 
