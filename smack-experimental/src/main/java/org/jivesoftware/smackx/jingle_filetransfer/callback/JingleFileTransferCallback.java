@@ -27,7 +27,7 @@ import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportExcept
  */
 public interface JingleFileTransferCallback {
 
-    void accept(File target) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, UnsupportedJingleTransportException, SmackException.NoResponseException;
+    void accept(File target) throws Exception;
 
     void decline() throws SmackException.NotConnectedException, InterruptedException;
 }

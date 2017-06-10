@@ -17,7 +17,9 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.WeakHashMap;
@@ -26,21 +28,26 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.hashes.HashManager;
+import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
+import org.jivesoftware.smackx.jingle.JingleTransportHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
-import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
@@ -48,7 +55,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.handler.InitiatorOutgoingFile
 import org.jivesoftware.smackx.jingle_filetransfer.handler.ResponderIncomingFileTransferAccepted;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_s5b.JingleS5BTransportManager;
+import org.jivesoftware.smackx.jingle_ibb.JingleIBBTransportManager;
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -80,8 +87,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                 NAMESPACE_V5, this);
         JingleContentProviderManager.addJingleContentDescriptionProvider(
                 NAMESPACE_V5, new JingleFileTransferContentDescriptionProvider());
-        //JingleIBBTransportManager.getInstanceFor(connection);
-        JingleS5BTransportManager.getInstanceFor(connection);
+        JingleIBBTransportManager.getInstanceFor(connection);
+        //JingleS5BTransportManager.getInstanceFor(connection);
     }
 
     /**
@@ -121,7 +128,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
      * QnD method.
      * @param file
      */
-    public void sendFile(File file, final FullJid recipient) throws IOException, SmackException, InterruptedException, XMPPException {
+    public void sendFile(final File file, final FullJid recipient) throws Exception {
         AbstractJingleTransportManager<?> tm = JingleTransportManager.getInstanceFor(connection())
                 .getAvailableJingleBytestreamManagers().iterator().next();
 
@@ -132,15 +139,43 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
 
         JingleFileTransferContentDescription description = new JingleFileTransferContentDescription(
                 Collections.singletonList((JingleContentDescriptionChildElement) b.build()));
-        Jingle initiate = tm.createSessionInitiate(recipient, description);
+
+        JingleContentTransport transport = tm.createJingleContentTransport(recipient);
+        Jingle initiate = sessionInitiate(recipient, description, transport);
 
         JingleManager.FullJidAndSessionId fullJidAndSessionId =
                 new JingleManager.FullJidAndSessionId(recipient, initiate.getSid());
 
-        jingleManager.registerJingleSessionHandler(recipient, initiate.getSid(),
-                new InitiatorOutgoingFileTransferInitiated(this, fullJidAndSessionId, file));
+        InitiatorOutgoingFileTransferInitiated sessionHandler =
+                new InitiatorOutgoingFileTransferInitiated(this, fullJidAndSessionId, file);
 
+        jingleManager.registerJingleSessionHandler(recipient, initiate.getSid(), sessionHandler);
+
+        JingleTransportHandler<?> transportHandler = tm.createJingleTransportHandler(sessionHandler);
         connection().sendStanza(initiate);
+        transportHandler.establishOutgoingSession(fullJidAndSessionId, transport, new JingleTransportEstablishedCallback() {
+            @Override
+            public void onSessionEstablished(BytestreamSession bytestreamSession) {
+                try {
+                    byte[] filebuf = new byte[(int) file.length()];
+                    HashElement hashElement = FileAndHashReader.readAndCalculateHash(file, filebuf, HashManager.ALGORITHM.SHA_256);
+                    bytestreamSession.getInputStream().read(filebuf);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        bytestreamSession.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onSessionFailure(JingleTransportFailureException reason) {
+
+            }
+        });
     }
 
     public FullJid ourJid() {
@@ -173,8 +208,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
 
         notifyIncomingFileTransferListeners(jingle, new JingleFileTransferCallback() {
             @Override
-            public void accept(File target) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, UnsupportedJingleTransportException, SmackException.NoResponseException {
-                connection().sendStanza(finalTransportManager.createSessionAccept(jingle));
+            public void accept(final File target) throws Exception {
+                connection().sendStanza(sessionAccept(jingle));
 
                 JingleManager.FullJidAndSessionId fullJidAndSessionId =
                         new JingleManager.FullJidAndSessionId(
@@ -192,7 +227,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                         new JingleTransportEstablishedCallback() {
                             @Override
                             public void onSessionEstablished(BytestreamSession bytestreamSession) {
-
+                                receiveFile(jingle, bytestreamSession, target);
                             }
 
                             @Override
@@ -209,6 +244,100 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         });
 
         return IQ.createResultIQ(jingle);
+    }
+
+    protected Jingle sessionInitiate(FullJid recipient, JingleContentDescription contentDescription, JingleContentTransport transport) {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setSessionId(StringUtils.randomString(24))
+                .setAction(JingleAction.session_initiate)
+                .setInitiator(connection().getUser());
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.setDescription(contentDescription)
+                .setName(StringUtils.randomString(24))
+                .setCreator(JingleContent.Creator.initiator)
+                .setSenders(JingleContent.Senders.initiator)
+                .addTransport(transport);
+
+        jb.addJingleContent(cb.build());
+        Jingle jingle = jb.build();
+        jingle.setFrom(connection().getUser());
+        jingle.setTo(recipient);
+
+        return jingle;
+    }
+
+    protected Jingle sessionAccept(Jingle request) throws Exception {
+        JingleContent content = request.getContents().get(0);
+
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setSessionId(request.getSid())
+                .setAction(JingleAction.session_accept)
+                .setResponder(connection().getUser());
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.setSenders(content.getSenders())
+                .setCreator(content.getCreator())
+                .setName(content.getName())
+                .setDescription(content.getDescription());
+
+        AbstractJingleTransportManager<?> tm = JingleTransportManager.getInstanceFor(connection())
+                .getJingleContentTransportManager(request);
+
+        JingleContentTransport transport = tm.createJingleContentTransport(request);
+        cb.addTransport(transport);
+
+        jb.addJingleContent(cb.build());
+        Jingle jingle = jb.build();
+        jingle.setFrom(connection().getUser());
+        jingle.setTo(request.getFrom());
+
+        return jingle;
+    }
+
+    public void receiveFile(Jingle request, BytestreamSession session, File target) {
+        JingleFileTransferChild file = (JingleFileTransferChild)
+                request.getContents().get(0).getDescription().getJingleContentDescriptionChildren().get(0);
+
+        InputStream inputStream = null;
+        FileOutputStream outputStream = null;
+
+        try {
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+
+            inputStream = session.getInputStream();
+            outputStream = new FileOutputStream(target);
+
+            byte[] fileBuf = new byte[file.getSize()];
+            byte[] buf = new byte[2048];
+            int read = 0;
+            while (read < fileBuf.length) {
+                int r = inputStream.read(buf);
+                if (r >= 0) {
+                    System.arraycopy(buf, 0, fileBuf, read, r);
+                    read += r;
+                }
+            }
+
+            outputStream.write(fileBuf);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+                session.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public XMPPConnection getConnection() {

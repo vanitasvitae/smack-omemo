@@ -22,6 +22,7 @@ import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
+import org.jxmpp.jid.FullJid;
 
 /**
  * This class defines the shape that JingleTransportManager must be of.
@@ -40,7 +41,7 @@ public abstract class AbstractJingleTransportManager<D extends JingleContentTran
 
     public abstract JingleTransportHandler<D> createJingleTransportHandler(JingleSessionHandler sessionHandler);
 
-    public abstract D createJingleContentTransport(JingleManager.FullJidAndSessionId target) throws Exception;
+    public abstract D createJingleContentTransport(FullJid target) throws Exception;
 
     public abstract D createJingleContentTransport(Jingle remotesRequest) throws Exception;
 

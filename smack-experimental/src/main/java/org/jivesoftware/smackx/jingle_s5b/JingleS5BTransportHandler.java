@@ -7,6 +7,7 @@ import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportHandler;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleS5BTransport;
 
 /**
@@ -21,12 +22,12 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
     }
 
     @Override
-    public void establishOutgoingSession(JingleManager.FullJidAndSessionId target, JingleS5BTransport transport, JingleTransportEstablishedCallback callback) {
+    public void establishOutgoingSession(JingleManager.FullJidAndSessionId target, JingleContentTransport transport, JingleTransportEstablishedCallback callback) {
 
     }
 
     @Override
-    public void establishIncomingSession(JingleManager.FullJidAndSessionId target, JingleS5BTransport transport, JingleTransportEstablishedCallback callback) {
+    public void establishIncomingSession(JingleManager.FullJidAndSessionId target, JingleContentTransport transport, JingleTransportEstablishedCallback callback) {
 
     }
 

@@ -20,13 +20,13 @@ import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
-import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportHandler;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle_ibb.provider.JingleIBBTransportProvider;
+import org.jxmpp.jid.FullJid;
 
 /**
  * BytestreamManager for Jingle InBandBytestream Transports.
@@ -54,8 +54,8 @@ public final class JingleIBBTransportManager extends AbstractJingleTransportMana
     }
 
     @Override
-    public JingleIBBTransport createJingleContentTransport(JingleManager.FullJidAndSessionId target) {
-        return new JingleIBBTransport(target.getSessionId());
+    public JingleIBBTransport createJingleContentTransport(FullJid target) {
+        return new JingleIBBTransport();
     }
 
     @Override

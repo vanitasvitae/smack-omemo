@@ -14,6 +14,7 @@ import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportHandler;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
 
@@ -29,7 +30,7 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
-    public void establishOutgoingSession(JingleManager.FullJidAndSessionId target, JingleIBBTransport transport, JingleTransportEstablishedCallback callback) {
+    public void establishOutgoingSession(JingleManager.FullJidAndSessionId target, JingleContentTransport transport, JingleTransportEstablishedCallback callback) {
         InBandBytestreamSession session;
 
         try {
@@ -44,7 +45,7 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
-    public void establishIncomingSession(final JingleManager.FullJidAndSessionId target, JingleIBBTransport transport, final JingleTransportEstablishedCallback callback) {
+    public void establishIncomingSession(final JingleManager.FullJidAndSessionId target, JingleContentTransport transport, final JingleTransportEstablishedCallback callback) {
         InBandBytestreamManager.getByteStreamManager(getConnection()).addIncomingBytestreamListener(new BytestreamListener() {
             @Override
             public void incomingBytestreamRequest(BytestreamRequest request) {

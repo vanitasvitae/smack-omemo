@@ -28,8 +28,11 @@ import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
+import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
 import org.jivesoftware.smackx.jingle_filetransfer.FileAndHashReader;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
@@ -60,13 +63,30 @@ public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHand
             return null;
         }
 
+        JingleContentTransport transport = jingle.getContents().get(0).getJingleTransports().get(0);
+
         switch (jingle.getAction()) {
             case session_accept:
+                bm.createJingleTransportHandler(this).establishOutgoingSession(fullJidAndSessionId, transport, new JingleTransportEstablishedCallback() {
+                    @Override
+                    public void onSessionEstablished(final BytestreamSession bytestreamSession) {
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                startTransfer(bytestreamSession, jingle);
+                            }
+                        }.run();
+                    }
 
+                    @Override
+                    public void onSessionFailure(JingleTransportFailureException reason) {
+
+                    }
+                });
                 Runnable transfer = new Runnable() {
                     @Override
                     public void run() {
-                        startTransfer(bm, jingle);
+
                     }
                 };
                 transfer.run();
@@ -87,16 +107,7 @@ public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHand
         return m != null ? m.getConnection() : null;
     }
 
-    public void startTransfer(AbstractJingleTransportManager<?> transportManager, Jingle jingle) {
-    BytestreamSession session;
-
-        try {
-            session = transportManager.outgoingInitiatedSession(jingle);
-        } catch (Exception e) {
-            //TODO
-            return;
-        }
-
+    public void startTransfer(BytestreamSession session, Jingle jingle) {
         HashElement fileHash;
         byte[] buf = new byte[(int) file.length()];
 

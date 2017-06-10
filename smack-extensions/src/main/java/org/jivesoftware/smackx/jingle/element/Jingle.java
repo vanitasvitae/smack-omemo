@@ -199,7 +199,9 @@ public final class Jingle extends IQ {
         }
 
         public Jingle build() {
-            return new Jingle(sid, action, initiator, responder, reason, contents);
+            Jingle jingle = new Jingle(sid, action, initiator, responder, reason, contents);
+            jingle.setType(Type.set);
+            return jingle;
         }
     }
 }

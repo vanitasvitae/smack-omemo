@@ -17,19 +17,11 @@
 package org.jivesoftware.smackx.jingle_filetransfer.handler;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smackx.bytestreams.BytestreamListener;
-import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
-import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
@@ -42,7 +34,7 @@ import org.jxmpp.jid.FullJid;
 /**
  * This handler represents the state of the responders jingle session after the responder sent session-accept.
  */
-public class ResponderIncomingFileTransferAccepted implements JingleSessionHandler, BytestreamListener {
+public class ResponderIncomingFileTransferAccepted implements JingleSessionHandler {
 
     private static final Logger LOGGER = Logger.getLogger(ResponderIncomingFileTransferAccepted.class.getName());
 
@@ -68,62 +60,13 @@ public class ResponderIncomingFileTransferAccepted implements JingleSessionHandl
     }
 
     @Override
-    public void incomingBytestreamRequest(BytestreamRequest request) {
-        if (!request.getFrom().asFullJidIfPossible().equals(initiator) || !sessionId.equals(request.getSessionID())) {
-            LOGGER.log(Level.INFO, "Not our session.");
-            return;
-        }
-
-        BytestreamSession session;
-        try {
-            session = request.accept();
-        } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException e) {
-            LOGGER.log(Level.SEVERE, "Exception while accepting session: " + e, e);
-            return;
-        }
-        byte[] fileBuf = new byte[size];
-        byte[] buf = new byte[4096];
-        InputStream inputStream = null;
-        FileOutputStream fileOutputStream = null;
-
-        try {
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-
-            fileOutputStream = new FileOutputStream(target);
-            inputStream = session.getInputStream();
-
-            int read = 0;
-            while (read < fileBuf.length) {
-                int r = inputStream.read(buf);
-                if (r != -1) {
-                    System.arraycopy(buf, 0, fileBuf, read, r);
-                    read += r;
-                }
-            }
-
-            fileOutputStream.write(fileBuf);
-
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Caught IOException while receiving files: " + e, e);
-        } finally {
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-                if (fileOutputStream != null) {
-                    fileOutputStream.close();
-                }
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Caught Exception while closing streams: " + e, e);
-            }
-            transportManager.removeIncomingRespondedSessionListener(this);
-        }
+    public IQ handleJingleSessionRequest(Jingle jingle, String sessionId) {
+        return null;
     }
 
     @Override
-    public IQ handleJingleSessionRequest(Jingle jingle, String sessionId) {
-        return null;
+    public XMPPConnection getConnection() {
+        JingleFileTransferManager m = manager.get();
+        return m != null ? m.getConnection() : null;
     }
 }

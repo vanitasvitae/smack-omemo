@@ -29,7 +29,6 @@ import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
-import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -71,8 +70,8 @@ public final class JingleS5BTransportManager extends AbstractJingleTransportMana
     }
 
     @Override
-    public JingleS5BTransport createJingleContentTransport(JingleManager.FullJidAndSessionId target) throws Exception {
-        return createJingleContentTransport(target.getFullJid(), JingleTransportManager.generateRandomId(), Bytestream.Mode.tcp);
+    public JingleS5BTransport createJingleContentTransport(FullJid target) throws Exception {
+        return createJingleContentTransport(target, JingleTransportManager.generateRandomId(), Bytestream.Mode.tcp);
     }
 
     @Override

@@ -5,6 +5,8 @@ package org.jivesoftware.smackx.jingle.exception;
  */
 public class JingleTransportFailureException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
     public JingleTransportFailureException(Throwable wrapped) {
         super(wrapped);
     }
