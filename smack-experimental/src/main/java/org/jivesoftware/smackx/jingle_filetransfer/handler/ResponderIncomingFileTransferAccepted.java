@@ -24,7 +24,6 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
-import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
@@ -60,12 +59,10 @@ public class ResponderIncomingFileTransferAccepted implements JingleSessionHandl
             e.printStackTrace();
         }
         this.initiator = initiate.getInitiator();
-        this.sessionId = initiate.getSid();
+        this.sessionId = initiate.getSessionId();
 
         transportManager.createJingleTransportHandler(this).establishIncomingSession(
-                new JingleManager.FullJidAndSessionId(initiate.getFrom().asFullJidIfPossible(), initiate.getSid()),
-                initiate.getContents().get(0).getJingleTransports().get(0),
-                new JingleTransportEstablishedCallback() {
+                initiate, new JingleTransportEstablishedCallback() {
                     @Override
                     public void onSessionEstablished(BytestreamSession bytestreamSession) {
                         manager.receiveFile(initiate, bytestreamSession, target);

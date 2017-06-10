@@ -108,7 +108,7 @@ public final class Jingle extends IQ {
      *
      * @return Returns the session ID related to the session.
      */
-    public String getSid() {
+    public String getSessionId() {
         return sessionId;
     }
 
@@ -135,7 +135,7 @@ public final class Jingle extends IQ {
         xml.optAttribute(INITIATOR_ATTRIBUTE_NAME, getInitiator());
         xml.optAttribute(RESPONDER_ATTRIBUTE_NAME, getResponder());
         xml.optAttribute(ACTION_ATTRIBUTE_NAME, getAction());
-        xml.optAttribute(SESSION_ID_ATTRIBUTE_NAME, getSid());
+        xml.optAttribute(SESSION_ID_ATTRIBUTE_NAME, getSessionId());
         xml.rightAngleBracket();
 
         xml.optElement(reason);

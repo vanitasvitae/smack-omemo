@@ -66,7 +66,7 @@ public class JingleTest extends SmackTestSuite {
         assertEquals(romeo, jingle.getInitiator());
         assertEquals(juliet, jingle.getResponder());
         assertEquals(jingle.getAction(), JingleAction.session_initiate);
-        assertEquals(sessionId, jingle.getSid());
+        assertEquals(sessionId, jingle.getSessionId());
 
         String xml = "<jingle xmlns='urn:xmpp:jingle:1' " +
                 "initiator='romeo@montague.lit/orchard' " +

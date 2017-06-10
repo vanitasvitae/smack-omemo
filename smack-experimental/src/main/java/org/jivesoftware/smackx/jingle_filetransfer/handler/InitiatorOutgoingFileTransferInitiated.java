@@ -29,6 +29,7 @@ import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
+import org.jivesoftware.smackx.jingle.JingleTransportHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
@@ -67,7 +68,7 @@ public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHand
 
         switch (jingle.getAction()) {
             case session_accept:
-                bm.createJingleTransportHandler(this).establishOutgoingSession(fullJidAndSessionId, transport, new JingleTransportEstablishedCallback() {
+                bm.createJingleTransportHandler(this).establishOutgoingSession(jingle, new JingleTransportEstablishedCallback() {
                     @Override
                     public void onSessionEstablished(final BytestreamSession bytestreamSession) {
                         new Runnable() {

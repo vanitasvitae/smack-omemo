@@ -69,7 +69,7 @@ public final class JingleManager extends Manager {
                             Jid from = jingle.getFrom();
                             assert (from != null);
                             FullJid fullFrom = from.asFullJidOrThrow();
-                            FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(fullFrom, jingle.getSid());
+                            FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(fullFrom, jingle.getSessionId());
                             JingleSessionHandler jingleSessionHandler = jingleSessionHandlers.get(fullJidAndSessionId);
 
                             if (jingleSessionHandler == null) {
@@ -79,7 +79,7 @@ public final class JingleManager extends Manager {
                                         .addExtension(JingleError.UNKNOWN_SESSION);
                                 return IQ.createErrorResponse(jingle, errorBuilder);
                             }
-                            return jingleSessionHandler.handleJingleSessionRequest(jingle, jingle.getSid());
+                            return jingleSessionHandler.handleJingleSessionRequest(jingle, jingle.getSessionId());
                         }
 
                         if (jingle.getContents().size() > 1) {
@@ -95,7 +95,7 @@ public final class JingleManager extends Manager {
                             //Unsupported Application
                             Jingle.Builder builder = Jingle.getBuilder();
                             builder.setAction(JingleAction.session_terminate)
-                                    .setSessionId(jingle.getSid())
+                                    .setSessionId(jingle.getSessionId())
                                     .setReason(JingleReason.Reason.unsupported_applications);
                             Jingle response = builder.build();
                             response.setTo(jingle.getFrom());

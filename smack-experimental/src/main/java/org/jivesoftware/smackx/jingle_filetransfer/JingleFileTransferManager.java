@@ -141,16 +141,16 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         Jingle initiate = sessionInitiate(recipient, description, transport);
 
         JingleManager.FullJidAndSessionId fullJidAndSessionId =
-                new JingleManager.FullJidAndSessionId(recipient, initiate.getSid());
+                new JingleManager.FullJidAndSessionId(recipient, initiate.getSessionId());
 
         InitiatorOutgoingFileTransferInitiated sessionHandler =
                 new InitiatorOutgoingFileTransferInitiated(this, fullJidAndSessionId, file);
 
-        jingleManager.registerJingleSessionHandler(recipient, initiate.getSid(), sessionHandler);
+        jingleManager.registerJingleSessionHandler(recipient, initiate.getSessionId(), sessionHandler);
 
         JingleTransportHandler<?> transportHandler = tm.createJingleTransportHandler(sessionHandler);
         connection().sendStanza(initiate);
-        transportHandler.establishOutgoingSession(fullJidAndSessionId, transport, new JingleTransportEstablishedCallback() {
+        transportHandler.establishOutgoingSession(initiate, new JingleTransportEstablishedCallback() {
             @Override
             public void onSessionEstablished(BytestreamSession bytestreamSession) {
                 try {
@@ -192,7 +192,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
                 connection().sendStanza(sessionAccept(jingle));
                 ResponderIncomingFileTransferAccepted responded = new ResponderIncomingFileTransferAccepted(
                         JingleFileTransferManager.this, jingle, target);
-                jingleManager.registerJingleSessionHandler(jingle.getFrom().asFullJidIfPossible(), jingle.getSid(),
+                jingleManager.registerJingleSessionHandler(jingle.getFrom().asFullJidIfPossible(), jingle.getSessionId(),
                         responded);
             }
 
@@ -230,7 +230,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         JingleContent content = request.getContents().get(0);
 
         Jingle.Builder jb = Jingle.getBuilder();
-        jb.setSessionId(request.getSid())
+        jb.setSessionId(request.getSessionId())
                 .setAction(JingleAction.session_accept)
                 .setResponder(connection().getUser());
 
@@ -259,7 +259,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         jb.setResponder(connection().getUser())
                 .setAction(JingleAction.session_terminate)
                 .setReason(JingleReason.Reason.decline)
-                .setSessionId(request.getSid());
+                .setSessionId(request.getSessionId());
         Jingle jingle = jb.build();
         jingle.setTo(request.getFrom());
         jingle.setFrom(connection().getUser());

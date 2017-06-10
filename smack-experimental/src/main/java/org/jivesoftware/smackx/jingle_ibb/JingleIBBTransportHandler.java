@@ -10,11 +10,10 @@ import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamSession;
-import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportHandler;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
 
@@ -30,12 +29,12 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
-    public void establishOutgoingSession(JingleManager.FullJidAndSessionId target, JingleContentTransport transport, JingleTransportEstablishedCallback callback) {
+    public void establishOutgoingSession(Jingle request, JingleTransportEstablishedCallback callback) {
         InBandBytestreamSession session;
 
         try {
             session = InBandBytestreamManager.getByteStreamManager(getConnection())
-                    .establishSession(target.getFullJid(), target.getSessionId());
+                    .establishSession(request.getResponder(), request.getSessionId());
         } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | InterruptedException e) {
             callback.onSessionFailure(new JingleTransportFailureException(e));
             return;
@@ -45,12 +44,12 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
-    public void establishIncomingSession(final JingleManager.FullJidAndSessionId target, JingleContentTransport transport, final JingleTransportEstablishedCallback callback) {
+    public void establishIncomingSession(final Jingle initiate, final JingleTransportEstablishedCallback callback) {
         InBandBytestreamManager.getByteStreamManager(getConnection()).addIncomingBytestreamListener(new BytestreamListener() {
             @Override
             public void incomingBytestreamRequest(BytestreamRequest request) {
-                if (request.getFrom().asFullJidIfPossible().equals(target.getFullJid())
-                        && request.getSessionID().equals(target.getSessionId())) {
+                if (request.getFrom().asFullJidIfPossible().equals(initiate.getInitiator())
+                        && request.getSessionID().equals(initiate.getSessionId())) {
                     BytestreamSession session;
 
                     try {
