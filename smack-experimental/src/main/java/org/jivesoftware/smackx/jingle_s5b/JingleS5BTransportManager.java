@@ -66,7 +66,7 @@ public final class JingleS5BTransportManager extends AbstractJingleTransportMana
 
     @Override
     public JingleS5BTransportHandler createJingleTransportHandler(JingleSessionHandler sessionHandler) {
-        return null;
+        return new JingleS5BTransportHandler(sessionHandler);
     }
 
     @Override
@@ -140,9 +140,4 @@ public final class JingleS5BTransportManager extends AbstractJingleTransportMana
 
         return streamHosts;
     }
-
-    public void connectToStreamHost() {
-
-    }
-
 }
