@@ -16,20 +16,12 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import java.io.IOException;
-
 import org.jivesoftware.smack.Manager;
-import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.bytestreams.BytestreamListener;
-import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
-import org.jxmpp.jid.FullJid;
 
 /**
  * This class defines the shape that JingleTransportManager must be of.
@@ -46,18 +38,11 @@ public abstract class AbstractJingleTransportManager<D extends JingleContentTran
 
     protected abstract JingleContentTransportProvider<D> createJingleContentTransportProvider();
 
+    public abstract JingleTransportHandler<D> createJingleTransportHandler(JingleSessionHandler sessionHandler);
+
+    public abstract D createJingleContentTransport(JingleManager.FullJidAndSessionId target) throws Exception;
+
+    public abstract D createJingleContentTransport(Jingle remotesRequest) throws Exception;
+
     public abstract String getNamespace();
-
-    public Jingle createSessionInitiate(FullJid targetJID, JingleContentDescription application) throws XMPPException, IOException, InterruptedException, SmackException {
-        return createSessionInitiate(targetJID, application, JingleTransportManager.generateRandomId());
-    }
-
-    public abstract Jingle createSessionInitiate(FullJid targetJID, JingleContentDescription application, String sessionId) throws XMPPException, IOException, InterruptedException, SmackException;
-
-    public abstract Jingle createSessionAccept(Jingle request) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException;
-
-    public abstract BytestreamSession outgoingInitiatedSession(Jingle jingle) throws Exception;
-
-    public abstract void setIncomingRespondedSessionListener(Jingle jingle, BytestreamListener listener);
-
 }

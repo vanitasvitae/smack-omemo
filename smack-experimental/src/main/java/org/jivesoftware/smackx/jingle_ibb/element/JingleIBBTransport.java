@@ -37,6 +37,10 @@ public class JingleIBBTransport extends JingleContentTransport {
         this(DEFAULT_BLOCK_SIZE);
     }
 
+    public JingleIBBTransport(String sid) {
+        this(DEFAULT_BLOCK_SIZE, sid);
+    }
+
     public JingleIBBTransport(short blockSize) {
         this(blockSize, JingleTransportManager.generateRandomId());
     }

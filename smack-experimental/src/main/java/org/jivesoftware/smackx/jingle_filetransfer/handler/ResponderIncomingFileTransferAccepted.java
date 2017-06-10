@@ -30,9 +30,11 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.BytestreamListener;
 import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
+import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jxmpp.jid.FullJid;
@@ -45,6 +47,7 @@ public class ResponderIncomingFileTransferAccepted implements JingleSessionHandl
     private static final Logger LOGGER = Logger.getLogger(ResponderIncomingFileTransferAccepted.class.getName());
 
     private final WeakReference<JingleFileTransferManager> manager;
+    private AbstractJingleTransportManager<?> transportManager;
     private final File target;
     private final int size;
     private final FullJid initiator;
@@ -55,6 +58,11 @@ public class ResponderIncomingFileTransferAccepted implements JingleSessionHandl
         this.target = target;
         this.size = ((JingleFileTransferChild) initiate.getContents().get(0).getDescription()
                 .getJingleContentDescriptionChildren().get(0)).getSize();
+        try {
+            this.transportManager = JingleTransportManager.getInstanceFor(manager.getConnection()).getJingleContentTransportManager(initiate);
+        } catch (UnsupportedJingleTransportException e) {
+            e.printStackTrace();
+        }
         this.initiator = initiate.getInitiator();
         this.sessionId = initiate.getSid();
     }
@@ -110,7 +118,7 @@ public class ResponderIncomingFileTransferAccepted implements JingleSessionHandl
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Caught Exception while closing streams: " + e, e);
             }
-            InBandBytestreamManager.getByteStreamManager(manager.get().getConnection()).removeIncomingBytestreamListener(this);
+            transportManager.removeIncomingRespondedSessionListener(this);
         }
     }
 

@@ -28,15 +28,18 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
 import org.jivesoftware.smackx.jingle.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
 import org.jivesoftware.smackx.jingle.JingleManager;
+import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
@@ -172,10 +175,31 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
             @Override
             public void accept(File target) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, UnsupportedJingleTransportException, SmackException.NoResponseException {
                 connection().sendStanza(finalTransportManager.createSessionAccept(jingle));
-                ResponderIncomingFileTransferAccepted responded = new ResponderIncomingFileTransferAccepted(JingleFileTransferManager.this, jingle, target);
+
+                JingleManager.FullJidAndSessionId fullJidAndSessionId =
+                        new JingleManager.FullJidAndSessionId(
+                                jingle.getFrom().asFullJidIfPossible(), jingle.getSid());
+
+
+                ResponderIncomingFileTransferAccepted responded = new ResponderIncomingFileTransferAccepted(
+                        JingleFileTransferManager.this, jingle, target);
+
                 jingleManager.registerJingleSessionHandler(jingle.getFrom().asFullJidIfPossible(), jingle.getSid(),
                         responded);
-                finalTransportManager.setIncomingRespondedSessionListener(jingle, responded);
+
+                finalTransportManager.createJingleTransportHandler(responded).establishIncomingSession(fullJidAndSessionId,
+                        jingle.getContents().get(0).getJingleTransports().get(0),
+                        new JingleTransportEstablishedCallback() {
+                            @Override
+                            public void onSessionEstablished(BytestreamSession bytestreamSession) {
+
+                            }
+
+                            @Override
+                            public void onSessionFailure(JingleTransportFailureException reason) {
+
+                            }
+                        });
             }
 
             @Override

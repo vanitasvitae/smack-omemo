@@ -16,26 +16,17 @@
  */
 package org.jivesoftware.smackx.jingle_ibb;
 
-import java.io.IOException;
 import java.util.WeakHashMap;
 
-import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smackx.bytestreams.BytestreamListener;
-import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.jingle.AbstractJingleTransportManager;
-import org.jivesoftware.smackx.jingle.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.JingleManager;
+import org.jivesoftware.smackx.jingle.JingleSessionHandler;
+import org.jivesoftware.smackx.jingle.JingleTransportHandler;
 import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle_ibb.provider.JingleIBBTransportProvider;
-import org.jxmpp.jid.FullJid;
 
 /**
  * BytestreamManager for Jingle InBandBytestream Transports.
@@ -58,10 +49,34 @@ public final class JingleIBBTransportManager extends AbstractJingleTransportMana
     }
 
     @Override
-    public Jingle createSessionInitiate(FullJid targetJID, JingleContentDescription application) throws XMPPException, IOException, InterruptedException, SmackException {
-        return createSessionInitiate(targetJID, application, JingleTransportManager.generateRandomId());
+    public JingleTransportHandler<JingleIBBTransport> createJingleTransportHandler(JingleSessionHandler sessionHandler) {
+        return new JingleIBBTransportHandler(sessionHandler);
     }
 
+    @Override
+    public JingleIBBTransport createJingleContentTransport(JingleManager.FullJidAndSessionId target) {
+        return new JingleIBBTransport(target.getSessionId());
+    }
+
+    @Override
+    public JingleIBBTransport createJingleContentTransport(Jingle remotesRequest) throws Exception {
+        JingleIBBTransport remotesTransport = (JingleIBBTransport) remotesRequest.getContents().get(0)
+                .getJingleTransports().get(0);
+        return new JingleIBBTransport(remotesTransport.getBlockSize(), remotesTransport.getSessionId());
+    }
+
+
+    @Override
+    protected JingleContentTransportProvider<JingleIBBTransport> createJingleContentTransportProvider() {
+        return new JingleIBBTransportProvider();
+    }
+
+    @Override
+    public String getNamespace() {
+        return JingleIBBTransport.NAMESPACE_V1;
+    }
+
+    /*
     @Override
     public Jingle createSessionInitiate(FullJid targetJID, JingleContentDescription application, String sessionID) throws XMPPException, IOException, InterruptedException, SmackException {
         Jingle.Builder jb = Jingle.getBuilder();
@@ -105,28 +120,6 @@ public final class JingleIBBTransportManager extends AbstractJingleTransportMana
         jingle.setFrom(connection().getUser());
         return jingle;
     }
+    */
 
-    @Override
-    public BytestreamSession outgoingInitiatedSession(Jingle jingle) throws Exception {
-        InBandBytestreamManager ibb = InBandBytestreamManager.getByteStreamManager(connection());
-        return ibb.establishSession(jingle.getResponder(), jingle.getSid());
-    }
-
-    @Override
-    public void setIncomingRespondedSessionListener(Jingle jingle, BytestreamListener listener) {
-        InBandBytestreamManager.getByteStreamManager(connection()).addIncomingBytestreamListener(listener);
-    }
-
-    //###############################################
-
-
-    @Override
-    protected JingleContentTransportProvider<JingleIBBTransport> createJingleContentTransportProvider() {
-        return new JingleIBBTransportProvider();
-    }
-
-    @Override
-    public String getNamespace() {
-        return JingleIBBTransport.NAMESPACE_V1;
-    }
 }

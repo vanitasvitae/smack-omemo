@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.hashes.HashManager;
@@ -49,10 +50,10 @@ public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHand
     }
 
     @Override
-    public IQ handleJingleSessionRequest(Jingle jingle, String sessionId) {
-        AbstractJingleTransportManager<?> bm;
+    public IQ handleJingleSessionRequest(final Jingle jingle, String sessionId) {
+        final AbstractJingleTransportManager<?> bm;
         try {
-            bm = JingleTransportManager.getInstanceFor(manager.get().getConnection())
+            bm = JingleTransportManager.getInstanceFor(getConnection())
                     .getJingleContentTransportManager(jingle);
         } catch (UnsupportedJingleTransportException e) {
             // TODO
@@ -61,7 +62,15 @@ public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHand
 
         switch (jingle.getAction()) {
             case session_accept:
-                startTransfer(bm, jingle);
+
+                Runnable transfer = new Runnable() {
+                    @Override
+                    public void run() {
+                        startTransfer(bm, jingle);
+                    }
+                };
+                transfer.run();
+
                 break;
             case session_terminate:
                 break;
@@ -70,6 +79,12 @@ public class InitiatorOutgoingFileTransferInitiated implements JingleSessionHand
 
         }
         return IQ.createResultIQ(jingle);
+    }
+
+    @Override
+    public XMPPConnection getConnection() {
+        JingleFileTransferManager m = manager.get();
+        return m != null ? m.getConnection() : null;
     }
 
     public void startTransfer(AbstractJingleTransportManager<?> transportManager, Jingle jingle) {
