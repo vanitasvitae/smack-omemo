@@ -79,7 +79,7 @@ public final class JingleManager extends Manager {
                                         .addExtension(JingleError.UNKNOWN_SESSION);
                                 return IQ.createErrorResponse(jingle, errorBuilder);
                             }
-                            return jingleSessionHandler.handleJingleSessionRequest(jingle, jingle.getSessionId());
+                            return jingleSessionHandler.handleJingleSessionRequest(jingle);
                         }
 
                         if (jingle.getContents().size() > 1) {

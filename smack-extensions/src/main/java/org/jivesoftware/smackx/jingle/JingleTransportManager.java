@@ -25,6 +25,7 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportException;
 
 /**
@@ -47,6 +48,18 @@ public final class JingleTransportManager extends Manager {
             INSTANCES.put(connection, manager);
         }
         return manager;
+    }
+
+    public static AbstractJingleTransportManager<?> getJingleContentTransportManager(XMPPConnection connection, String namespace) throws UnsupportedJingleTransportException {
+        return getInstanceFor(connection).getJingleContentTransportManager(namespace);
+    }
+
+    public static AbstractJingleTransportManager<?> getJingleContentTransportManager(XMPPConnection connection, Jingle jingle) throws UnsupportedJingleTransportException {
+        return getInstanceFor(connection).getJingleContentTransportManager(jingle);
+    }
+
+    public static  AbstractJingleTransportManager<?> getJingleContentTransportManager(XMPPConnection connection, JingleContentTransport transport) throws UnsupportedJingleTransportException {
+        return getInstanceFor(connection).getJingleContentTransportManager(transport.getNamespace());
     }
 
     public AbstractJingleTransportManager<?> getJingleContentTransportManager(String namespace) throws UnsupportedJingleTransportException {

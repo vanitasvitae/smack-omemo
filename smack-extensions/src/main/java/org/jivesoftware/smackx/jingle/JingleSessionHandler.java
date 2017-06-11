@@ -22,7 +22,7 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
 
 public interface JingleSessionHandler {
 
-    IQ handleJingleSessionRequest(Jingle jingle, String sessionId);
+    IQ handleJingleSessionRequest(Jingle jingle);
 
     XMPPConnection getConnection();
 

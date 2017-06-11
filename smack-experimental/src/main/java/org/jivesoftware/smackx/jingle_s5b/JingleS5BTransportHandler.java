@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright © 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.jingle_s5b;
 
 import java.io.IOException;
@@ -15,6 +31,7 @@ import org.jivesoftware.smackx.bytestreams.socks5.Socks5Client;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
+import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportHandler;
@@ -44,10 +61,10 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
     }
 
     @Override
-    public void establishOutgoingSession(Jingle request, JingleTransportEstablishedCallback callback) {
-        JingleContent content = request.getContents().get(0);
+    public void establishOutgoingSession(JingleManager.FullJidAndSessionId fullJidAndSessionId,
+                                         JingleContent content,
+                                         JingleTransportEstablishedCallback callback) {
         JingleContentTransport hopefullyS5BTransport = content.getJingleTransports().get(0);
-
         if (!hopefullyS5BTransport.getNamespace().equals(JingleS5BTransport.NAMESPACE_V1)) {
             throw new IllegalArgumentException("Transport must be a JingleS5BTransport.");
         }
@@ -55,8 +72,9 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
         JingleS5BTransport transport = (JingleS5BTransport) hopefullyS5BTransport;
 
         Socks5Proxy.getSocks5Proxy().addLocalAddress(Socks5Utils.createDigest(
-                request.getSessionId(), getConnection().getUser().asFullJidIfPossible(), request.getResponder()));
-
+                fullJidAndSessionId.getSessionId(),                 //SessionID
+                getConnection().getUser().asFullJidIfPossible(),    //Us
+                fullJidAndSessionId.getFullJid()));                 //Them
 
         JingleS5BTransportCandidate usedCandidate = null;
         for (JingleContentTransportCandidate c : transport.getCandidates()) {
@@ -86,7 +104,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
 
         if (connectedSocket != null) {
             Jingle.Builder jb = Jingle.getBuilder();
-            jb.setSessionId(request.getSessionId())
+            jb.setSessionId(fullJidAndSessionId.getSessionId())
                     .setAction(JingleAction.transport_info)
                     .setInitiator(getConnection().getUser());
 
@@ -103,20 +121,19 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
 
             Jingle jingle = jb.build();
             jingle.setFrom(getConnection().getUser());
-            jingle.setTo(request.getFrom());
+            jingle.setTo(fullJidAndSessionId.getFullJid());
             try {
                 getConnection().sendStanza(jingle);
-            } catch (SmackException.NotConnectedException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } catch (SmackException.NotConnectedException | InterruptedException e) {
+                LOGGER.log(Level.WARNING, "Could not send candidate-used stanza: " + e, e);
             }
         }
     }
 
     @Override
-    public void establishIncomingSession(Jingle request, JingleTransportEstablishedCallback callback) {
-        JingleContent content = request.getContents().get(0);
+    public void establishIncomingSession(JingleManager.FullJidAndSessionId fullJidAndSessionId,
+                                         JingleContent content,
+                                         JingleTransportEstablishedCallback callback) {
         JingleContentTransport hopefullyS5BTransport = content.getJingleTransports().get(0);
         if (!hopefullyS5BTransport.getNamespace().equals(JingleS5BTransport.NAMESPACE_V1)) {
             throw new IllegalArgumentException("Transport must be a JingleS5BTransport.");

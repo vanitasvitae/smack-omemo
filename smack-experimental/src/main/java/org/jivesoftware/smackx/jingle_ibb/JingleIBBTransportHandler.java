@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright © 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.jingle_ibb;
 
 import java.lang.ref.WeakReference;
@@ -10,10 +26,11 @@ import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamSession;
+import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportHandler;
-import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
 
@@ -29,12 +46,14 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
-    public void establishOutgoingSession(Jingle request, JingleTransportEstablishedCallback callback) {
+    public void establishOutgoingSession(JingleManager.FullJidAndSessionId fullJidAndSessionId,
+                                         JingleContent content,
+                                         JingleTransportEstablishedCallback callback) {
         InBandBytestreamSession session;
 
         try {
             session = InBandBytestreamManager.getByteStreamManager(getConnection())
-                    .establishSession(request.getResponder(), request.getSessionId());
+                    .establishSession(fullJidAndSessionId.getFullJid(), fullJidAndSessionId.getSessionId());
         } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | InterruptedException e) {
             callback.onSessionFailure(new JingleTransportFailureException(e));
             return;
@@ -44,12 +63,14 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
-    public void establishIncomingSession(final Jingle initiate, final JingleTransportEstablishedCallback callback) {
+    public void establishIncomingSession(final JingleManager.FullJidAndSessionId fullJidAndSessionId,
+                                         JingleContent content,
+                                         final JingleTransportEstablishedCallback callback) {
         InBandBytestreamManager.getByteStreamManager(getConnection()).addIncomingBytestreamListener(new BytestreamListener() {
             @Override
             public void incomingBytestreamRequest(BytestreamRequest request) {
-                if (request.getFrom().asFullJidIfPossible().equals(initiate.getInitiator())
-                        && request.getSessionID().equals(initiate.getSessionId())) {
+                if (request.getFrom().asFullJidIfPossible().equals(fullJidAndSessionId.getFullJid())
+                        && request.getSessionID().equals(fullJidAndSessionId.getSessionId())) {
                     BytestreamSession session;
 
                     try {

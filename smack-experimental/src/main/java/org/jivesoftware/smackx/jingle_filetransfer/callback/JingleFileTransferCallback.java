@@ -25,7 +25,7 @@ import org.jivesoftware.smack.SmackException;
  */
 public interface JingleFileTransferCallback {
 
-    void acceptFileTransfer(File target) throws Exception;
+    void acceptFileTransfer(File target) throws SmackException.NotConnectedException, InterruptedException;
 
     void declineFileTransfer() throws SmackException.NotConnectedException, InterruptedException;
 }
