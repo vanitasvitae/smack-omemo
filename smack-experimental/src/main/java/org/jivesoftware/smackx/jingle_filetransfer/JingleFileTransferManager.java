@@ -18,18 +18,19 @@ package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.jingle.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
+import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
 import org.jivesoftware.smackx.jingle_ibb.JingleIBBTransportManager;
 import org.jxmpp.jid.FullJid;
 
@@ -43,10 +44,9 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
 
     private final ArrayList<IncomingJingleFileTransferListener> incomingJFTListeners = new ArrayList<>();
 
-    private HashMap<JingleManager.FullJidAndSessionId, JingleFileTransferSession> jingleSessions = new HashMap<>();
-
     private JingleFileTransferManager(XMPPConnection connection) {
         super(connection);
+        JingleContentProviderManager.addJingleContentDescriptionProvider(NAMESPACE_V5, new JingleFileTransferContentDescriptionProvider());
         JingleManager.getInstanceFor(connection).registerDescriptionHandler(NAMESPACE_V5, this);
         JingleIBBTransportManager.getInstanceFor(connection);
         //JingleS5BTransportManager.getInstanceFor(connection);
@@ -72,15 +72,15 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
     }
 
     public void addJingleSession(JingleFileTransferSession session) {
-        jingleSessions.put(session.getFullJidAndSessionId(), session);
-    }
-
-    public JingleFileTransferSession getJingleSession(JingleManager.FullJidAndSessionId fullJidAndSessionId) {
-        return jingleSessions.get(fullJidAndSessionId);
+        JingleManager.FullJidAndSessionId fns = session.getFullJidAndSessionId();
+        JingleManager.getInstanceFor(connection())
+                .registerJingleSessionHandler(fns.getFullJid(), fns.getSessionId(), session);
     }
 
     public void removeJingleSession(JingleFileTransferSession session) {
-        jingleSessions.remove(session.getFullJidAndSessionId());
+        JingleManager.FullJidAndSessionId fns = session.getFullJidAndSessionId();
+        JingleManager.getInstanceFor(connection()).unregisterJingleSession(
+                fns.getFullJid(), fns.getSessionId());
     }
 
     @Override

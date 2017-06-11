@@ -105,12 +105,13 @@ public class JingleFileTransferSession extends AbstractJingleSession {
      */
     public JingleFileTransferSession(XMPPConnection connection, Jingle initiate) {
         super(connection);
+        LOGGER.log(Level.INFO, "Incoming session!");
         this.sessionId = initiate.getSessionId();
         this.remote = initiate.getInitiator();
         this.source = null;
         this.proposedContent = initiate.getContents().get(0);
 
-        this.state = new IncomingAccepted(connection, this);
+        this.state = new IncomingFresh(connection, this);
     }
 
     /**
