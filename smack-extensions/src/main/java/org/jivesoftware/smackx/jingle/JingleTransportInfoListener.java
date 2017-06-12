@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2017 Florian Schmaus
+ * Copyright © 2017 Paul Schaub
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,12 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 
-public interface JingleSessionHandler {
+/**
+ * Listener for transport-info Jingle stanzas.
+ */
+public interface JingleTransportInfoListener {
 
-    IQ handleJingleSessionRequest(Jingle jingle);
-
-    XMPPConnection getConnection();
-
-    void addTransportInfoListener(JingleTransportInfoListener listener);
-
-    void removeTransportInfoListener(JingleTransportInfoListener listener);
-
+    void onTransportInfoReceived(Jingle transportInfo);
 }

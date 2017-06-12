@@ -31,7 +31,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleFileTransferCa
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingJingleFileTransferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_ibb.JingleIBBTransportManager;
+import org.jivesoftware.smackx.jingle_s5b.JingleS5BTransportManager;
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -48,8 +48,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         super(connection);
         JingleContentProviderManager.addJingleContentDescriptionProvider(NAMESPACE_V5, new JingleFileTransferContentDescriptionProvider());
         JingleManager.getInstanceFor(connection).registerDescriptionHandler(NAMESPACE_V5, this);
-        JingleIBBTransportManager.getInstanceFor(connection);
-        //JingleS5BTransportManager.getInstanceFor(connection);
+        //JingleIBBTransportManager.getInstanceFor(connection);
+        JingleS5BTransportManager.getInstanceFor(connection);
     }
 
     public static JingleFileTransferManager getInstanceFor(XMPPConnection connection) {

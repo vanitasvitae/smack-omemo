@@ -30,6 +30,7 @@ import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
 import org.jivesoftware.smackx.jingle.JingleTransportEstablishedCallback;
 import org.jivesoftware.smackx.jingle.JingleTransportHandler;
+import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
@@ -46,8 +47,14 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
+    public void prepareOutgoingSession(JingleManager.FullJidAndSessionId fullJidAndSessionId, JingleContent content) {
+        // Nothing to do
+    }
+
+    @Override
     public void establishOutgoingSession(JingleManager.FullJidAndSessionId fullJidAndSessionId,
-                                         JingleContent content,
+                                         JingleContent receivedContent,
+                                         JingleContent proposedContent,
                                          JingleTransportEstablishedCallback callback) {
         InBandBytestreamSession session;
 
@@ -64,7 +71,8 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
 
     @Override
     public void establishIncomingSession(final JingleManager.FullJidAndSessionId fullJidAndSessionId,
-                                         JingleContent content,
+                                         JingleContent receivedContent,
+                                         JingleContent proposedContent,
                                          final JingleTransportEstablishedCallback callback) {
         InBandBytestreamManager.getByteStreamManager(getConnection()).addIncomingBytestreamListener(new BytestreamListener() {
             @Override
@@ -90,5 +98,10 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     public XMPPConnection getConnection() {
         JingleSessionHandler sessionHandler = jingleSessionHandler.get();
         return sessionHandler != null ? sessionHandler.getConnection() : null;
+    }
+
+    @Override
+    public void onTransportInfoReceived(Jingle transportInfo) {
+
     }
 }

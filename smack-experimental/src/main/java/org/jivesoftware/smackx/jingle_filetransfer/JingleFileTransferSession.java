@@ -59,7 +59,8 @@ public class JingleFileTransferSession extends AbstractJingleSession {
 
     private final File source;
     private File target;
-    private final JingleContent proposedContent;
+    private JingleContent proposedContent;
+    private JingleContent receivedContent;
     private final FullJid remote;
     private final String sessionId;
 
@@ -109,7 +110,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
         this.sessionId = initiate.getSessionId();
         this.remote = initiate.getInitiator();
         this.source = null;
-        this.proposedContent = initiate.getContents().get(0);
+        this.receivedContent = initiate.getContents().get(0);
 
         this.state = new IncomingFresh(connection, this);
     }
@@ -117,7 +118,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
     /**
      * session-initiate has been sent.
      */
-    public static class OutgoingInitiated extends AbstractJingleSession {
+    private static class OutgoingInitiated extends AbstractJingleSession {
 
         private final JingleFileTransferSession parent;
 
@@ -128,6 +129,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
 
         @Override
         protected IQ handleSessionAccept(Jingle jingle) {
+            parent.receivedContent = jingle.getContents().get(0);
             parent.state = new OutgoingAccepted(connection, parent);
             //TODO: Notify parent
             return IQ.createResultIQ(jingle);
@@ -142,7 +144,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
 
     }
 
-    public static class OutgoingAccepted extends AbstractJingleSession {
+    private static class OutgoingAccepted extends AbstractJingleSession {
         private final JingleFileTransferSession parent;
 
         public OutgoingAccepted(XMPPConnection connection, final JingleFileTransferSession parent) {
@@ -158,12 +160,14 @@ public class JingleFileTransferSession extends AbstractJingleSession {
             }
 
             JingleTransportHandler<?> transportHandler = tm.createJingleTransportHandler(this);
-            transportHandler.establishOutgoingSession(parent.getFullJidAndSessionId(),
+            transportHandler.prepareOutgoingSession(parent.getFullJidAndSessionId(), parent.proposedContent);
+            parent.addTransportInfoListener(transportHandler);
+            transportHandler.establishOutgoingSession(parent.getFullJidAndSessionId(), parent.receivedContent,
                     parent.proposedContent, parent.outgoingFileTransferSessionEstablishedCallback);
         }
     }
 
-    public static class IncomingFresh extends AbstractJingleSession {
+    private static class IncomingFresh extends AbstractJingleSession {
         private final JingleFileTransferSession parent;
 
         public IncomingFresh(XMPPConnection connection, JingleFileTransferSession parent) {
@@ -177,8 +181,10 @@ public class JingleFileTransferSession extends AbstractJingleSession {
                 throw new IllegalArgumentException("Jingle action MUST be session-initiate!");
             }
 
+            parent.receivedContent = initiate.getContents().get(0);
+
             //Get <file/>
-            JingleFileTransferChild file = (JingleFileTransferChild) initiate.getContents().get(0)
+            JingleFileTransferChild file = (JingleFileTransferChild) parent.receivedContent
                     .getDescription().getJingleContentDescriptionChildren().get(0);
 
             final JingleFileTransferCallback callback = new JingleFileTransferCallback() {
@@ -186,12 +192,13 @@ public class JingleFileTransferSession extends AbstractJingleSession {
                 public void acceptFileTransfer(File target) throws SmackException.NotConnectedException, InterruptedException {
                     Jingle response = null;
                     try {
-                        response = parent.createSessionAccept(initiate);
+                        response = parent.createSessionAccept();
                     } catch (Exception e) {
                         LOGGER.log(Level.WARNING, "Could not create accept-session stanza: " + e, e);
                     }
 
                     connection.sendStanza(response);
+                    parent.proposedContent = response.getContents().get(0);
                     parent.target = target;
                     parent.state = new IncomingAccepted(connection, parent);
                 }
@@ -210,7 +217,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
         }
     }
 
-    public static class IncomingAccepted extends AbstractJingleSession {
+    private static class IncomingAccepted extends AbstractJingleSession {
 
         public IncomingAccepted(XMPPConnection connection, JingleFileTransferSession parent) {
             super(connection);
@@ -223,7 +230,8 @@ public class JingleFileTransferSession extends AbstractJingleSession {
             }
 
             JingleTransportHandler<?> transportHandler = tm.createJingleTransportHandler(this);
-            transportHandler.establishIncomingSession(parent.getFullJidAndSessionId(),
+            parent.addTransportInfoListener(transportHandler);
+            transportHandler.establishIncomingSession(parent.getFullJidAndSessionId(), parent.receivedContent,
                     parent.proposedContent, parent.incomingFileTransferSessionEstablishedCallback);
         }
     }
@@ -252,8 +260,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
         return jingle;
     }
 
-    protected Jingle createSessionAccept(Jingle jingle) throws Exception {
-        JingleContent content = jingle.getContents().get(0);
+    protected Jingle createSessionAccept() throws Exception {
 
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setAction(JingleAction.session_accept)
@@ -265,16 +272,16 @@ public class JingleFileTransferSession extends AbstractJingleSession {
         AbstractJingleTransportManager<?> tm;
         try {
             tm = JingleTransportManager.getJingleContentTransportManager(
-                    connection, jingle);
+                    connection, receivedContent.getJingleTransports().get(0));
         } catch (UnsupportedJingleTransportException e) {
             throw new AssertionError("Should never happen."); //TODO: Make sure.
         }
 
-        cb.addTransport(tm.createJingleContentTransport(jingle))
-                .setDescription(content.getDescription())
-                .setName(content.getName())
-                .setCreator(content.getCreator())
-                .setSenders(content.getSenders());
+        cb.addTransport(tm.createJingleContentTransport(remote))
+                .setDescription(receivedContent.getDescription())
+                .setName(receivedContent.getName())
+                .setCreator(receivedContent.getCreator())
+                .setSenders(receivedContent.getSenders());
 
         jb.addJingleContent(cb.build());
         Jingle accept = jb.build();

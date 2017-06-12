@@ -16,9 +16,12 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
+import java.util.ArrayList;
+
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
+import org.jivesoftware.smackx.jingle.JingleTransportInfoListener;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 
 /**
@@ -28,6 +31,7 @@ public abstract class AbstractJingleSession implements JingleSessionHandler {
 
     protected final XMPPConnection connection;
     protected AbstractJingleSession state;
+    protected final ArrayList<JingleTransportInfoListener> transportInfoListeners = new ArrayList<>();
 
     public AbstractJingleSession(XMPPConnection connection) {
         this.connection = connection;
@@ -120,6 +124,9 @@ public abstract class AbstractJingleSession implements JingleSessionHandler {
     }
 
     protected IQ handleTransportInfo(Jingle transportInfo) {
+        for (JingleTransportInfoListener l : transportInfoListeners) {
+            l.onTransportInfoReceived(transportInfo);
+        }
         return IQ.createResultIQ(transportInfo);
     }
 
@@ -129,6 +136,16 @@ public abstract class AbstractJingleSession implements JingleSessionHandler {
 
     protected IQ handleTransportReject(Jingle transportReject) {
         return IQ.createResultIQ(transportReject);
+    }
+
+    @Override
+    public void addTransportInfoListener(JingleTransportInfoListener listener) {
+        transportInfoListeners.add(listener);
+    }
+
+    @Override
+    public void removeTransportInfoListener(JingleTransportInfoListener listener) {
+        transportInfoListeners.remove(listener);
     }
 
     @Override
