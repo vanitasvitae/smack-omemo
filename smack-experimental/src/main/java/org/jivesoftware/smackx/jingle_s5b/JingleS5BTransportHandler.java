@@ -52,9 +52,14 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
 
     private final WeakReference<JingleSessionHandler> sessionHandler;
 
+    private JingleManager.FullJidAndSessionId fullJidAndSessionId;
+    private JingleContent receivedContent;
+    private JingleContent proposedContent;
+    private JingleTransportEstablishedCallback callback;
     private JingleS5BTransport myTransport;
 
     private JingleS5BTransportCandidate receivedCandidateUsed = null;
+    private JingleS5BTransportCandidate selectedCandidateUsed = null;
 
     private Socket connectedSocket = null;
 
@@ -88,6 +93,10 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                           JingleContent receivedContent,
                           JingleContent proposedContent,
                           JingleTransportEstablishedCallback callback) {
+        this.fullJidAndSessionId = fullJidAndSessionId;
+        this.receivedContent = receivedContent;
+        this.proposedContent = proposedContent;
+        this.callback = callback;
 
         JingleContentTransport hopefullyS5BTransport = receivedContent.getJingleTransports().get(0);
         if (!hopefullyS5BTransport.getNamespace().equals(JingleS5BTransport.NAMESPACE_V1)) {
@@ -110,17 +119,10 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
             LOGGER.log(Level.INFO, "Connect to " + address);
             // establish socket
             try {
-
-                // build SOCKS5 client
                 final Socks5Client socks5Client = new Socks5Client(streamHost, transport.getDestinationAddress());
-
-                // connect to SOCKS5 proxy with a timeout
                 connectedSocket = socks5Client.getSocket(10 * 1000);
-
-
-                // set selected host
+                selectedCandidateUsed = usedCandidate;
                 break;
-
             }
             catch (TimeoutException | IOException | SmackException | XMPPException | InterruptedException e) {
                 LOGGER.log(Level.WARNING, "Could not connect to " + address + ": " + e, e);
@@ -128,84 +130,93 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
         }
 
         if (connectedSocket != null) {
-            Jingle.Builder jb = Jingle.getBuilder();
-            jb.setSessionId(fullJidAndSessionId.getSessionId())
-                    .setAction(JingleAction.transport_info)
-                    .setInitiator(getConnection().getUser());
-
-            JingleContent.Builder cb = JingleContent.getBuilder();
-            cb.setName(receivedContent.getName())
-                    .setCreator(receivedContent.getCreator())
-                    .setSenders(receivedContent.getSenders());
-
-            JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
-            tb.setStreamId(((JingleS5BTransport) receivedContent.getJingleTransports().get(0)).getStreamId());
-            tb.setCandidateUsed(usedCandidate.getCandidateId());
-            cb.addTransport(tb.build());
-
-            jb.addJingleContent(cb.build());
-
-            Jingle jingle = jb.build();
-            jingle.setFrom(getConnection().getUser());
-            jingle.setTo(fullJidAndSessionId.getFullJid());
+            //Send candidate-used
+            Jingle jingle = createCandidateUsed(usedCandidate, fullJidAndSessionId, receivedContent);
             try {
                 getConnection().sendStanza(jingle);
             } catch (SmackException.NotConnectedException | InterruptedException e) {
                 LOGGER.log(Level.WARNING, "Could not send candidate-used stanza: " + e, e);
             }
-
-            //Activate proxy
-            if (usedCandidate.getType() == JingleS5BTransportCandidate.Type.proxy) {
-                Bytestream bytestream = new Bytestream(fullJidAndSessionId.getSessionId());
-                bytestream.setToActivate(fullJidAndSessionId.getFullJid());
-                bytestream.setTo(usedCandidate.getJid());
-                try {
-                    getConnection().sendStanza(bytestream);
-                } catch (SmackException.NotConnectedException | InterruptedException e) {
-                    LOGGER.log(Level.WARNING, "Could not activate proxy: " + e, e);
-                }
-            }
-
-            jb = Jingle.getBuilder();
-            jb.setAction(JingleAction.transport_info)
-                    .setSessionId(fullJidAndSessionId.getSessionId());
-            //TODO: setInitiator
-
-            cb = JingleContent.getBuilder();
-            cb.setCreator(JingleContent.Creator.initiator)
-                    .setName(receivedContent.getName());
-
-            tb = JingleS5BTransport.getBuilder();
-            tb.setStreamId(((JingleS5BTransport) receivedContent.getJingleTransports().get(0)).getStreamId());
-            tb.setCandidateActivated(usedCandidate.getCandidateId());
-
-            cb.addTransport(tb.build());
-            jb.addJingleContent(cb.build());
-
-            Jingle activate = jb.build();
-            activate.setTo(fullJidAndSessionId.getFullJid());
-            activate.setFrom(getConnection().getUser());
-
-            try {
-                getConnection().sendStanza(activate);
-            } catch (SmackException.NotConnectedException | InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "Could not send transport-activated: " + e, e);
-            }
-
-            callback.onSessionEstablished(new Socks5BytestreamSession(connectedSocket, false));
         } else {
 
         }
+    }
+
+    void activateProxy() {
+        //Activate proxy
+        if (selectedCandidateUsed.getType() == JingleS5BTransportCandidate.Type.proxy) {
+            Bytestream bytestream = new Bytestream(fullJidAndSessionId.getSessionId());
+            bytestream.setToActivate(fullJidAndSessionId.getFullJid());
+            bytestream.setTo(fullJidAndSessionId.getFullJid());
+            try {
+                getConnection().sendStanza(bytestream);
+            } catch (SmackException.NotConnectedException | InterruptedException e) {
+                LOGGER.log(Level.WARNING, "Could not activate proxy: " + e, e);
+            }
+        }
+
+        Jingle activate = createCandidateActive(selectedCandidateUsed, fullJidAndSessionId, receivedContent);
+        try {
+            getConnection().sendStanza(activate);
+        } catch (SmackException.NotConnectedException | InterruptedException e) {
+            LOGGER.log(Level.SEVERE, "Could not send transport-activated: " + e, e);
+        }
+
+        callback.onSessionEstablished(new Socks5BytestreamSession(connectedSocket, false));
+    }
+
+    Jingle createCandidateUsed(JingleS5BTransportCandidate usedCandidate, JingleManager.FullJidAndSessionId fullJidAndSessionId, JingleContent receivedContent) {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setSessionId(fullJidAndSessionId.getSessionId())
+                .setAction(JingleAction.transport_info)
+                .setInitiator(getConnection().getUser());
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.setName(receivedContent.getName())
+                .setCreator(receivedContent.getCreator())
+                .setSenders(receivedContent.getSenders());
+
+        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        tb.setStreamId(((JingleS5BTransport) receivedContent.getJingleTransports().get(0)).getStreamId());
+        tb.setCandidateUsed(usedCandidate.getCandidateId());
+        cb.addTransport(tb.build());
+
+        jb.addJingleContent(cb.build());
+
+        Jingle jingle = jb.build();
+        jingle.setFrom(getConnection().getUser());
+        jingle.setTo(fullJidAndSessionId.getFullJid());
+        return jingle;
+    }
+
+    Jingle createCandidateActive(JingleS5BTransportCandidate usedCandidate, JingleManager.FullJidAndSessionId fullJidAndSessionId, JingleContent receivedContent) {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setAction(JingleAction.transport_info)
+                .setSessionId(fullJidAndSessionId.getSessionId())
+                .setInitiator(fullJidAndSessionId.getFullJid());
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.setCreator(JingleContent.Creator.initiator)
+                .setName(receivedContent.getName());
+
+        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        tb.setStreamId(((JingleS5BTransport) receivedContent.getJingleTransports().get(0)).getStreamId());
+        tb.setCandidateActivated(usedCandidate.getCandidateId());
+
+        cb.addTransport(tb.build());
+        jb.addJingleContent(cb.build());
+
+        Jingle activate = jb.build();
+        activate.setTo(fullJidAndSessionId.getFullJid());
+        activate.setFrom(getConnection().getUser());
+
+        return activate;
     }
 
     @Override
     public XMPPConnection getConnection() {
         JingleSessionHandler handler = sessionHandler.get();
         return handler != null ? handler.getConnection() : null;
-    }
-
-    public void setReceivedCandidateUsed(JingleS5BTransportCandidate used) {
-        this.receivedCandidateUsed = used;
     }
 
     @Override
@@ -223,8 +234,31 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
         if (info == null) {
             throw new IllegalArgumentException("Jingle must contain at least one JingleS5BTransportInfo.");
         }
+
+        JingleS5BTransportCandidate finalCandidateUsed;
+
         if (info.getElementName().equals(JingleS5BTransportInfo.CandidateUsed.ELEMENT)) {
             String candidateUsedId = ((JingleS5BTransportInfo.CandidateUsed) info).getCandidateId();
+            for (JingleContentTransportCandidate c : myTransport.getCandidates()) {
+                if (((JingleS5BTransportCandidate) c).getCandidateId().equals(candidateUsedId)) {
+                    receivedCandidateUsed = (JingleS5BTransportCandidate) c;
+                }
+            }
+
+            if (receivedCandidateUsed == null) {
+                //TODO: Unknown candidate.
+            } else {
+
+            }
+        }
+    }
+
+    void onCandidateUsed() {
+        if (selectedCandidateUsed.getPriority() > receivedCandidateUsed.getPriority()) {
+            activateProxy();
+        } else if (selectedCandidateUsed.getPriority() < receivedCandidateUsed.getPriority()) {
+            //createCandidateActive()
+        } else { //==
         }
     }
 }

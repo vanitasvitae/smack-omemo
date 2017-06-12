@@ -505,11 +505,6 @@ public class JingleFileTransferSession extends AbstractJingleSession {
     }
 
     @Override
-    protected IQ handleTransportInfo(Jingle transportInfo) {
-        return state.handleTransportInfo(transportInfo);
-    }
-
-    @Override
     protected IQ handleTransportReplace(Jingle transportReplace) {
         return state.handleTransportReplace(transportReplace);
     }
