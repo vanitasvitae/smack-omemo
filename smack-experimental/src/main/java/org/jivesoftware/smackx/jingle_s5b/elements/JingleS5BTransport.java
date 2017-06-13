@@ -70,6 +70,20 @@ public class JingleS5BTransport extends JingleContentTransport {
         xml.attribute(ATTR_SID, streamId);
     }
 
+    public boolean hasCandidate(String candidateId) {
+        return getCandidate(candidateId) != null;
+    }
+
+    public JingleS5BTransportCandidate getCandidate(String candidateId) {
+        for (JingleContentTransportCandidate c : candidates) {
+            JingleS5BTransportCandidate candidate = (JingleS5BTransportCandidate) c;
+            if (candidate.getCandidateId().equals(candidateId)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
     public static Builder getBuilder() {
         return new Builder();
     }

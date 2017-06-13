@@ -19,6 +19,7 @@ package org.jivesoftware.smackx.jingle;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
 
 public interface JingleSessionHandler {
 
@@ -29,5 +30,13 @@ public interface JingleSessionHandler {
     void addTransportInfoListener(JingleTransportInfoListener listener);
 
     void removeTransportInfoListener(JingleTransportInfoListener listener);
+
+    JingleManager.FullJidAndSessionId getFullJidAndSessionId();
+
+    JingleContent getReceivedContent();
+
+    JingleContent getProposedContent();
+
+    JingleContent.Creator getRole();
 
 }

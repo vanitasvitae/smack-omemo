@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.jingle;
 
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 
 /**
@@ -25,18 +24,9 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
  */
 public interface JingleTransportHandler<D extends JingleContentTransport> extends JingleTransportInfoListener {
 
-    void prepareOutgoingSession(JingleManager.FullJidAndSessionId fullJidAndSessionId,
-                                JingleContent content);
+    void establishOutgoingSession(JingleTransportEstablishedCallback callback);
 
-    void establishOutgoingSession(JingleManager.FullJidAndSessionId fullJidAndSessionId,
-                                  JingleContent receivedContent,
-                                  JingleContent proposedContent,
-                                  JingleTransportEstablishedCallback callback);
-
-    void establishIncomingSession(JingleManager.FullJidAndSessionId fullJidAndSessionId,
-                                  JingleContent receivedContent,
-                                  JingleContent proposedContent,
-                                  JingleTransportEstablishedCallback callback);
+    void establishIncomingSession(JingleTransportEstablishedCallback callback);
 
     XMPPConnection getConnection();
 }

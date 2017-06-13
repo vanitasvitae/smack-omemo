@@ -63,6 +63,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
     private JingleContent receivedContent;
     private final FullJid remote;
     private final String sessionId;
+    private final JingleContent.Creator role;
 
     /**
      * Send a file.
@@ -74,6 +75,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
         this.remote = recipient;
         this.source = send;
         this.sessionId = StringUtils.randomString(24);
+        this.role = JingleContent.Creator.initiator;
 
         JingleFileTransferChild fileTransferChild = fileElementFromFile(send);
         JingleContent.Builder cb = JingleContent.getBuilder();
@@ -106,7 +108,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
      */
     public JingleFileTransferSession(XMPPConnection connection, Jingle initiate) {
         super(connection);
-        LOGGER.log(Level.INFO, "Incoming session!");
+        this.role = JingleContent.Creator.responder;
         this.sessionId = initiate.getSessionId();
         this.remote = initiate.getInitiator();
         this.source = null;
@@ -142,6 +144,25 @@ public class JingleFileTransferSession extends AbstractJingleSession {
             return IQ.createResultIQ(jingle);
         }
 
+        @Override
+        public JingleManager.FullJidAndSessionId getFullJidAndSessionId() {
+            return parent.getFullJidAndSessionId();
+        }
+
+        @Override
+        public JingleContent getReceivedContent() {
+            return parent.getReceivedContent();
+        }
+
+        @Override
+        public JingleContent getProposedContent() {
+            return parent.getProposedContent();
+        }
+
+        @Override
+        public JingleContent.Creator getRole() {
+            return parent.getRole();
+        }
     }
 
     private static class OutgoingAccepted extends AbstractJingleSession {
@@ -160,10 +181,28 @@ public class JingleFileTransferSession extends AbstractJingleSession {
             }
 
             JingleTransportHandler<?> transportHandler = tm.createJingleTransportHandler(this);
-            transportHandler.prepareOutgoingSession(parent.getFullJidAndSessionId(), parent.proposedContent);
             parent.addTransportInfoListener(transportHandler);
-            transportHandler.establishOutgoingSession(parent.getFullJidAndSessionId(), parent.receivedContent,
-                    parent.proposedContent, parent.outgoingFileTransferSessionEstablishedCallback);
+            transportHandler.establishOutgoingSession(parent.outgoingFileTransferSessionEstablishedCallback);
+        }
+
+        @Override
+        public JingleManager.FullJidAndSessionId getFullJidAndSessionId() {
+            return parent.getFullJidAndSessionId();
+        }
+
+        @Override
+        public JingleContent getReceivedContent() {
+            return parent.getReceivedContent();
+        }
+
+        @Override
+        public JingleContent getProposedContent() {
+            return parent.getProposedContent();
+        }
+
+        @Override
+        public JingleContent.Creator getRole() {
+            return parent.getRole();
         }
     }
 
@@ -215,12 +254,34 @@ public class JingleFileTransferSession extends AbstractJingleSession {
             JingleFileTransferManager.getInstanceFor(connection).notifyIncomingJingleFileTransferListeners(file, callback);
             return IQ.createResultIQ(initiate);
         }
+
+        @Override
+        public JingleManager.FullJidAndSessionId getFullJidAndSessionId() {
+            return parent.getFullJidAndSessionId();
+        }
+
+        @Override
+        public JingleContent getReceivedContent() {
+            return parent.getReceivedContent();
+        }
+
+        @Override
+        public JingleContent getProposedContent() {
+            return parent.getProposedContent();
+        }
+
+        @Override
+        public JingleContent.Creator getRole() {
+            return parent.getRole();
+        }
     }
 
     private static class IncomingAccepted extends AbstractJingleSession {
+        private final JingleFileTransferSession parent;
 
         public IncomingAccepted(XMPPConnection connection, JingleFileTransferSession parent) {
             super(connection);
+            this.parent = parent;
             AbstractJingleTransportManager<?> tm = null;
             try {
                 tm = JingleTransportManager.getJingleContentTransportManager(
@@ -231,8 +292,27 @@ public class JingleFileTransferSession extends AbstractJingleSession {
 
             JingleTransportHandler<?> transportHandler = tm.createJingleTransportHandler(this);
             parent.addTransportInfoListener(transportHandler);
-            transportHandler.establishIncomingSession(parent.getFullJidAndSessionId(), parent.receivedContent,
-                    parent.proposedContent, parent.incomingFileTransferSessionEstablishedCallback);
+            transportHandler.establishIncomingSession(parent.incomingFileTransferSessionEstablishedCallback);
+        }
+
+        @Override
+        public JingleManager.FullJidAndSessionId getFullJidAndSessionId() {
+            return parent.getFullJidAndSessionId();
+        }
+
+        @Override
+        public JingleContent getReceivedContent() {
+            return parent.getReceivedContent();
+        }
+
+        @Override
+        public JingleContent getProposedContent() {
+            return parent.getProposedContent();
+        }
+
+        @Override
+        public JingleContent.Creator getRole() {
+            return parent.getRole();
         }
     }
 
@@ -440,9 +520,35 @@ public class JingleFileTransferSession extends AbstractJingleSession {
         }
     }
 
+    @Override
     public JingleManager.FullJidAndSessionId getFullJidAndSessionId() {
         return new JingleManager.FullJidAndSessionId(remote, sessionId);
     }
+
+    @Override
+    public JingleContent getProposedContent() {
+        return proposedContent;
+    }
+
+    public void setProposedContent(JingleContent proposedContent) {
+        this.proposedContent = proposedContent;
+    }
+
+    @Override
+    public JingleContent getReceivedContent() {
+        return receivedContent;
+    }
+
+    public void setReceivedContent(JingleContent receivedContent) {
+        this.receivedContent = receivedContent;
+    }
+
+    @Override
+    public JingleContent.Creator getRole() {
+        return role;
+    }
+
+
 
     @Override
     protected IQ handleSessionInitiate(Jingle sessionInitiate) {

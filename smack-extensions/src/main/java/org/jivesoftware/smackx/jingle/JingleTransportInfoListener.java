@@ -23,5 +23,5 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
  */
 public interface JingleTransportInfoListener {
 
-    void onTransportInfoReceived(Jingle transportInfo);
+    boolean onTransportInfoReceived(Jingle transportInfo);
 }
