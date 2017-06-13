@@ -87,6 +87,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                 final Socks5Client socks5Client = new Socks5Client(streamHost, transport.getDestinationAddress());
                 connectedSocket = socks5Client.getSocket(10 * 1000);
                 connectedCandidate = candidate;
+                LOGGER.log(Level.INFO, "Connected to "+address);
                 break;
             }
             catch (TimeoutException | IOException | SmackException | XMPPException | InterruptedException e) {
@@ -208,10 +209,10 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                             // establish socket
                             try {
                                 final Socks5Client socks5Client = new Socks5Client(streamHost,
-                                        ((JingleS5BTransport) sessionHandler.getReceivedContent().getJingleTransports().get(0))
+                                        ((JingleS5BTransport) sessionHandler.getProposedContent().getJingleTransports().get(0))
                                                 .getDestinationAddress());
                                 connectedSocket = socks5Client.getSocket(10 * 1000);
-                                break;
+                                LOGGER.log(Level.INFO, "Connected to " + address);
                             }
                             catch (TimeoutException | IOException | SmackException | XMPPException | InterruptedException e) {
                                 LOGGER.log(Level.WARNING, "Could not connect to own proxy at " + address + ": " + e, e);
@@ -301,7 +302,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                     }
                 }
             }
-
+            LOGGER.log(Level.INFO, "Established connection with " + parent.usedCandidate.getHost() + " using " + Socks5Proxy.getSocks5Proxy().getLocalAddresses().get(0));
             callback.onSessionEstablished(new Socks5BytestreamSession(parent.connectedSocket, parent.usedCandidate.getType() == JingleS5BTransportCandidate.Type.direct));
         }
 
