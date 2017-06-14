@@ -11,6 +11,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Client;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5ClientForInitiator;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.JingleSessionHandler;
@@ -219,7 +220,9 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
 
                             // establish socket
                             try {
-                                final Socks5Client socks5Client = new Socks5Client(streamHost, digest);
+                                final Socks5ClientForInitiator socks5Client = new Socks5ClientForInitiator(streamHost, digest, getConnection(),
+                                        parent.sessionHandler.getFullJidAndSessionId().getSessionId(),
+                                        parent.sessionHandler.getFullJidAndSessionId().getFullJid());
                                 connectedSocket = socks5Client.getSocket(10 * 1000);
                                 LOGGER.log(Level.INFO, "Connected to " + address + " using " + digest);
                             }
