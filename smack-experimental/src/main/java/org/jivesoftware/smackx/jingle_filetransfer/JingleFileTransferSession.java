@@ -61,6 +61,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
     private File target;
     private JingleContent proposedContent;
     private JingleContent receivedContent;
+    private JingleTransportHandler<?> transportHandler;
     private final FullJid remote;
     private final String sessionId;
     private final JingleContent.Creator role;
@@ -98,6 +99,18 @@ public class JingleFileTransferSession extends AbstractJingleSession {
             LOGGER.log(Level.SEVERE, "Could not send session-initiate: " + e, e);
             return;
         }
+
+        AbstractJingleTransportManager<?> tm;
+        try {
+            tm = JingleTransportManager.getJingleContentTransportManager(connection,
+                    proposedContent.getJingleTransports().get(0));
+        } catch (UnsupportedJingleTransportException e) {
+            throw new AssertionError("Since we initiated the transport, we MUST know the transport method.");
+        }
+
+        transportHandler = tm.createJingleTransportHandler(this);
+        addTransportInfoListener(transportHandler);
+        transportHandler.prepareSession();
 
         this.state = new OutgoingInitiated(connection, this);
     }
@@ -172,17 +185,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
             super(connection);
             this.parent = parent;
 
-            AbstractJingleTransportManager<?> tm;
-            try {
-                tm = JingleTransportManager.getJingleContentTransportManager(connection,
-                        parent.proposedContent.getJingleTransports().get(0));
-            } catch (UnsupportedJingleTransportException e) {
-                throw new AssertionError("Since we initiated the transport, we MUST know the transport method.");
-            }
-
-            JingleTransportHandler<?> transportHandler = tm.createJingleTransportHandler(this);
-            parent.addTransportInfoListener(transportHandler);
-            transportHandler.establishOutgoingSession(parent.outgoingFileTransferSessionEstablishedCallback);
+            parent.transportHandler.establishOutgoingSession(parent.outgoingFileTransferSessionEstablishedCallback);
         }
 
         @Override
@@ -279,10 +282,10 @@ public class JingleFileTransferSession extends AbstractJingleSession {
     private static class IncomingAccepted extends AbstractJingleSession {
         private final JingleFileTransferSession parent;
 
-        public IncomingAccepted(XMPPConnection connection, JingleFileTransferSession parent) {
+        IncomingAccepted(XMPPConnection connection, JingleFileTransferSession parent) {
             super(connection);
             this.parent = parent;
-            AbstractJingleTransportManager<?> tm = null;
+            AbstractJingleTransportManager<?> tm;
             try {
                 tm = JingleTransportManager.getJingleContentTransportManager(
                         connection, parent.proposedContent.getJingleTransports().get(0));
@@ -290,9 +293,11 @@ public class JingleFileTransferSession extends AbstractJingleSession {
                 throw new AssertionError("Since we accepted the transfer, we MUST know the transport method.");
             }
 
-            JingleTransportHandler<?> transportHandler = tm.createJingleTransportHandler(this);
-            parent.addTransportInfoListener(transportHandler);
-            transportHandler.establishIncomingSession(parent.incomingFileTransferSessionEstablishedCallback);
+            parent.transportHandler = tm.createJingleTransportHandler(this);
+
+            parent.addTransportInfoListener(parent.transportHandler);
+            parent.transportHandler.prepareSession();
+            parent.transportHandler.establishIncomingSession(parent.incomingFileTransferSessionEstablishedCallback);
         }
 
         @Override

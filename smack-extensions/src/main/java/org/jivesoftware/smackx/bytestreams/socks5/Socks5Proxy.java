@@ -348,7 +348,7 @@ public final class Socks5Proxy {
      * 
      * @param digest to be added to the list of allowed transfers
      */
-    protected void addTransfer(String digest) {
+    public void addTransfer(String digest) {
         this.allowedConnections.add(digest);
     }
 
@@ -361,7 +361,7 @@ public final class Socks5Proxy {
      * 
      * @param digest to be removed from the list of allowed transfers
      */
-    protected void removeTransfer(String digest) {
+    public void removeTransfer(String digest) {
         this.allowedConnections.remove(digest);
         this.connectionMap.remove(digest);
     }

@@ -24,6 +24,8 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
  */
 public interface JingleTransportHandler<D extends JingleContentTransport> extends JingleTransportInfoListener {
 
+    void prepareSession();
+
     void establishOutgoingSession(JingleTransportEstablishedCallback callback);
 
     void establishIncomingSession(JingleTransportEstablishedCallback callback);

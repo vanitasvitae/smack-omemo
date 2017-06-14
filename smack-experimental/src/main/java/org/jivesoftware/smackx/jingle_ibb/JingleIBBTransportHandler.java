@@ -43,6 +43,11 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
+    public void prepareSession() {
+
+    }
+
+    @Override
     public void establishOutgoingSession(JingleTransportEstablishedCallback callback) {
         InBandBytestreamSession session;
 
