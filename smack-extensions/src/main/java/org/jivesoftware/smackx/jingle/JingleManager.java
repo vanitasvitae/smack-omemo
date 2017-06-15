@@ -89,8 +89,13 @@ public final class JingleManager extends Manager {
 
                         JingleContent content = jingle.getContents().get(0);
                         JingleContentDescription description = content.getDescription();
-                        JingleHandler jingleDescriptionHandler = descriptionHandlers.get(
-                                description.getNamespace());
+
+                        JingleHandler jingleDescriptionHandler = null;
+                        if (description != null) {
+                            jingleDescriptionHandler = descriptionHandlers.get(
+                                    description.getNamespace());
+                        }
+
                         if (jingleDescriptionHandler == null) {
                             //Unsupported Application
                             Jingle.Builder builder = Jingle.getBuilder();
