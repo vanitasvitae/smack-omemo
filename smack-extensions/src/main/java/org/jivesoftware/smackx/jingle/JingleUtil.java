@@ -4,11 +4,13 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.element.JingleError;
 import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jxmpp.jid.FullJid;
 
@@ -159,5 +161,75 @@ public class JingleUtil {
         jingle.setTo(recipient);
 
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
+    }
+
+    public IQ sendSessionTerminateUnsupportedTransports(FullJid recipient, String sessionId)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        return sendSessionTerminate(recipient, sessionId, JingleReason.Reason.unsupported_transports);
+    }
+
+    public IQ sendSessionTerminateFailedTransport(FullJid recipient, String sessionId)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        return sendSessionTerminate(recipient, sessionId, JingleReason.Reason.failed_transport);
+    }
+
+    public IQ sendSessionTerminateUnsupportedApplications(FullJid recipient, String sessionId)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        return sendSessionTerminate(recipient, sessionId, JingleReason.Reason.unsupported_applications);
+    }
+
+    public IQ sendSessionTerminateFailedApplication(FullJid recipient, String sessionId)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        return sendSessionTerminate(recipient, sessionId, JingleReason.Reason.failed_application);
+    }
+
+    public IQ sendSessionTerminateIncompatibleParameters(FullJid recipient, String sessionId)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        return sendSessionTerminate(recipient, sessionId, JingleReason.Reason.incompatible_parameters);
+    }
+
+    public IQ sendSessionPing(FullJid recipient, String sessionId)
+            throws SmackException.NotConnectedException, InterruptedException,
+            XMPPException.XMPPErrorException, SmackException.NoResponseException {
+        
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setSessionId(sessionId)
+                .setAction(JingleAction.session_info);
+
+        Jingle jingle = jb.build();
+        jingle.setFrom(connection.getUser());
+        jingle.setTo(recipient);
+
+        return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
+    }
+
+    public void sendErrorUnknownSession(Jingle request)
+            throws SmackException.NotConnectedException, InterruptedException {
+
+        XMPPError.Builder error = XMPPError.getBuilder();
+        error.setCondition(XMPPError.Condition.item_not_found)
+                .addExtension(JingleError.UNKNOWN_SESSION);
+
+        connection.sendStanza(IQ.createErrorResponse(request, error));
+    }
+
+    public void sendErrorUnknownInitiator(Jingle request)
+            throws SmackException.NotConnectedException, InterruptedException {
+        connection.sendStanza(IQ.createErrorResponse(request, XMPPError.Condition.service_unavailable));
+    }
+
+    public void sendErrorUnsupportedInfo(Jingle request)
+            throws SmackException.NotConnectedException, InterruptedException {
+
+        XMPPError.Builder error = XMPPError.getBuilder();
+        error.setCondition(XMPPError.Condition.feature_not_implemented)
+                .addExtension(JingleError.UNSUPPORTED_INFO);
+
+        connection.sendStanza(IQ.createErrorResponse(request, error));
     }
 }
