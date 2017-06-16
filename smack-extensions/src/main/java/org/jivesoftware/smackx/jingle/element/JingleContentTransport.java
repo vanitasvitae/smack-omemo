@@ -31,18 +31,33 @@ public abstract class JingleContentTransport implements ExtensionElement {
     public static final String ELEMENT = "transport";
 
     protected final List<JingleContentTransportCandidate> candidates;
+    protected final List<JingleContentTransportInfo> infos;
 
     protected JingleContentTransport(List<JingleContentTransportCandidate> candidates) {
+        this(candidates, null);
+    }
+
+    protected JingleContentTransport(List<JingleContentTransportCandidate> candidates, List<JingleContentTransportInfo> infos) {
         if (candidates != null) {
             this.candidates = Collections.unmodifiableList(candidates);
         }
         else {
             this.candidates = Collections.emptyList();
         }
+
+        if (infos != null) {
+            this.infos = infos;
+        } else {
+            this.infos = Collections.emptyList();
+        }
     }
 
     public List<JingleContentTransportCandidate> getCandidates() {
         return candidates;
+    }
+
+    public List<JingleContentTransportInfo> getInfos() {
+        return infos;
     }
 
     @Override
@@ -59,17 +74,17 @@ public abstract class JingleContentTransport implements ExtensionElement {
         XmlStringBuilder xml = new XmlStringBuilder(this);
         addExtraAttributes(xml);
 
-        if (candidates.isEmpty()) {
+        if (candidates.isEmpty() && infos.isEmpty()) {
             xml.closeEmptyElement();
 
         } else {
 
             xml.rightAngleBracket();
             xml.append(candidates);
+            xml.append(infos);
             xml.closeElement(this);
         }
 
         return xml;
     }
-
 }
