@@ -27,7 +27,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildEleme
 public class JingleFileTransfer extends JingleContentDescription {
     public static final String NAMESPACE_V5 = "urn:xmpp:jingle:apps:file-transfer:5";
 
-    protected JingleFileTransfer(List<JingleContentDescriptionChildElement> payloads) {
+    public JingleFileTransfer(List<JingleContentDescriptionChildElement> payloads) {
         super(payloads);
     }
 
