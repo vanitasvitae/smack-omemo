@@ -37,6 +37,7 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidate;
+import org.jivesoftware.smackx.jingle.exception.JingleTransportFailureException;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleS5BTransport;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleS5BTransportCandidate;
 import org.jivesoftware.smackx.jingle_s5b.elements.JingleS5BTransportInfo;
@@ -109,6 +110,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                 break;
             }
             catch (TimeoutException | IOException | SmackException | XMPPException | InterruptedException e) {
+                //We cannot connect to transport candidate. Try others...
                 LOGGER.log(Level.WARNING, "Could not connect to " + address + ": " + e, e);
             }
         }
@@ -138,7 +140,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
             try {
                 getConnection().sendStanza(jingle);
             } catch (SmackException.NotConnectedException | InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "Could not send candidate-used transport-info: " + e, e);
+                callback.onSessionFailure(new JingleTransportFailureException(e));
             }
         } else {
             //Candidate error
@@ -168,7 +170,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
             try {
                 getConnection().sendStanza(jingle);
             } catch (SmackException.NotConnectedException | InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "Could not send candidate-error transport-info: " + e, e);
+                callback.onSessionFailure(new JingleTransportFailureException(e));
             }
         }
 
@@ -178,6 +180,11 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
     @Override
     public XMPPConnection getConnection() {
         return sessionHandler.getConnection();
+    }
+
+    @Override
+    public String getNamespace() {
+        return JingleS5BTransport.NAMESPACE_V1;
     }
 
     private interface JingleS5BTransportHandlerInterface {
@@ -216,7 +223,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
 
                     if (usedCandidate == null) {
                         //Error unknown candidate.
-
+                        //TODO: Ignore? Not specified in xep-0260
                     } else {
 
                         //We already have a remote candidate selected.
@@ -244,6 +251,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                             }
                             catch (TimeoutException | IOException | SmackException | XMPPException | InterruptedException e) {
                                 LOGGER.log(Level.WARNING, "Could not connect to own proxy at " + address + ": " + e, e);
+                                callback.onSessionFailure(new JingleTransportFailureException(e));
                             }
                         }
 
@@ -259,13 +267,14 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                     parent.remoteCandidateError = true;
                     if (parent.localCandidateError) {
                         //Session transport-failed
+                        //TODO: Fallback
                     } else {
                         state = new CandidateUsedReceived(parent);
                     }
                     break;
 
                 case JingleS5BTransportInfo.ProxyError.ELEMENT:
-
+                    //???
                     break;
             }
 
@@ -290,10 +299,16 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
             JingleS5BTransport transport = (JingleS5BTransport) content.getJingleTransports().get(0);
             JingleS5BTransportInfo info = (JingleS5BTransportInfo) transport.getInfos().get(0);
 
-            if (info.getElementName().equals(JingleS5BTransportInfo.CandidateActivated.ELEMENT)) {
-                //TODO: Check if same candidate
-                LOGGER.log(Level.INFO, "Established connection with " + parent.usedCandidate.getHost());
-                callback.onSessionEstablished(new Socks5BytestreamSession(parent.connectedSocket, parent.usedCandidate.getType() == JingleS5BTransportCandidate.Type.direct));
+            if (JingleS5BTransportInfo.CandidateActivated.ELEMENT.equals(info.getElementName())) {
+                JingleS5BTransportInfo.CandidateActivated candidateActivated =
+                        (JingleS5BTransportInfo.CandidateActivated) info;
+
+                if (!parent.usedCandidate.getCandidateId().equals(candidateActivated.getCandidateId())) {
+                    //TODO: Unknown candidate. Not specified in xep-0260?
+                } else {
+                    LOGGER.log(Level.INFO, "Established connection with " + parent.usedCandidate.getHost());
+                    callback.onSessionEstablished(new Socks5BytestreamSession(parent.connectedSocket, parent.usedCandidate.getType() == JingleS5BTransportCandidate.Type.direct));
+                }
                 return true;
             }
             return false;
@@ -315,6 +330,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                             getConnection().createStanzaCollectorAndSend(activateProxy).nextResultOrThrow();
                         } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | InterruptedException e) {
                             LOGGER.log(Level.SEVERE, "Could not activate proxy server: " + e, e);
+                            callback.onSessionFailure(new JingleTransportFailureException(e));
                         }
                     }
 
@@ -347,6 +363,7 @@ public class JingleS5BTransportHandler implements JingleTransportHandler<JingleS
                         getConnection().sendStanza(j);
                     } catch (SmackException.NotConnectedException | InterruptedException e) {
                         LOGGER.log(Level.SEVERE, "Could not send candidate-activated : " + e, e);
+                        callback.onSessionFailure(new JingleTransportFailureException(e));
                     }
 
                     LOGGER.log(Level.INFO, "Established connection with " + parent.usedCandidate.getHost());

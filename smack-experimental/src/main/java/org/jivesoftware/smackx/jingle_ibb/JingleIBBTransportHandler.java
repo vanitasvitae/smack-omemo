@@ -91,6 +91,11 @@ public class JingleIBBTransportHandler implements JingleTransportHandler<JingleI
     }
 
     @Override
+    public String getNamespace() {
+        return JingleIBBTransport.NAMESPACE_V1;
+    }
+
+    @Override
     public boolean onTransportInfoReceived(Jingle transportInfo) {
         return false;
     }

@@ -31,4 +31,6 @@ public interface JingleTransportHandler<D extends JingleContentTransport> extend
     void establishIncomingSession(JingleTransportEstablishedCallback callback);
 
     XMPPConnection getConnection();
+
+    String getNamespace();
 }

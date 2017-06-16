@@ -48,6 +48,7 @@ import org.jivesoftware.smackx.jingle.exception.UnsupportedJingleTransportExcept
 import org.jivesoftware.smackx.jingle_filetransfer.callback.JingleFileTransferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferContentDescription;
+import org.jivesoftware.smackx.jingle_ibb.element.JingleIBBTransport;
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -78,6 +79,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
         this.sessionId = StringUtils.randomString(24);
         this.role = JingleContent.Creator.initiator;
 
+        //Create file content element
         JingleFileTransferChild fileTransferChild = fileElementFromFile(send);
         JingleContent.Builder cb = JingleContent.getBuilder();
         cb.setSenders(JingleContent.Senders.initiator)
@@ -88,7 +90,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
         try {
             cb.addTransport(defaultTransport());
         } catch (Exception e) {
-            throw new AssertionError("At least IBB should work. " + e);
+            throw new AssertionError("At least IBB should work as a transport method. " + e);
         }
 
         this.proposedContent = cb.build();
@@ -423,7 +425,14 @@ public class JingleFileTransferSession extends AbstractJingleSession {
 
                 @Override
                 public void onSessionFailure(JingleTransportFailureException reason) {
-                    //TODO: Send transport-failed or so.
+                    //TODO: Send transport-replace to fall back to IBB
+                    // Do we already use IBB?
+                    if (transportHandler.getNamespace().equals(JingleIBBTransport.NAMESPACE_V1)) {
+                        //fail
+                    } else {
+                        Jingle.Builder jb = Jingle.getBuilder();
+                        jb.setAction(JingleAction.transport_replace);
+                    }
                 }
             };
 
@@ -436,7 +445,7 @@ public class JingleFileTransferSession extends AbstractJingleSession {
 
                 @Override
                 public void onSessionFailure(JingleTransportFailureException reason) {
-                    //TODO: Send transport failed
+                    LOGGER.log(Level.SEVERE, "SESSION FAILIURE: ", reason);
                 }
             };
 
