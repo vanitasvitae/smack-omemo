@@ -55,58 +55,63 @@ public class JingleS5BTransportProvider extends JingleContentTransportProvider<J
         }
 
         JingleS5BTransportCandidate.Builder cb;
-        while (true) {
+        outerloop: while (true) {
             int tag = parser.nextTag();
             String name = parser.getName();
-            if (tag == START_TAG) {
-                switch (name) {
+            switch (tag) {
+                case START_TAG: {
+                    switch (name) {
 
-                    case JingleS5BTransportCandidate.ELEMENT:
-                    cb = JingleS5BTransportCandidate.getBuilder();
-                    cb.setCandidateId(parser.getAttributeValue(null, ATTR_CID));
-                    cb.setHost(parser.getAttributeValue(null, ATTR_HOST));
-                    cb.setJid(parser.getAttributeValue(null, ATTR_JID));
-                    cb.setPriority(Integer.parseInt(parser.getAttributeValue(null, ATTR_PRIORITY)));
+                        case JingleS5BTransportCandidate.ELEMENT:
+                            cb = JingleS5BTransportCandidate.getBuilder();
+                            cb.setCandidateId(parser.getAttributeValue(null, ATTR_CID));
+                            cb.setHost(parser.getAttributeValue(null, ATTR_HOST));
+                            cb.setJid(parser.getAttributeValue(null, ATTR_JID));
+                            cb.setPriority(Integer.parseInt(parser.getAttributeValue(null, ATTR_PRIORITY)));
 
-                    String portString = parser.getAttributeValue(null, ATTR_PORT);
-                    if (portString != null) {
-                        cb.setPort(Integer.parseInt(portString));
+                            String portString = parser.getAttributeValue(null, ATTR_PORT);
+                            if (portString != null) {
+                                cb.setPort(Integer.parseInt(portString));
+                            }
+
+                            String typeString = parser.getAttributeValue(null, ATTR_TYPE);
+                            if (typeString != null) {
+                                cb.setType(JingleS5BTransportCandidate.Type.fromString(typeString));
+                            }
+                            builder.addTransportCandidate(cb.build());
+                            break;
+
+                        case JingleS5BTransportInfo.CandidateActivated.ELEMENT:
+                            builder.addTransportInfo(JingleS5BTransportInfo.CandidateActivated(
+                                    parser.getAttributeValue(null,
+                                            JingleS5BTransportInfo.CandidateActivated.ATTR_CID)));
+                            break;
+
+                        case JingleS5BTransportInfo.CandidateUsed.ELEMENT:
+                            builder.addTransportInfo(JingleS5BTransportInfo.CandidateUsed(
+                                    parser.getAttributeValue(null,
+                                            JingleS5BTransportInfo.CandidateUsed.ATTR_CID)));
+                            break;
+
+                        case JingleS5BTransportInfo.CandidateError.ELEMENT:
+                            builder.addTransportInfo(JingleS5BTransportInfo.CandidateError());
+                            break;
+
+                        case JingleS5BTransportInfo.ProxyError.ELEMENT:
+                            builder.addTransportInfo(JingleS5BTransportInfo.ProxyError());
+                            break;
                     }
+                }
+                break;
 
-                    String typeString = parser.getAttributeValue(null, ATTR_TYPE);
-                    if (typeString != null) {
-                        cb.setType(JingleS5BTransportCandidate.Type.fromString(typeString));
+                case END_TAG: {
+                    switch (name) {
+                        case JingleContentTransport.ELEMENT:
+                            break outerloop;
                     }
-                    builder.addTransportCandidate(cb.build());
-                    break;
-
-                    case JingleS5BTransportInfo.CandidateActivated.ELEMENT:
-                        builder.addTransportInfo(JingleS5BTransportInfo.CandidateActivated(
-                                parser.getAttributeValue(null,
-                                        JingleS5BTransportInfo.CandidateActivated.ATTR_CID)));
-                        break;
-
-                    case JingleS5BTransportInfo.CandidateUsed.ELEMENT:
-                        builder.addTransportInfo(JingleS5BTransportInfo.CandidateUsed(
-                                parser.getAttributeValue(null,
-                                        JingleS5BTransportInfo.CandidateUsed.ATTR_CID)));
-                        break;
-
-                    case JingleS5BTransportInfo.CandidateError.ELEMENT:
-                        builder.addTransportInfo(JingleS5BTransportInfo.CandidateError());
-                        break;
-
-                    case JingleS5BTransportInfo.ProxyError.ELEMENT:
-                        builder.addTransportInfo(JingleS5BTransportInfo.ProxyError());
-                        break;
                 }
             }
-
-            if (tag == END_TAG && name.equals(JingleContentTransport.ELEMENT)) {
-                break;
-            }
         }
-
         return builder.build();
     }
 }
