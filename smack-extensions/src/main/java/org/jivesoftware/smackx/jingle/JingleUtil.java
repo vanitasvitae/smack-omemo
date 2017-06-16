@@ -196,7 +196,7 @@ public class JingleUtil {
     public IQ sendSessionPing(FullJid recipient, String sessionId)
             throws SmackException.NotConnectedException, InterruptedException,
             XMPPException.XMPPErrorException, SmackException.NoResponseException {
-        
+
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setSessionId(sessionId)
                 .setAction(JingleAction.session_info);
