@@ -26,6 +26,7 @@ import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTr
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransportCandidate;
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransportInfo;
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.provider.JingleS5BTransportProvider;
+
 import org.junit.Test;
 import org.jxmpp.jid.impl.JidCreate;
 

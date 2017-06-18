@@ -25,11 +25,13 @@ import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
+
 import org.jxmpp.util.XmppDateTime;
 import org.xmlpull.v1.XmlPullParser;
+
 
 /**
  * Provider for JingleContentDescriptionFileTransfer elements.

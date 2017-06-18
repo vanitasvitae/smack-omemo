@@ -28,6 +28,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.element.JingleError;
 import org.jivesoftware.smackx.jingle.element.JingleReason;
+
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -42,12 +43,12 @@ public class JingleUtil {
     }
 
     public IQ sendSessionInitiate(FullJid recipient,
-                           String sessionId,
-                           JingleContent.Creator contentCreator,
-                           String contentName,
-                           JingleContent.Senders contentSenders,
-                           JingleContentDescription description,
-                           JingleContentTransport transport)
+                                  String sessionId,
+                                  JingleContent.Creator contentCreator,
+                                  String contentName,
+                                  JingleContent.Senders contentSenders,
+                                  JingleContentDescription description,
+                                  JingleContentTransport transport)
             throws SmackException.NotConnectedException, InterruptedException,
             XMPPException.XMPPErrorException, SmackException.NoResponseException {
 
