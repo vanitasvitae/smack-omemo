@@ -353,4 +353,29 @@ public class JingleUtil {
             throws SmackException.NotConnectedException, InterruptedException {
         connection.sendStanza(createErrorUnsupportedInfo(request));
     }
+
+
+    public IQ createErrorTieBreak(Jingle request) {
+        XMPPError.Builder error = XMPPError.getBuilder();
+        error.setCondition(XMPPError.Condition.conflict)
+                .addExtension(JingleError.TIE_BREAK);
+        return IQ.createErrorResponse(request, error);
+    }
+
+    public void sendErrorTieBreak(Jingle request)
+            throws SmackException.NotConnectedException, InterruptedException {
+        connection.sendStanza(createErrorTieBreak(request));
+    }
+
+    public IQ createErrorOutOfOrder(Jingle request) {
+        XMPPError.Builder error = XMPPError.getBuilder();
+        error.setCondition(XMPPError.Condition.unexpected_request)
+                .addExtension(JingleError.OUT_OF_ORDER);
+        return IQ.createErrorResponse(request, error);
+    }
+
+    public void sendErrorOutOfOrder(Jingle request)
+            throws SmackException.NotConnectedException, InterruptedException {
+        connection.sendStanza(createErrorOutOfOrder(request));
+    }
 }
