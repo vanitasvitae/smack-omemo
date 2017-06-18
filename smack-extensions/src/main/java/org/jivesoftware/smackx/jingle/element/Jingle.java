@@ -24,6 +24,7 @@ import java.util.List;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smack.util.StringUtils;
+
 import org.jxmpp.jid.FullJid;
 
 /**
@@ -195,6 +196,11 @@ public final class Jingle extends IQ {
 
         public Builder setReason(JingleReason.Reason reason) {
             this.reason = new JingleReason(reason);
+            return this;
+        }
+
+        public Builder setReason(JingleReason reason) {
+            this.reason = reason;
             return this;
         }
 
