@@ -23,7 +23,7 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.util.StringUtils;
 
 import org.junit.Test;
-import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
@@ -34,18 +34,20 @@ public class JingleSessionTest extends SmackTestSuite {
 
     @Test
     public void sessionTest() throws XmppStringprepException {
-        Jid romeo = JidCreate.from("romeo@montague.lit");
-        Jid juliet = JidCreate.from("juliet@capulet.lit");
+        FullJid romeo = JidCreate.fullFrom("romeo@montague.lit/r");
+        FullJid juliet = JidCreate.fullFrom("juliet@capulet.lit/j");
         String sid = StringUtils.randomString(24);
 
-        JingleSession s1 = new JingleSession(romeo, juliet, sid);
-        JingleSession s2 = new JingleSession(juliet, romeo, sid);
-        JingleSession s3 = new JingleSession(romeo, juliet, StringUtils.randomString(23));
-        JingleSession s4 = new JingleSession(juliet, romeo, sid);
+        JingleSession s1 = new JingleSession(romeo, juliet, Role.initiator, sid);
+        JingleSession s2 = new JingleSession(juliet, romeo, Role.responder, sid);
+        JingleSession s3 = new JingleSession(romeo, juliet, Role.responder, StringUtils.randomString(23));
+        JingleSession s4 = new JingleSession(juliet, romeo, Role.responder, sid);
+        JingleSession s5 = new JingleSession(juliet, romeo, Role.initiator, sid);
 
         assertNotSame(s1, s2);
         assertNotSame(s1, s3);
         assertNotSame(s2, s3);
+        assertNotSame(s4, s5);
         assertEquals(s2, s4);
         assertEquals(s2.hashCode(), s4.hashCode());
     }

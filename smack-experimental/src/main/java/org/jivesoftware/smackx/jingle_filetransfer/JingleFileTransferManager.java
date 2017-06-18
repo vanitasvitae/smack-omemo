@@ -20,16 +20,27 @@ import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.jingle.JingleHandler;
+import org.jivesoftware.smackx.jingle.JingleManager;
+import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+
+import org.jxmpp.jid.FullJid;
 
 /**
  * Manager for JingleFileTransfer (XEP-0234).
  */
-public final class JingleFileTransferManager extends Manager {
+public final class JingleFileTransferManager extends Manager implements JingleHandler {
 
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
 
     private JingleFileTransferManager(XMPPConnection connection) {
         super(connection);
+        ServiceDiscoveryManager.getInstanceFor(connection).addFeature(JingleFileTransfer.NAMESPACE_V5);
+        JingleManager jingleManager = JingleManager.getInstanceFor(connection);
+        jingleManager.registerDescriptionHandler(JingleFileTransfer.NAMESPACE_V5, this);
     }
 
     public static JingleFileTransferManager getInstanceFor(XMPPConnection connection) {
@@ -39,5 +50,14 @@ public final class JingleFileTransferManager extends Manager {
             INSTANCES.put(connection, manager);
         }
         return manager;
+    }
+
+    @Override
+    public IQ handleJingleRequest(Jingle jingle) {
+        FullJid fullJid = jingle.getFrom().asFullJidOrThrow();
+        String sid = jingle.getSid();
+        JingleFileTransferSessionHandler handler = JingleFileTransferSessionHandler.getInstanceFor(connection());
+        JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(fullJid, sid, handler);
+        return handler.handleJingleSessionRequest(jingle, jingle.getSid());
     }
 }

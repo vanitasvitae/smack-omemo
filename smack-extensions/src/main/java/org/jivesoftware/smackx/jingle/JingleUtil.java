@@ -345,7 +345,6 @@ public class JingleUtil {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.feature_not_implemented)
                 .addExtension(JingleError.UNSUPPORTED_INFO);
-
         return IQ.createErrorResponse(request, error);
     }
 
@@ -353,7 +352,6 @@ public class JingleUtil {
             throws SmackException.NotConnectedException, InterruptedException {
         connection.sendStanza(createErrorUnsupportedInfo(request));
     }
-
 
     public IQ createErrorTieBreak(Jingle request) {
         XMPPError.Builder error = XMPPError.getBuilder();

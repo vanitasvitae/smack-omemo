@@ -16,28 +16,59 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.FullJid;
 
-// TODO: Is this class still required? If not, then remove it.
 public class JingleSession {
 
-    private final Jid initiator;
+    protected final FullJid local;
 
-    private final Jid responder;
+    protected final FullJid remote;
 
-    private final String sid;
+    protected final Role role;
 
-    public JingleSession(Jid initiator, Jid responder, String sid) {
-        this.initiator = initiator;
-        this.responder = responder;
+    protected final String sid;
+
+    public JingleSession(FullJid initiator, FullJid responder, Role role, String sid) {
+        if (role == Role.initiator) {
+            this.local = initiator;
+            this.remote = responder;
+        } else {
+            this.local = responder;
+            this.remote = initiator;
+        }
         this.sid = sid;
+        this.role = role;
+    }
+
+    public FullJid getInitiator() {
+        return isInitiator() ? local : remote;
+    }
+
+    public boolean isInitiator() {
+        return role == Role.initiator;
+    }
+
+    public FullJid getResponder() {
+        return isResponder() ? local : remote;
+    }
+
+    public boolean isResponder() {
+        return role == Role.responder;
+    }
+
+    public String getSessionId() {
+        return sid;
+    }
+
+    public FullJidAndSessionId getFullJidAndSessionId() {
+        return new FullJidAndSessionId(remote, sid);
     }
 
     @Override
     public int hashCode() {
-        int hashCode = 31 + initiator.hashCode();
-        hashCode = 31 * hashCode + responder.hashCode();
-        hashCode = 31 * hashCode + sid.hashCode();
+        int hashCode = 31 + getInitiator().hashCode();
+        hashCode = 31 * hashCode + getResponder().hashCode();
+        hashCode = 31 * hashCode + getSessionId().hashCode();
         return hashCode;
     }
 
@@ -48,7 +79,8 @@ public class JingleSession {
         }
 
         JingleSession otherJingleSession = (JingleSession) other;
-        return initiator.equals(otherJingleSession.initiator) && responder.equals(otherJingleSession.responder)
-                        && sid.equals(otherJingleSession.sid);
+        return getInitiator().equals(otherJingleSession.getInitiator())
+                && getResponder().equals(otherJingleSession.getResponder())
+                && sid.equals(otherJingleSession.sid);
     }
 }
