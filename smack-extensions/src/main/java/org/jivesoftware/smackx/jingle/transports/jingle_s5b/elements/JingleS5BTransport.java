@@ -41,6 +41,7 @@ public class JingleS5BTransport extends JingleContentTransport {
 
     protected JingleS5BTransport(List<JingleContentTransportCandidate> candidates, List<JingleContentTransportInfo> infos, String streamId, String dstAddr, Bytestream.Mode mode) {
         super(candidates, infos);
+        StringUtils.requireNotNullOrEmpty(streamId, "sid MUST be neither null, nor empty.");
         this.streamId = streamId;
         this.dstAddr = dstAddr;
         this.mode = mode;
@@ -137,7 +138,6 @@ public class JingleS5BTransport extends JingleContentTransport {
         }
 
         public JingleS5BTransport build() {
-            StringUtils.requireNotNullOrEmpty(streamId, "sid MUST be neither null, nor empty.");
             return new JingleS5BTransport(candidates, infos, streamId, dstAddr, mode);
         }
     }
