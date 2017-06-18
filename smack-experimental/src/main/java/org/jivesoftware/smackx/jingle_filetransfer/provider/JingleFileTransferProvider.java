@@ -32,7 +32,6 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
 import org.jxmpp.util.XmppDateTime;
 import org.xmlpull.v1.XmlPullParser;
 
-
 /**
  * Provider for JingleContentDescriptionFileTransfer elements.
  */
