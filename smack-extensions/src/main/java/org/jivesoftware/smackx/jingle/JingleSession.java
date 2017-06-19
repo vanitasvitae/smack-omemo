@@ -16,6 +16,8 @@
  */
 package org.jivesoftware.smackx.jingle;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 
@@ -177,7 +179,7 @@ public abstract class JingleSession implements JingleSessionHandler {
         return IQ.createResultIQ(transportInfo);
     }
 
-    protected IQ handleTransportReplace(Jingle transportReplace) {
+    protected IQ handleTransportReplace(Jingle transportReplace) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
         return IQ.createResultIQ(transportReplace);
     }
 

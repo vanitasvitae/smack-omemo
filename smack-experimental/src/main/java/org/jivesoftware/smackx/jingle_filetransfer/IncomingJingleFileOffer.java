@@ -31,6 +31,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 
 import org.jxmpp.jid.FullJid;
 
@@ -59,6 +60,12 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
             //Out of order (initiate after accept)
             return jutil.createErrorOutOfOrder(initiate);
         }
+
+        JingleContent content = initiate.getContents().get(0);
+        this.creator = content.getCreator();
+        this.file = (JingleFileTransfer) content.getDescription();
+        this.name = content.getName();
+        this.transport = content.getJingleTransports().get(0);
 
         JingleFileTransferManager.getInstanceFor(connection).notifyIncomingFileOffer(initiate, this);
         setState(State.pending);

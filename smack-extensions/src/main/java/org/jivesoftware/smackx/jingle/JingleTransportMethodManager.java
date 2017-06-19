@@ -64,8 +64,17 @@ public final class JingleTransportMethodManager extends Manager {
     }
 
     public JingleTransportManager<?> getTransportManager(Jingle request) {
+
         JingleContent content = request.getContents().get(0);
+        if (content == null) {
+            return null;
+        }
+
         JingleContentTransport transport = content.getJingleTransports().get(0);
+        if (transport == null) {
+            return null;
+        }
+
         return getTransportManager(transport.getNamespace());
     }
 

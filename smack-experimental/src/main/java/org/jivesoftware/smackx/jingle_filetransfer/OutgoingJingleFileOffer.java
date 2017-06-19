@@ -21,9 +21,11 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
 import org.jivesoftware.smackx.jingle.Role;
+import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
@@ -58,6 +60,34 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
             JingleContentTransport transport = transportManager.createTransport();
 
             jutil.sendSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transport);
+        }
+    }
+
+    @Override
+    public IQ handleSessionAccept(Jingle sessionAccept) {
+        //TODO
+        setState(State.active);
+        return jutil.createAck(sessionAccept);
+    }
+
+    @Override
+    public IQ handleSessionTerminate(Jingle sessionTerminate) {
+        //TODO
+        setState(State.terminated);
+        return jutil.createAck(sessionTerminate);
+    }
+
+    @Override
+    public IQ handleTransportReplace(Jingle transportReplace)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        JingleTransportManager<?> replacementManager = JingleTransportMethodManager.getInstanceFor(connection)
+                .getTransportManager(transportReplace);
+
+        if (replacementManager != null) {
+            jutil.sendTransportAccept(transportReplace.getFrom().asFullJidOrThrow(),
+                    transportReplace.getInitiator(), transportReplace.getSid(), creator, name,
+                    replacementManager.createTransport());
         }
     }
 }
