@@ -16,6 +16,7 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
+import java.util.ArrayList;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
@@ -30,6 +31,7 @@ import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
 
 import org.jxmpp.jid.FullJid;
 
@@ -40,6 +42,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
 
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
     private final JingleUtil jutil;
+    private final ArrayList<JingleFileTransferOfferListener> jingleFileTransferOfferListeners = new ArrayList<>();
 
     private JingleFileTransferManager(XMPPConnection connection) {
         super(connection);
@@ -90,7 +93,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         JingleContent content = request.getContents().get(0);
         //File Offer
         if (content.getSenders() == JingleContent.Senders.initiator) {
-            return JingleFileOffer.createIncomingFileOffer(connection(), request);
+            return new IncomingJingleFileOffer(connection(), request);
         } //File Request
         else if (content.getSenders() == JingleContent.Senders.responder) {
             return JingleFileRequest.createIncomingFileRequest(connection(), request);
@@ -101,6 +104,16 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
     }
 
     public void notifyIncomingFileOffer(Jingle initiate, IncomingFileOfferCallback callback) {
+        for (JingleFileTransferOfferListener l : jingleFileTransferOfferListeners) {
+            l.onFileOffer(initiate, callback);
+        }
+    }
 
+    public void addJingleFileTransferOfferListener(JingleFileTransferOfferListener listener) {
+        jingleFileTransferOfferListeners.add(listener);
+    }
+
+    public void remove(JingleFileTransferOfferListener listener) {
+        jingleFileTransferOfferListeners.remove(listener);
     }
 }

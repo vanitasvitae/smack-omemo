@@ -24,7 +24,6 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -32,45 +31,37 @@ import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
-import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileRequestCallback;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 
 import org.jxmpp.jid.FullJid;
 
 /**
- * Offer.
+ * We are the responder and we are the recipient.
  */
-public class JingleFileOffer extends JingleFileTransferSession implements IncomingFileOfferCallback, IncomingFileRequestCallback {
+public class IncomingJingleFileOffer extends JingleFileTransferSession implements IncomingFileOfferCallback {
+    private static final Logger LOGGER = Logger.getLogger(IncomingJingleFileOffer.class.getName());
 
-    private static final Logger LOGGER = Logger.getLogger(JingleFileOffer.class.getName());
-
-    public JingleFileOffer(XMPPConnection connection, FullJid initiator, FullJid responder, Role role, String sid) {
-        super(connection, initiator, responder, role, sid, Type.offer);
+    public IncomingJingleFileOffer(XMPPConnection connection, FullJid initiator, String sid) {
+        super(connection, initiator, connection.getUser().asFullJidOrThrow(), Role.responder, sid, Type.offer);
     }
 
-    public static JingleFileOffer createOutgoingFileOffer(XMPPConnection connection, FullJid recipient) {
-        return new JingleFileOffer(connection, connection.getUser().asFullJidOrThrow(), recipient,
-                Role.initiator, JingleManager.randomSid());
-    }
-
-    public static JingleFileOffer createIncomingFileOffer(XMPPConnection connection, Jingle request) {
-        return new JingleFileOffer(connection, request.getInitiator(), connection.getUser().asFullJidOrThrow(),
-                Role.responder, request.getSid());
+    public IncomingJingleFileOffer(XMPPConnection connection, Jingle request) {
+        this(connection, request.getInitiator(), request.getSid());
     }
 
     @Override
     public IQ handleSessionInitiate(Jingle initiate) {
-        setState(State.pending);
         if (role == Role.initiator) {
-            //TODO: Illegal stanza. Figure out, if we handle it correct.
+            //TODO: Is tie-break the correct way to tackle this?
             return jutil.createErrorTieBreak(initiate);
         }
 
         if (getState() != State.fresh) {
+            //Out of order (initiate after accept)
             return jutil.createErrorOutOfOrder(initiate);
         }
 
         JingleFileTransferManager.getInstanceFor(connection).notifyIncomingFileOffer(initiate, this);
+        setState(State.pending);
         return jutil.createAck(initiate);
     }
 
@@ -114,15 +105,5 @@ public class JingleFileOffer extends JingleFileTransferSession implements Incomi
         } catch (SmackException.NotConnectedException | SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException e) {
             LOGGER.log(Level.SEVERE, "Could not send session-terminate: " + e, e);
         }
-    }
-
-    @Override
-    public void acceptIncomingFileRequest(JingleFileTransfer file, File source) {
-
-    }
-
-    @Override
-    public void declineIncomingFileRequest() {
-
     }
 }

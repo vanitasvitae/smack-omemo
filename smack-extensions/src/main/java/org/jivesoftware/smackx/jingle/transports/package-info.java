@@ -14,18 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.callback;
-
-import java.io.File;
-
-import org.jivesoftware.smackx.jingle.element.Jingle;
 
 /**
- * Callback used to accept/decline file requests.
+ * Smack's API for <a href="https://xmpp.org/extensions/xep-0261.html">XEP-0261: Jingle In-Band Bytestreams</a>.
  */
-public interface IncomingFileRequestCallback {
-
-    void acceptIncomingFileRequest(Jingle request, File source);
-
-    void declineIncomingFileRequest(Jingle request);
-}
+package org.jivesoftware.smackx.jingle.transports;

@@ -17,11 +17,12 @@
 package org.jivesoftware.smackx.jingle_filetransfer.listener;
 
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 
 /**
- * Created by vanitas on 18.06.17.
+ * Listener for incoming Jingle File Transfer (XEP-0234) file offers.
  */
-public interface IncomingFileTransferListener {
+public interface JingleFileTransferOfferListener {
 
-    void onIncomingJingleFileTransfer(Jingle request);
+    void onFileOffer(Jingle request, IncomingFileOfferCallback callback);
 }

@@ -1,6 +1,23 @@
+/**
+ *
+ * Copyright 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.jingle;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
@@ -9,14 +26,21 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
+import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransport;
 
 /**
- * Created by vanitas on 19.06.17.
+ * Manager where TransportMethods are registered.
  */
 public final class JingleTransportMethodManager extends Manager {
 
     private static final WeakHashMap<XMPPConnection, JingleTransportMethodManager> INSTANCES = new WeakHashMap<>();
     private final HashMap<String, JingleTransportManager<?>> transportManagers = new HashMap<>();
+
+    private static final String[] transportPreference = new String[] {
+            JingleS5BTransport.NAMESPACE_V1,
+            JingleIBBTransport.NAMESPACE_V1
+    };
 
     private JingleTransportMethodManager(XMPPConnection connection) {
         super(connection);
@@ -43,5 +67,26 @@ public final class JingleTransportMethodManager extends Manager {
         JingleContent content = request.getContents().get(0);
         JingleContentTransport transport = content.getJingleTransports().get(0);
         return getTransportManager(transport.getNamespace());
+    }
+
+    /**
+     * TODO: Find better solution.
+     * @return
+     */
+    public JingleTransportManager<?> getBestAvailableTransportManager() {
+        JingleTransportManager<?> tm;
+        for (String ns : transportPreference) {
+            tm = getTransportManager(ns);
+            if (tm != null) {
+                return tm;
+            }
+        }
+
+        Iterator<String> it = transportManagers.keySet().iterator();
+        if (it.hasNext()) {
+            return getTransportManager(it.next());
+        }
+
+        return null;
     }
 }
