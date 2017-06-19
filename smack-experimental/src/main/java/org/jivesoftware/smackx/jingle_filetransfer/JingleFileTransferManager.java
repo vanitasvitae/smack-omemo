@@ -24,7 +24,10 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
 import org.jivesoftware.smackx.jingle.JingleManager;
+import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 
 import org.jxmpp.jid.FullJid;
@@ -56,8 +59,23 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
     public IQ handleJingleRequest(Jingle jingle) {
         FullJid fullJid = jingle.getFrom().asFullJidOrThrow();
         String sid = jingle.getSid();
-        JingleFileTransferSessionHandler handler = JingleFileTransferSessionHandler.getInstanceFor(connection());
+
+        JingleFileTransferSession handler = createSession(jingle);
         JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(fullJid, sid, handler);
-        return handler.handleJingleSessionRequest(jingle, jingle.getSid());
+        return handler.handleJingleSessionRequest(jingle);
+    }
+
+    private JingleFileTransferSession createSession(Jingle request) {
+        if (request.getAction() != JingleAction.session_initiate) {
+            throw new IllegalArgumentException("Requests action MUST be session-initiate.");
+        }
+        JingleContent content = request.getContents().get(0);
+        if (content.getSenders() == JingleContent.Senders.initiator) {
+            return new JingleFileOffer(request.getInitiator(), request.getResponder(), Role.responder, request.getSid());
+        } else if (content.getSenders() == JingleContent.Senders.responder) {
+            return new JingleFileRequest(request.getInitiator(), request.getResponder(), Role.responder, request.getSid());
+        } else {
+            throw new IllegalArgumentException("Requests content.senders MUST be either responder or initiator.");
+        }
     }
 }

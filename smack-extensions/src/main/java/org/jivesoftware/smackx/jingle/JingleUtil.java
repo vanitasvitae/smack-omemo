@@ -69,6 +69,29 @@ public class JingleUtil {
         return jingle;
     }
 
+    public Jingle createSessionInitiateFileOffer(FullJid recipient,
+                                                 String sessionId,
+                                                 JingleContent.Creator contentCreator,
+                                                 String contentName,
+                                                 JingleContentDescription description,
+                                                 JingleContentTransport transport) {
+        return createSessionInitiate(recipient, sessionId, contentCreator, contentName,
+                JingleContent.Senders.initiator, description, transport);
+    }
+
+    public IQ sendSessionInitiateFileOffer(FullJid recipient,
+                                           String sessionId,
+                                           JingleContent.Creator contentCreator,
+                                           String contentName,
+                                           JingleContentDescription description,
+                                           JingleContentTransport transport)
+            throws SmackException.NotConnectedException, InterruptedException,
+            XMPPException.XMPPErrorException, SmackException.NoResponseException {
+
+        Jingle jingle = createSessionInitiateFileOffer(recipient, sessionId, contentCreator, contentName, description, transport);
+        return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
+    }
+
     public IQ sendSessionInitiate(FullJid recipient,
                                   String sessionId,
                                   JingleContent.Creator contentCreator,

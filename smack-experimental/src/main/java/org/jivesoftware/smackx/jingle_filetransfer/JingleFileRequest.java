@@ -16,7 +16,9 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.Role;
+import org.jivesoftware.smackx.jingle.element.Jingle;
 
 import org.jxmpp.jid.FullJid;
 
@@ -27,5 +29,10 @@ public class JingleFileRequest extends JingleFileTransferSession {
 
     public JingleFileRequest(FullJid initiator, FullJid responder, Role role, String sid) {
         super(initiator, responder, role, sid, Type.request);
+    }
+
+    @Override
+    public IQ handleJingleSessionRequest(Jingle jingle) {
+        return null;
     }
 }

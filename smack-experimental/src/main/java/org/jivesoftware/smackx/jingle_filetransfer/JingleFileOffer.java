@@ -24,6 +24,7 @@ import org.jxmpp.jid.FullJid;
  * Offer.
  */
 public class JingleFileOffer extends JingleFileTransferSession {
+
     public JingleFileOffer(FullJid initiator, FullJid responder, Role role, String sid) {
         super(initiator, responder, role, sid, Type.offer);
     }

@@ -32,6 +32,13 @@ public abstract class JingleFileTransferSession extends JingleSession {
         ;
     }
 
+    public enum State {
+        pending,
+        active,
+        terminated,
+        ;
+    }
+
     private final Type type;
 
     public JingleFileTransferSession(FullJid initiator, FullJid responder, Role role, String sid, Type type) {
