@@ -18,14 +18,14 @@ package org.jivesoftware.smackx.jingle_filetransfer.callback;
 
 import java.io.File;
 
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jingle.element.Jingle;
 
 /**
  * Callback used to accept/decline file offers.
  */
 public interface IncomingFileOfferCallback {
 
-    void accept(JingleFileTransfer file, File target);
+    void acceptIncomingFileOffer(Jingle request, File target);
 
-    void decline();
+    void declineIncomingFileOffer(Jingle request);
 }

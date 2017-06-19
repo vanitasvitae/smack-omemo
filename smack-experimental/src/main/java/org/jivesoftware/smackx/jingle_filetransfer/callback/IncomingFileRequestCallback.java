@@ -25,7 +25,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
  */
 public interface IncomingFileRequestCallback {
 
-    void accept(JingleFileTransfer file, File source);
+    void acceptIncomingFileRequest(JingleFileTransfer file, File source);
 
-    void decline();
+    void declineIncomingFileRequest();
 }
