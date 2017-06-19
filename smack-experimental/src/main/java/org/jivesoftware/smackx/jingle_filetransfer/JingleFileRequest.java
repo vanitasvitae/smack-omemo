@@ -16,7 +16,8 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
-import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 
@@ -27,12 +28,17 @@ import org.jxmpp.jid.FullJid;
  */
 public class JingleFileRequest extends JingleFileTransferSession {
 
-    public JingleFileRequest(FullJid initiator, FullJid responder, Role role, String sid) {
-        super(initiator, responder, role, sid, Type.request);
+    public JingleFileRequest(XMPPConnection connection, FullJid initiator, FullJid responder, Role role, String sid) {
+        super(connection, initiator, responder, role, sid, Type.request);
     }
 
-    @Override
-    public IQ handleJingleSessionRequest(Jingle jingle) {
-        return null;
+    public static JingleFileRequest createOutgoingFileRequest(XMPPConnection connection, FullJid recipient) {
+        return new JingleFileRequest(connection, connection.getUser().asFullJidOrThrow(), recipient, Role.initiator,
+                JingleManager.randomSid());
+    }
+
+    public static JingleFileRequest createIncomingFileRequest(XMPPConnection connection, Jingle request) {
+        return new JingleFileRequest(connection, request.getInitiator(), connection.getUser().asFullJidOrThrow(), Role.responder,
+                request.getSid());
     }
 }

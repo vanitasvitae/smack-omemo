@@ -16,7 +16,15 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
+import java.io.File;
+
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.Role;
+import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 
 import org.jxmpp.jid.FullJid;
 
@@ -25,7 +33,43 @@ import org.jxmpp.jid.FullJid;
  */
 public class JingleFileOffer extends JingleFileTransferSession {
 
-    public JingleFileOffer(FullJid initiator, FullJid responder, Role role, String sid) {
-        super(initiator, responder, role, sid, Type.offer);
+    public JingleFileOffer(XMPPConnection connection, FullJid initiator, FullJid responder, Role role, String sid) {
+        super(connection, initiator, responder, role, sid, Type.offer);
+    }
+
+    public static JingleFileOffer createOutgoingFileOffer(XMPPConnection connection, FullJid recipient) {
+        return new JingleFileOffer(connection, connection.getUser().asFullJidOrThrow(), recipient,
+                Role.initiator, JingleManager.randomSid());
+    }
+
+    public static JingleFileOffer createIncomingFileOffer(XMPPConnection connection, Jingle request) {
+        return new JingleFileOffer(connection, request.getInitiator(), connection.getUser().asFullJidOrThrow(),
+                Role.responder, request.getSid());
+    }
+
+    @Override
+    public IQ handleSessionInitiate(Jingle initiate) {
+        if (role == Role.initiator) {
+
+        }
+
+        if (getState() != State.fresh) {
+            return jutil.createErrorOutOfOrder(initiate);
+        }
+
+        IncomingFileOfferCallback callback = new IncomingFileOfferCallback() {
+            @Override
+            public void accept(JingleFileTransfer file, File target) {
+
+            }
+
+            @Override
+            public void decline() {
+
+            }
+        };
+
+        JingleFileTransferManager.getInstanceFor(connection).notifyIncomingFileOffer(initiate, callback);
+        return jutil.createAck(initiate);
     }
 }

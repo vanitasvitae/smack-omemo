@@ -27,6 +27,7 @@ import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
 import org.jivesoftware.smack.iqrequest.IQRequestHandler.Mode;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
@@ -73,7 +74,7 @@ public final class JingleManager extends Manager {
                         JingleSessionHandler sessionHandler = jingleSessionHandlers.get(fullJidAndSessionId);
                         if (sessionHandler != null) {
                             //Handle existing session
-                            return sessionHandler.handleJingleSessionRequest(jingle, jingle.getSid());
+                            return sessionHandler.handleJingleSessionRequest(jingle);
                         }
 
                         if (jingle.getAction() == JingleAction.session_initiate) {
@@ -108,5 +109,9 @@ public final class JingleManager extends Manager {
     public JingleSessionHandler unregisterJingleSessionHandler(FullJid otherJid, String sessionId, JingleSessionHandler sessionHandler) {
         FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(otherJid, sessionId);
         return jingleSessionHandlers.remove(fullJidAndSessionId);
+    }
+
+    public static String randomSid() {
+        return StringUtils.randomString(24);
     }
 }

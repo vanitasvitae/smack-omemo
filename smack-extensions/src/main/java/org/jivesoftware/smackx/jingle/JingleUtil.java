@@ -324,6 +324,10 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    public IQ sendContentRejectFileNotAvailable(FullJid recipient, String sessionId, JingleContentDescription description) {
+        return null; //TODO Later
+    }
+
     public Jingle createSessionPing(FullJid recipient, String sessionId) {
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setSessionId(sessionId)
@@ -341,6 +345,14 @@ public class JingleUtil {
             XMPPException.XMPPErrorException, SmackException.NoResponseException {
         Jingle jingle = createSessionPing(recipient, sessionId);
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
+    }
+
+    public IQ createAck(Jingle jingle) {
+        return IQ.createResultIQ(jingle);
+    }
+
+    public void sendAck(Jingle jingle) throws SmackException.NotConnectedException, InterruptedException {
+        connection.sendStanza(createAck(jingle));
     }
 
     public IQ createErrorUnknownSession(Jingle request) {
@@ -398,5 +410,14 @@ public class JingleUtil {
     public void sendErrorOutOfOrder(Jingle request)
             throws SmackException.NotConnectedException, InterruptedException {
         connection.sendStanza(createErrorOutOfOrder(request));
+    }
+
+    public IQ createErrorMalformedRequest(Jingle request) {
+        return IQ.createErrorResponse(request, XMPPError.Condition.bad_request);
+    }
+
+    public void sendErrorMalformedRequest(Jingle request)
+            throws SmackException.NotConnectedException, InterruptedException {
+        connection.sendStanza(createErrorMalformedRequest(request));
     }
 }

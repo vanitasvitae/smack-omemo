@@ -16,7 +16,9 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.JingleSession;
+import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.Role;
 
 import org.jxmpp.jid.FullJid;
@@ -33,21 +35,37 @@ public abstract class JingleFileTransferSession extends JingleSession {
     }
 
     public enum State {
+        fresh,
         pending,
         active,
         terminated,
         ;
     }
 
-    private final Type type;
+    protected final XMPPConnection connection;
+    protected final JingleUtil jutil;
 
-    public JingleFileTransferSession(FullJid initiator, FullJid responder, Role role, String sid, Type type) {
+    private final Type type;
+    private State state;
+
+    public JingleFileTransferSession(XMPPConnection connection, FullJid initiator, FullJid responder, Role role, String sid, Type type) {
         super(initiator, responder, role, sid);
         this.type = type;
+        this.state = State.fresh;
+        this.connection = connection;
+        this.jutil = new JingleUtil(connection);
     }
 
     public Type getType() {
         return type;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
     }
 
     public boolean isOffer() {
