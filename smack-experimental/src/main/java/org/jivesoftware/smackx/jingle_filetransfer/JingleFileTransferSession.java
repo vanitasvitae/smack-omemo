@@ -22,6 +22,7 @@ import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 
 import org.jxmpp.jid.FullJid;
@@ -52,6 +53,7 @@ public abstract class JingleFileTransferSession extends JingleSession {
     protected String name;
     protected JingleFileTransfer file;
     protected JingleContentTransport transport;
+    protected JingleTransportManager<?> transportManager;
 
     private final Type type;
     private State state;

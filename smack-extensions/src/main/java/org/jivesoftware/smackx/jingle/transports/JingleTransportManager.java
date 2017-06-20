@@ -31,4 +31,8 @@ public abstract class JingleTransportManager<D extends JingleContentTransport> {
 
     public abstract D createTransport(Jingle request);
 
+    public abstract void initiateOutgoingSession(JingleContentTransport transport, JingleTransportInitiationCallback callback);
+
+    public abstract void initiateIncomingSession(JingleContentTransport transport, JingleTransportInitiationCallback callback);
+
 }

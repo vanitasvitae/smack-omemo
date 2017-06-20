@@ -121,7 +121,11 @@ public abstract class JingleSession implements JingleSessionHandler {
             case session_terminate:
                 return handleSessionTerminate(jingle);
             case transport_replace:
-                return handleTransportReplace(jingle);
+                try {
+                    return handleTransportReplace(jingle);
+                } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+                    e.printStackTrace();
+                }
             default:
                 return IQ.createResultIQ(jingle);
         }
@@ -179,7 +183,9 @@ public abstract class JingleSession implements JingleSessionHandler {
         return IQ.createResultIQ(transportInfo);
     }
 
-    protected IQ handleTransportReplace(Jingle transportReplace) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+    protected IQ handleTransportReplace(Jingle transportReplace)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
         return IQ.createResultIQ(transportReplace);
     }
 

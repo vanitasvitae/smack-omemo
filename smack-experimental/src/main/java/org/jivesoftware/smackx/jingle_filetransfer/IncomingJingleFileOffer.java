@@ -51,10 +51,6 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
     @Override
     public IQ handleSessionInitiate(Jingle initiate) {
-        if (role == Role.initiator) {
-            //TODO: Is tie-break the correct way to tackle this?
-            return jutil.createErrorTieBreak(initiate);
-        }
 
         if (getState() != State.fresh) {
             //Out of order (initiate after accept)
