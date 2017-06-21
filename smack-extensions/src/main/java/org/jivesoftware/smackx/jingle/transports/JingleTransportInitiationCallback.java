@@ -19,11 +19,12 @@ package org.jivesoftware.smackx.jingle.transports;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 
 /**
- * Created by vanitas on 20.06.17.
+ * Callback for bytestream session creation of TransportManagers.
  */
 public interface JingleTransportInitiationCallback {
 
     void onSessionInitiated(BytestreamSession bytestreamSession);
 
+    void onException(Exception e);
 
 }

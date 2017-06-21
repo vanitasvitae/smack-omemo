@@ -35,6 +35,15 @@ import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTr
 public final class JingleTransportMethodManager extends Manager {
 
     private static final WeakHashMap<XMPPConnection, JingleTransportMethodManager> INSTANCES = new WeakHashMap<>();
+
+    static {
+        ClassLoader classLoader = JingleTransportMethodManager.class.getClassLoader();
+        String[] knownTransports = new String[] {
+                "org.jivesoftware.smackx.jingle.transports.jingle_s5b.JingleS5BTransportManager",
+                "org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportManager"
+                };
+        //TODO: Load dynamically.
+    }
     private final HashMap<String, JingleTransportManager<?>> transportManagers = new HashMap<>();
 
     private static final String[] transportPreference = new String[] {

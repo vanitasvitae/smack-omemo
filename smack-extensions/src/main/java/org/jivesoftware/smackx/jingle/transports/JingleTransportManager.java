@@ -16,8 +16,11 @@
  */
 package org.jivesoftware.smackx.jingle.transports;
 
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+
+import org.jxmpp.jid.FullJid;
 
 /**
  * Manager for a JingleTransport method.
@@ -25,14 +28,24 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
  */
 public abstract class JingleTransportManager<D extends JingleContentTransport> {
 
+    private final XMPPConnection connection;
+
+    public JingleTransportManager(XMPPConnection connection) {
+        this.connection = connection;
+    }
+
+    public XMPPConnection getConnection() {
+        return connection;
+    }
+
     public abstract String getNamespace();
 
     public abstract D createTransport();
 
     public abstract D createTransport(Jingle request);
 
-    public abstract void initiateOutgoingSession(JingleContentTransport transport, JingleTransportInitiationCallback callback);
+    public abstract void initiateOutgoingSession(FullJid remote, JingleContentTransport transport, JingleTransportInitiationCallback callback);
 
-    public abstract void initiateIncomingSession(JingleContentTransport transport, JingleTransportInitiationCallback callback);
+    public abstract void initiateIncomingSession(FullJid remote, JingleContentTransport transport, JingleTransportInitiationCallback callback);
 
 }

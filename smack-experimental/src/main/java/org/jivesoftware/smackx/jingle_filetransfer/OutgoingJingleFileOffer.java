@@ -92,11 +92,16 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         // Legal
         else {
             state = State.active;
-            transportManager.initiateOutgoingSession(transport, new JingleTransportInitiationCallback() {
+            transportManager.initiateOutgoingSession(getResponder(), transport, new JingleTransportInitiationCallback() {
                 @Override
                 public void onSessionInitiated(final BytestreamSession session) {
                     sendingThread = new SendingThread(session, source);
                     sendingThread.run();
+                }
+
+                @Override
+                public void onException(Exception e) {
+                    LOGGER.log(Level.SEVERE, "Cannot create outgoing Bytestream session: ", e);
                 }
             });
         }
