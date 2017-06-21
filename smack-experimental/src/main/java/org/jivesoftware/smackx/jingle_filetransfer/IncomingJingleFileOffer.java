@@ -57,6 +57,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
     public IncomingJingleFileOffer(XMPPConnection connection, FullJid initiator, String sid) {
         super(connection, initiator, connection.getUser().asFullJidOrThrow(), Role.responder, sid, Type.offer);
+        state = State.fresh;
     }
 
     public IncomingJingleFileOffer(XMPPConnection connection, Jingle request) {

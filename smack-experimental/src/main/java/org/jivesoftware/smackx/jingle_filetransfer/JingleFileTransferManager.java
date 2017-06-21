@@ -22,7 +22,9 @@ import java.util.Collections;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
@@ -32,10 +34,12 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
+import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferProvider;
 
 import org.jxmpp.jid.FullJid;
 
@@ -53,6 +57,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(JingleFileTransfer.NAMESPACE_V5);
         JingleManager jingleManager = JingleManager.getInstanceFor(connection);
         jingleManager.registerDescriptionHandler(JingleFileTransfer.NAMESPACE_V5, this);
+        JingleContentProviderManager.addJingleContentDescriptionProvider(
+                JingleFileTransfer.NAMESPACE_V5, new JingleFileTransferProvider());
         jutil = new JingleUtil(connection);
     }
 
@@ -65,7 +71,9 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         return manager;
     }
 
-    public void sendFile(FullJid recipient, File file) {
+    public void sendFile(FullJid recipient, File file)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
         OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
         offer.send(file);
     }
