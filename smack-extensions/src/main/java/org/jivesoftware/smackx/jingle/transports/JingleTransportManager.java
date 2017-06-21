@@ -40,7 +40,7 @@ public abstract class JingleTransportManager<D extends JingleContentTransport> {
 
     public abstract String getNamespace();
 
-    public abstract D createTransport();
+    public abstract D createTransport(FullJid recipient);
 
     public abstract D createTransport(Jingle request);
 

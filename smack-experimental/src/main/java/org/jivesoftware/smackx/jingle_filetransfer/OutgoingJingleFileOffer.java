@@ -75,7 +75,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
                 throw new IllegalStateException("There must be at least one workable transport method.");
             }
 
-            transport = transportManager.createTransport();
+            transport = transportManager.createTransport(getResponder());
 
             jutil.sendSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transport);
             state = State.pending;
@@ -130,7 +130,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         if (replacementManager != null) {
             jutil.sendTransportAccept(transportReplace.getFrom().asFullJidOrThrow(),
                     transportReplace.getInitiator(), transportReplace.getSid(), creator, name,
-                    replacementManager.createTransport());
+                    replacementManager.createTransport(getResponder()));
         }
 
         return jutil.createAck(transportReplace);

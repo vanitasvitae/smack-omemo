@@ -59,7 +59,7 @@ public final class JingleIBBTransportManager extends JingleTransportManager<Jing
     }
 
     @Override
-    public JingleIBBTransport createTransport() {
+    public JingleIBBTransport createTransport(FullJid recipient) {
         return new JingleIBBTransport();
     }
 

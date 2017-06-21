@@ -87,7 +87,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
                 return jutil.createAck(initiate);
             }
 
-            transport = transportManager.createTransport();
+            transport = transportManager.createTransport(getInitiator());
             jutil.sendTransportReplace(initiate.getFrom().asFullJidOrThrow(), initiate.getInitiator(),
                     initiate.getSid(), creator, name, transport);
             state = State.sent_transport_replace;
