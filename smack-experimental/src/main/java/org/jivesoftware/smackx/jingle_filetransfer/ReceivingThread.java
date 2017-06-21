@@ -28,7 +28,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 
 /**
- * Created by vanitas on 21.06.17.
+ * Thread for receiving data.
  */
 public class ReceivingThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(ReceivingThread.class.getName());
@@ -63,7 +63,7 @@ public class ReceivingThread extends Thread {
                     System.arraycopy(bufbuf, 0, filebuf, read, r);
                     read += r;
                 } else {
-                    //TODO
+                    break;
                 }
             }
 

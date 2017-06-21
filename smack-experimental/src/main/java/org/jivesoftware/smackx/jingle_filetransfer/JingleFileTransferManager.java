@@ -16,7 +16,9 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
@@ -29,8 +31,10 @@ import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
 
 import org.jxmpp.jid.FullJid;
@@ -59,6 +63,11 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
             INSTANCES.put(connection, manager);
         }
         return manager;
+    }
+
+    public void sendFile(FullJid recipient, File file) {
+        OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
+        offer.send(file);
     }
 
     @Override
@@ -114,7 +123,16 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         jingleFileTransferOfferListeners.add(listener);
     }
 
-    public void remove(JingleFileTransferOfferListener listener) {
+    public void removeJingleFileTransferOfferListener(JingleFileTransferOfferListener listener) {
         jingleFileTransferOfferListeners.remove(listener);
+    }
+
+    public static JingleFileTransfer fileTransferFromFile(File file) {
+        JingleFileTransferChild.Builder fb = JingleFileTransferChild.getBuilder();
+        fb.setFile(file)
+                .setDescription("A file.")
+                .setMediaType("application/octet-stream");
+
+        return new JingleFileTransfer(Collections.<JingleContentDescriptionChildElement>singletonList(fb.build()));
     }
 }

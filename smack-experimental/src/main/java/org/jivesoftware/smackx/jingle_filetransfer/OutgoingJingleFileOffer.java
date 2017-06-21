@@ -43,6 +43,15 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
     private static final Logger LOGGER = Logger.getLogger(OutgoingJingleFileOffer.class.getName());
 
+    public void send(File file) throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        source = file;
+        String contentName = JingleManager.randomSid();
+        JingleFileTransfer transfer = JingleFileTransferManager.fileTransferFromFile(file);
+
+        initiateFileOffer(transfer, JingleContent.Creator.initiator, contentName);
+    }
+
     public enum State {
         fresh,
         pending,
