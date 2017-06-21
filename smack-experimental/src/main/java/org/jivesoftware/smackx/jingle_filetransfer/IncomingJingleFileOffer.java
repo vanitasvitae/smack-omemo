@@ -17,6 +17,9 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,13 +27,16 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 
 import org.jxmpp.jid.FullJid;
 
@@ -114,7 +120,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
     }
 
     @Override
-    public void acceptIncomingFileOffer(Jingle request, File target) {
+    public void acceptIncomingFileOffer(Jingle request, final File target) {
 
         if (transportManager == null) {
             //Unsupported transport
@@ -127,10 +133,60 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
             return;
         }
 
-        JingleContentTransport transport = transportManager.createTransport(request);
+        final JingleContentTransport transport = transportManager.createTransport(request);
         try {
             jutil.sendSessionAccept(getInitiator(), sid, creator, name, JingleContent.Senders.initiator, file, transport);
             state = State.active;
+            transportManager.initiateIncomingSession(getInitiator(), transport, new JingleTransportInitiationCallback() {
+                @Override
+                public void onSessionInitiated(BytestreamSession bytestreamSession) {
+                    JingleFileTransferChild fileTransfer = (JingleFileTransferChild) file.getJingleContentDescriptionChildren().get(0);
+                    FileOutputStream outputStream = null;
+                    InputStream inputStream;
+
+                    try {
+                        outputStream = new FileOutputStream(target);
+                        inputStream = bytestreamSession.getInputStream();
+
+                        byte[] filebuf = new byte[fileTransfer.getSize()];
+                        int read = 0;
+                        byte[] bufbuf = new byte[2048];
+
+                        while (read < filebuf.length) {
+                            int r = inputStream.read(bufbuf);
+                            if (r >= 0) {
+                                System.arraycopy(bufbuf, 0, filebuf, read, r);
+                                read += r;
+                            } else {
+                                //TODO
+                            }
+                        }
+
+                        outputStream.write(filebuf);
+
+                    } catch (IOException e) {
+                        LOGGER.log(Level.SEVERE, "Error while receiving data: ", e);
+                    } finally {
+                        try {
+                            bytestreamSession.close();
+                        } catch (IOException e) {
+                            LOGGER.log(Level.SEVERE, "Could not close InputStream.", e);
+                        }
+                        if (outputStream != null) {
+                            try {
+                                outputStream.close();
+                            } catch (IOException e) {
+                                LOGGER.log(Level.SEVERE, "Could not close FileOutputStream.", e);
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onException(Exception e) {
+
+                }
+            });
         } catch (SmackException.NotConnectedException | SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException e) {
             LOGGER.log(Level.SEVERE, "Could not send session-accept: " + e, e);
         }
