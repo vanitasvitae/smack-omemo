@@ -49,8 +49,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         sent_transport_replace,
         active,
         terminated,
-        ;
-    }
+        ;}
 
     private Thread sendingThread;
     private File source;
@@ -66,20 +65,22 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         this(connection, recipient, JingleManager.randomSid());
     }
 
-    public void sendFile(JingleFileTransfer file, JingleContent.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
-        if (state == State.fresh) {
-            transportManager = JingleTransportMethodManager.getInstanceFor(connection)
-                    .getBestAvailableTransportManager();
-
-            if (transportManager == null) {
-                throw new IllegalStateException("There must be at least one workable transport method.");
-            }
-
-            transport = transportManager.createTransport(getResponder());
-
-            jutil.sendSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transport);
-            state = State.pending;
+    public void initiateFileOffer(JingleFileTransfer file, JingleContent.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+        if (state != State.fresh) {
+            throw new IllegalStateException("This session is not fresh.");
         }
+
+        transportManager = JingleTransportMethodManager.getInstanceFor(connection)
+                .getBestAvailableTransportManager();
+
+        if (transportManager == null) {
+            throw new IllegalStateException("There must be at least one workable transport method.");
+        }
+
+        transport = transportManager.createTransport(getResponder());
+
+        jutil.sendSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transport);
+        state = State.pending;
     }
 
     @Override
@@ -87,24 +88,22 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         // Out of order?
         if (state != State.pending) {
             LOGGER.log(Level.WARNING, "Out of order!");
-            jutil.sendErrorOutOfOrder(sessionAccept);
+            return jutil.createErrorOutOfOrder(sessionAccept);
         }
-        // Legal
-        else {
-            state = State.active;
-            transportManager.initiateOutgoingSession(getResponder(), transport, new JingleTransportInitiationCallback() {
-                @Override
-                public void onSessionInitiated(final BytestreamSession session) {
-                    sendingThread = new SendingThread(session, source);
-                    sendingThread.run();
-                }
 
-                @Override
-                public void onException(Exception e) {
-                    LOGGER.log(Level.SEVERE, "Cannot create outgoing Bytestream session: ", e);
-                }
-            });
-        }
+        state = State.active;
+        transportManager.initiateOutgoingSession(getResponder(), transport, new JingleTransportInitiationCallback() {
+            @Override
+            public void onSessionInitiated(final BytestreamSession session) {
+                sendingThread = new SendingThread(session, source);
+                sendingThread.run();
+            }
+
+            @Override
+            public void onException(Exception e) {
+                LOGGER.log(Level.SEVERE, "Cannot create outgoing Bytestream session: ", e);
+            }
+        });
 
         return jutil.createAck(sessionAccept);
     }

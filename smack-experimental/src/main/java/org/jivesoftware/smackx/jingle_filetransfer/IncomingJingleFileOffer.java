@@ -77,11 +77,12 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
         this.transportManager = tm.getTransportManager(initiate);
 
         if (transportManager == null) {
-            //Fallback
+            //Try fallback.
             pendingSessionInitiate = initiate;
             transportManager = tm.getBestAvailableTransportManager();
 
             if (transportManager == null) {
+                //No usable transports.
                 jutil.sendSessionTerminateUnsupportedTransports(initiate.getInitiator(), initiate.getSid());
                 state = State.terminated;
                 return jutil.createAck(initiate);
