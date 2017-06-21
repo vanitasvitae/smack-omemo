@@ -17,10 +17,6 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,12 +43,23 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
     private static final Logger LOGGER = Logger.getLogger(OutgoingJingleFileOffer.class.getName());
 
+    public enum State {
+        fresh,
+        pending,
+        sent_transport_replace,
+        active,
+        terminated,
+        ;
+    }
+
     private Thread sendingThread;
     private File source;
+    private State state;
 
 
     public OutgoingJingleFileOffer(XMPPConnection connection, FullJid responder, String sid) {
         super(connection, connection.getUser().asFullJidOrThrow(), responder, Role.initiator, sid, Type.offer);
+        state = State.fresh;
     }
 
     public OutgoingJingleFileOffer(XMPPConnection connection, FullJid recipient) {
@@ -60,7 +67,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     }
 
     public void sendFile(JingleFileTransfer file, JingleContent.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
-        if (getState() == State.fresh) {
+        if (state == State.fresh) {
             transportManager = JingleTransportMethodManager.getInstanceFor(connection)
                     .getBestAvailableTransportManager();
 
@@ -71,20 +78,28 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
             transport = transportManager.createTransport();
 
             jutil.sendSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transport);
+            state = State.pending;
         }
     }
 
     @Override
-    public IQ handleSessionAccept(Jingle sessionAccept) {
-        setState(State.active);
-
-        transportManager.initiateOutgoingSession(transport, new JingleTransportInitiationCallback() {
-            @Override
-            public void onSessionInitiated(final BytestreamSession session) {
-                sendingThread = new SendingThread(session, source);
-                sendingThread.run();
-            }
-        });
+    public IQ handleSessionAccept(Jingle sessionAccept) throws SmackException.NotConnectedException, InterruptedException {
+        // Out of order?
+        if (state != State.pending) {
+            LOGGER.log(Level.WARNING, "Out of order!");
+            jutil.sendErrorOutOfOrder(sessionAccept);
+        }
+        // Legal
+        else {
+            state = State.active;
+            transportManager.initiateOutgoingSession(transport, new JingleTransportInitiationCallback() {
+                @Override
+                public void onSessionInitiated(final BytestreamSession session) {
+                    sendingThread = new SendingThread(session, source);
+                    sendingThread.run();
+                }
+            });
+        }
 
         return jutil.createAck(sessionAccept);
     }
@@ -96,7 +111,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
             sendingThread.interrupt();
         }
 
-        setState(State.terminated);
+        state = State.terminated;
         return jutil.createAck(sessionTerminate);
     }
 
@@ -114,56 +129,5 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         }
 
         return jutil.createAck(transportReplace);
-    }
-
-    private static class SendingThread extends Thread {
-
-        private final BytestreamSession session;
-        private final File source;
-
-        public SendingThread(BytestreamSession session, File source) {
-            this.session = session;
-            this.source = source;
-        }
-
-        @Override
-        public void run() {
-            InputStream inputStream;
-            OutputStream outputStream;
-
-            try {
-                inputStream = new FileInputStream(source);
-                outputStream = session.getOutputStream();
-
-                byte[] filebuf = new byte[(int) source.length()];
-                int r = inputStream.read(filebuf);
-
-                if (r < 0) {
-                    throw new IOException("Read returned -1");
-                }
-
-                outputStream.write(filebuf);
-            }
-            catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Could not send file: " + e, e);
-            }
-            finally {
-                try {
-                    session.close();
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "Could not close session.", e);
-                }
-            }
-        }
-
-        @Override
-        public void interrupt() {
-            try {
-                session.close();
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Could not close session.", e);
-            }
-            super.interrupt();
-        }
     }
 }

@@ -77,6 +77,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         }
 
         JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(fullJid, sid, handler);
+
         return handler.handleJingleSessionRequest(jingle);
     }
 

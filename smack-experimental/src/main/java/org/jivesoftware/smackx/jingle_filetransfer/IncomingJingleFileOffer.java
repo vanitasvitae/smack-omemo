@@ -29,7 +29,6 @@ import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
-import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 
@@ -40,6 +39,18 @@ import org.jxmpp.jid.FullJid;
  */
 public class IncomingJingleFileOffer extends JingleFileTransferSession implements IncomingFileOfferCallback {
     private static final Logger LOGGER = Logger.getLogger(IncomingJingleFileOffer.class.getName());
+    private Jingle pendingSessionInitiate = null;
+
+    public enum State {
+        fresh,
+        pending,
+        sent_transport_replace,
+        active,
+        terminated,
+        ;
+    }
+
+    private State state;
 
     public IncomingJingleFileOffer(XMPPConnection connection, FullJid initiator, String sid) {
         super(connection, initiator, connection.getUser().asFullJidOrThrow(), Role.responder, sid, Type.offer);
@@ -50,9 +61,10 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
     }
 
     @Override
-    public IQ handleSessionInitiate(Jingle initiate) {
+    public IQ handleSessionInitiate(Jingle initiate) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+        JingleTransportMethodManager tm = JingleTransportMethodManager.getInstanceFor(connection);
 
-        if (getState() != State.fresh) {
+        if (state != State.fresh) {
             //Out of order (initiate after accept)
             return jutil.createErrorOutOfOrder(initiate);
         }
@@ -61,29 +73,53 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
         this.creator = content.getCreator();
         this.file = (JingleFileTransfer) content.getDescription();
         this.name = content.getName();
-        this.transport = content.getJingleTransports().get(0);
+        this.transport = content.getJingleTransport();
+        this.transportManager = tm.getTransportManager(initiate);
+
+        if (transportManager == null) {
+            //Fallback
+            pendingSessionInitiate = initiate;
+            transportManager = tm.getBestAvailableTransportManager();
+
+            if (transportManager == null) {
+                jutil.sendSessionTerminateUnsupportedTransports(initiate.getInitiator(), initiate.getSid());
+                state = State.terminated;
+                return jutil.createAck(initiate);
+            }
+
+            transport = transportManager.createTransport();
+            jutil.sendTransportReplace(initiate.getFrom().asFullJidOrThrow(), initiate.getInitiator(),
+                    initiate.getSid(), creator, name, transport);
+            state = State.sent_transport_replace;
+            return jutil.createAck(initiate);
+        }
 
         JingleFileTransferManager.getInstanceFor(connection).notifyIncomingFileOffer(initiate, this);
-        setState(State.pending);
+        state = State.pending;
         return jutil.createAck(initiate);
     }
 
     @Override
-    public void acceptIncomingFileOffer(Jingle request, File target) {
-        FullJid recipient = request.getInitiator();
-        String sid = request.getSid();
-        JingleContent content = request.getContents().get(0);
+    public IQ handleTransportAccept(Jingle transportAccept) {
 
-        //Get TransportManager
-        JingleTransportManager<?> transportManager = JingleTransportMethodManager.getInstanceFor(connection)
-                .getTransportManager(request);
+        if (state != State.sent_transport_replace) {
+            return jutil.createErrorOutOfOrder(transportAccept);
+        }
+
+        JingleFileTransferManager.getInstanceFor(connection).notifyIncomingFileOffer(pendingSessionInitiate, this);
+        transport = transportAccept.getContents().get(0).getJingleTransport();
+        state = State.pending;
+        return jutil.createAck(transportAccept);
+    }
+
+    @Override
+    public void acceptIncomingFileOffer(Jingle request, File target) {
 
         if (transportManager == null) {
             //Unsupported transport
             LOGGER.log(Level.WARNING, "Unsupported Transport method.");
-            setState(State.terminated);
             try {
-                jutil.sendSessionTerminateUnsupportedTransports(recipient, sid);
+                jutil.sendSessionTerminateUnsupportedTransports(request.getFrom().asFullJidOrThrow(), sid);
             } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
                 LOGGER.log(Level.SEVERE, "Could not send session-terminate: " + e, e);
             }
@@ -92,9 +128,8 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
         JingleContentTransport transport = transportManager.createTransport(request);
         try {
-            jutil.sendSessionAccept(recipient, sid, content.getCreator(), content.getName(), content.getSenders(),
-                    content.getDescription(), transport);
-            setState(State.active);
+            jutil.sendSessionAccept(getInitiator(), sid, creator, name, JingleContent.Senders.initiator, file, transport);
+            state = State.active;
         } catch (SmackException.NotConnectedException | SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException e) {
             LOGGER.log(Level.SEVERE, "Could not send session-accept: " + e, e);
         }
@@ -102,7 +137,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
     @Override
     public void declineIncomingFileOffer(Jingle request) {
-        setState(State.terminated);
+        state = State.terminated;
         try {
             jutil.sendSessionTerminateDecline(request.getInitiator(), request.getSid());
         } catch (SmackException.NotConnectedException | SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException e) {

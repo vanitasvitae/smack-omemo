@@ -60,7 +60,7 @@ public class JingleUtil {
                 .setName(contentName)
                 .setSenders(contentSenders)
                 .setDescription(description)
-                .addTransport(transport);
+                .setTransport(transport);
 
         Jingle jingle = jb.addJingleContent(cb.build()).build();
         jingle.setFrom(connection.getUser());
@@ -126,7 +126,7 @@ public class JingleUtil {
                 .setName(contentName)
                 .setSenders(contentSenders)
                 .setDescription(description)
-                .addTransport(transport);
+                .setTransport(transport);
 
         Jingle jingle = jb.addJingleContent(cb.build()).build();
         jingle.setTo(recipient);
@@ -364,7 +364,7 @@ public class JingleUtil {
                 .setAction(JingleAction.transport_replace);
 
         JingleContent.Builder cb = JingleContent.getBuilder();
-        cb.setName(contentName).setCreator(contentCreator).addTransport(transport);
+        cb.setName(contentName).setCreator(contentCreator).setTransport(transport);
         Jingle jingle = jb.addJingleContent(cb.build()).build();
 
         jingle.setTo(recipient);
@@ -391,7 +391,7 @@ public class JingleUtil {
                 .setSessionId(sessionId);
 
         JingleContent.Builder cb = JingleContent.getBuilder();
-        cb.setCreator(contentCreator).setName(contentName).addTransport(transport);
+        cb.setCreator(contentCreator).setName(contentName).setTransport(transport);
 
         Jingle jingle = jb.addJingleContent(cb.build()).build();
         jingle.setTo(recipient);
@@ -418,7 +418,7 @@ public class JingleUtil {
                 .setSessionId(sessionId);
 
         JingleContent.Builder cb = JingleContent.getBuilder();
-        cb.setCreator(contentCreator).setName(contentName).addTransport(transport);
+        cb.setCreator(contentCreator).setName(contentName).setTransport(transport);
 
         Jingle jingle = jb.addJingleContent(cb.build()).build();
         jingle.setTo(recipient);

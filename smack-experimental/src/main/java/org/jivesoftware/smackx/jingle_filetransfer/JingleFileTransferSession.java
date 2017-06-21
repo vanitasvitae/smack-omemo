@@ -38,14 +38,6 @@ public abstract class JingleFileTransferSession extends JingleSession {
         ;
     }
 
-    public enum State {
-        fresh,
-        pending,
-        active,
-        terminated,
-        ;
-    }
-
     protected final XMPPConnection connection;
     protected final JingleUtil jutil;
 
@@ -56,26 +48,16 @@ public abstract class JingleFileTransferSession extends JingleSession {
     protected JingleTransportManager<?> transportManager;
 
     private final Type type;
-    private State state;
 
     public JingleFileTransferSession(XMPPConnection connection, FullJid initiator, FullJid responder, Role role, String sid, Type type) {
         super(initiator, responder, role, sid);
         this.type = type;
-        this.state = State.fresh;
         this.connection = connection;
         this.jutil = new JingleUtil(connection);
     }
 
     public Type getType() {
         return type;
-    }
-
-    public State getState() {
-        return state;
-    }
-
-    public void setState(State state) {
-        this.state = state;
     }
 
     public boolean isOffer() {
