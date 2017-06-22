@@ -16,6 +16,10 @@
  */
 package org.jivesoftware.smackx.jingle;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
@@ -24,6 +28,7 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jxmpp.jid.FullJid;
 
 public abstract class JingleSession implements JingleSessionHandler {
+    private static final Logger LOGGER = Logger.getLogger(JingleSession.class.getName());
 
     protected final FullJid local;
 
@@ -32,6 +37,39 @@ public abstract class JingleSession implements JingleSessionHandler {
     protected final Role role;
 
     protected final String sid;
+
+    protected final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<Runnable>() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public boolean add(Runnable runnable) {
+            synchronized (tasks) {
+                LOGGER.log(Level.INFO, "Add task.");
+                boolean b = super.add(runnable);
+                tasks.notify();
+                return b;
+            }
+        }
+    };
+
+    private final Thread worker = new Thread() {
+        @Override
+        public void run() {
+            synchronized (tasks) {
+                while (true) {
+                    try {
+                        tasks.wait();
+                        while (!tasks.isEmpty()) {
+                            LOGGER.log(Level.INFO, "Run task.");
+                            tasks.poll().run();
+                        }
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.WARNING, "Interrupted.");
+                    }
+                }
+            }
+        }
+    };
 
     public JingleSession(FullJid initiator, FullJid responder, Role role, String sid) {
         if (role == Role.initiator) {
@@ -43,6 +81,7 @@ public abstract class JingleSession implements JingleSessionHandler {
         }
         this.sid = sid;
         this.role = role;
+        worker.start();
     }
 
     public FullJid getInitiator() {

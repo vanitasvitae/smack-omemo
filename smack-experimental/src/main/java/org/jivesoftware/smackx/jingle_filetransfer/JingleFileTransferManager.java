@@ -20,6 +20,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
@@ -47,10 +49,11 @@ import org.jxmpp.jid.FullJid;
  * Manager for JingleFileTransfer (XEP-0234).
  */
 public final class JingleFileTransferManager extends Manager implements JingleHandler {
+    private static final Logger LOGGER = Logger.getLogger(JingleFileTransferManager.class.getName());
 
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
-    private final JingleUtil jutil;
     private final ArrayList<JingleFileTransferOfferListener> jingleFileTransferOfferListeners = new ArrayList<>();
+    private final JingleUtil jutil;
 
     private JingleFileTransferManager(XMPPConnection connection) {
         super(connection);
@@ -75,6 +78,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
             throws InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
         OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
+        JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(recipient, offer.getSessionId(), offer);
         offer.send(file);
     }
 
@@ -88,8 +92,6 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         try {
             handler = createSessionHandler(jingle);
         } catch (IllegalArgumentException malformed) {
-            // If senders is neither initiator, nor responder, consider session malformed.
-            // See XEP-0166 §6.3 Example 16 and XEP-0234 §4.1
             return jutil.createErrorMalformedRequest(jingle);
         }
 
@@ -105,6 +107,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
      */
     private JingleFileTransferSession createSessionHandler(Jingle request) {
         if (request.getAction() != JingleAction.session_initiate) {
+            LOGGER.log(Level.WARNING, "First received action must be session-initiate.");
             throw new IllegalArgumentException("Requests action MUST be session-initiate.");
         }
 
@@ -115,8 +118,11 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         } //File Request
         else if (content.getSenders() == JingleContent.Senders.responder) {
             return JingleFileRequest.createIncomingFileRequest(connection(), request);
-        } //Malformed Request
-        else {
+
+        } else {
+            // If senders is neither initiator, nor responder, consider session malformed.
+            // See XEP-0166 §6.3 Example 16 and XEP-0234 §4.1
+            LOGGER.log(Level.WARNING, "Jingle has invalid sender value. Only initiator and responder are allowed.");
             throw new IllegalArgumentException("Requests content.senders MUST be either responder or initiator.");
         }
     }

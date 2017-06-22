@@ -105,7 +105,7 @@ public class JingleUtil {
         Jingle jingle = createSessionInitiate(recipient, sessionId, contentCreator, contentName, contentSenders,
                 description, transport);
 
-        return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
+        return connection.createStanzaCollectorAndSend(jingle).nextResult();
     }
 
     public Jingle createSessionAccept(FullJid recipient,
@@ -148,7 +148,7 @@ public class JingleUtil {
         Jingle jingle = createSessionAccept(recipient, sessionId, contentCreator, contentName, contentSenders,
                 description, transport);
 
-        return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
+        return connection.createStanzaCollectorAndSend(jingle).nextResult();
     }
 
     public Jingle createSessionTerminate(FullJid recipient, String sessionId, JingleReason reason) {

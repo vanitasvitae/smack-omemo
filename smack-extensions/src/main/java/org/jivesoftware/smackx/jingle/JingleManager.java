@@ -19,6 +19,7 @@ package org.jivesoftware.smackx.jingle;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
@@ -33,7 +34,6 @@ import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportManager;
-import org.jivesoftware.smackx.jingle.transports.jingle_s5b.JingleS5BTransportManager;
 
 import org.jxmpp.jid.FullJid;
 
@@ -88,19 +88,21 @@ public final class JingleManager extends Manager {
 
                             if (jingleDescriptionHandler == null) {
                                 //Unsupported Application
+                                LOGGER.log(Level.WARNING, "Unsupported Jingle application.");
                                 return jutil.createSessionTerminateUnsupportedApplications(fullFrom, sid);
                             }
                             return jingleDescriptionHandler.handleJingleRequest(jingle);
                         }
 
                         //Unknown session
+                        LOGGER.log(Level.WARNING, "Unknown session.");
                         return jutil.createErrorUnknownSession(jingle);
                     }
                 });
         //Register transports.
         JingleTransportMethodManager transportMethodManager = JingleTransportMethodManager.getInstanceFor(connection);
         transportMethodManager.registerTransportManager(JingleIBBTransportManager.getInstanceFor(connection));
-        transportMethodManager.registerTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
+        //transportMethodManager.registerTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
     }
 
     public JingleHandler registerDescriptionHandler(String namespace, JingleHandler handler) {

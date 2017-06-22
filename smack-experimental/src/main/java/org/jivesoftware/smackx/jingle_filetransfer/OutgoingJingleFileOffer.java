@@ -43,15 +43,6 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
     private static final Logger LOGGER = Logger.getLogger(OutgoingJingleFileOffer.class.getName());
 
-    public void send(File file) throws InterruptedException, XMPPException.XMPPErrorException,
-            SmackException.NotConnectedException, SmackException.NoResponseException {
-        source = file;
-        String contentName = JingleManager.randomSid();
-        JingleFileTransfer transfer = JingleFileTransferManager.fileTransferFromFile(file);
-
-        initiateFileOffer(transfer, JingleContent.Creator.initiator, contentName);
-    }
-
     public enum State {
         fresh,
         pending,
@@ -74,6 +65,15 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         this(connection, recipient, JingleManager.randomSid());
     }
 
+    public void send(File file) throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        source = file;
+        String contentName = JingleManager.randomSid();
+        JingleFileTransfer transfer = JingleFileTransferManager.fileTransferFromFile(file);
+
+        initiateFileOffer(transfer, JingleContent.Creator.initiator, contentName);
+    }
+
     public void initiateFileOffer(JingleFileTransfer file, JingleContent.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
         if (state != State.fresh) {
             throw new IllegalStateException("This session is not fresh.");
@@ -88,29 +88,37 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
         transport = transportManager.createTransport(getResponder());
 
-        jutil.sendSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transport);
         state = State.pending;
+
+        jutil.sendSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transport);
     }
 
     @Override
     public IQ handleSessionAccept(Jingle sessionAccept) throws SmackException.NotConnectedException, InterruptedException {
         // Out of order?
         if (state != State.pending) {
-            LOGGER.log(Level.WARNING, "Out of order!");
+            LOGGER.log(Level.WARNING, "Session state is " + state + ", so session-accept is out of order.");
             return jutil.createErrorOutOfOrder(sessionAccept);
         }
 
+        LOGGER.log(Level.INFO, "Session was accepted. Initiate Bytestream.");
         state = State.active;
-        transportManager.initiateOutgoingSession(getResponder(), transport, new JingleTransportInitiationCallback() {
+        tasks.add(new Runnable() {
             @Override
-            public void onSessionInitiated(final BytestreamSession session) {
-                sendingThread = new SendingThread(session, source);
-                sendingThread.run();
-            }
+            public void run() {
+                transportManager.initiateOutgoingSession(getResponder(), transport, new JingleTransportInitiationCallback() {
+                    @Override
+                    public void onSessionInitiated(final BytestreamSession session) {
+                        LOGGER.log(Level.INFO, "BytestreamSession initiated. Start transfer.");
+                        sendingThread = new SendingThread(session, source);
+                        sendingThread.start();
+                    }
 
-            @Override
-            public void onException(Exception e) {
-                LOGGER.log(Level.SEVERE, "Cannot create outgoing Bytestream session: ", e);
+                    @Override
+                    public void onException(Exception e) {
+                        LOGGER.log(Level.SEVERE, "Cannot create outgoing Bytestream session: ", e);
+                    }
+                });
             }
         });
 
@@ -119,8 +127,10 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
     @Override
     public IQ handleSessionTerminate(Jingle sessionTerminate) {
+        LOGGER.log(Level.INFO, "Received session-terminate: " + sessionTerminate.getReason().asEnum());
 
         if (sendingThread != null && !sendingThread.isInterrupted()) {
+            LOGGER.log(Level.INFO, "Interrupt sending thread.");
             sendingThread.interrupt();
         }
 
@@ -129,17 +139,33 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     }
 
     @Override
-    public IQ handleTransportReplace(Jingle transportReplace)
+    public IQ handleTransportReplace(final Jingle transportReplace)
             throws InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
-        JingleTransportManager<?> replacementManager = JingleTransportMethodManager.getInstanceFor(connection)
+        LOGGER.log(Level.INFO, "Received transport-replace.");
+
+        final JingleTransportManager<?> replacementManager = JingleTransportMethodManager.getInstanceFor(connection)
                 .getTransportManager(transportReplace);
 
-        if (replacementManager != null) {
-            jutil.sendTransportAccept(transportReplace.getFrom().asFullJidOrThrow(),
-                    transportReplace.getInitiator(), transportReplace.getSid(), creator, name,
-                    replacementManager.createTransport(getResponder()));
-        }
+        tasks.add(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (replacementManager != null) {
+                        LOGGER.log(Level.INFO, "Accept transport-replace.");
+                        jutil.sendTransportAccept(transportReplace.getFrom().asFullJidOrThrow(),
+                                transportReplace.getInitiator(), transportReplace.getSid(), creator, name,
+                                replacementManager.createTransport(getResponder()));
+                    } else {
+                        LOGGER.log(Level.INFO, "Unsupported transport. Reject transport-replace.");
+                        jutil.sendTransportReject(transportReplace.getFrom().asFullJidOrThrow(), transportReplace.getInitiator(),
+                                transportReplace.getSid(), creator, name, transportReplace.getContents().get(0).getJingleTransport());
+                    }
+                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                    LOGGER.log(Level.SEVERE, "Help me please!", e);
+                }
+            }
+        });
 
         return jutil.createAck(transportReplace);
     }

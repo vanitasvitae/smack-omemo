@@ -134,6 +134,14 @@ public class JingleFileTransferChild extends JingleContentDescriptionChildElemen
             return this;
         }
 
+        /**
+         * Set the media type of the file.
+         * This is a MIME type from this list:
+         * https://www.iana.org/assignments/media-types/media-types.xhtml
+         * Default should be application/octet-stream.
+         * @param mediaType
+         * @return
+         */
         public Builder setMediaType(String mediaType) {
             this.mediaType = mediaType;
             return this;
