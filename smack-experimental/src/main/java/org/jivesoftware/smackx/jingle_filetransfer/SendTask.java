@@ -29,13 +29,13 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 /**
  * Created by vanitas on 21.06.17.
  */
-public class SendingThread extends Thread {
-    private static final Logger LOGGER = Logger.getLogger(SendingThread.class.getName());
+public class SendTask implements Runnable {
+    private static final Logger LOGGER = Logger.getLogger(SendTask.class.getName());
 
     private final BytestreamSession session;
     private final File source;
 
-    public SendingThread(BytestreamSession session, File source) {
+    public SendTask(BytestreamSession session, File source) {
         this.session = session;
         this.source = source;
     }
@@ -68,15 +68,5 @@ public class SendingThread extends Thread {
                 LOGGER.log(Level.SEVERE, "Could not close session.", e);
             }
         }
-    }
-
-    @Override
-    public void interrupt() {
-        try {
-            session.close();
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Could not close session.", e);
-        }
-        super.interrupt();
     }
 }

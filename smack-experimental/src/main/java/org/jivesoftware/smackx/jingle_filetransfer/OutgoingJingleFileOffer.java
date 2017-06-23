@@ -51,7 +51,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         terminated
     }
 
-    private Thread sendingThread;
+    private Runnable sendingThread;
     private File source;
     private State state;
 
@@ -110,8 +110,8 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
                     @Override
                     public void onSessionInitiated(final BytestreamSession session) {
                         LOGGER.log(Level.INFO, "BytestreamSession initiated. Start transfer.");
-                        sendingThread = new SendingThread(session, source);
-                        sendingThread.start();
+                        sendingThread = new SendTask(session, source);
+                        queued.add(threadPool.submit(sendingThread));
                     }
 
                     @Override
@@ -128,11 +128,6 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     @Override
     public IQ handleSessionTerminate(Jingle sessionTerminate) {
         LOGGER.log(Level.INFO, "Received session-terminate: " + sessionTerminate.getReason().asEnum());
-
-        if (sendingThread != null && !sendingThread.isInterrupted()) {
-            LOGGER.log(Level.INFO, "Interrupt sending thread.");
-            sendingThread.interrupt();
-        }
 
         state = State.terminated;
         return jutil.createAck(sessionTerminate);

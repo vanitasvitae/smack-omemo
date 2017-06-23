@@ -42,7 +42,7 @@ import org.jxmpp.jid.FullJid;
 public class IncomingJingleFileOffer extends JingleFileTransferSession implements IncomingFileOfferCallback {
     private static final Logger LOGGER = Logger.getLogger(IncomingJingleFileOffer.class.getName());
     private Jingle pendingSessionInitiate = null;
-    private ReceivingThread receivingThread;
+    private ReceiveTask receivingThread;
 
     public enum State {
         fresh,
@@ -143,8 +143,8 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
                     transportSession.initiateIncomingSession(new JingleTransportInitiationCallback() {
                         @Override
                         public void onSessionInitiated(BytestreamSession bytestreamSession) {
-                            receivingThread = new ReceivingThread(bytestreamSession, file, target);
-                            receivingThread.start();
+                            receivingThread = new ReceiveTask(bytestreamSession, file, target);
+                            queued.add(threadPool.submit(receivingThread));
                         }
 
                         @Override

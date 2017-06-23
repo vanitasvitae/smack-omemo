@@ -16,6 +16,9 @@
  */
 package org.jivesoftware.smackx.jingle.transports.jingle_ibb;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
@@ -31,6 +34,7 @@ import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
 
 public class JingleIBBTransportSession extends JingleTransportSession<JingleIBBTransport> {
+    private static final Logger LOGGER = Logger.getLogger(JingleIBBTransportSession.class.getName());
 
     private final JingleIBBTransportManager transportManager;
 
@@ -53,6 +57,7 @@ public class JingleIBBTransportSession extends JingleTransportSession<JingleIBBT
 
     @Override
     public void initiateOutgoingSession(JingleTransportInitiationCallback callback) {
+        LOGGER.log(Level.INFO, "Initiate Jingle InBandBytestream session.");
         if (jingleSession.get() == null) {
             callback.onException(new NullPointerException("Lost reference to JingleSession."));
             return;
@@ -72,7 +77,7 @@ public class JingleIBBTransportSession extends JingleTransportSession<JingleIBBT
 
     @Override
     public void initiateIncomingSession(final JingleTransportInitiationCallback callback) {
-
+        LOGGER.log(Level.INFO, "Await Jingle InBandBytestream session.");
         if (jingleSession.get() == null) {
             callback.onException(new NullPointerException("Lost reference to JingleSession."));
         }

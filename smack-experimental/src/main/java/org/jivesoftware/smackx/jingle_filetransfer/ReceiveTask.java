@@ -30,14 +30,14 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChi
 /**
  * Thread for receiving data.
  */
-public class ReceivingThread extends Thread {
-    private static final Logger LOGGER = Logger.getLogger(ReceivingThread.class.getName());
+public class ReceiveTask implements Runnable {
+    private static final Logger LOGGER = Logger.getLogger(ReceiveTask.class.getName());
 
     private final BytestreamSession session;
     private final JingleFileTransfer fileTransfer;
     private final File target;
 
-    public ReceivingThread(BytestreamSession session, JingleFileTransfer fileTransfer, File target) {
+    public ReceiveTask(BytestreamSession session, JingleFileTransfer fileTransfer, File target) {
         this.session = session;
         this.fileTransfer = fileTransfer;
         this.target = target;
