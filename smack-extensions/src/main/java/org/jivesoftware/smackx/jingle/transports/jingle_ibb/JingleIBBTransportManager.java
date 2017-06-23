@@ -18,22 +18,13 @@ package org.jivesoftware.smackx.jingle.transports.jingle_ibb;
 
 import java.util.WeakHashMap;
 
-import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.bytestreams.BytestreamListener;
-import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
-import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
-import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.provider.JingleIBBTransportProvider;
-
-import org.jxmpp.jid.FullJid;
 
 /**
  * Manager for Jingle InBandBytestream transports (XEP-0261).
@@ -62,51 +53,12 @@ public final class JingleIBBTransportManager extends JingleTransportManager<Jing
     }
 
     @Override
-    public JingleIBBTransport createTransport(FullJid recipient) {
-        return new JingleIBBTransport();
+    public JingleTransportSession<JingleIBBTransport> transportSession(JingleSession jingleSession) {
+        return new JingleIBBTransportSession(jingleSession);
     }
 
     @Override
-    public JingleIBBTransport createTransport(Jingle request) {
-        JingleIBBTransport rTransport = (JingleIBBTransport) request.getContents().get(0).getJingleTransport();
-        return new JingleIBBTransport(rTransport.getBlockSize(), rTransport.getSessionId());
-    }
-
-    @Override
-    public void initiateOutgoingSession(FullJid remote, JingleContentTransport transport, JingleTransportInitiationCallback callback) {
-        JingleIBBTransport ibbTransport = (JingleIBBTransport) transport;
-        BytestreamSession session;
-
-        try {
-            session = InBandBytestreamManager.getByteStreamManager(getConnection())
-                    .establishSession(remote, ibbTransport.getSessionId());
-            callback.onSessionInitiated(session);
-        } catch (SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
-            callback.onException(e);
-        }
-    }
-
-    @Override
-    public void initiateIncomingSession(final FullJid remote, final JingleContentTransport transport, final JingleTransportInitiationCallback callback) {
-        final JingleIBBTransport ibbTransport = (JingleIBBTransport) transport;
-
-        InBandBytestreamManager.getByteStreamManager(getConnection()).addIncomingBytestreamListener(new BytestreamListener() {
-            @Override
-            public void incomingBytestreamRequest(BytestreamRequest request) {
-                if (request.getFrom().asFullJidIfPossible().equals(remote)
-                        && request.getSessionID().equals(ibbTransport.getSessionId())) {
-
-                    BytestreamSession session;
-
-                    try {
-                        session = request.accept();
-                    } catch (InterruptedException | SmackException | XMPPException.XMPPErrorException e) {
-                        callback.onException(e);
-                        return;
-                    }
-                    callback.onSessionInitiated(session);
-                }
-            }
-        });
+    public void authenticated(XMPPConnection connection, boolean resumed) {
+        //Nothing to do.
     }
 }

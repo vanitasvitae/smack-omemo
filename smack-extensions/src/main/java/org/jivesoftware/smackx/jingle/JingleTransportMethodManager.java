@@ -36,14 +36,6 @@ public final class JingleTransportMethodManager extends Manager {
 
     private static final WeakHashMap<XMPPConnection, JingleTransportMethodManager> INSTANCES = new WeakHashMap<>();
 
-    static {
-        ClassLoader classLoader = JingleTransportMethodManager.class.getClassLoader();
-        String[] knownTransports = new String[] {
-                "org.jivesoftware.smackx.jingle.transports.jingle_s5b.JingleS5BTransportManager",
-                "org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportManager"
-                };
-        //TODO: Load dynamically.
-    }
     private final HashMap<String, JingleTransportManager<?>> transportManagers = new HashMap<>();
 
     private static final String[] transportPreference = new String[] {
@@ -68,10 +60,17 @@ public final class JingleTransportMethodManager extends Manager {
         transportManagers.put(manager.getNamespace(), manager);
     }
 
+    public static JingleTransportManager<?> getTransportManager(XMPPConnection connection, String namespace) {
+        return getInstanceFor(connection).getTransportManager(namespace);
+    }
+
     public JingleTransportManager<?> getTransportManager(String namespace) {
         return transportManagers.get(namespace);
     }
 
+    public static JingleTransportManager<?> getTransportManager(XMPPConnection connection, Jingle request) {
+        return getInstanceFor(connection).getTransportManager(request);
+    }
     public JingleTransportManager<?> getTransportManager(Jingle request) {
 
         JingleContent content = request.getContents().get(0);
@@ -87,10 +86,10 @@ public final class JingleTransportMethodManager extends Manager {
         return getTransportManager(transport.getNamespace());
     }
 
-    /**
-     * TODO: Find better solution.
-     * @return
-     */
+    public JingleTransportManager<?> getBestAvailableTransportManager(XMPPConnection connection) {
+        return getInstanceFor(connection).getBestAvailableTransportManager();
+    }
+
     public JingleTransportManager<?> getBestAvailableTransportManager() {
         JingleTransportManager<?> tm;
         for (String ns : transportPreference) {

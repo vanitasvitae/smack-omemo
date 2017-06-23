@@ -30,6 +30,14 @@ public class FullJidAndSessionId {
         this.sessionId = sessionId;
     }
 
+    public FullJid getFullJid() {
+        return fullJid;
+    }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
     @Override
     public int hashCode() {
         int hashCode = 31 * fullJid.hashCode();

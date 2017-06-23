@@ -34,7 +34,7 @@ public class JingleFileRequest extends JingleFileTransferSession {
 
     public static JingleFileRequest createOutgoingFileRequest(XMPPConnection connection, FullJid recipient) {
         return new JingleFileRequest(connection, connection.getUser().asFullJidOrThrow(), recipient, Role.initiator,
-                JingleManager.randomSid());
+                JingleManager.randomId());
     }
 
     public static JingleFileRequest createIncomingFileRequest(XMPPConnection connection, Jingle request) {

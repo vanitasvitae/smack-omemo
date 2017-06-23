@@ -16,14 +16,18 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 
 import org.jxmpp.jid.FullJid;
 
@@ -38,38 +42,9 @@ public abstract class JingleSession implements JingleSessionHandler {
 
     protected final String sid;
 
-    protected final ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<Runnable>() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public boolean add(Runnable runnable) {
-            synchronized (tasks) {
-                LOGGER.log(Level.INFO, "Add task.");
-                boolean b = super.add(runnable);
-                tasks.notify();
-                return b;
-            }
-        }
-    };
-
-    private final Thread worker = new Thread() {
-        @Override
-        public void run() {
-            synchronized (tasks) {
-                while (true) {
-                    try {
-                        tasks.wait();
-                        while (!tasks.isEmpty()) {
-                            LOGGER.log(Level.INFO, "Run task.");
-                            tasks.poll().run();
-                        }
-                    } catch (InterruptedException e) {
-                        LOGGER.log(Level.WARNING, "Interrupted.");
-                    }
-                }
-            }
-        }
-    };
+    protected ExecutorService threadPool = Executors.newSingleThreadExecutor();
+    protected ArrayList<Future<?>> queued = new ArrayList<>();
+    protected JingleTransportSession<?> transportSession;
 
     public JingleSession(FullJid initiator, FullJid responder, Role role, String sid) {
         if (role == Role.initiator) {
@@ -81,7 +56,6 @@ public abstract class JingleSession implements JingleSessionHandler {
         }
         this.sid = sid;
         this.role = role;
-        worker.start();
     }
 
     public FullJid getInitiator() {
@@ -100,12 +74,28 @@ public abstract class JingleSession implements JingleSessionHandler {
         return role == Role.responder;
     }
 
+    public FullJid getRemote() {
+        return remote;
+    }
+
+    public FullJid getLocal() {
+        return local;
+    }
+
     public String getSessionId() {
         return sid;
     }
 
     public FullJidAndSessionId getFullJidAndSessionId() {
         return new FullJidAndSessionId(remote, sid);
+    }
+
+    public JingleTransportSession<?> getTransportSession() {
+        return transportSession;
+    }
+
+    protected void setTransportSession(JingleTransportSession<?> transportSession) {
+        this.transportSession = transportSession;
     }
 
     @Override
@@ -153,7 +143,7 @@ public abstract class JingleSession implements JingleSessionHandler {
             case transport_accept:
                 return handleTransportAccept(jingle);
             case transport_info:
-                return handleTransportInfo(jingle);
+                return transportSession.handleTransportInfo(jingle);
             case session_initiate:
                 return handleSessionInitiate(jingle);
             case transport_reject:
@@ -218,10 +208,6 @@ public abstract class JingleSession implements JingleSessionHandler {
         return IQ.createResultIQ(transportAccept);
     }
 
-    protected IQ handleTransportInfo(Jingle transportInfo) {
-        return IQ.createResultIQ(transportInfo);
-    }
-
     protected IQ handleTransportReplace(Jingle transportReplace)
             throws InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
@@ -231,5 +217,7 @@ public abstract class JingleSession implements JingleSessionHandler {
     protected IQ handleTransportReject(Jingle transportReject) {
         return IQ.createResultIQ(transportReject);
     }
+
+    public abstract XMPPConnection getConnection();
 
 }

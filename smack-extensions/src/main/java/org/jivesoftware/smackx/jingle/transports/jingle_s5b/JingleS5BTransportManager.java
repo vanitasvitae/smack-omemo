@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.jingle.transports.jingle_s5b;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -29,19 +28,14 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
-import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
-import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
-import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransport;
-import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransportCandidate;
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.provider.JingleS5BTransportProvider;
 
-import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
 
 /**
@@ -52,6 +46,9 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
     private static final Logger LOGGER = Logger.getLogger(JingleS5BTransportManager.class.getName());
 
     private static final WeakHashMap<XMPPConnection, JingleS5BTransportManager> INSTANCES = new WeakHashMap<>();
+
+    private List<Bytestream.StreamHost> localStreamHosts = null;
+    private List<Bytestream.StreamHost> availableStreamHosts = null;
 
     private JingleS5BTransportManager(XMPPConnection connection) {
         super(connection);
@@ -73,65 +70,33 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
     }
 
     @Override
-    public JingleS5BTransport createTransport(FullJid recipient) {
-        return createTransport(recipient, JingleManager.randomSid(), Bytestream.Mode.tcp);
+    public JingleTransportSession<JingleS5BTransport> transportSession(JingleSession jingleSession) {
+        return new JingleS5BTransportSession(jingleSession);
     }
 
-    @Override
-    public JingleS5BTransport createTransport(Jingle request) {
-        FullJid remote = request.getFrom().asFullJidIfPossible();
-        JingleS5BTransport received = (JingleS5BTransport) request.getContents().get(0).getJingleTransport();
-
-        return createTransport(remote, received.getStreamId(), received.getMode());
-    }
-
-    private JingleS5BTransport createTransport(FullJid remote, String sid, Bytestream.Mode mode) {
-        JingleS5BTransport.Builder builder = JingleS5BTransport.getBuilder();
-        List<Bytestream.StreamHost> localStreams = getLocalStreamHosts();
-        List<Bytestream.StreamHost> availableStreams;
-        try {
-            availableStreams = getAvailableStreamHosts();
-        } catch (XMPPException.XMPPErrorException | SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException e) {
-            LOGGER.log(Level.WARNING, "Could not determine available StreamHosts: ", e);
-            availableStreams = Collections.emptyList();
-        }
-
-        for (Bytestream.StreamHost host : localStreams) {
-            JingleS5BTransportCandidate candidate = new JingleS5BTransportCandidate(host, 100);
-            builder.addTransportCandidate(candidate);
-        }
-
-        for (Bytestream.StreamHost host : availableStreams) {
-            JingleS5BTransportCandidate candidate = new JingleS5BTransportCandidate(host, 0);
-            builder.addTransportCandidate(candidate);
-        }
-
-        builder.setStreamId(sid);
-        builder.setMode(mode);
-        builder.setDestinationAddress(Socks5Utils.createDigest(sid, getConnection().getUser().asFullJidOrThrow(), remote));
-        return builder.build();
-    }
-
-
-    @Override
-    public void initiateOutgoingSession(FullJid remote, JingleContentTransport transport, JingleTransportInitiationCallback callback) {
-
-    }
-
-    @Override
-    public void initiateIncomingSession(FullJid remote, JingleContentTransport transport, JingleTransportInitiationCallback callback) {
-
-    }
-
-    public List<Bytestream.StreamHost> getAvailableStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+    private List<Bytestream.StreamHost> queryAvailableStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         Socks5BytestreamManager s5m = Socks5BytestreamManager.getBytestreamManager(getConnection());
         List<Jid> proxies = s5m.determineProxies();
         return determineStreamHostInfo(proxies);
     }
 
-    public List<Bytestream.StreamHost> getLocalStreamHosts() {
+    private List<Bytestream.StreamHost> queryLocalStreamHosts() {
         return Socks5BytestreamManager.getBytestreamManager(getConnection())
                 .getLocalStreamHost();
+    }
+
+    public List<Bytestream.StreamHost> getAvailableStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        if (availableStreamHosts == null) {
+            availableStreamHosts = queryAvailableStreamHosts();
+        }
+        return availableStreamHosts;
+    }
+
+    public List<Bytestream.StreamHost> getLocalStreamHosts() {
+        if (localStreamHosts == null) {
+            localStreamHosts = queryLocalStreamHosts();
+        }
+        return localStreamHosts;
     }
 
     public List<Bytestream.StreamHost> determineStreamHostInfo(List<Jid> proxies) {
@@ -154,5 +119,16 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         }
 
         return streamHosts;
+    }
+
+
+    @Override
+    public void authenticated(XMPPConnection connection, boolean resumed) {
+        if (!resumed) try {
+            localStreamHosts = queryLocalStreamHosts();
+            availableStreamHosts = queryAvailableStreamHosts();
+        } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+            LOGGER.log(Level.WARNING, "Could not query available StreamHosts: " + e, e);
+        }
     }
 }

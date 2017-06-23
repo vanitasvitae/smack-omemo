@@ -16,22 +16,22 @@
  */
 package org.jivesoftware.smackx.jingle.transports;
 
+import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
-
-import org.jxmpp.jid.FullJid;
 
 /**
  * Manager for a JingleTransport method.
  * @param <D> JingleContentTransport.
  */
-public abstract class JingleTransportManager<D extends JingleContentTransport> {
+public abstract class JingleTransportManager<D extends JingleContentTransport> implements ConnectionListener {
 
     private final XMPPConnection connection;
 
     public JingleTransportManager(XMPPConnection connection) {
         this.connection = connection;
+        connection.addConnectionListener(this);
     }
 
     public XMPPConnection getConnection() {
@@ -40,12 +40,36 @@ public abstract class JingleTransportManager<D extends JingleContentTransport> {
 
     public abstract String getNamespace();
 
-    public abstract D createTransport(FullJid recipient);
+    public abstract JingleTransportSession<D> transportSession(JingleSession jingleSession);
 
-    public abstract D createTransport(Jingle request);
 
-    public abstract void initiateOutgoingSession(FullJid remote, JingleContentTransport transport, JingleTransportInitiationCallback callback);
+    @Override
+    public void connected(XMPPConnection connection) {
 
-    public abstract void initiateIncomingSession(FullJid remote, JingleContentTransport transport, JingleTransportInitiationCallback callback);
+    }
 
+    @Override
+    public void connectionClosed() {
+
+    }
+
+    @Override
+    public void connectionClosedOnError(Exception e) {
+
+    }
+
+    @Override
+    public void reconnectionSuccessful() {
+
+    }
+
+    @Override
+    public void reconnectingIn(int seconds) {
+
+    }
+
+    @Override
+    public void reconnectionFailed(Exception e) {
+
+    }
 }
