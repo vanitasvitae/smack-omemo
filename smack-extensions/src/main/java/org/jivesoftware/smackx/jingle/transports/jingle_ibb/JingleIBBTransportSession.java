@@ -89,7 +89,7 @@ public class JingleIBBTransportSession extends JingleTransportSession<JingleIBBT
             public void incomingBytestreamRequest(BytestreamRequest request) {
                 if (request.getFrom().asFullJidIfPossible().equals(jingleSession.get().getRemote())
                         && request.getSessionID().equals(ibbTransport.getSessionId())) {
-
+                    LOGGER.log(Level.INFO,"MATCH! Create bytesteam session.");
                     BytestreamSession session;
 
                     try {
@@ -99,6 +99,8 @@ public class JingleIBBTransportSession extends JingleTransportSession<JingleIBBT
                         return;
                     }
                     callback.onSessionInitiated(session);
+                } else {
+                    LOGGER.log(Level.SEVERE, "MISSMATCH");
                 }
             }
         });

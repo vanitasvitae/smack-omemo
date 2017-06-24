@@ -135,29 +135,28 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
             return;
         }
 
-        queued.add(threadPool.submit(new Runnable() {
+        state = State.active;
+
+        transportSession.initiateIncomingSession(new JingleTransportInitiationCallback() {
             @Override
-            public void run() {
-                try {
-                    state = State.active;
-                    transportSession.initiateIncomingSession(new JingleTransportInitiationCallback() {
-                        @Override
-                        public void onSessionInitiated(BytestreamSession bytestreamSession) {
-                            receivingThread = new ReceiveTask(bytestreamSession, file, target);
-                            queued.add(threadPool.submit(receivingThread));
-                        }
-
-                        @Override
-                        public void onException(Exception e) {
-
-                        }
-                    });
-                    jutil.sendSessionAccept(getInitiator(), sid, creator, name, JingleContent.Senders.initiator, file, transportSession.createTransport());
-                } catch (SmackException.NotConnectedException | SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException e) {
-                    LOGGER.log(Level.SEVERE, "Could not send session-accept: " + e, e);
-                }
+            public void onSessionInitiated(BytestreamSession bytestreamSession) {
+                LOGGER.log(Level.INFO, "BEFORE THREAD START!");
+                receivingThread = new ReceiveTask(bytestreamSession, file, target);
+                queued.add(threadPool.submit(receivingThread));
+                LOGGER.log(Level.INFO,"AFTER THREAD START!");
             }
-        }));
+
+            @Override
+            public void onException(Exception e) {
+
+            }
+        });
+
+        try {
+            jutil.sendSessionAccept(getInitiator(), sid, creator, name, JingleContent.Senders.initiator, file, transportSession.createTransport());
+        } catch (SmackException.NotConnectedException | SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

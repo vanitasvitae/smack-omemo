@@ -103,24 +103,22 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
         LOGGER.log(Level.INFO, "Session was accepted. Initiate Bytestream.");
         state = State.active;
-        queued.add(threadPool.submit(new Runnable() {
-            @Override
-            public void run() {
-                transportSession.initiateOutgoingSession(new JingleTransportInitiationCallback() {
-                    @Override
-                    public void onSessionInitiated(final BytestreamSession session) {
-                        LOGGER.log(Level.INFO, "BytestreamSession initiated. Start transfer.");
-                        sendingThread = new SendTask(session, source);
-                        queued.add(threadPool.submit(sendingThread));
-                    }
 
-                    @Override
-                    public void onException(Exception e) {
-                        LOGGER.log(Level.SEVERE, "Cannot create outgoing Bytestream session: ", e);
-                    }
-                });
+        transportSession.processJingle(sessionAccept);
+
+        transportSession.initiateOutgoingSession(new JingleTransportInitiationCallback() {
+            @Override
+            public void onSessionInitiated(final BytestreamSession session) {
+                LOGGER.log(Level.INFO, "BytestreamSession initiated. Start transfer.");
+                sendingThread = new SendTask(session, source);
+                queued.add(threadPool.submit(sendingThread));
             }
-        }));
+
+            @Override
+            public void onException(Exception e) {
+                LOGGER.log(Level.SEVERE, "Cannot create outgoing Bytestream session: ", e);
+            }
+        });
 
         return jutil.createAck(sessionAccept);
     }
