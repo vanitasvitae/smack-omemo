@@ -33,6 +33,7 @@ import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidate;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
@@ -46,6 +47,9 @@ import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTr
 public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BTransport> {
     private static final Logger LOGGER = Logger.getLogger(JingleS5BTransportSession.class.getName());
     private final JingleS5BTransportManager transportManager;
+
+    private Socket connectedSocket;
+    private JingleS5BTransportCandidate usedCandidate;
 
     public JingleS5BTransportSession(JingleSession jingleSession) {
         super(jingleSession);
@@ -91,6 +95,11 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
 
     @Override
     public void initiateOutgoingSession(JingleTransportInitiationCallback callback) {
+        JingleSession jSession = jingleSession.get();
+        if (jSession == null) {
+            throw new NullPointerException("Lost reference to jingleSession.");
+        }
+
         JingleS5BTransport receivedTransport = (JingleS5BTransport) remoteTransport;
 
         Socket socket = null;
@@ -112,8 +121,29 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
                         + receivedTransport.getDestinationAddress());
             }
 
-            if (socket != null) {
+            JingleContent content = jSession.getContents().get(0);
 
+            Jingle response;
+
+            if (socket != null) {
+                connectedSocket = socket;
+                usedCandidate = workedForUs;
+
+                response = transportManager.createCandidateUsed(jSession.getRemote(),
+                        jSession.getSessionId(), content.getSenders(), content.getCreator(),
+                        content.getName(), receivedTransport.getStreamId(), usedCandidate.getCandidateId());
+
+            } else {
+                response = transportManager.createCandidateError(jSession.getRemote(),
+                        jSession.getSessionId(), content.getSenders(), content.getCreator(),
+                        content.getName(), receivedTransport.getStreamId());
+
+            }
+
+            try {
+                jSession.getConnection().sendStanza(response);
+            } catch (SmackException.NotConnectedException | InterruptedException e) {
+                LOGGER.log(Level.WARNING, "Could not send candidate-used.", e);
             }
         }
     }

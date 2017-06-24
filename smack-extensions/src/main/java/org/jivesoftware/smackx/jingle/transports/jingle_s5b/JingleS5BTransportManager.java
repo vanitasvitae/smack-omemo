@@ -30,12 +30,16 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.JingleSession;
+import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransport;
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.provider.JingleS5BTransportProvider;
 
+import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
 
 /**
@@ -130,5 +134,41 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
             LOGGER.log(Level.WARNING, "Could not query available StreamHosts: " + e, e);
         }
+    }
+
+    public Jingle createCandidateUsed(FullJid recipient, String sessionId, JingleContent.Senders contentSenders,
+                                      JingleContent.Creator contentCreator, String contentName, String streamId,
+                                      String candidateId) {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setSessionId(sessionId).setInitiator(recipient).setAction(JingleAction.transport_info);
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.setName(contentName).setCreator(contentCreator).setSenders(contentSenders);
+
+        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        tb.setCandidateUsed(candidateId).setStreamId(streamId);
+
+        Jingle jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
+        jingle.setFrom(getConnection().getUser().asFullJidOrThrow());
+        jingle.setTo(recipient);
+
+        return jingle;
+    }
+
+    public Jingle createCandidateError(FullJid remote, String sessionId, JingleContent.Senders senders, JingleContent.Creator creator, String name, String streamId) {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setSessionId(sessionId).setInitiator(remote).setAction(JingleAction.transport_info);
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.setName(name).setCreator(creator).setSenders(senders);
+
+        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        tb.setCandidateError();
+
+        Jingle jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
+        jingle.setFrom(getConnection().getUser().asFullJidOrThrow());
+        jingle.setTo(remote);
+
+        return jingle;
     }
 }

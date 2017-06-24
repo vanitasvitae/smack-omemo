@@ -59,9 +59,5 @@ public abstract class JingleTransportSession<T extends JingleContentTransport> {
 
     public abstract IQ handleTransportInfo(Jingle transportInfo);
 
-    public void setRemoteTransport(JingleContentTransport remoteTransport) {
-        this.remoteTransport = remoteTransport;
-    }
-
     public abstract JingleTransportManager<T> transportManager();
 }

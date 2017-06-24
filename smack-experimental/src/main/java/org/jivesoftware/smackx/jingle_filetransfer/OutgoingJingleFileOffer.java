@@ -147,12 +147,14 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
                     if (replacementManager != null) {
                         LOGGER.log(Level.INFO, "Accept transport-replace.");
                         jutil.sendTransportAccept(transportReplace.getFrom().asFullJidOrThrow(),
-                                transportReplace.getInitiator(), transportReplace.getSid(), creator, name,
+                                transportReplace.getInitiator(), transportReplace.getSid(),
+                                getContents().get(0).getCreator(), getContents().get(0).getName(),
                                 transportSession.createTransport());
                     } else {
                         LOGGER.log(Level.INFO, "Unsupported transport. Reject transport-replace.");
                         jutil.sendTransportReject(transportReplace.getFrom().asFullJidOrThrow(), transportReplace.getInitiator(),
-                                transportReplace.getSid(), creator, name, transportReplace.getContents().get(0).getJingleTransport());
+                                transportReplace.getSid(), getContents().get(0).getCreator(),
+                                getContents().get(0).getName(), transportReplace.getContents().get(0).getJingleTransport());
                     }
                 } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
                     LOGGER.log(Level.SEVERE, "Help me please!", e);

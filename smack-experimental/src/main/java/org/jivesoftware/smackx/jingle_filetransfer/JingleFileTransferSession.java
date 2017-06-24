@@ -20,7 +20,6 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.Role;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 
 import org.jxmpp.jid.FullJid;
@@ -39,8 +38,6 @@ public abstract class JingleFileTransferSession extends JingleSession {
     protected final XMPPConnection connection;
     protected final JingleUtil jutil;
 
-    protected JingleContent.Creator creator;
-    protected String name;
     protected JingleFileTransfer file;
 
     private final Type type;

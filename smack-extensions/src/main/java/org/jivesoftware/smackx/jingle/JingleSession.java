@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.jingle;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -27,6 +28,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 
 import org.jxmpp.jid.FullJid;
@@ -42,11 +44,17 @@ public abstract class JingleSession implements JingleSessionHandler {
 
     protected final String sid;
 
+    protected final List<JingleContent> contents = new ArrayList<>();
+
     protected ExecutorService threadPool = Executors.newSingleThreadExecutor();
     protected ArrayList<Future<?>> queued = new ArrayList<>();
     protected JingleTransportSession<?> transportSession;
 
     public JingleSession(FullJid initiator, FullJid responder, Role role, String sid) {
+        this(initiator, responder, role, sid, null);
+    }
+
+    public JingleSession(FullJid initiator, FullJid responder, Role role, String sid, List<JingleContent> contents) {
         if (role == Role.initiator) {
             this.local = initiator;
             this.remote = responder;
@@ -56,6 +64,10 @@ public abstract class JingleSession implements JingleSessionHandler {
         }
         this.sid = sid;
         this.role = role;
+
+        if (contents != null) {
+            this.contents.addAll(contents);
+        }
     }
 
     public FullJid getInitiator() {
@@ -88,6 +100,10 @@ public abstract class JingleSession implements JingleSessionHandler {
 
     public FullJidAndSessionId getFullJidAndSessionId() {
         return new FullJidAndSessionId(remote, sid);
+    }
+
+    public List<JingleContent> getContents() {
+        return contents;
     }
 
     public JingleTransportSession<?> getTransportSession() {
