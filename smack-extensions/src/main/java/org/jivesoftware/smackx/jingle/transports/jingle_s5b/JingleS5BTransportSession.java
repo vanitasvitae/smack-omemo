@@ -27,7 +27,10 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Client;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5ClientForInitiator;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.JingleManager;
@@ -36,10 +39,12 @@ import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidate;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
+import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationException;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransport;
 import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransportCandidate;
+import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransportInfo;
 
 /**
  * LOL.
@@ -49,7 +54,11 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
     private final JingleS5BTransportManager transportManager;
 
     private Socket connectedSocket;
-    private JingleS5BTransportCandidate usedCandidate;
+    private JingleS5BTransportCandidate localUsedCandidate;
+    private JingleS5BTransportCandidate remoteUsedCandidate;
+    private JingleTransportInitiationCallback callback;
+    private boolean remoteError = false;
+    private boolean localError = false;
 
     public JingleS5BTransportSession(JingleSession jingleSession) {
         super(jingleSession);
@@ -66,6 +75,11 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
     }
 
     private JingleS5BTransport createTransport(String sid, Bytestream.Mode mode) {
+        JingleSession jSession = jingleSession.get();
+        if (jSession == null) {
+            throw new NullPointerException("Lost reference to JingleSession.");
+        }
+
         JingleS5BTransport.Builder builder = JingleS5BTransport.getBuilder();
 
         for (Bytestream.StreamHost host : transportManager.getLocalStreamHosts()) {
@@ -77,7 +91,8 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
 
         try {
             availableStreamHosts = transportManager.getAvailableStreamHosts();
-        } catch (XMPPException.XMPPErrorException | SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException e) {
+        } catch (XMPPException.XMPPErrorException | SmackException.NoResponseException | InterruptedException |
+                SmackException.NotConnectedException e) {
             LOGGER.log(Level.WARNING, "Could not get available StreamHosts: " + e, e);
         }
 
@@ -89,12 +104,23 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
 
         builder.setStreamId(sid);
         builder.setMode(mode);
-        builder.setDestinationAddress(Socks5Utils.createDigest(sid, jingleSession.get().getLocal(), jingleSession.get().getRemote()));
+        builder.setDestinationAddress(Socks5Utils.createDigest(sid, jSession.getLocal(), jSession.getRemote()));
         return builder.build();
     }
 
     @Override
     public void initiateOutgoingSession(JingleTransportInitiationCallback callback) {
+        this.callback = callback;
+        initiateSession();
+    }
+
+    @Override
+    public void initiateIncomingSession(JingleTransportInitiationCallback callback) {
+        this.callback = callback;
+        initiateSession();
+    }
+
+    private void initiateSession() {
         JingleSession jSession = jingleSession.get();
         if (jSession == null) {
             throw new NullPointerException("Lost reference to jingleSession.");
@@ -127,17 +153,17 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
 
             if (socket != null) {
                 connectedSocket = socket;
-                usedCandidate = workedForUs;
+                localUsedCandidate = workedForUs;
 
                 response = transportManager.createCandidateUsed(jSession.getRemote(),
                         jSession.getSessionId(), content.getSenders(), content.getCreator(),
-                        content.getName(), receivedTransport.getStreamId(), usedCandidate.getCandidateId());
+                        content.getName(), receivedTransport.getStreamId(), localUsedCandidate.getCandidateId());
 
             } else {
+                localError = true;
                 response = transportManager.createCandidateError(jSession.getRemote(),
                         jSession.getSessionId(), content.getSenders(), content.getCreator(),
                         content.getName(), receivedTransport.getStreamId());
-
             }
 
             try {
@@ -145,12 +171,90 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
             } catch (SmackException.NotConnectedException | InterruptedException e) {
                 LOGGER.log(Level.WARNING, "Could not send candidate-used.", e);
             }
+
+            closeIfBothSidesFailed();
         }
     }
 
-    @Override
-    public void initiateIncomingSession(JingleTransportInitiationCallback callback) {
+    private boolean closeIfBothSidesFailed() {
+        JingleSession jSession = jingleSession.get();
+        if (jSession != null) {
+            if (localError && remoteError) {
+                callback.onException(new JingleTransportInitiationException.CandidateError());
+                return true;
+            }
+        }
+    }
 
+    private JingleS5BTransportCandidate determineUsedCandidate() {
+        if (localUsedCandidate == null && remoteUsedCandidate == null) {
+            return null;
+        }
+
+        if (remoteUsedCandidate == null) {
+            return localUsedCandidate;
+        }
+
+        if (localUsedCandidate == null) {
+            return remoteUsedCandidate;
+        }
+
+        if (localUsedCandidate.getPriority() > remoteUsedCandidate.getPriority()) {
+            return localUsedCandidate;
+        }
+
+        if (localUsedCandidate.getPriority() < remoteUsedCandidate.getPriority()) {
+            return remoteUsedCandidate;
+        }
+
+        return jingleSession.get().isInitiator() ? localUsedCandidate : remoteUsedCandidate;
+    }
+
+    public IQ handleCandidateUsed(Jingle candidateUsed) {
+        JingleS5BTransportInfo info = (JingleS5BTransportInfo) candidateUsed.getContents().get(0)
+                .getJingleTransport().getInfos().get(0);
+
+        String candidateId = ((JingleS5BTransportInfo.CandidateUsed) info).getCandidateId();
+
+        for (JingleContentTransportCandidate c : localTransport.getCandidates()) {
+            JingleS5BTransportCandidate candidate = (JingleS5BTransportCandidate) c;
+            if (candidate.getCandidateId().equals(candidateId)) {
+                remoteUsedCandidate = candidate;
+                break;
+            }
+        }
+
+        if (remoteUsedCandidate == null) {
+            callback.onException(new Exception("Unknown candidate"));
+            return IQ.createResultIQ(candidateUsed);
+        }
+
+        if (localUsedCandidate != null) {
+            JingleS5BTransportCandidate used = determineUsedCandidate();
+
+            // Our candidate is nominated.
+            if (used == remoteUsedCandidate) {
+
+                if (used.getType() == JingleS5BTransportCandidate.Type.proxy) {
+
+                }
+
+
+
+                callback.onSessionInitiated();
+            }
+            // Remotes candidate is nominated.
+            else {
+                if (connectedSocket != null) {
+                    callback.onSessionInitiated(new Socks5BytestreamSession(connectedSocket,
+                            used.getJid().asBareJid().equals(jingleSession.get().getRemote().asBareJid())));
+                } else {
+                    throw new AssertionError("Connected socket is null.");
+                }
+            }
+        }
+
+        return IQ.createResultIQ(candidateUsed);
     }
 
     @Override
@@ -160,7 +264,33 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
 
     @Override
     public IQ handleTransportInfo(Jingle transportInfo) {
-        return null;
+        JingleS5BTransport transport = (JingleS5BTransport) transportInfo.getContents().get(0).getJingleTransport();
+        JingleS5BTransportInfo info = (JingleS5BTransportInfo) transport.getInfos().get(0);
+        if (info != null) {
+            switch (info.getElementName()) {
+
+                case JingleS5BTransportInfo.CandidateUsed.ELEMENT:
+                    return handleCandidateUsed(transportInfo);
+
+                case JingleS5BTransportInfo.CandidateActivated.ELEMENT:
+
+                case JingleS5BTransportInfo.CandidateError.ELEMENT:
+                    remoteError = true;
+
+                    closeIfBothSidesFailed();
+
+                    if (localUsedCandidate.getType() != JingleS5BTransportCandidate.Type.proxy) {
+                        //TODO: Connect
+                    } else {
+
+                    }
+
+                    break;
+
+                case JingleS5BTransportInfo.ProxyError.ELEMENT:
+
+            }
+        }
     }
 
     @Override

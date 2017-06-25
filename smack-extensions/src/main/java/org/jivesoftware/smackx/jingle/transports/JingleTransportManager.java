@@ -45,7 +45,6 @@ public abstract class JingleTransportManager<D extends JingleContentTransport> i
 
     @Override
     public void connected(XMPPConnection connection) {
-
     }
 
     @Override

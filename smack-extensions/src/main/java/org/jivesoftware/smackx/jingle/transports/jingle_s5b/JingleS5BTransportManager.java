@@ -28,6 +28,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -129,6 +130,10 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
     @Override
     public void authenticated(XMPPConnection connection, boolean resumed) {
         if (!resumed) try {
+            Socks5Proxy socks5Proxy = Socks5Proxy.getSocks5Proxy();
+            if (!socks5Proxy.isRunning()) {
+                socks5Proxy.start();
+            }
             localStreamHosts = queryLocalStreamHosts();
             availableStreamHosts = queryAvailableStreamHosts();
         } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
@@ -171,4 +176,5 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
 
         return jingle;
     }
+
 }
