@@ -239,11 +239,13 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
         return IQ.createResultIQ(candidateUsed);
     }
 
-    private void connect(JingleS5BTransportCandidate candidate) {
+    private void connect(JingleS5BTransportCandidate candidate) throws SmackException.NotConnectedException, InterruptedException {
         JingleSession jSession = jingleSession.get();
         if (jSession == null) {
             throw new NullPointerException("Lost reference to JingleSession.");
         }
+        JingleContent content = jSession.getContents().get(0);
+
         // Used candidate belongs to remote.
         if (candidate == localUsedCandidate) {
 
@@ -286,20 +288,17 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
                             SmackException.NotConnectedException | InterruptedException e) {
                         LOGGER.log(Level.SEVERE, "Could not activate proxy server: " + e, e);
 
-                        JingleContent content = jSession.getContents().get(0);
-                        try {
-                            //send proxy error
-                            jSession.getConnection().sendStanza(transportManager.createProxyError(
-                                    jSession.getRemote(), jSession.getInitiator(), jSession.getSessionId(),
-                                    content.getSenders(), content.getCreator(), content.getName(),
-                                    ((JingleS5BTransport) localTransport).getStreamId()));
-                        } catch (SmackException.NotConnectedException | InterruptedException e1) {
-                            LOGGER.log(Level.SEVERE, "Could not send proxy error.", e);
-                            return;
-                        }
+                        //send proxy error
+                        jSession.getConnection().sendStanza(transportManager.createProxyError(
+                                jSession.getRemote(), jSession.getInitiator(), jSession.getSessionId(),
+                                content.getSenders(), content.getCreator(), content.getName(),
+                                ((JingleS5BTransport) localTransport).getStreamId()));
+                        return;
                     }
-                    //send candidate-activate
-                    
+
+                    transportManager.createCandidateActivated(jSession.getRemote(), jSession.getInitiator(), jSession.getSessionId(),
+                            content.getSenders(), content.getCreator(), content.getName(), ((JingleS5BTransport) localTransport).getStreamId(),
+                            candidate.getCandidateId());
                 }
 
             } else {

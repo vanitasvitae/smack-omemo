@@ -177,7 +177,9 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         return jingle;
     }
 
-    public Jingle createProxyError(FullJid remote, FullJid initiator, String sessionId, JingleContent.Senders senders, JingleContent.Creator creator, String name, String streamId) {
+    public Jingle createProxyError(FullJid remote, FullJid initiator, String sessionId,
+                                   JingleContent.Senders senders, JingleContent.Creator creator,
+                                   String name, String streamId) {
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setSessionId(sessionId).setAction(JingleAction.transport_info).setInitiator(initiator);
 
@@ -185,11 +187,29 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         cb.setSenders(senders).setCreator(creator).setName(name);
 
         JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
-        tb.setStreamId(sessionId).setProxyError();
+        tb.setStreamId(sessionId).setProxyError().setStreamId(streamId);
 
         Jingle jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
         jingle.setTo(remote);
         jingle.setFrom(getConnection().getUser().asFullJidOrThrow());
+        return jingle;
+    }
+
+    public Jingle createCandidateActivated(FullJid remote, FullJid initiator, String sessionId,
+                                           JingleContent.Senders senders, JingleContent.Creator creator,
+                                           String name, String streamId, String candidateId) {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setInitiator(initiator).setSessionId(sessionId).setAction(JingleAction.transport_info);
+
+        JingleContent.Builder cb = JingleContent.getBuilder();
+        cb.setName(name).setCreator(creator).setSenders(senders);
+
+        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        tb.setStreamId(streamId).setCandidateActivated(candidateId);
+
+        Jingle jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
+        jingle.setFrom(getConnection().getUser().asFullJidOrThrow());
+        jingle.setTo(remote);
         return jingle;
     }
 
