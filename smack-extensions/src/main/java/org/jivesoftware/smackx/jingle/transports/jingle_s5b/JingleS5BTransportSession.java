@@ -145,39 +145,42 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
                 Socks5Client socks5Client = new Socks5Client(streamHost, receivedTransport.getDestinationAddress());
                 socket = socks5Client.getSocket(10 * 1000);
                 workedForUs = candidate;
+                LOGGER.log(Level.INFO, "Connected to remote address " + address + " with dstAddr "
+                        + receivedTransport.getDestinationAddress());
+                break;
 
             } catch (IOException | XMPPException | InterruptedException | TimeoutException | SmackException e) {
                 LOGGER.log(Level.WARNING, "Could not connect to remotes address " + address + " with dstAddr "
                         + receivedTransport.getDestinationAddress());
             }
-
-            JingleContent content = jSession.getContents().get(0);
-
-            Jingle response;
-
-            if (socket != null) {
-                connectedSocket = socket;
-                localUsedCandidate = workedForUs;
-
-                response = transportManager.createCandidateUsed(jSession.getRemote(), jSession.getInitiator(),
-                        jSession.getSessionId(), content.getSenders(), content.getCreator(),
-                        content.getName(), receivedTransport.getStreamId(), localUsedCandidate.getCandidateId());
-
-            } else {
-                localError = true;
-                response = transportManager.createCandidateError(jSession.getRemote(), jSession.getInitiator(),
-                        jSession.getSessionId(), content.getSenders(), content.getCreator(),
-                        content.getName(), receivedTransport.getStreamId());
-            }
-
-            try {
-                jSession.getConnection().sendStanza(response);
-            } catch (SmackException.NotConnectedException | InterruptedException e) {
-                LOGGER.log(Level.WARNING, "Could not send candidate-used.", e);
-            }
-
-            closeIfBothSidesFailed();
         }
+
+        JingleContent content = jSession.getContents().get(0);
+
+        Jingle response;
+
+        if (socket != null) {
+            connectedSocket = socket;
+            localUsedCandidate = workedForUs;
+
+            response = transportManager.createCandidateUsed(jSession.getRemote(), jSession.getInitiator(),
+                    jSession.getSessionId(), content.getSenders(), content.getCreator(),
+                    content.getName(), receivedTransport.getStreamId(), localUsedCandidate.getCandidateId());
+
+        } else {
+            localError = true;
+            response = transportManager.createCandidateError(jSession.getRemote(), jSession.getInitiator(),
+                    jSession.getSessionId(), content.getSenders(), content.getCreator(),
+                    content.getName(), receivedTransport.getStreamId());
+        }
+
+        try {
+            jSession.getConnection().sendStanza(response);
+        } catch (SmackException.NotConnectedException | InterruptedException e) {
+            LOGGER.log(Level.WARNING, "Could not send candidate-used.", e);
+        }
+
+        closeIfBothSidesFailed();
     }
 
     private boolean closeIfBothSidesFailed() {
@@ -234,7 +237,7 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
             return jutil.createErrorMalformedRequest(candidateUsed);
         }
 
-        if (localUsedCandidate != null) {
+        if (localUsedCandidate != null || localError) {
             try {
                 connect(determineUsedCandidate());
             } catch (SmackException.NotConnectedException | InterruptedException e) {
@@ -341,12 +344,11 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
             return IQ.createResultIQ(candidateError);
         }
 
-        if (localUsedCandidate != null) {
-
-            if (localUsedCandidate.getType() != JingleS5BTransportCandidate.Type.proxy) {
-                //TODO: Connect
-            } else {
-
+        if (localUsedCandidate != null || localError) {
+            try {
+                connect(determineUsedCandidate());
+            } catch (SmackException.NotConnectedException | InterruptedException e) {
+                callback.onException(e);
             }
         }
 
