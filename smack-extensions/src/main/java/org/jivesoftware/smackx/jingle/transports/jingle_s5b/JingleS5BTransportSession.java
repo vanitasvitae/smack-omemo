@@ -233,7 +233,11 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
         }
 
         if (localUsedCandidate != null) {
-            connect(determineUsedCandidate());
+            try {
+                connect(determineUsedCandidate());
+            } catch (SmackException.NotConnectedException | InterruptedException e) {
+                callback.onException(e);
+            }
         }
 
         return IQ.createResultIQ(candidateUsed);
@@ -263,20 +267,7 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
 
             if (candidate.getType() == JingleS5BTransportCandidate.Type.proxy) {
 
-                if (candidate.getJid().asBareJid().equals(jSession.getLocal().asBareJid())) {
-
-                    Socks5ClientForInitiator socks5Client = new Socks5ClientForInitiator(candidate.getStreamHost(),
-                            ((JingleS5BTransport) localTransport).getDestinationAddress(),
-                            jSession.getConnection(), ((JingleS5BTransport) localTransport).getStreamId(),
-                            jSession.getLocal());
-                    try {
-                        connectedSocket = socks5Client.getSocket(10 * 1000);
-                    } catch (IOException | XMPPException | SmackException | InterruptedException | TimeoutException e) {
-                        callback.onException(e);
-                        return;
-                    }
-                    callback.onSessionInitiated(new Socks5BytestreamSession(connectedSocket, true));
-                } else {
+                if (!candidate.getJid().asBareJid().equals(jSession.getLocal().asBareJid())) {
                     //activate proxy
                     Bytestream activateProxy = new Bytestream(((JingleS5BTransport) localTransport).getStreamId());
                     activateProxy.setToActivate(candidate.getJid());
@@ -301,8 +292,20 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
                             candidate.getCandidateId());
                 }
 
-            } else {
+                Socks5ClientForInitiator socks5Client = new Socks5ClientForInitiator(candidate.getStreamHost(),
+                        ((JingleS5BTransport) localTransport).getDestinationAddress(),
+                        jSession.getConnection(), ((JingleS5BTransport) localTransport).getStreamId(),
+                        jSession.getLocal());
+                try {
+                    connectedSocket = socks5Client.getSocket(10 * 1000);
+                } catch (IOException | XMPPException | SmackException | InterruptedException | TimeoutException e) {
+                    callback.onException(e);
+                    return;
+                }
+                callback.onSessionInitiated(new Socks5BytestreamSession(connectedSocket, true));
 
+            } else {
+                //TODO: Find out how to react.
             }
         }
     }
