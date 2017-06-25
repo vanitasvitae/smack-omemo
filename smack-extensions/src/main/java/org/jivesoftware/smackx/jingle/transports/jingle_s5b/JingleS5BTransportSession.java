@@ -157,13 +157,13 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
                 connectedSocket = socket;
                 localUsedCandidate = workedForUs;
 
-                response = transportManager.createCandidateUsed(jSession.getRemote(),
+                response = transportManager.createCandidateUsed(jSession.getRemote(), jSession.getInitiator(),
                         jSession.getSessionId(), content.getSenders(), content.getCreator(),
                         content.getName(), receivedTransport.getStreamId(), localUsedCandidate.getCandidateId());
 
             } else {
                 localError = true;
-                response = transportManager.createCandidateError(jSession.getRemote(),
+                response = transportManager.createCandidateError(jSession.getRemote(), jSession.getInitiator(),
                         jSession.getSessionId(), content.getSenders(), content.getCreator(),
                         content.getName(), receivedTransport.getStreamId());
             }
@@ -275,15 +275,31 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
                     }
                     callback.onSessionInitiated(new Socks5BytestreamSession(connectedSocket, true));
                 } else {
+                    //activate proxy
                     Bytestream activateProxy = new Bytestream(((JingleS5BTransport) localTransport).getStreamId());
                     activateProxy.setToActivate(candidate.getJid());
                     activateProxy.setTo(candidate.getJid());
+                    Bytestream result;
                     try {
-                        jSession.getConnection().createStanzaCollectorAndSend(activateProxy).nextResultOrThrow();
-                    } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | InterruptedException e) {
+                        result = jSession.getConnection().createStanzaCollectorAndSend(activateProxy).nextResultOrThrow();
+                    } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException |
+                            SmackException.NotConnectedException | InterruptedException e) {
                         LOGGER.log(Level.SEVERE, "Could not activate proxy server: " + e, e);
 
+                        JingleContent content = jSession.getContents().get(0);
+                        try {
+                            //send proxy error
+                            jSession.getConnection().sendStanza(transportManager.createProxyError(
+                                    jSession.getRemote(), jSession.getInitiator(), jSession.getSessionId(),
+                                    content.getSenders(), content.getCreator(), content.getName(),
+                                    ((JingleS5BTransport) localTransport).getStreamId()));
+                        } catch (SmackException.NotConnectedException | InterruptedException e1) {
+                            LOGGER.log(Level.SEVERE, "Could not send proxy error.", e);
+                            return;
+                        }
                     }
+                    //send candidate-activate
+                    
                 }
 
             } else {
@@ -300,7 +316,9 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
     public IQ handleCandidateError(Jingle candidateError) {
         remoteError = true;
 
-        closeIfBothSidesFailed();
+        if (closeIfBothSidesFailed()) {
+            return IQ.createResultIQ(candidateError);
+        }
 
         if (localUsedCandidate.getType() != JingleS5BTransportCandidate.Type.proxy) {
             //TODO: Connect
