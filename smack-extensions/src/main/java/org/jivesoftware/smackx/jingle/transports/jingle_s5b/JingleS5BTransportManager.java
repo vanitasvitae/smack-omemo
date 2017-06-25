@@ -177,4 +177,16 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         return jingle;
     }
 
+    public Jingle createProxyError(FullJid remote, String sessionId, JingleContent.Senders senders, JingleContent.Creator creator, String name, String streamId) {
+        Jingle.Builder jb = Jingle.getBuilder();
+        jb.setSessionId(sessionId).setAction(JingleAction.transport_info);
+
+
+
+        Jingle jingle = jb.build();
+        jingle.setTo(remote);
+        jingle.setFrom(getConnection().getUser().asFullJidOrThrow());
+        return jingle;
+    }
+
 }
