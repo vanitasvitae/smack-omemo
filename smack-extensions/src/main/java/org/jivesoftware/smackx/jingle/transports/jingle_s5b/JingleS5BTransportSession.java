@@ -107,7 +107,9 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
         builder.setStreamId(sid);
         builder.setMode(mode);
         builder.setDestinationAddress(Socks5Utils.createDigest(sid, jSession.getLocal(), jSession.getRemote()));
-        return builder.build();
+        localTransport = builder.build();
+
+        return (JingleS5BTransport) localTransport;
     }
 
     @Override
@@ -311,6 +313,23 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
     }
 
     public IQ handleCandidateActivated(Jingle candidateActivated) {
+        JingleContent content = candidateActivated.getContents().get(0);
+        JingleS5BTransportInfo info = (JingleS5BTransportInfo) content.getJingleTransport().getInfos().get(0);
+        if (!info.getElementName().equals(JingleS5BTransportInfo.CandidateActivated.ELEMENT)) {
+            throw new AssertionError("Element mus be candidateActivated.");
+        }
+
+        JingleS5BTransportInfo.CandidateActivated activated = (JingleS5BTransportInfo.CandidateActivated) info;
+        if (!localUsedCandidate.getCandidateId().equals(activated.getCandidateId())) {
+            throw new AssertionError("CandidateID must be equal.");
+        }
+
+        if (connectedSocket == null) {
+            throw new AssertionError("connected Socket must not be null.");
+        }
+
+        callback.onSessionInitiated(new Socks5BytestreamSession(connectedSocket,
+                jingleSession.get().getRemote().asBareJid().equals(localUsedCandidate.getJid().asBareJid())));
 
         return IQ.createResultIQ(candidateActivated);
     }
@@ -322,10 +341,13 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
             return IQ.createResultIQ(candidateError);
         }
 
-        if (localUsedCandidate.getType() != JingleS5BTransportCandidate.Type.proxy) {
-            //TODO: Connect
-        } else {
+        if (localUsedCandidate != null) {
 
+            if (localUsedCandidate.getType() != JingleS5BTransportCandidate.Type.proxy) {
+                //TODO: Connect
+            } else {
+
+            }
         }
 
         return IQ.createResultIQ(candidateError);

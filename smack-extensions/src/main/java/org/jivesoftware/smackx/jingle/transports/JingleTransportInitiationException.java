@@ -8,10 +8,10 @@ public abstract class JingleTransportInitiationException extends Exception {
 
 
     public static class ProxyError extends JingleTransportInitiationException {
-
+        private static final long serialVersionUID = 1L;
     }
 
     public static class CandidateError extends JingleTransportInitiationException {
-
+        private static final long serialVersionUID = 1L;
     }
 }

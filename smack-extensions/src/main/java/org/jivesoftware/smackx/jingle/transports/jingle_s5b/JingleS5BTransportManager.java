@@ -168,7 +168,7 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         cb.setName(name).setCreator(creator).setSenders(senders);
 
         JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
-        tb.setCandidateError();
+        tb.setCandidateError().setStreamId(streamId);
 
         Jingle jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
         jingle.setFrom(getConnection().getUser().asFullJidOrThrow());

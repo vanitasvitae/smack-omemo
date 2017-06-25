@@ -34,6 +34,7 @@ import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportManager;
+import org.jivesoftware.smackx.jingle.transports.jingle_s5b.JingleS5BTransportManager;
 
 import org.jxmpp.jid.FullJid;
 
@@ -102,7 +103,7 @@ public final class JingleManager extends Manager {
         //Register transports.
         JingleTransportMethodManager transportMethodManager = JingleTransportMethodManager.getInstanceFor(connection);
         transportMethodManager.registerTransportManager(JingleIBBTransportManager.getInstanceFor(connection));
-        //transportMethodManager.registerTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
+        transportMethodManager.registerTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
     }
 
     public JingleHandler registerDescriptionHandler(String namespace, JingleHandler handler) {
