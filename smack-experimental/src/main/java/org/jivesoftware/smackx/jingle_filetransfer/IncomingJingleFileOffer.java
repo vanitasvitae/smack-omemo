@@ -146,6 +146,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
         transportSession.initiateIncomingSession(new JingleTransportInitiationCallback() {
             @Override
             public void onSessionInitiated(BytestreamSession bytestreamSession) {
+                LOGGER.log(Level.INFO, "Bytestream initiated. Start receiving.");
                 receivingThread = new ReceiveTask(bytestreamSession, file, target);
                 queued.add(threadPool.submit(receivingThread));
             }
