@@ -28,6 +28,7 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
@@ -46,29 +47,27 @@ public class JingleIBBTransportSession extends JingleTransportSession<JingleIBBT
     @Override
     public JingleIBBTransport createTransport() {
 
-        if (remoteTransport == null) {
+        if (theirProposal == null) {
             return new JingleIBBTransport();
         } else {
-            JingleIBBTransport existing = (JingleIBBTransport) remoteTransport;
-            return new JingleIBBTransport(existing.getBlockSize(), existing.getSessionId());
+            return new JingleIBBTransport(theirProposal.getBlockSize(), theirProposal.getSessionId());
         }
 
     }
 
     @Override
+    public void setTheirProposal(JingleContentTransport transport) {
+        theirProposal = (JingleIBBTransport) transport;
+    }
+
+    @Override
     public void initiateOutgoingSession(JingleTransportInitiationCallback callback) {
         LOGGER.log(Level.INFO, "Initiate Jingle InBandBytestream session.");
-        if (jingleSession.get() == null) {
-            callback.onException(new NullPointerException("Lost reference to JingleSession."));
-            return;
-        }
 
-        JingleIBBTransport ibbTransport = (JingleIBBTransport) remoteTransport;
         BytestreamSession session;
-
         try {
-            session = InBandBytestreamManager.getByteStreamManager(jingleSession.get().getConnection())
-                    .establishSession(jingleSession.get().getRemote(), ibbTransport.getSessionId());
+            session = InBandBytestreamManager.getByteStreamManager(jingleSession.getConnection())
+                    .establishSession(jingleSession.getRemote(), theirProposal.getSessionId());
             callback.onSessionInitiated(session);
         } catch (SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
             callback.onException(e);
@@ -78,17 +77,12 @@ public class JingleIBBTransportSession extends JingleTransportSession<JingleIBBT
     @Override
     public void initiateIncomingSession(final JingleTransportInitiationCallback callback) {
         LOGGER.log(Level.INFO, "Await Jingle InBandBytestream session.");
-        if (jingleSession.get() == null) {
-            callback.onException(new NullPointerException("Lost reference to JingleSession."));
-        }
 
-        final JingleIBBTransport ibbTransport = (JingleIBBTransport) remoteTransport;
-
-        InBandBytestreamManager.getByteStreamManager(jingleSession.get().getConnection()).addIncomingBytestreamListener(new BytestreamListener() {
+        InBandBytestreamManager.getByteStreamManager(jingleSession.getConnection()).addIncomingBytestreamListener(new BytestreamListener() {
             @Override
             public void incomingBytestreamRequest(BytestreamRequest request) {
-                if (request.getFrom().asFullJidIfPossible().equals(jingleSession.get().getRemote())
-                        && request.getSessionID().equals(ibbTransport.getSessionId())) {
+                if (request.getFrom().asFullJidIfPossible().equals(jingleSession.getRemote())
+                        && request.getSessionID().equals(theirProposal.getSessionId())) {
                     BytestreamSession session;
 
                     try {
@@ -116,6 +110,6 @@ public class JingleIBBTransportSession extends JingleTransportSession<JingleIBBT
 
     @Override
     public JingleTransportManager<JingleIBBTransport> transportManager() {
-        return JingleIBBTransportManager.getInstanceFor(jingleSession.get().getConnection());
+        return JingleIBBTransportManager.getInstanceFor(jingleSession.getConnection());
     }
 }

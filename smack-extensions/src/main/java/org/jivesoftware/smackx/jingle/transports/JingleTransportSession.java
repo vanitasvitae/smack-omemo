@@ -16,8 +16,6 @@
  */
 package org.jivesoftware.smackx.jingle.transports;
 
-import java.lang.ref.WeakReference;
-
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -28,12 +26,11 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
  * Created by vanitas on 20.06.17.
  */
 public abstract class JingleTransportSession<T extends JingleContentTransport> {
-    protected final WeakReference<JingleSession> jingleSession;
-    protected JingleContentTransport remoteTransport;
-    protected JingleContentTransport localTransport;
+    protected final JingleSession jingleSession;
+    protected T ourProposal, theirProposal;
 
     public JingleTransportSession(JingleSession session) {
-        this.jingleSession = new WeakReference<>(session);
+        this.jingleSession = session;
     }
 
     public abstract T createTransport();
@@ -47,9 +44,11 @@ public abstract class JingleTransportSession<T extends JingleContentTransport> {
         JingleContentTransport t = content.getJingleTransport();
 
         if (t != null && t.getNamespace().equals(getNamespace())) {
-            remoteTransport = t;
+            setTheirProposal(t);
         }
     }
+
+    public abstract void setTheirProposal(JingleContentTransport transport);
 
     public abstract void initiateOutgoingSession(JingleTransportInitiationCallback callback);
 
