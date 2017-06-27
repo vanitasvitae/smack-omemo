@@ -143,6 +143,15 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
         state = State.active;
 
+        try {
+            jutil.sendSessionAccept(getInitiator(), sid, getContents().get(0).getCreator(),
+                    getContents().get(0).getName(), JingleContent.Senders.initiator, file,
+                    transportSession.createTransport());
+        } catch (SmackException.NotConnectedException | SmackException.NoResponseException |
+                XMPPException.XMPPErrorException | InterruptedException e) {
+            LOGGER.log(Level.WARNING, "Could not send session-accept.", e);
+        }
+
         transportSession.initiateIncomingSession(new JingleTransportInitiationCallback() {
             @Override
             public void onSessionInitiated(BytestreamSession bytestreamSession) {
@@ -153,18 +162,9 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
             @Override
             public void onException(Exception e) {
-
+                LOGGER.log(Level.SEVERE, "EXCEPTION IN INCOMING SESSION: ", e);
             }
         });
-
-        try {
-            jutil.sendSessionAccept(getInitiator(), sid, getContents().get(0).getCreator(),
-                    getContents().get(0).getName(), JingleContent.Senders.initiator, file,
-                    transportSession.createTransport());
-        } catch (SmackException.NotConnectedException | SmackException.NoResponseException |
-                XMPPException.XMPPErrorException | InterruptedException e) {
-            LOGGER.log(Level.WARNING, "Could not send session-accept.", e);
-        }
     }
 
     @Override

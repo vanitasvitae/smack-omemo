@@ -119,7 +119,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
             @Override
             public void onException(Exception e) {
-                LOGGER.log(Level.SEVERE, "Cannot create outgoing Bytestream session: ", e);
+                LOGGER.log(Level.SEVERE, "EXCEPTION IN OUTGOING SESSION:", e);
             }
         });
 

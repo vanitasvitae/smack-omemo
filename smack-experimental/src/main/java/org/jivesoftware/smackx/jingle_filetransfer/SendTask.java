@@ -42,6 +42,7 @@ public class SendTask implements Runnable {
 
     @Override
     public void run() {
+        LOGGER.log(Level.INFO, "Start SendTask");
         InputStream inputStream;
         OutputStream outputStream;
 
@@ -57,6 +58,7 @@ public class SendTask implements Runnable {
             }
 
             outputStream.write(filebuf);
+            LOGGER.log(Level.INFO, "Written " + r + " bytes.");
         }
         catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Could not send file: " + e, e);
@@ -64,6 +66,7 @@ public class SendTask implements Runnable {
         finally {
             try {
                 session.close();
+                LOGGER.log(Level.INFO, "Session closed.");
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Could not close session.", e);
             }
