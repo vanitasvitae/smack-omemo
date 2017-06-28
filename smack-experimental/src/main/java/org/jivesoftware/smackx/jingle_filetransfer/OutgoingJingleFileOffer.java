@@ -104,7 +104,6 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
             return jutil.createErrorOutOfOrder(sessionAccept);
         }
 
-        LOGGER.log(Level.INFO, "Session was accepted. Initiate Bytestream.");
         state = State.active;
 
         transportSession.processJingle(sessionAccept);
@@ -112,7 +111,6 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         transportSession.initiateOutgoingSession(new JingleTransportInitiationCallback() {
             @Override
             public void onSessionInitiated(final BytestreamSession session) {
-                LOGGER.log(Level.INFO, "BytestreamSession initiated. Start transfer.");
                 sendingThread = new SendTask(session, source);
                 queued.add(threadPool.submit(sendingThread));
             }
@@ -128,8 +126,6 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
     @Override
     public IQ handleSessionTerminate(Jingle sessionTerminate) {
-        LOGGER.log(Level.INFO, "Received session-terminate: " + sessionTerminate.getReason().asEnum());
-
         state = State.terminated;
         return jutil.createAck(sessionTerminate);
     }
@@ -138,8 +134,6 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     public IQ handleTransportReplace(final Jingle transportReplace)
             throws InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
-        LOGGER.log(Level.INFO, "Received transport-replace.");
-
         final JingleTransportManager<?> replacementManager = JingleTransportMethodManager.getInstanceFor(connection)
                 .getTransportManager(transportReplace);
 

@@ -239,7 +239,14 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
         return IQ.createResultIQ(jingle);
     }
 
+    /**
+     * Determine, which candidate (ours/theirs) is the nominated one.
+     * Connect to this candidate. If it is a proxy and it is ours, activate it and connect.
+     * If its a proxy and it is theirs, wait for activation.
+     * If it is not a proxy, just connect.
+     */
     private void connectIfReady() {
+        JingleContent content = jingleSession.getContents().get(0);
         if (ourChoice == null || theirChoice == null) {
             // Not yet ready.
             LOGGER.log(Level.INFO, "Not ready.");
@@ -249,102 +256,69 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
         if (ourChoice == CANDIDATE_FAILURE && theirChoice == CANDIDATE_FAILURE) {
             LOGGER.log(Level.INFO, "Failure.");
             // TODO: Transport failed.
-        } else {
-            UsedCandidate nominated;
-            if (ourChoice != CANDIDATE_FAILURE && theirChoice != CANDIDATE_FAILURE) {
-                if (ourChoice.candidate.getPriority() > theirChoice.candidate.getPriority()) {
-                    nominated = ourChoice;
-                } else if (ourChoice.candidate.getPriority() < theirChoice.candidate.getPriority()) {
-                    nominated = theirChoice;
-                } else {
-                    nominated = jingleSession.isInitiator() ? ourChoice : theirChoice;
-                }
-            } else if (ourChoice != CANDIDATE_FAILURE) {
+            return;
+        }
+
+        //Determine nominated candidate.
+        UsedCandidate nominated;
+        if (ourChoice != CANDIDATE_FAILURE && theirChoice != CANDIDATE_FAILURE) {
+            if (ourChoice.candidate.getPriority() > theirChoice.candidate.getPriority()) {
                 nominated = ourChoice;
-            } else {
+            } else if (ourChoice.candidate.getPriority() < theirChoice.candidate.getPriority()) {
                 nominated = theirChoice;
+            } else {
+                nominated = jingleSession.isInitiator() ? ourChoice : theirChoice;
+            }
+        } else if (ourChoice != CANDIDATE_FAILURE) {
+            nominated = ourChoice;
+        } else {
+            nominated = theirChoice;
+        }
+
+        boolean isExternalProxy = !nominated.candidate.getJid().asBareJid().equals(jingleSession.getLocal().asBareJid());
+
+        if (nominated == theirChoice) {
+            try {
+                nominated = connectToOurCandidate(nominated.candidate);
+            } catch (InterruptedException | IOException | XMPPException | SmackException | TimeoutException e) {
+                LOGGER.log(Level.INFO, "Could not connect to our candidate.");
+                return;
             }
 
-            // Proxy. Needs activation.
-            //if (nominated.candidate.getType() == JingleS5BTransportCandidate.Type.proxy) {
-            if (nominated.candidate.getType() == JingleS5BTransportCandidate.Type.proxy) {
-                //Our proxy.
-                if (nominated == theirChoice) {
-                    LOGGER.log(Level.INFO, "Our proxy.");
-                    JingleContent content = jingleSession.getContents().get(0);
-                    //Not a local proxy. Activate it.
-                    if (!nominated.candidate.getJid().asBareJid().equals(jingleSession.getLocal().asBareJid())) {
-                        Bytestream activateProxy = new Bytestream(ourProposal.getStreamId());
-                        activateProxy.setToActivate(nominated.candidate.getJid());
-                        activateProxy.setTo(nominated.candidate.getJid());
-                        //Send proxy activation.
-                        try {
-                            jingleSession.getConnection().createStanzaCollectorAndSend(activateProxy).nextResultOrThrow();
-                            //Connect
-                            try {
-                                nominated = connectToOurCandidate(nominated.candidate);
-                                Socks5BytestreamSession bs = new Socks5BytestreamSession(nominated.socket,
-                                        nominated.candidate.getJid().asBareJid().equals(jingleSession.getLocal().asBareJid()));
-                                callback.onSessionInitiated(bs);
-                            } catch (InterruptedException | TimeoutException | SmackException | IOException | XMPPException e) {
-                                LOGGER.log(Level.WARNING, "Could not connect to our own proxy after activation.", e);
-                                //TODO: ???
-                            }
-                        }
-                        //Could not activate proxy. Send proxy-error
-                        catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
-                            LOGGER.log(Level.WARNING, "Could not activate proxy at " + nominated.candidate.getJid()
-                                    + ". Send proxy-error.", e);
-                            Jingle proxyError = transportManager().createProxyError(
-                                    jingleSession.getRemote(), jingleSession.getInitiator(),
-                                    jingleSession.getSessionId(), content.getSenders(),
-                                    content.getCreator(), content.getName(), nominated.transport.getStreamId());
-                            try {
-                                jingleSession.getConnection().sendStanza(proxyError);
-                            }
-                            //Could not send proxy-error. WTF?
-                            catch (SmackException.NotConnectedException | InterruptedException e1) {
-                                LOGGER.log(Level.WARNING, "Could not send proxy-error.", e1);
-                            }
-                            callback.onException(e);
-                            return;
-                        }
-                    }
-                    //Send candidate-activate.
-                    Jingle candidateActivate = transportManager().createCandidateActivated(
-                            jingleSession.getRemote(), jingleSession.getInitiator(), jingleSession.getSessionId(),
-                            content.getSenders(), content.getCreator(), content.getName(), nominated.transport.getStreamId(),
-                            nominated.candidate.getCandidateId());
-                    try {
-                        jingleSession.getConnection().createStanzaCollectorAndSend(candidateActivate)
-                                .nextResultOrThrow();
-                        LOGGER.log(Level.INFO, "Candidate-activate sent.");
-                    } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
-                        LOGGER.log(Level.WARNING, "Could not send candidate-activated", e);
-                        return;
-                    }
-                    Socks5BytestreamSession bs = new Socks5BytestreamSession(nominated.socket, false);
-                    callback.onSessionInitiated(bs);
+            if (isExternalProxy) {
+                Bytestream activate = new Bytestream(ourProposal.getStreamId());
+                activate.setMode(null);
+                activate.setType(IQ.Type.set);
+                activate.setTo(nominated.candidate.getJid());
+                activate.setToActivate(jingleSession.getRemote());
+
+                try {
+                    jingleSession.getConnection().createStanzaCollectorAndSend(activate).nextResultOrThrow();
+                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                    LOGGER.log(Level.WARNING, "Could not activate proxy.", e);
+                    return;
                 }
-                //Else wait for activation.
             }
-            // Direct connection. Go ahead.
-            else {
-                Socks5BytestreamSession bs;
-                if (nominated == ourChoice) {
-                    bs = new Socks5BytestreamSession(nominated.socket,
-                            nominated.candidate.getJid().asBareJid().equals(jingleSession.getRemote().asBareJid()));
-                } else {
-                    try {
-                        nominated = connectToOurCandidate(theirChoice.candidate);
-                    } catch (InterruptedException | IOException | XMPPException | SmackException | TimeoutException e) {
-                        LOGGER.log(Level.SEVERE, "Failed to connect to our own StreamHost!");
-                        callback.onException(e);
-                        return;
-                    }
-                    bs = new Socks5BytestreamSession(nominated.socket,
-                            nominated.candidate.getJid().asBareJid().equals(jingleSession.getLocal().asBareJid()));
-                }
+
+            Jingle candidateActivate = transportManager().createCandidateActivated(
+                    jingleSession.getRemote(), jingleSession.getInitiator(), jingleSession.getSessionId(),
+                    content.getSenders(), content.getCreator(), content.getName(), nominated.transport.getStreamId(),
+                    nominated.candidate.getCandidateId());
+            try {
+                jingleSession.getConnection().createStanzaCollectorAndSend(candidateActivate)
+                        .nextResultOrThrow();
+            } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                LOGGER.log(Level.WARNING, "Could not send candidate-activated", e);
+                return;
+            }
+
+            Socks5BytestreamSession bs = new Socks5BytestreamSession(nominated.socket, !isExternalProxy);
+            callback.onSessionInitiated(bs);
+        }
+        //Our choice
+        else {
+            if (!nominated.candidate.getJid().asBareJid().equals(jingleSession.getRemote().asBareJid())) {
+                Socks5BytestreamSession bs = new Socks5BytestreamSession(nominated.socket, !isExternalProxy);
                 callback.onSessionInitiated(bs);
             }
         }

@@ -45,7 +45,6 @@ public class ReceiveTask implements Runnable {
 
     @Override
     public void run() {
-        LOGGER.log(Level.INFO, "Start ReceiveTask");
         JingleFileTransferChild transfer = (JingleFileTransferChild) fileTransfer.getJingleContentDescriptionChildren().get(0);
         FileOutputStream outputStream = null;
         InputStream inputStream;
@@ -69,14 +68,12 @@ public class ReceiveTask implements Runnable {
             }
 
             outputStream.write(filebuf);
-            LOGGER.log(Level.INFO, "Received " + read + " bytes.");
 
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error while receiving data: ", e);
         } finally {
             try {
                 session.close();
-                LOGGER.log(Level.INFO, "Session closed.");
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Could not close InputStream.", e);
             }
