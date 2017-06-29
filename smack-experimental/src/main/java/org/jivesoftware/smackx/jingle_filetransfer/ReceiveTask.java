@@ -56,7 +56,7 @@ public class ReceiveTask implements Runnable {
             byte[] filebuf = new byte[transfer.getSize()];
             int read = 0;
             byte[] bufbuf = new byte[2048];
-
+            LOGGER.log(Level.INFO, "Begin receiving.");
             while (read < filebuf.length) {
                 int r = inputStream.read(bufbuf);
                 if (r >= 0) {
@@ -68,6 +68,7 @@ public class ReceiveTask implements Runnable {
             }
 
             outputStream.write(filebuf);
+            LOGGER.log(Level.INFO, "File successfully received.");
 
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error while receiving data: ", e);

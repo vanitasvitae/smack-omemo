@@ -118,8 +118,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         } //File Request
         else if (content.getSenders() == JingleContent.Senders.responder) {
             return JingleFileRequest.createIncomingFileRequest(connection(), request);
-
-        } else {
+        }
+        else {
             // If senders is neither initiator, nor responder, consider session malformed.
             // See XEP-0166 §6.3 Example 16 and XEP-0234 §4.1
             LOGGER.log(Level.WARNING, "Jingle has invalid sender value. Only initiator and responder are allowed.");

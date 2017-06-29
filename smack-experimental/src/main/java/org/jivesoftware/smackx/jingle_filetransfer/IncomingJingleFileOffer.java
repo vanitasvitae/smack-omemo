@@ -127,6 +127,11 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
     }
 
     @Override
+    public void onTransportMethodFailed(String namespace) {
+        //Nothing to do.
+    }
+
+    @Override
     public void acceptIncomingFileOffer(final Jingle request, final File target) {
         LOGGER.log(Level.INFO, "Client accepted incoming file offer. Try to start receiving.");
         if (transportSession == null) {

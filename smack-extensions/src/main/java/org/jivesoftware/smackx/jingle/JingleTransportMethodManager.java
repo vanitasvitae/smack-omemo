@@ -18,6 +18,7 @@ package org.jivesoftware.smackx.jingle;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
@@ -102,6 +103,28 @@ public final class JingleTransportMethodManager extends Manager {
         Iterator<String> it = transportManagers.keySet().iterator();
         if (it.hasNext()) {
             return getTransportManager(it.next());
+        }
+
+        return null;
+    }
+
+    public JingleTransportManager<?> getBestAvailableTransportManager(Set<String> except) {
+        JingleTransportManager<?> tm;
+        for (String ns : transportPreference) {
+            tm = getTransportManager(ns);
+            if (tm != null) {
+                if (except.contains(tm.getNamespace())) {
+                    continue;
+                }
+                return tm;
+            }
+        }
+
+        for (String ns : transportManagers.keySet()) {
+            if (except.contains(ns)) {
+                continue;
+            }
+            return getTransportManager(ns);
         }
 
         return null;

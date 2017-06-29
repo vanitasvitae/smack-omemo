@@ -66,8 +66,8 @@ public final class JingleS5BTransportCandidate extends JingleContentTransportCan
         this.type = type;
     }
 
-    public JingleS5BTransportCandidate(Bytestream.StreamHost streamHost, int priority) {
-        this(StringUtils.randomString(24), streamHost.getAddress(), streamHost.getJID(), streamHost.getPort(), priority, Type.proxy);
+    public JingleS5BTransportCandidate(Bytestream.StreamHost streamHost, int priority, Type type) {
+        this(StringUtils.randomString(24), streamHost.getAddress(), streamHost.getJID(), streamHost.getPort(), priority, type);
     }
 
     public enum Type {

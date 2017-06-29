@@ -27,6 +27,7 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
+import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
@@ -160,5 +161,39 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         }));
 
         return jutil.createAck(transportReplace);
+    }
+
+    @Override
+    public IQ handleTransportAccept(Jingle transportAccept)
+            throws SmackException.NotConnectedException, InterruptedException {
+        return handleSessionAccept(transportAccept);
+    }
+
+    @Override
+    public void onTransportMethodFailed(String namespace) {
+        state = State.pending;
+        JingleContent content = contents.get(0);
+        failedTransportMethods.add(namespace);
+        JingleTransportMethodManager tm = JingleTransportMethodManager.getInstanceFor(getConnection());
+        JingleTransportManager<?> next = tm.getBestAvailableTransportManager(failedTransportMethods);
+
+        if (next == null) {
+            //Failure
+            try {
+                new JingleUtil(getConnection()).sendSessionTerminateUnsupportedTransports(getRemote(), getSessionId());
+            } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+                LOGGER.log(Level.WARNING, "Could not send session-terminate.", e);
+            }
+            return;
+        }
+
+        //Replace transport
+        this.transportSession = next.transportSession(this);
+        try {
+            jutil.sendTransportReplace(getRemote(), getInitiator(), getSessionId(), content.getCreator(), content.getName(),
+                    transportSession.createTransport());
+        } catch (SmackException.NotConnectedException | SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException e) {
+            LOGGER.log(Level.WARNING, "Could not send transport-replace.", e);
+        }
     }
 }

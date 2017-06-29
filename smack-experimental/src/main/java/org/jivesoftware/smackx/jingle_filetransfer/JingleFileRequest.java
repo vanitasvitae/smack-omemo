@@ -41,4 +41,9 @@ public class JingleFileRequest extends JingleFileTransferSession {
         return new JingleFileRequest(connection, request.getInitiator(), connection.getUser().asFullJidOrThrow(), Role.responder,
                 request.getSid());
     }
+
+    @Override
+    public void onTransportMethodFailed(String namespace) {
+        //Not implemented
+    }
 }
