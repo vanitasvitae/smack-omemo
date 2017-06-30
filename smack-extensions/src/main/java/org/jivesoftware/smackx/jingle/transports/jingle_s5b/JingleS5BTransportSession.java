@@ -78,16 +78,19 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
                         Socks5Utils.createDigest(sid, jingleSession.getLocal(), jingleSession.getRemote()));
 
         //Local host
-        for (Bytestream.StreamHost host : transportManager().getLocalStreamHosts()) {
-            jb.addTransportCandidate(new JingleS5BTransportCandidate(host, 100, JingleS5BTransportCandidate.Type.direct));
+        if (JingleS5BTransportManager.isUseLocalCandidates()) {
+            for (Bytestream.StreamHost host : transportManager().getLocalStreamHosts()) {
+                jb.addTransportCandidate(new JingleS5BTransportCandidate(host, 100, JingleS5BTransportCandidate.Type.direct));
+            }
         }
 
-        List<Bytestream.StreamHost> remoteHosts;
-        try {
-            remoteHosts = transportManager().getAvailableStreamHosts();
-        } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
-            LOGGER.log(Level.WARNING, "Could not determine available StreamHosts.", e);
-            remoteHosts = Collections.emptyList();
+        List<Bytestream.StreamHost> remoteHosts = Collections.emptyList();
+        if (JingleS5BTransportManager.isUseExternalCandidates()) {
+            try {
+                remoteHosts = transportManager().getAvailableStreamHosts();
+            } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                LOGGER.log(Level.WARNING, "Could not determine available StreamHosts.", e);
+            }
         }
 
         for (Bytestream.StreamHost host : remoteHosts) {

@@ -55,6 +55,9 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
     private List<Bytestream.StreamHost> localStreamHosts = null;
     private List<Bytestream.StreamHost> availableStreamHosts = null;
 
+    private static boolean useLocalCandidates = true;
+    private static boolean useExternalCandidates = true;
+
     private JingleS5BTransportManager(XMPPConnection connection) {
         super(connection);
         JingleContentProviderManager.addJingleContentTransportProvider(getNamespace(), new JingleS5BTransportProvider());
@@ -213,4 +216,19 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         return jingle;
     }
 
+    public static void setUseLocalCandidates(boolean localCandidates) {
+        JingleS5BTransportManager.useLocalCandidates = localCandidates;
+    }
+
+    public static void setUseExternalCandidates(boolean externalCandidates) {
+        JingleS5BTransportManager.useExternalCandidates = externalCandidates;
+    }
+
+    public static boolean isUseLocalCandidates() {
+        return useLocalCandidates;
+    }
+
+    public static boolean isUseExternalCandidates() {
+        return useExternalCandidates;
+    }
 }
