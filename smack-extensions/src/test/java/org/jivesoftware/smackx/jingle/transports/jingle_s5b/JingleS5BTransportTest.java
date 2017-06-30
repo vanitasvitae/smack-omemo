@@ -16,9 +16,15 @@
  */
 package org.jivesoftware.smackx.jingle.transports.jingle_s5b;
 
+<<<<<<< HEAD
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
+=======
+import static junit.framework.TestCase.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+>>>>>>> js5btbFixes
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
@@ -128,7 +134,11 @@ public class JingleS5BTransportTest extends SmackTestSuite {
         JingleS5BTransport proxyErrorTransport = new JingleS5BTransportProvider()
                 .parse(TestUtils.getParser(proxyError));
         assertNull(proxyErrorTransport.getDestinationAddress());
+<<<<<<< HEAD
         assertNotNull(proxyErrorTransport.getInfo());
+=======
+        assertNotNull(candidateErrorTransport.getInfo());
+>>>>>>> js5btbFixes
         assertEquals("vj3hs98y", proxyErrorTransport.getStreamId());
         assertEquals(JingleS5BTransportInfo.ProxyError(),
                 proxyErrorTransport.getInfo());
@@ -140,7 +150,11 @@ public class JingleS5BTransportTest extends SmackTestSuite {
                         "</transport>";
         JingleS5BTransport candidateUsedTransport = new JingleS5BTransportProvider()
                 .parse(TestUtils.getParser(candidateUsed));
+<<<<<<< HEAD
         assertNotNull(candidateUsedTransport.getInfo());
+=======
+        assertNotNull(candidateErrorTransport.getInfo());
+>>>>>>> js5btbFixes
         assertEquals(JingleS5BTransportInfo.CandidateUsed("hr65dqyd"),
                 candidateUsedTransport.getInfo());
         assertEquals("hr65dqyd",
@@ -154,7 +168,11 @@ public class JingleS5BTransportTest extends SmackTestSuite {
                         "</transport>";
         JingleS5BTransport candidateActivatedTransport = new JingleS5BTransportProvider()
                 .parse(TestUtils.getParser(candidateActivated));
+<<<<<<< HEAD
         assertNotNull(candidateActivatedTransport.getInfo());
+=======
+        assertNotNull(candidateErrorTransport.getInfo());
+>>>>>>> js5btbFixes
         assertEquals(JingleS5BTransportInfo.CandidateActivated("hr65dqyd"),
                 candidateActivatedTransport.getInfo());
         assertEquals("hr65dqyd",

@@ -93,8 +93,8 @@ public class JingleS5BTransport extends JingleContentTransport {
         private String streamId;
         private String dstAddr;
         private Bytestream.Mode mode;
-        private ArrayList<JingleContentTransportCandidate> candidates = new ArrayList<>();
-        private JingleContentTransportInfo info = null;
+        private final ArrayList<JingleContentTransportCandidate> candidates = new ArrayList<>();
+        private JingleContentTransportInfo info;
 
         public Builder setStreamId(String sid) {
             this.streamId = sid;
@@ -112,11 +112,22 @@ public class JingleS5BTransport extends JingleContentTransport {
         }
 
         public Builder addTransportCandidate(JingleS5BTransportCandidate candidate) {
+            if (info != null) {
+                throw new IllegalStateException("Builder has already an info set. " +
+                        "The transport can only have either an info or transport candidates, not both.");
+            }
             this.candidates.add(candidate);
             return this;
         }
 
         public Builder setTransportInfo(JingleContentTransportInfo info) {
+            if (!candidates.isEmpty()) {
+                throw new IllegalStateException("Builder has already at least one candidate set. " +
+                        "The transport can only have either an info or transport candidates, not both.");
+            }
+            if (this.info != null) {
+                throw new IllegalStateException("Builder has already an info set.");
+            }
             this.info = info;
             return this;
         }
