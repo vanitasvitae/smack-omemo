@@ -29,7 +29,6 @@ import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
-import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
@@ -175,6 +174,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     @Override
     public IQ handleTransportAccept(Jingle transportAccept)
             throws SmackException.NotConnectedException, InterruptedException {
+
         return handleSessionAccept(transportAccept);
     }
 
@@ -189,7 +189,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         if (next == null) {
             //Failure
             try {
-                new JingleUtil(getConnection()).sendSessionTerminateUnsupportedTransports(getRemote(), getSessionId());
+                jutil.sendSessionTerminateUnsupportedTransports(getRemote(), getSessionId());
             } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
                 LOGGER.log(Level.WARNING, "Could not send session-terminate.", e);
             }

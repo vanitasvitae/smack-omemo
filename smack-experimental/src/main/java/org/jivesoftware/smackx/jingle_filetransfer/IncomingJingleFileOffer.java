@@ -44,6 +44,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
     private static final Logger LOGGER = Logger.getLogger(IncomingJingleFileOffer.class.getName());
     private Jingle pendingSessionInitiate = null;
     private ReceiveTask receivingThread;
+    private File target;
 
     public enum State {
         fresh,
@@ -113,6 +114,55 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
     }
 
     @Override
+    public IQ handleTransportReplace(final Jingle transportReplace)
+            throws InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
+        final JingleTransportManager<?> replacementManager = JingleTransportMethodManager.getInstanceFor(connection)
+                .getTransportManager(transportReplace);
+
+        queued.add(JingleManager.getThreadPool().submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (replacementManager != null) {
+                        LOGGER.log(Level.INFO, "Accept transport-replace.");
+                        IncomingJingleFileOffer.this.transportSession = replacementManager.transportSession(IncomingJingleFileOffer.this);
+                        transportSession.processJingle(transportReplace);
+                        transportSession.initiateIncomingSession(new JingleTransportInitiationCallback() {
+                            @Override
+                            public void onSessionInitiated(BytestreamSession bytestreamSession) {
+                                LOGGER.log(Level.INFO, "Bytestream initiated. Start receiving.");
+                                receivingThread = new ReceiveTask(bytestreamSession, file, target);
+                                queued.add(JingleManager.getThreadPool().submit(receivingThread));
+                            }
+
+                            @Override
+                            public void onException(Exception e) {
+                                LOGGER.log(Level.SEVERE, "EXCEPTION IN INCOMING SESSION: ", e);
+                            }
+                        });
+
+                        jutil.sendTransportAccept(transportReplace.getFrom().asFullJidOrThrow(),
+                                transportReplace.getInitiator(), transportReplace.getSid(),
+                                getContents().get(0).getCreator(), getContents().get(0).getName(),
+                                transportSession.createTransport());
+
+                    } else {
+                        LOGGER.log(Level.INFO, "Unsupported transport. Reject transport-replace.");
+                        jutil.sendTransportReject(transportReplace.getFrom().asFullJidOrThrow(), transportReplace.getInitiator(),
+                                transportReplace.getSid(), getContents().get(0).getCreator(),
+                                getContents().get(0).getName(), transportReplace.getContents().get(0).getJingleTransport());
+                    }
+                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                    LOGGER.log(Level.SEVERE, "Help me please!", e);
+                }
+            }
+        }));
+
+        return jutil.createAck(transportReplace);
+    }
+
+    @Override
     public IQ handleTransportAccept(Jingle transportAccept) {
         LOGGER.log(Level.INFO, "Received transport-accept.");
         if (state != State.sent_transport_replace) {
@@ -134,6 +184,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
     @Override
     public void acceptIncomingFileOffer(final Jingle request, final File target) {
+        this.target = target;
         LOGGER.log(Level.INFO, "Client accepted incoming file offer. Try to start receiving.");
         if (transportSession == null) {
             //Unsupported transport

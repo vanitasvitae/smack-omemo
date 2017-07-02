@@ -136,40 +136,40 @@ public abstract class JingleSession implements JingleSessionHandler {
     @Override
     public IQ handleJingleSessionRequest(Jingle jingle) {
         try {
-        switch (jingle.getAction()) {
-            case content_accept:
-                return handleContentAccept(jingle);
-            case content_add:
-                return handleContentAdd(jingle);
-            case content_modify:
-                return handleContentModify(jingle);
-            case content_reject:
-                return handleContentReject(jingle);
-            case content_remove:
-                return handleContentRemove(jingle);
-            case description_info:
-                return handleDescriptionInfo(jingle);
-            case session_info:
-                return handleSessionInfo(jingle);
-            case security_info:
-                return handleSecurityInfo(jingle);
-            case session_accept:
-                return handleSessionAccept(jingle);
-            case transport_accept:
-                return handleTransportAccept(jingle);
-            case transport_info:
-                return transportSession.handleTransportInfo(jingle);
-            case session_initiate:
-                return handleSessionInitiate(jingle);
-            case transport_reject:
-                return handleTransportReject(jingle);
-            case session_terminate:
-                return handleSessionTerminate(jingle);
-            case transport_replace:
-                return handleTransportReplace(jingle);
-            default:
-                return IQ.createResultIQ(jingle);
-        }
+            switch (jingle.getAction()) {
+                case content_accept:
+                    return handleContentAccept(jingle);
+                case content_add:
+                    return handleContentAdd(jingle);
+                case content_modify:
+                    return handleContentModify(jingle);
+                case content_reject:
+                    return handleContentReject(jingle);
+                case content_remove:
+                    return handleContentRemove(jingle);
+                case description_info:
+                    return handleDescriptionInfo(jingle);
+                case session_info:
+                    return handleSessionInfo(jingle);
+                case security_info:
+                    return handleSecurityInfo(jingle);
+                case session_accept:
+                    return handleSessionAccept(jingle);
+                case transport_accept:
+                    return handleTransportAccept(jingle);
+                case transport_info:
+                    return transportSession.handleTransportInfo(jingle);
+                case session_initiate:
+                    return handleSessionInitiate(jingle);
+                case transport_reject:
+                    return handleTransportReject(jingle);
+                case session_terminate:
+                    return handleSessionTerminate(jingle);
+                case transport_replace:
+                    return handleTransportReplace(jingle);
+                default:
+                    return IQ.createResultIQ(jingle);
+            }
         } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
             return null; //TODO:
         }
