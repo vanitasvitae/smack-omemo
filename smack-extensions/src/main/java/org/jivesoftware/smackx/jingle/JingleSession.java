@@ -19,8 +19,6 @@ package org.jivesoftware.smackx.jingle;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
@@ -48,7 +46,6 @@ public abstract class JingleSession implements JingleSessionHandler {
 
     protected final List<JingleContent> contents = new ArrayList<>();
 
-    protected static ExecutorService threadPool = Executors.newSingleThreadExecutor();
     protected ArrayList<Future<?>> queued = new ArrayList<>();
     protected JingleTransportSession<?> transportSession;
 

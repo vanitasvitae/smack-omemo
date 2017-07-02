@@ -19,6 +19,8 @@ package org.jivesoftware.smackx.jingle;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +45,12 @@ public final class JingleManager extends Manager {
     private static final Logger LOGGER = Logger.getLogger(JingleManager.class.getName());
 
     private static final Map<XMPPConnection, JingleManager> INSTANCES = new WeakHashMap<>();
+
+    private static final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+    public static ExecutorService getThreadPool() {
+        return threadPool;
+    }
 
     public static synchronized JingleManager getInstanceFor(XMPPConnection connection) {
         JingleManager jingleManager = INSTANCES.get(connection);

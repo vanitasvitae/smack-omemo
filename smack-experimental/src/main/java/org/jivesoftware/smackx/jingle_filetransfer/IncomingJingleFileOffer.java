@@ -25,6 +25,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -162,7 +163,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
             public void onSessionInitiated(BytestreamSession bytestreamSession) {
                 LOGGER.log(Level.INFO, "Bytestream initiated. Start receiving.");
                 receivingThread = new ReceiveTask(bytestreamSession, file, target);
-                queued.add(threadPool.submit(receivingThread));
+                queued.add(JingleManager.getThreadPool().submit(receivingThread));
             }
 
             @Override

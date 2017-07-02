@@ -21,9 +21,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackFuture;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
@@ -75,6 +77,13 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         initiateFileOffer(transfer, JingleContent.Creator.initiator, contentName);
     }
 
+    public SmackFuture<?> sendAsync(File file) {
+        source = file;
+        String contentName = "jft-" + StringUtils.randomString(20);
+        JingleFileTransfer transfer = JingleFileTransferManager.fileTransferFromFile(file);
+        return null; //TODO
+    }
+
     public void initiateFileOffer(JingleFileTransfer file, JingleContent.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
         if (state != State.fresh) {
             throw new IllegalStateException("This session is not fresh.");
@@ -113,7 +122,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
             @Override
             public void onSessionInitiated(final BytestreamSession session) {
                 sendingThread = new SendTask(session, source);
-                queued.add(threadPool.submit(sendingThread));
+                queued.add(JingleManager.getThreadPool().submit(sendingThread));
             }
 
             @Override
@@ -138,7 +147,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         final JingleTransportManager<?> replacementManager = JingleTransportMethodManager.getInstanceFor(connection)
                 .getTransportManager(transportReplace);
 
-        queued.add(threadPool.submit(new Runnable() {
+        queued.add(JingleManager.getThreadPool().submit(new Runnable() {
             @Override
             public void run() {
                 try {
