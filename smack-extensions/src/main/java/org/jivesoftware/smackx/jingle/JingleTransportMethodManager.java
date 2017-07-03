@@ -61,6 +61,10 @@ public final class JingleTransportMethodManager extends Manager {
         transportManagers.put(manager.getNamespace(), manager);
     }
 
+    public void unregisterTransportManager(JingleTransportManager<?> manager) {
+        transportManagers.remove(manager.getNamespace());
+    }
+
     public static JingleTransportManager<?> getTransportManager(XMPPConnection connection, String namespace) {
         return getInstanceFor(connection).getTransportManager(namespace);
     }
@@ -87,7 +91,7 @@ public final class JingleTransportMethodManager extends Manager {
         return getTransportManager(transport.getNamespace());
     }
 
-    public JingleTransportManager<?> getBestAvailableTransportManager(XMPPConnection connection) {
+    public static JingleTransportManager<?> getBestAvailableTransportManager(XMPPConnection connection) {
         return getInstanceFor(connection).getBestAvailableTransportManager();
     }
 

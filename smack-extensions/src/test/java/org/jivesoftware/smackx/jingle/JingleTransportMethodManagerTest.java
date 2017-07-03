@@ -1,0 +1,110 @@
+package org.jivesoftware.smackx.jingle;
+
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.jivesoftware.smack.DummyConnection;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
+import org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportManager;
+import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
+import org.jivesoftware.smackx.jingle.transports.jingle_s5b.JingleS5BTransportManager;
+import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransport;
+
+import org.junit.Test;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
+
+public class JingleTransportMethodManagerTest extends SmackTestSuite {
+
+    @Test
+    public void getTransportManagerTest() throws XmppStringprepException {
+        XMPPConnection connection = new DummyConnection();
+        JingleTransportMethodManager jtmm = JingleTransportMethodManager.getInstanceFor(connection);
+
+        assertNull(jtmm.getBestAvailableTransportManager());
+        assertNull(jtmm.getTransportManager(JingleIBBTransport.NAMESPACE_V1));
+        assertNull(jtmm.getTransportManager(JingleS5BTransport.NAMESPACE_V1));
+
+        jtmm.registerTransportManager(JingleIBBTransportManager.getInstanceFor(connection));
+        assertNull(jtmm.getTransportManager(JingleS5BTransport.NAMESPACE_V1));
+        assertNotNull(jtmm.getTransportManager(JingleIBBTransport.NAMESPACE_V1));
+        assertEquals(JingleIBBTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
+
+        jtmm.registerTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
+        assertEquals(JingleS5BTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
+
+        jtmm.unregisterTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
+        assertNull(jtmm.getTransportManager(JingleS5BTransport.NAMESPACE_V1));
+        jtmm.unregisterTransportManager(JingleIBBTransportManager.getInstanceFor(connection));
+
+        assertNull(jtmm.getBestAvailableTransportManager());
+
+        jtmm.registerTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
+        assertEquals(JingleS5BTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
+        jtmm.registerTransportManager(JingleIBBTransportManager.getInstanceFor(connection));
+        assertEquals(JingleS5BTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
+
+        assertEquals(JingleIBBTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager(
+                Collections.singleton(JingleS5BTransport.NAMESPACE_V1)));
+
+        JingleStubTransportManager stub = new JingleStubTransportManager(connection);
+        jtmm.registerTransportManager(stub);
+        assertEquals(stub, JingleTransportMethodManager.getTransportManager(connection, JingleStubTransportManager.NAMESPACE));
+        assertEquals(JingleS5BTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
+
+        Jingle jingle = Jingle.getBuilder().setSessionId("test").setAction(JingleAction.session_initiate)
+                .setInitiator(JidCreate.fullFrom("test@test.test/test"))
+                .addJingleContent(
+                        JingleContent.getBuilder().setCreator(JingleContent.Creator.initiator).setName("content")
+                                .setSenders(JingleContent.Senders.initiator).setTransport(
+                                        new JingleIBBTransport("transportId")).build()).build();
+        assertEquals(JingleIBBTransportManager.getInstanceFor(connection), jtmm.getTransportManager(jingle));
+        assertEquals(JingleIBBTransportManager.getInstanceFor(connection),
+                JingleTransportMethodManager.getTransportManager(connection, jingle));
+
+        Set<String> except = new HashSet<>();
+        except.add(JingleIBBTransport.NAMESPACE_V1);
+        except.add(JingleS5BTransport.NAMESPACE_V1);
+        assertEquals(stub, jtmm.getBestAvailableTransportManager(except));
+
+        jtmm.unregisterTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
+        jtmm.unregisterTransportManager(JingleIBBTransportManager.getInstanceFor(connection));
+        assertEquals(stub, JingleTransportMethodManager.getBestAvailableTransportManager(connection));
+    }
+
+    private static class JingleStubTransportManager extends JingleTransportManager<JingleContentTransport> {
+
+        public static final String NAMESPACE = "urn:xmpp:jingle:transports:stub:0";
+
+        public JingleStubTransportManager(XMPPConnection connection) {
+            super(connection);
+        }
+
+        @Override
+        public String getNamespace() {
+            return NAMESPACE;
+        }
+
+        @Override
+        public JingleTransportSession<JingleContentTransport> transportSession(JingleSession jingleSession) {
+            return null;
+        }
+
+        @Override
+        public void authenticated(XMPPConnection connection, boolean resumed) {
+
+        }
+    }
+}
