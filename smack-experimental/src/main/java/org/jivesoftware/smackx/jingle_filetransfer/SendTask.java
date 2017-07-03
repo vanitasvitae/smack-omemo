@@ -58,6 +58,7 @@ public class SendTask implements Runnable {
 
             LOGGER.log(Level.INFO, "WRITE");
             outputStream.write(filebuf);
+            outputStream.flush();
             LOGGER.log(Level.INFO, "WRITING FINISHED");
         }
         catch (IOException e) {
@@ -70,7 +71,6 @@ public class SendTask implements Runnable {
                     inputStream.close();
                     LOGGER.log(Level.INFO, "InputStream closed.");
                 }
-
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Could not close session.", e);
             }

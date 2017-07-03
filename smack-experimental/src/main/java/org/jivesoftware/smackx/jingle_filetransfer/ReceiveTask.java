@@ -55,13 +55,14 @@ public class ReceiveTask implements Runnable {
 
             byte[] filebuf = new byte[transfer.getSize()];
             int read = 0;
-            byte[] bufbuf = new byte[2048];
-            LOGGER.log(Level.INFO, "Begin receiving.");
+            byte[] bufbuf = new byte[4096];
+            LOGGER.log(Level.INFO, "Begin receiving bytes.");
             while (read < filebuf.length) {
                 int r = inputStream.read(bufbuf);
                 if (r >= 0) {
                     System.arraycopy(bufbuf, 0, filebuf, read, r);
                     read += r;
+                    LOGGER.log(Level.INFO, "Read " + r + " (" + read + " of " + filebuf.length + ") bytes.");
                 } else {
                     break;
                 }
