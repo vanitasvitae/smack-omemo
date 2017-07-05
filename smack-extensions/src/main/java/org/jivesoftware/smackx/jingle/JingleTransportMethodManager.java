@@ -91,6 +91,7 @@ public final class JingleTransportMethodManager extends Manager {
         return getTransportManager(transport.getNamespace());
     }
 
+
     public static JingleTransportManager<?> getBestAvailableTransportManager(XMPPConnection connection) {
         return getInstanceFor(connection).getBestAvailableTransportManager();
     }

@@ -32,6 +32,7 @@ import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
+
 /**
  * Test the JingleUtil class.
  */
@@ -45,6 +46,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Before
     public void setup() throws XmppStringprepException {
+
         connection = new DummyConnection(
                 DummyConnection.getDummyConfigurationBuilder()
                 .setUsernameAndPassword("romeo@montague.lit",
