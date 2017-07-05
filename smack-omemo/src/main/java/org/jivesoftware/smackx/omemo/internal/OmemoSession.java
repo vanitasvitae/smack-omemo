@@ -19,13 +19,13 @@ package org.jivesoftware.smackx.omemo.internal;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.StringUtils;
-
 import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.OmemoManager;
 import org.jivesoftware.smackx.omemo.OmemoStore;
@@ -50,6 +50,8 @@ import org.jivesoftware.smackx.omemo.exceptions.NoRawSessionException;
  * @author Paul Schaub
  */
 public abstract class OmemoSession<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
+
+    private static final Logger LOGGER = Logger.getLogger(OmemoSession.class.getName());
 
     protected final T_Ciph cipher;
     protected final OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> omemoStore;
@@ -128,16 +130,25 @@ public abstract class OmemoSession<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         byte[] authTag = null;
 
         if (unpackedKey.length == 32) {
+
             authTag = new byte[16];
             //copy key part into messageKey
             System.arraycopy(unpackedKey, 0, messageKey, 0, 16);
             //copy tag part into authTag
             System.arraycopy(unpackedKey, 16, authTag, 0,16);
-        } else if (element.isKeyTransportElement() && unpackedKey.length == 16) {
-            messageKey = unpackedKey;
+
+        } else if(unpackedKey.length == 16) {
+
+            if(element.isMessageElement()) {
+                LOGGER.log(Level.WARNING, "Received OMEMO element uses deprecated legacy key format!" +
+                        "Please ask your contact to update their client " +
+                        "or annoy their clients project maintainer to adopt the new format!");
+            }
+
+            messageKey = unpackedKey.clone();
+
         } else {
-            throw new CryptoFailedException("MessageKey has wrong length: "
-                    + unpackedKey.length + ". Probably legacy auth tag format.");
+            throw new CryptoFailedException("MessageKey has wrong length: " + unpackedKey.length + ". Probably legacy auth tag format.");
         }
 
         return new CipherAndAuthTag(messageKey, element.getHeader().getIv(), authTag);
@@ -157,14 +168,21 @@ public abstract class OmemoSession<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             throw new IllegalArgumentException("decryptMessageElement cannot decrypt OmemoElement which is no MessageElement!");
         }
 
-        if (cipherAndAuthTag.getAuthTag() == null || cipherAndAuthTag.getAuthTag().length != 16) {
-            throw new CryptoFailedException("AuthenticationTag is null or has wrong length: "
-                    + (cipherAndAuthTag.getAuthTag() == null ? "null" : cipherAndAuthTag.getAuthTag().length));
+        byte[] encryptedBody;
+
+        if (cipherAndAuthTag.getAuthTag() == null) {
+            LOGGER.log(Level.WARNING, "AuthTag is null. This is a less secure legacy message!");
+            encryptedBody = element.getPayload().clone();
+
+        } else if (cipherAndAuthTag.getAuthTag().length == 16) {
+            encryptedBody = new byte[element.getPayload().length + 16];
+            byte[] payload = element.getPayload();
+            System.arraycopy(payload, 0, encryptedBody, 0, payload.length);
+            System.arraycopy(cipherAndAuthTag.getAuthTag(), 0, encryptedBody, payload.length, 16);
+
+        } else {
+            throw new CryptoFailedException("AuthTag has wrong length: " + cipherAndAuthTag.getAuthTag().length);
         }
-        byte[] encryptedBody = new byte[element.getPayload().length + 16];
-        byte[] payload = element.getPayload();
-        System.arraycopy(payload, 0, encryptedBody, 0, payload.length);
-        System.arraycopy(cipherAndAuthTag.getAuthTag(), 0, encryptedBody, payload.length, 16);
 
         try {
             String plaintext = new String(cipherAndAuthTag.getCipher().doFinal(encryptedBody), StringUtils.UTF8);
