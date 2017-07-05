@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.SmackException;
@@ -171,7 +172,8 @@ public abstract class JingleSession implements JingleSessionHandler {
                     return IQ.createResultIQ(jingle);
             }
         } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
-            return null; //TODO:
+            LOGGER.log(Level.SEVERE, "Caught an Exception: ", e);
+            return null; //TODO: Handle better?
         }
     }
 

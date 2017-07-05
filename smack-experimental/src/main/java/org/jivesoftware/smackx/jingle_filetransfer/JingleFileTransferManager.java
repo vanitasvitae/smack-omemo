@@ -41,6 +41,7 @@ import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.SendFileHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferProvider;
 
@@ -75,12 +76,14 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         return manager;
     }
 
-    public void sendFile(FullJid recipient, File file)
+    public SendFileHandler sendFile(FullJid recipient, File file)
             throws InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
         OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
         JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(recipient, offer.getSessionId(), offer);
+        SendFileHandler handler = new SendFileHandler(offer);
         offer.send(file);
+        return handler;
     }
 
     public SmackFuture<?> asyncSendFile(FullJid recipient, File file) {
