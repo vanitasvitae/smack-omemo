@@ -30,6 +30,7 @@ import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
@@ -45,6 +46,41 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
     private Jingle pendingSessionInitiate = null;
     private ReceiveTask receivingThread;
     private File target;
+
+    @Override
+    public void cancel() {
+
+    }
+
+    @Override
+    public boolean isFinished() {
+        return false;
+    }
+
+    @Override
+    public boolean isStarted() {
+        return false;
+    }
+
+    @Override
+    public void addEndedListener(EndedListener listener) {
+
+    }
+
+    @Override
+    public void addStartedListener(StartedListener listener) {
+
+    }
+
+    @Override
+    public void notifyEndedListeners(JingleReason.Reason reason) {
+
+    }
+
+    @Override
+    public void notifyStartedListeners() {
+
+    }
 
     public enum State {
         fresh,

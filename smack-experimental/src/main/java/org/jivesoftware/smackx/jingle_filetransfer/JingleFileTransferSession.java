@@ -21,13 +21,14 @@ import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
 import org.jxmpp.jid.FullJid;
 
 /**
  * Class representing a Jingle session in the context of Jingle File Transfer (XEP-0234).
  */
-public abstract class JingleFileTransferSession extends JingleSession {
+public abstract class JingleFileTransferSession extends JingleSession implements FileTransferHandler {
 
     public enum Type {
         offer,
