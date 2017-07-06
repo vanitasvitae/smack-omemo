@@ -150,6 +150,77 @@ public class JingleUtilTest extends SmackTestSuite {
         assertEquals("ofthenight", alt.getAlternativeSessionId());
     }
 
+    @Test
+    public void createSessionTerminateCancelTest() throws Exception {
+        Jingle cancel = jutil.createSessionTerminateCancel(juliet, "thisistheend");
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='session-terminate' " +
+                        "sid='thisistheend'>" +
+                        "<reason>" +
+                        "<cancel/>" +
+                        "</reason>" +
+                        "</jingle>";
+        String xml = getIQXML(romeo, juliet, cancel.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, cancel.toXML().toString());
+        Jingle jingle = new JingleProvider().parse(TestUtils.getParser(jingleXML));
+        assertNotNull(jingle);
+        assertEquals(jingle.getAction(), JingleAction.session_terminate);
+        assertEquals(jingle.getReason().asEnum(), JingleReason.Reason.cancel);
+    }
+
+    @Test
+    public void createSessionTerminateUnsupportedTransportsTest() throws Exception {
+        Jingle unsupportedTransports = jutil.createSessionTerminateUnsupportedTransports(juliet, "thisisus");
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='session-terminate' " +
+                        "sid='thisisus'>" +
+                        "<reason>" +
+                        "<unsupported-transports/>" +
+                        "</reason>" +
+                        "</jingle>";
+        String xml = getIQXML(romeo, juliet, unsupportedTransports.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, unsupportedTransports.toXML().toString());
+        Jingle jingle = new JingleProvider().parse(TestUtils.getParser(jingleXML));
+        assertNotNull(jingle);
+        assertEquals(jingle.getAction(), JingleAction.session_terminate);
+        assertEquals(jingle.getReason().asEnum(), JingleReason.Reason.unsupported_transports);
+    }
+
+    @Test
+    public void createSessionTerminateUnsupportedApplicationsTest() throws Exception {
+        Jingle unsupportedApplications = jutil.createSessionTerminateUnsupportedApplications(juliet, "thisiswar");
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='session-terminate' " +
+                        "sid='thisiswar'>" +
+                        "<reason>" +
+                        "<unsupported-applications/>" +
+                        "</reason>" +
+                        "</jingle>";
+        String xml = getIQXML(romeo, juliet, unsupportedApplications.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, unsupportedApplications.toXML().toString());
+        Jingle jingle = new JingleProvider().parse(TestUtils.getParser(jingleXML));
+        assertNotNull(jingle);
+        assertEquals(jingle.getAction(), JingleAction.session_terminate);
+        assertEquals(jingle.getReason().asEnum(), JingleReason.Reason.unsupported_applications);
+    }
+
+    @Test
+    public void createSessionPingTest() throws Exception {
+        Jingle ping = jutil.createSessionPing(juliet, "thisisit");
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='session-info' " +
+                        "sid='thisisit'/>";
+        String xml = getIQXML(romeo, juliet, ping.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, ping.toXML().toString());
+        Jingle jingle = new JingleProvider().parse(TestUtils.getParser(jingleXML));
+        assertNotNull(jingle);
+        assertEquals(JingleAction.session_info, jingle.getAction());
+    }
+
     private String getIQXML(FullJid from, FullJid to, String stanzaId, String jingleXML) {
         return
                 "<iq from='" + from + "' id='" + stanzaId + "' to='" + to + "' type='set'>" +
