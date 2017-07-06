@@ -41,6 +41,7 @@ import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
+
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferProvider;
