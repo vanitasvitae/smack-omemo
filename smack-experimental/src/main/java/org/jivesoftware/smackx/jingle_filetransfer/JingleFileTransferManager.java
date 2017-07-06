@@ -83,7 +83,8 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
         JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(recipient, offer.getSessionId(), offer);
         offer.send(file);
-        return offer;
+        //return offer;
+        return null;
     }
 
     public SmackFuture<?> asyncSendFile(FullJid recipient, File file) {
