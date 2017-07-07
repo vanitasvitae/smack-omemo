@@ -28,6 +28,7 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle.provider.JingleProvider;
 
@@ -54,8 +55,8 @@ public class JingleUtilTest extends SmackTestSuite {
 
         connection = new DummyConnection(
                 DummyConnection.getDummyConfigurationBuilder()
-                .setUsernameAndPassword("romeo@montague.lit",
-                "iluvJulibabe13").build());
+                        .setUsernameAndPassword("romeo@montague.lit",
+                                "iluvJulibabe13").build());
         JingleManager jm = JingleManager.getInstanceFor(connection);
         jutil = new JingleUtil(connection);
         romeo = connection.getUser().asFullJidOrThrow();
@@ -75,12 +76,12 @@ public class JingleUtilTest extends SmackTestSuite {
         Jingle terminate = jutil.createSessionTerminateDecline(juliet, "thisismadness");
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
-                "action='session-terminate' " +
-                "sid='thisismadness'>" +
-                    "<reason>" +
+                        "action='session-terminate' " +
+                        "sid='thisismadness'>" +
+                        "<reason>" +
                         "<decline/>" +
-                    "</reason>" +
-                "</jingle>";
+                        "</reason>" +
+                        "</jingle>";
         String xml = getIQXML(romeo, juliet, terminate.getStanzaId(), jingleXML);
         assertXMLEqual(xml, terminate.toXML().toString());
         Jingle jingle = new JingleProvider().parse(TestUtils.getParser(jingleXML));
@@ -94,12 +95,12 @@ public class JingleUtilTest extends SmackTestSuite {
         Jingle success = jutil.createSessionTerminateSuccess(juliet, "thisissparta");
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
-                "action='session-terminate' " +
-                "sid='thisissparta'>" +
-                    "<reason>" +
+                        "action='session-terminate' " +
+                        "sid='thisissparta'>" +
+                        "<reason>" +
                         "<success/>" +
-                    "</reason>" +
-                "</jingle>";
+                        "</reason>" +
+                        "</jingle>";
         String xml = getIQXML(romeo, juliet, success.getStanzaId(), jingleXML);
         assertXMLEqual(xml, success.toXML().toString());
         Jingle jingle = new JingleProvider().parse(TestUtils.getParser(jingleXML));
@@ -221,10 +222,55 @@ public class JingleUtilTest extends SmackTestSuite {
         assertEquals(JingleAction.session_info, jingle.getAction());
     }
 
+    @Test
+    public void createSessionTerminateContentCancelTest() throws Exception {
+        Jingle cancel = jutil.createSessionTerminateContentCancel(juliet, "thisismumbo#5", JingleContent.Creator.initiator, "content123");
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='session-terminate' " +
+                        "sid='thisismumbo#5'>" +
+                        "<content creator='initiator' name='content123'/>" +
+                        "<reason>" +
+                        "<cancel/>" +
+                        "</reason>" +
+                        "</jingle>";
+        String xml = getIQXML(romeo, juliet, cancel.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, cancel.toXML().toString());
+        Jingle jingle = new JingleProvider().parse(TestUtils.getParser(jingleXML));
+        assertNotNull(jingle);
+        assertEquals(JingleAction.session_terminate, jingle.getAction());
+        assertEquals(JingleReason.Reason.cancel, jingle.getReason().asEnum());
+        assertEquals("thisismumbo#5", jingle.getSid());
+        JingleContent content = jingle.getContents().get(0);
+        assertNotNull(content);
+        assertEquals("content123", content.getName());
+        assertEquals(JingleContent.Creator.initiator, content.getCreator());
+    }
+
+    @Test
+    public void createErrorMalformedRequestTest() throws Exception {
+        Jingle j = defaultJingle(romeo, "error123");
+        IQ error = jutil.createErrorMalformedRequest(j);
+        String xml =
+                "<iq " +
+                        "to='" + romeo + "' " +
+                        "from='" + romeo +"' " +
+                        "id='" + j.getStanzaId() + "' " +
+                        "type='error'>" +
+                        "<error type='cancel'>" +
+                        "<bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+                        "</error>" +
+                        "</iq>";
+        assertXMLEqual(xml, error.toXML().toString());
+    }
+
     private String getIQXML(FullJid from, FullJid to, String stanzaId, String jingleXML) {
-        return
-                "<iq from='" + from + "' id='" + stanzaId + "' to='" + to + "' type='set'>" +
-                    jingleXML +
+        return "<iq from='" + from + "' id='" + stanzaId + "' to='" + to + "' type='set'>" +
+                jingleXML +
                 "</iq>";
+    }
+
+    private Jingle defaultJingle(FullJid recipient, String sessionId) {
+        return jutil.createSessionPing(recipient, sessionId);
     }
 }

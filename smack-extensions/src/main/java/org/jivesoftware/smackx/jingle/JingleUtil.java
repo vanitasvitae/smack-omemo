@@ -249,7 +249,7 @@ public class JingleUtil {
                                                       JingleContent.Creator contentCreator, String contentName) {
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setAction(JingleAction.session_terminate)
-                .setSessionId(sessionId);
+                .setSessionId(sessionId).setReason(JingleReason.Reason.cancel);
 
         JingleContent.Builder cb = JingleContent.getBuilder();
         cb.setCreator(contentCreator).setName(contentName);
@@ -497,8 +497,16 @@ public class JingleUtil {
         connection.sendStanza(createErrorOutOfOrder(request));
     }
 
+    /**
+     * XEP-0166 Ex. 16
+     * @param request
+     * @return
+     */
     public IQ createErrorMalformedRequest(Jingle request) {
-        return IQ.createErrorResponse(request, XMPPError.Condition.bad_request);
+        XMPPError.Builder error = XMPPError.getBuilder();
+        error.setType(XMPPError.Type.CANCEL);
+        error.setCondition(XMPPError.Condition.bad_request);
+        return IQ.createErrorResponse(request, error);
     }
 
     public void sendErrorMalformedRequest(Jingle request)
