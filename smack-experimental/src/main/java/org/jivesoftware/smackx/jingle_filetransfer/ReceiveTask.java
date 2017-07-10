@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 
@@ -33,14 +34,16 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChi
 public class ReceiveTask implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ReceiveTask.class.getName());
 
-    private final BytestreamSession session;
+    private final BytestreamSession byteStream;
     private final JingleFileTransfer fileTransfer;
     private final File target;
+    private final JingleFileTransferSession session;
 
-    public ReceiveTask(BytestreamSession session, JingleFileTransfer fileTransfer, File target) {
-        this.session = session;
+    public ReceiveTask(JingleFileTransferSession session, BytestreamSession byteStream, JingleFileTransfer fileTransfer, File target) {
+        this.byteStream = byteStream;
         this.fileTransfer = fileTransfer;
         this.target = target;
+        this.session = session;
     }
 
     @Override
@@ -51,7 +54,7 @@ public class ReceiveTask implements Runnable {
 
         try {
             outputStream = new FileOutputStream(target);
-            inputStream = session.getInputStream();
+            inputStream = byteStream.getInputStream();
 
             byte[] filebuf = new byte[transfer.getSize()];
             int read = 0;
@@ -75,7 +78,7 @@ public class ReceiveTask implements Runnable {
             LOGGER.log(Level.SEVERE, "Error while receiving data: ", e);
         } finally {
             try {
-                session.close();
+                byteStream.close();
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Could not close InputStream.", e);
             }
@@ -86,6 +89,8 @@ public class ReceiveTask implements Runnable {
                     LOGGER.log(Level.SEVERE, "Could not close FileOutputStream.", e);
                 }
             }
+
+            session.notifyEndedListeners(JingleReason.Reason.success);
         }
     }
 }

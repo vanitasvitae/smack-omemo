@@ -30,10 +30,12 @@ import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
 import org.jxmpp.jid.FullJid;
 
@@ -45,6 +47,12 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
     private Jingle pendingSessionInitiate = null;
     private ReceiveTask receivingThread;
     private File target;
+
+    @Override
+    public void cancel() {
+        //TODO: Actually cancel
+        notifyEndedListeners(JingleReason.Reason.cancel);
+    }
 
     public enum State {
         fresh,
@@ -132,7 +140,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
                             @Override
                             public void onSessionInitiated(BytestreamSession bytestreamSession) {
                                 LOGGER.log(Level.INFO, "Bytestream initiated. Start receiving.");
-                                receivingThread = new ReceiveTask(bytestreamSession, file, target);
+                                receivingThread = new ReceiveTask(IncomingJingleFileOffer.this, bytestreamSession, file, target);
                                 queued.add(JingleManager.getThreadPool().submit(receivingThread));
                             }
 
@@ -183,7 +191,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
     }
 
     @Override
-    public void acceptIncomingFileOffer(final Jingle request, final File target) {
+    public FileTransferHandler acceptIncomingFileOffer(final Jingle request, final File target) {
         this.target = target;
         LOGGER.log(Level.INFO, "Client accepted incoming file offer. Try to start receiving.");
         if (transportSession == null) {
@@ -195,7 +203,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
                     SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
                 LOGGER.log(Level.SEVERE, "Could not send session-terminate: " + e, e);
             }
-            return;
+            return null;
         }
 
         state = State.active;
@@ -213,8 +221,10 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
             @Override
             public void onSessionInitiated(BytestreamSession bytestreamSession) {
                 LOGGER.log(Level.INFO, "Bytestream initiated. Start receiving.");
-                receivingThread = new ReceiveTask(bytestreamSession, file, target);
+                receivingThread = new ReceiveTask(IncomingJingleFileOffer.this, bytestreamSession, file, target);
                 queued.add(JingleManager.getThreadPool().submit(receivingThread));
+                started = true;
+                notifyStartedListeners();
             }
 
             @Override
@@ -222,6 +232,8 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
                 LOGGER.log(Level.SEVERE, "EXCEPTION IN INCOMING SESSION: ", e);
             }
         });
+
+        return this;
     }
 
     @Override

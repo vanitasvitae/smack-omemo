@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 
 /**
  * Created by vanitas on 21.06.17.
@@ -32,12 +33,14 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 public class SendTask implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(SendTask.class.getName());
 
-    private final BytestreamSession session;
+    private final BytestreamSession byteStream;
+    private final JingleFileTransferSession session;
     private final File source;
 
-    public SendTask(BytestreamSession session, File source) {
-        this.session = session;
+    public SendTask(JingleFileTransferSession session, BytestreamSession byteStream, File source) {
+        this.byteStream = byteStream;
         this.source = source;
+        this.session = session;
     }
 
     @Override
@@ -47,7 +50,7 @@ public class SendTask implements Runnable {
 
         try {
             inputStream = new FileInputStream(source);
-            outputStream = session.getOutputStream();
+            outputStream = byteStream.getOutputStream();
 
             byte[] filebuf = new byte[(int) source.length()];
             int r = inputStream.read(filebuf);
@@ -74,6 +77,8 @@ public class SendTask implements Runnable {
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Could not close session.", e);
             }
+
+            session.notifyEndedListeners(JingleReason.Reason.success);
         }
     }
 }

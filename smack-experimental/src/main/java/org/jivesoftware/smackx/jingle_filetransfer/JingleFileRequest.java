@@ -46,4 +46,9 @@ public class JingleFileRequest extends JingleFileTransferSession {
     public void onTransportMethodFailed(String namespace) {
         //Not implemented
     }
+
+    @Override
+    public void cancel() {
+
+    }
 }

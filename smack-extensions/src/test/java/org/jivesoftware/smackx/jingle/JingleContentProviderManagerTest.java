@@ -35,6 +35,9 @@ public class JingleContentProviderManagerTest extends SmackTestSuite {
 
     @Test
     public void transportProviderTest() {
+        JingleContentProviderManager.removeJingleContentTransportProvider(JingleIBBTransport.NAMESPACE_V1);
+        JingleContentProviderManager.removeJingleContentTransportProvider(JingleS5BTransport.NAMESPACE_V1);
+
         assertNull(JingleContentProviderManager.getJingleContentTransportProvider(JingleIBBTransport.NAMESPACE_V1));
         assertNull(JingleContentProviderManager.getJingleContentTransportProvider(JingleS5BTransport.NAMESPACE_V1));
 

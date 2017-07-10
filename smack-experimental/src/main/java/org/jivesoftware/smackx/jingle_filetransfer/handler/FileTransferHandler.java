@@ -29,8 +29,8 @@ public interface FileTransferHandler {
     void cancel();
 
     /**
-     * Returns true, if the file transfer is finished.
-     * @return true if transfer finished.
+     * Returns true, if the file transfer is ended.
+     * @return true if transfer ended.
      */
     boolean isFinished();
 
@@ -53,7 +53,7 @@ public interface FileTransferHandler {
     void addStartedListener(StartedListener listener);
 
     /**
-     * Notify all registered FinishedListeners that the file transfer has finished.
+     * Notify all registered FinishedListeners that the file transfer has ended.
      */
     void notifyEndedListeners(JingleReason.Reason reason);
 
@@ -63,7 +63,7 @@ public interface FileTransferHandler {
     void notifyStartedListeners();
 
     /**
-     * A FinishedListener will be notified by the SendFileHandler when the corresponding file transfer is finished.
+     * A FinishedListener will be notified by the SendFileHandler when the corresponding file transfer is ended.
      */
     interface EndedListener {
         void onEnded(JingleReason.Reason reason);

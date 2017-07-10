@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.SmackFuture;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
@@ -41,7 +40,6 @@ import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
-
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferProvider;
@@ -83,14 +81,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
         JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(recipient, offer.getSessionId(), offer);
         offer.send(file);
-        //return offer;
-        return null;
-    }
-
-    public SmackFuture<?> asyncSendFile(FullJid recipient, File file) {
-        OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
-        JingleManager.getInstanceFor(connection()).registerJingleSessionHandler(recipient, offer.getSessionId(), offer);
-        return offer.sendAsync(file);
+        return offer;
     }
 
     @Override

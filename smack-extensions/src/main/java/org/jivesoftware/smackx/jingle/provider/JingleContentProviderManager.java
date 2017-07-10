@@ -25,6 +25,14 @@ public class JingleContentProviderManager {
 
     private static final Map<String, JingleContentTransportProvider<?>> jingleContentTransportProviders = new ConcurrentHashMap<>();
 
+    public static void removeJingleContentTransportProvider(String namespace) {
+        jingleContentTransportProviders.remove(namespace);
+    }
+
+    public static void removeJingleContentDescriptionProvider(String namespace) {
+        jingleContentDescriptionProviders.remove(namespace);
+    }
+
     public static JingleContentDescriptionProvider<?> addJingleContentDescriptionProvider(String namespace,
                     JingleContentDescriptionProvider<?> provider) {
         return jingleContentDescriptionProviders.put(namespace, provider);

@@ -254,7 +254,7 @@ public class JingleUtilTest extends SmackTestSuite {
         String xml =
                 "<iq " +
                         "to='" + romeo + "' " +
-                        "from='" + romeo +"' " +
+                        "from='" + romeo + "' " +
                         "id='" + j.getStanzaId() + "' " +
                         "type='error'>" +
                         "<error type='cancel'>" +

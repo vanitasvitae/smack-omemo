@@ -32,6 +32,7 @@ import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
 import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle.element.Jingle;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
@@ -44,6 +45,12 @@ import org.jxmpp.jid.FullJid;
 public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
     private static final Logger LOGGER = Logger.getLogger(OutgoingJingleFileOffer.class.getName());
+
+    @Override
+    public void cancel() {
+        //TODO: Actually cancel
+        notifyEndedListeners(JingleReason.Reason.cancel);
+    }
 
     public enum State {
         fresh,
@@ -119,9 +126,10 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
         transportSession.initiateOutgoingSession(new JingleTransportInitiationCallback() {
             @Override
-            public void onSessionInitiated(final BytestreamSession session) {
-                sendingThread = new SendTask(session, source);
+            public void onSessionInitiated(final BytestreamSession byteStream) {
+                sendingThread = new SendTask(OutgoingJingleFileOffer.this, byteStream, source);
                 queued.add(JingleManager.getThreadPool().submit(sendingThread));
+                notifyStartedListeners();
             }
 
             @Override

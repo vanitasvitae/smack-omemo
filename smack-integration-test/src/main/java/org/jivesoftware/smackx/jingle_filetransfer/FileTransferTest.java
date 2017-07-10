@@ -29,12 +29,15 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
+import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
 
 import org.igniterealtime.smack.inttest.AbstractSmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
+import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 import org.junit.AfterClass;
 import org.jxmpp.jid.FullJid;
 
@@ -61,6 +64,8 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
 
     @SmackIntegrationTest
     public void basicFileTransferTest() {
+        final SimpleResultSyncPoint resultSyncPoint1 = new SimpleResultSyncPoint();
+        final SimpleResultSyncPoint resultSyncPoint2 = new SimpleResultSyncPoint();
 
         FullJid alice = conOne.getUser().asFullJidOrThrow();
         FullJid bob = conTwo.getUser().asFullJidOrThrow();
@@ -74,13 +79,37 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
         bftm.addJingleFileTransferOfferListener(new JingleFileTransferOfferListener() {
             @Override
             public void onFileOffer(Jingle request, IncomingFileOfferCallback callback) {
-                callback.acceptIncomingFileOffer(request, target);
+                FileTransferHandler handler2 = callback.acceptIncomingFileOffer(request, target);
+                handler2.addEndedListener(new FileTransferHandler.EndedListener() {
+                    @Override
+                    public void onEnded(JingleReason.Reason reason) {
+                        resultSyncPoint2.signal();
+                    }
+                });
             }
         });
 
         try {
-            aftm.sendFile(bob, source);
+            FileTransferHandler handler = aftm.sendFile(bob, source);
+            handler.addEndedListener(new FileTransferHandler.EndedListener() {
+                @Override
+                public void onEnded(JingleReason.Reason reason) {
+                    resultSyncPoint1.signal();
+                }
+            });
         } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+            fail();
+        }
+
+        try {
+            resultSyncPoint1.waitForResult(10 * 1000);
+        } catch (Exception e) {
+            fail();
+        }
+
+        try {
+            resultSyncPoint2.waitForResult(10 * 1000);
+        } catch (Exception e) {
             fail();
         }
 
@@ -92,7 +121,6 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
             fi.close();
             fi = new FileInputStream(target);
             fi.read(tBytes);
-            fi.close();
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Could not read files.");
             fail();
