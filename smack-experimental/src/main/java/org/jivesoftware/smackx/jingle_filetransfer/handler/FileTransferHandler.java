@@ -16,6 +16,8 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.handler;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.jingle.element.JingleReason;
 
 /**
@@ -26,7 +28,7 @@ public interface FileTransferHandler {
     /**
      * Cancels the current file transfer.
      */
-    void cancel();
+    void cancel() throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException;
 
     /**
      * Returns true, if the file transfer is ended.

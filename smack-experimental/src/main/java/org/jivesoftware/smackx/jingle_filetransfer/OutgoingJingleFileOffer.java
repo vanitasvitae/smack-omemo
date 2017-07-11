@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,8 +48,21 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     private static final Logger LOGGER = Logger.getLogger(OutgoingJingleFileOffer.class.getName());
 
     @Override
-    public void cancel() {
-        //TODO: Actually cancel
+    public void cancel() throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+        switch (state) {
+            case terminated:
+                return;
+
+            case active:
+                Future<?> task = queued.get(0);
+                if (task != null) {
+                    task.cancel(true);
+                    queued.remove(task);
+                }
+
+            default:
+                jutil.sendSessionTerminateCancel(getRemote(), getSessionId());
+        }
         notifyEndedListeners(JingleReason.Reason.cancel);
     }
 

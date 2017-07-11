@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,8 +51,15 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
     @Override
     public void cancel() {
-        //TODO: Actually cancel
-        notifyEndedListeners(JingleReason.Reason.cancel);
+        if (state == State.active) {
+            Future<?> task = queued.get(0);
+            if (task != null) {
+                task.cancel(true);
+                queued.remove(task);
+            }
+
+            notifyEndedListeners(JingleReason.Reason.cancel);
+        }
     }
 
     public enum State {
