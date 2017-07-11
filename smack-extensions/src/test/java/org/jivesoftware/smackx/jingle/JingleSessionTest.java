@@ -92,6 +92,7 @@ public class JingleSessionTest {
         assertNotSame(initiatedSimpleSession, respondedSimpleSession);
         assertFalse(initiatedSimpleSession.equals(respondedSimpleSession));
         assertNotSame(initiatedSimpleSession.hashCode(), respondedSimpleSession.hashCode());
+        assertFalse(initiatedSimpleSession.equals("Hallo Welt"));
     }
 
     @Test

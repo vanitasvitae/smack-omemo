@@ -42,6 +42,17 @@ public class JingleUtil {
         this.connection = connection;
     }
 
+    /**
+     * XEP-0166 Example 10.
+     * @param recipient
+     * @param sessionId
+     * @param contentCreator
+     * @param contentName
+     * @param contentSenders
+     * @param description
+     * @param transport
+     * @return
+     */
     public Jingle createSessionInitiate(FullJid recipient,
                                         String sessionId,
                                         JingleContent.Creator contentCreator,
@@ -69,6 +80,16 @@ public class JingleUtil {
         return jingle;
     }
 
+    /**
+     * XEP-0234 Example 1.
+     * @param recipient
+     * @param sessionId
+     * @param contentCreator
+     * @param contentName
+     * @param description
+     * @param transport
+     * @return
+     */
     public Jingle createSessionInitiateFileOffer(FullJid recipient,
                                                  String sessionId,
                                                  JingleContent.Creator contentCreator,
@@ -108,6 +129,17 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResult();
     }
 
+    /**
+     * XEP-0166 Example 17.
+     * @param recipient
+     * @param sessionId
+     * @param contentCreator
+     * @param contentName
+     * @param contentSenders
+     * @param description
+     * @param transport
+     * @return
+     */
     public Jingle createSessionAccept(FullJid recipient,
                                       String sessionId,
                                       JingleContent.Creator contentCreator,
@@ -151,6 +183,13 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResult();
     }
 
+    /**
+     * XEP-0166 §6.7.
+     * @param recipient
+     * @param sessionId
+     * @param reason
+     * @return
+     */
     public Jingle createSessionTerminate(FullJid recipient, String sessionId, JingleReason reason) {
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setAction(JingleAction.session_terminate)
@@ -184,6 +223,12 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 21.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateDecline(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.decline);
     }
@@ -196,6 +241,12 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 19.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateSuccess(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.success);
     }
@@ -208,6 +259,12 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 20.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateBusy(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.busy);
     }
@@ -220,6 +277,13 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 22.
+     * @param recipient
+     * @param sessionId
+     * @param altSessionId
+     * @return
+     */
     public Jingle createSessionTerminateAlternativeSession(FullJid recipient, String sessionId, String altSessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.AlternativeSession(altSessionId));
     }
@@ -232,6 +296,13 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0234 Example 9.
+     * Cancel all active transfers of the session.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateCancel(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.cancel);
     }
@@ -245,6 +316,15 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0234 Example 10.
+     * Cancel a single transfer.
+     * @param recipient
+     * @param sessionId
+     * @param contentCreator
+     * @param contentName
+     * @return
+     */
     public Jingle createSessionTerminateContentCancel(FullJid recipient, String sessionId,
                                                       JingleContent.Creator contentCreator, String contentName) {
         Jingle.Builder jb = Jingle.getBuilder();
@@ -269,6 +349,12 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 23.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateUnsupportedTransports(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.unsupported_transports);
     }
@@ -280,6 +366,12 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 24.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateFailedTransport(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.failed_transport);
     }
@@ -291,6 +383,12 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 25.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateUnsupportedApplications(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.unsupported_applications);
     }
@@ -302,6 +400,12 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 26.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateFailedApplication(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.failed_application);
     }
@@ -313,6 +417,12 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 27.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionTerminateIncompatibleParameters(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.incompatible_parameters);
     }
@@ -328,6 +438,12 @@ public class JingleUtil {
         return null; //TODO Later
     }
 
+    /**
+     * XEP-0166 Example 32.
+     * @param recipient
+     * @param sessionId
+     * @return
+     */
     public Jingle createSessionPing(FullJid recipient, String sessionId) {
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setSessionId(sessionId)
@@ -347,6 +463,11 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 Example 5.
+     * @param jingle
+     * @return
+     */
     public IQ createAck(Jingle jingle) {
         return IQ.createResultIQ(jingle);
     }
@@ -355,6 +476,16 @@ public class JingleUtil {
         connection.sendStanza(createAck(jingle));
     }
 
+    /**
+     * XEP-0260 Example 15.
+     * @param recipient
+     * @param initiator
+     * @param sessionId
+     * @param contentCreator
+     * @param contentName
+     * @param transport
+     * @return
+     */
     public Jingle createTransportReplace(FullJid recipient, FullJid initiator, String sessionId,
                                          JingleContent.Creator contentCreator, String contentName,
                                          JingleContentTransport transport) {
@@ -382,6 +513,16 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0260 Example 17.
+     * @param recipient
+     * @param initiator
+     * @param sessionId
+     * @param contentCreator
+     * @param contentName
+     * @param transport
+     * @return
+     */
     public Jingle createTransportAccept(FullJid recipient, FullJid initiator, String sessionId,
                                         JingleContent.Creator contentCreator, String contentName,
                                         JingleContentTransport transport) {
@@ -409,6 +550,16 @@ public class JingleUtil {
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
+    /**
+     * XEP-0166 §7.2.14.
+     * @param recipient
+     * @param initiator
+     * @param sessionId
+     * @param contentCreator
+     * @param contentName
+     * @param transport
+     * @return
+     */
     public Jingle createTransportReject(FullJid recipient, FullJid initiator, String sessionId,
                                         JingleContent.Creator contentCreator, String contentName,
                                         JingleContentTransport transport) {
@@ -440,6 +591,11 @@ public class JingleUtil {
      * ####################################################################################################
      */
 
+    /**
+     * XEP-0166 Example 29.
+     * @param request request with unknown sessionId.
+     * @return error stanza.
+     */
     public IQ createErrorUnknownSession(Jingle request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.item_not_found)
@@ -452,8 +608,14 @@ public class JingleUtil {
         connection.sendStanza(createErrorUnknownSession(request));
     }
 
+    /**
+     * XEP-0166 Example 12.
+     * @param request request from unknown initiator.
+     * @return error stanza.
+     */
     public IQ createErrorUnknownInitiator(Jingle request) {
-        return IQ.createErrorResponse(request, XMPPError.Condition.service_unavailable);
+        XMPPError.Builder b = XMPPError.getBuilder().setType(XMPPError.Type.CANCEL).setCondition(XMPPError.Condition.service_unavailable);
+        return IQ.createErrorResponse(request, b);
     }
 
     public void sendErrorUnknownInitiator(Jingle request)
@@ -461,6 +623,11 @@ public class JingleUtil {
         connection.sendStanza(createErrorUnknownInitiator(request));
     }
 
+    /**
+     * XEP-0166 Example 31.
+     * @param request request with unsupported info.
+     * @return error stanza.
+     */
     public IQ createErrorUnsupportedInfo(Jingle request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.feature_not_implemented)
@@ -473,6 +640,11 @@ public class JingleUtil {
         connection.sendStanza(createErrorUnsupportedInfo(request));
     }
 
+    /**
+     * XEP-0166 Example 34.
+     * @param request tie-breaking request
+     * @return error stanza
+     */
     public IQ createErrorTieBreak(Jingle request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.conflict)

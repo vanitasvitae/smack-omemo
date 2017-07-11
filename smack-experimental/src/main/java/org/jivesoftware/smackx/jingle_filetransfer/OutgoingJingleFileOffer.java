@@ -59,10 +59,12 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
                     task.cancel(true);
                     queued.remove(task);
                 }
+                break;
 
             default:
-                jutil.sendSessionTerminateCancel(getRemote(), getSessionId());
         }
+
+        jutil.sendSessionTerminateCancel(getRemote(), getSessionId());
         notifyEndedListeners(JingleReason.Reason.cancel);
     }
 

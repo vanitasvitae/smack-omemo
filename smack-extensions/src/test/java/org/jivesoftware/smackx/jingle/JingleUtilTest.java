@@ -21,6 +21,8 @@ import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
 
+import java.io.IOException;
+
 import org.jivesoftware.smack.DummyConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
@@ -37,6 +39,7 @@ import org.junit.Test;
 import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
+import org.xml.sax.SAXException;
 
 
 /**
@@ -259,6 +262,76 @@ public class JingleUtilTest extends SmackTestSuite {
                         "type='error'>" +
                         "<error type='cancel'>" +
                         "<bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+                        "</error>" +
+                        "</iq>";
+        assertXMLEqual(xml, error.toXML().toString());
+    }
+
+    @Test
+    public void createErrorTieBreakTest() throws IOException, SAXException {
+        Jingle j = defaultJingle(romeo, "thisistie");
+        IQ error = jutil.createErrorTieBreak(j);
+        String xml =
+                "<iq " +
+                        "to='" + romeo + "' " +
+                        "from='" + romeo + "' " +
+                        "id='" + j.getStanzaId() + "' " +
+                        "type='error'>" +
+                        "<error type='cancel'>" +
+                        "<conflict xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+                        "<tie-break xmlns='urn:xmpp:jingle:errors:1'/>" +
+                        "</error>" +
+                        "</iq>";
+        assertXMLEqual(xml, error.toXML().toString());
+    }
+
+    @Test
+    public void createErrorUnknownSessionTest() throws IOException, SAXException {
+        Jingle j = defaultJingle(romeo, "youknownothingjohnsnow");
+        IQ error = jutil.createErrorUnknownSession(j);
+        String xml =
+                "<iq " +
+                        "to='" + romeo + "' " +
+                        "from='" + romeo + "' " +
+                        "id='" + j.getStanzaId() + "' " +
+                        "type='error'>" +
+                        "<error type='cancel'>" +
+                        "<item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+                        "<unknown-session xmlns='urn:xmpp:jingle:errors:1'/>" +
+                        "</error>" +
+                        "</iq>";
+        assertXMLEqual(xml, error.toXML().toString());
+    }
+
+    @Test
+    public void createErrorUnknownInitiatorTest() throws IOException, SAXException {
+        Jingle j = defaultJingle(romeo, "iamyourfather");
+        IQ error = jutil.createErrorUnknownInitiator(j);
+        String xml =
+                "<iq " +
+                        "to='" + romeo + "' " +
+                        "from='" + romeo + "' " +
+                        "id='" + j.getStanzaId() + "' " +
+                        "type='error'>" +
+                        "<error type='cancel'>" +
+                        "<service-unavailable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+                        "</error>" +
+                        "</iq>";
+        assertXMLEqual(xml, error.toXML().toString());
+    }
+
+    @Test
+    public void createErrorOutOfOrderTest() throws IOException, SAXException {
+        Jingle j = defaultJingle(romeo, "yourfatheriam");
+        IQ error = jutil.createErrorOutOfOrder(j);
+        String xml =
+                "<iq " +
+                        "to='" + romeo + "' " +
+                        "from='" + romeo + "' " +
+                        "id='" + j.getStanzaId() + "' " +
+                        "type='error'>" +
+                        "<error type='cancel'>" +
+                        "<unexpected-result xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
                         "</error>" +
                         "</iq>";
         assertXMLEqual(xml, error.toXML().toString());
