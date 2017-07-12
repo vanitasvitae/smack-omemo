@@ -33,6 +33,7 @@ import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle.element.JingleReason;
 import org.jivesoftware.smackx.jingle.provider.JingleProvider;
+import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -212,6 +213,40 @@ public class JingleUtilTest extends SmackTestSuite {
     }
 
     @Test
+    public void createSessionTerminateFailedTransportTest() throws IOException, SAXException {
+        Jingle failedTransport = jutil.createSessionTerminateFailedTransport(juliet, "derailed");
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='session-terminate' " +
+                        "sid='derailed'>" +
+                        "<reason>" +
+                        "<failed-transport/>" +
+                        "</reason>" +
+                        "</jingle>";
+        String xml = getIQXML(romeo, juliet, failedTransport.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, failedTransport.toXML().toString());
+        assertEquals(JingleAction.session_terminate, failedTransport.getAction());
+        assertEquals(JingleReason.Reason.failed_transport, failedTransport.getReason().asEnum());
+    }
+
+    @Test
+    public void createSessionTerminateFailedApplicationTest() throws IOException, SAXException {
+        Jingle failedApplication = jutil.createSessionTerminateFailedApplication(juliet, "crashed");
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='session-terminate' " +
+                        "sid='crashed'>" +
+                        "<reason>" +
+                        "<failed-application/>" +
+                        "</reason>" +
+                        "</jingle>";
+        String xml = getIQXML(romeo, juliet, failedApplication.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, failedApplication.toXML().toString());
+        assertEquals(JingleAction.session_terminate, failedApplication.getAction());
+        assertEquals(JingleReason.Reason.failed_application, failedApplication.getReason().asEnum());
+    }
+
+    @Test
     public void createSessionPingTest() throws Exception {
         Jingle ping = jutil.createSessionPing(juliet, "thisisit");
         String jingleXML =
@@ -255,16 +290,61 @@ public class JingleUtilTest extends SmackTestSuite {
         Jingle terminate = jutil.createSessionTerminateIncompatibleParameters(juliet, "incompatibleSID");
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
-                "action='session-terminate' " +
-                "sid='incompatibleSID'>" +
-                "<reason>" +
-                "<incompatible-parameters/>" +
-                "</reason>" +
-                "</jingle>";
+                        "action='session-terminate' " +
+                        "sid='incompatibleSID'>" +
+                        "<reason>" +
+                        "<incompatible-parameters/>" +
+                        "</reason>" +
+                        "</jingle>";
         String xml = getIQXML(romeo, juliet, terminate.getStanzaId(), jingleXML);
         assertXMLEqual(xml, terminate.toXML().toString());
         assertEquals(JingleReason.Reason.incompatible_parameters, terminate.getReason().asEnum());
         assertEquals("incompatibleSID", terminate.getSid());
+    }
+
+    @Test
+    public void createTransportAcceptTest() throws IOException, SAXException {
+        Jingle transportAccept = jutil.createTransportAccept(juliet, romeo, "transAcc", JingleContent.Creator.initiator, "cname", new JingleIBBTransport("transid"));
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='transport-accept' " +
+                        "initiator='" + romeo + "' " +
+                        "sid='transAcc'>" +
+                        "<content creator='initiator' name='cname'>" +
+                        "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
+                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE+"' " +
+                        "sid='transid'/>" +
+                        "</content>" +
+                        "</jingle>";
+        String xml = getIQXML(romeo, juliet, transportAccept.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, transportAccept.toXML().toString());
+        assertEquals(JingleAction.transport_accept, transportAccept.getAction());
+        assertEquals("transAcc", transportAccept.getSid());
+    }
+
+    @Test
+    public void createTransportRejectTest() {
+        //TODO: Find example
+    }
+
+    @Test
+    public void createTransportReplaceTest() throws IOException, SAXException {
+        Jingle transportReplace = jutil.createTransportReplace(juliet, romeo, "transAcc", JingleContent.Creator.initiator, "cname", new JingleIBBTransport("transid"));
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='transport-replace' " +
+                        "initiator='" + romeo + "' " +
+                        "sid='transAcc'>" +
+                        "<content creator='initiator' name='cname'>" +
+                        "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
+                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE+"' " +
+                        "sid='transid'/>" +
+                        "</content>" +
+                        "</jingle>";
+        String xml = getIQXML(romeo, juliet, transportReplace.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, transportReplace.toXML().toString());
+        assertEquals(JingleAction.transport_replace, transportReplace.getAction());
+        assertEquals("transAcc", transportReplace.getSid());
     }
 
     @Test
