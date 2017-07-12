@@ -4,13 +4,13 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 
 import org.jivesoftware.smack.DummyConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.JingleManager;
@@ -23,6 +23,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildEleme
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
+import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.jxmpp.util.XmppDateTime;
-import org.xml.sax.SAXException;
 
 /**
  * Created by vanitas on 12.07.17.
@@ -55,11 +55,11 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
     }
 
     @Test
-    public void createSessionInitiateTest() throws IOException, SAXException {
+    public void createSessionInitiateTest() throws Exception {
         JingleIBBTransport transport = new JingleIBBTransport("transid");
         Date date = new Date();
         HashElement hash = new HashElement(HashManager.ALGORITHM.SHA_256, "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=");
-        JingleFileTransferChild file = new JingleFileTransferChild(date, "desc", hash, "application/octet-string", "name", 1337, null);
+        JingleFileTransferChild file = new JingleFileTransferChild(date, "desc", hash, "application/octet-stream", "name", 1337, null);
         JingleFileTransfer description = new JingleFileTransfer(Collections.<JingleContentDescriptionChildElement>singletonList(file));
 
         String contentName = "content";
@@ -97,7 +97,7 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
         assertEquals(JingleFileTransfer.NAMESPACE_V5, description.getNamespace());
         assertEquals(date, file.getDate());
         assertEquals(hash, file.getHash());
-        assertEquals("application/octet-string", file.getMediaType());
+        assertEquals("application/octet-stream", file.getMediaType());
         assertEquals("name", file.getName());
         assertEquals(1337, file.getSize());
         assertNull(file.getRange());
@@ -117,7 +117,7 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
                 "<file>" +
                 "<date>" + XmppDateTime.formatXEP0082Date(date) + "</date>" +
                 "<desc>desc</desc>" +
-                "<media-type>application/octet-string</media-type>" +
+                "<media-type>application/octet-stream</media-type>" +
                 "<name>name</name>" +
                 //"<range/>" + TODO: insert empty element when null?
                 "<size>1337</size>" +
@@ -126,6 +126,10 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
                 "</file>" +
                 "</description>";
         assertXMLEqual(descriptionXML, description.toXML().toString());
+
+        JingleFileTransfer parsed = new JingleFileTransferProvider().parse(TestUtils.getParser(descriptionXML));
+        assertEquals(1, parsed.getJingleContentDescriptionChildren().size());
+        assertEquals(file.toXML().toString(), parsed.getJingleContentDescriptionChildren().get(0).toXML().toString());
 
         String contentXML = "<content creator='initiator' name='content' senders='initiator'>" +
                 descriptionXML +
