@@ -312,7 +312,7 @@ public class JingleUtilTest extends SmackTestSuite {
                         "sid='transAcc'>" +
                         "<content creator='initiator' name='cname'>" +
                         "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
-                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE+"' " +
+                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE + "' " +
                         "sid='transid'/>" +
                         "</content>" +
                         "</jingle>";
@@ -337,7 +337,7 @@ public class JingleUtilTest extends SmackTestSuite {
                         "sid='transAcc'>" +
                         "<content creator='initiator' name='cname'>" +
                         "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
-                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE+"' " +
+                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE + "' " +
                         "sid='transid'/>" +
                         "</content>" +
                         "</jingle>";
