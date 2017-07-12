@@ -660,7 +660,7 @@ public class JingleUtil {
     public IQ createErrorUnsupportedInfo(Jingle request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.feature_not_implemented)
-                .addExtension(JingleError.UNSUPPORTED_INFO);
+                .addExtension(JingleError.UNSUPPORTED_INFO).setType(XMPPError.Type.MODIFY);
         return IQ.createErrorResponse(request, error);
     }
 

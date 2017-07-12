@@ -251,6 +251,23 @@ public class JingleUtilTest extends SmackTestSuite {
     }
 
     @Test
+    public void createSessionTerminateIncompatibleParameters() throws IOException, SAXException {
+        Jingle terminate = jutil.createSessionTerminateIncompatibleParameters(juliet, "incompatibleSID");
+        String jingleXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                "action='session-terminate' " +
+                "sid='incompatibleSID'>" +
+                "<reason>" +
+                "<incompatible-parameters/>" +
+                "</reason>" +
+                "</jingle>";
+        String xml = getIQXML(romeo, juliet, terminate.getStanzaId(), jingleXML);
+        assertXMLEqual(xml, terminate.toXML().toString());
+        assertEquals(JingleReason.Reason.incompatible_parameters, terminate.getReason().asEnum());
+        assertEquals("incompatibleSID", terminate.getSid());
+    }
+
+    @Test
     public void createErrorMalformedRequestTest() throws Exception {
         Jingle j = defaultJingle(romeo, "error123");
         IQ error = jutil.createErrorMalformedRequest(j);
@@ -330,14 +347,34 @@ public class JingleUtilTest extends SmackTestSuite {
                         "from='" + romeo + "' " +
                         "id='" + j.getStanzaId() + "' " +
                         "type='error'>" +
-                        "<error type='cancel'>" +
-                        "<unexpected-result xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+                        //"<error type='cancel'>" +
+                        "<error type='modify'>" + //TODO: Why?
+                        "<unexpected-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+                        "<out-of-order xmlns='urn:xmpp:jingle:errors:1'/>" +
                         "</error>" +
                         "</iq>";
         assertXMLEqual(xml, error.toXML().toString());
     }
 
-    private String getIQXML(FullJid from, FullJid to, String stanzaId, String jingleXML) {
+    @Test
+    public void createErrorUnsupportedInfoTest() throws IOException, SAXException {
+        Jingle j = defaultJingle(romeo, "thisstatementiswrong");
+        IQ error = jutil.createErrorUnsupportedInfo(j);
+        String xml =
+                "<iq " +
+                        "to='" + romeo + "' " +
+                        "from='" + romeo + "' " +
+                        "id='" + j.getStanzaId() + "' " +
+                        "type='error'>" +
+                        "<error type='modify'>" +
+                        "<feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+                        "<unsupported-info xmlns='urn:xmpp:jingle:errors:1'/>" +
+                        "</error>" +
+                        "</iq>";
+        assertXMLEqual(xml, error.toXML().toString());
+    }
+
+    public static String getIQXML(FullJid from, FullJid to, String stanzaId, String jingleXML) {
         return "<iq from='" + from + "' id='" + stanzaId + "' to='" + to + "' type='set'>" +
                 jingleXML +
                 "</iq>";
