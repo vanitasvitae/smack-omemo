@@ -61,15 +61,32 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
         HashElement hash = new HashElement(HashManager.ALGORITHM.SHA_256, "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=");
         JingleFileTransferChild file = new JingleFileTransferChild(date, "desc", hash, "application/octet-string", "name", 1337, null);
         JingleFileTransfer description = new JingleFileTransfer(Collections.<JingleContentDescriptionChildElement>singletonList(file));
-        Jingle initiate = jutil.createSessionInitiate(juliet, "letsstart", JingleContent.Creator.initiator, "content", JingleContent.Senders.initiator, description, transport);
+
+        String contentName = "content";
+
+        Jingle initiate = jutil.createSessionInitiate(juliet, "letsstart", JingleContent.Creator.initiator, contentName, JingleContent.Senders.initiator, description, transport);
+        Jingle accept = jutil.createSessionAccept(juliet, "acceptID", JingleContent.Creator.initiator, contentName, JingleContent.Senders.initiator, description, transport);
+        Jingle fileOffer = jutil.createSessionInitiateFileOffer(juliet, "fileOffer", JingleContent.Creator.initiator, contentName, description, transport);
 
         assertEquals(JingleAction.session_initiate, initiate.getAction());
+        assertEquals(JingleAction.session_accept, accept.getAction());
+
         assertEquals(romeo, initiate.getInitiator());
-        assertNull(initiate.getResponder()); //Must be null
+        assertEquals(romeo, accept.getResponder());
+        //Must be null
+        assertNull(initiate.getResponder());
+        assertNull(accept.getInitiator());
+
         assertEquals("letsstart", initiate.getSid());
+        assertEquals("acceptID", accept.getSid());
+
         assertEquals(1, initiate.getContents().size());
+        assertEquals(1, accept.getContents().size());
 
         JingleContent content = initiate.getContents().get(0);
+        assertEquals(content.toXML().toString(), initiate.getContents().get(0).toXML().toString());
+        assertEquals(content.toXML().toString(), accept.getContents().get(0).toXML().toString());
+
         assertEquals("content", content.getName());
         assertEquals(JingleContent.Creator.initiator, content.getCreator());
         assertEquals(JingleContent.Senders.initiator, content.getSenders());
@@ -116,14 +133,34 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
                 "</content>";
         assertXMLEqual(contentXML, content.toXML().toString());
 
-        String jingleXML =
+        String initiateXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-initiate' " +
                         "initiator='" + romeo + "' " +
                         "sid='letsstart'>" +
                         contentXML +
                         "</jingle>";
-        String xml = JingleUtilTest.getIQXML(romeo, juliet, initiate.getStanzaId(), jingleXML);
+        String xml = JingleUtilTest.getIQXML(romeo, juliet, initiate.getStanzaId(), initiateXML);
         assertXMLEqual(xml, initiate.toXML().toString());
+
+        String acceptXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                "action='session-accept' " +
+                "responder='" + romeo + "' " +
+                "sid='acceptID'>" +
+                contentXML +
+                "</jingle>";
+        xml = JingleUtilTest.getIQXML(romeo, juliet, accept.getStanzaId(), acceptXML);
+        assertXMLEqual(xml, accept.toXML().toString());
+
+        String fileOfferXML =
+                "<jingle xmlns='urn:xmpp:jingle:1' " +
+                        "action='session-initiate' " +
+                        "initiator='" + romeo + "' " +
+                        "sid='fileOffer'>" +
+                        contentXML +
+                        "</jingle>";
+        xml = JingleUtilTest.getIQXML(romeo, juliet, fileOffer.getStanzaId(), fileOfferXML);
+        assertXMLEqual(xml, fileOffer.toXML().toString());
     }
 }
