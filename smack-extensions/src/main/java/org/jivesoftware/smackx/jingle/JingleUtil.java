@@ -43,15 +43,16 @@ public class JingleUtil {
     }
 
     /**
+     * Initiate a Jingle session.
      * XEP-0166 Example 10.
-     * @param recipient
-     * @param sessionId
-     * @param contentCreator
-     * @param contentName
-     * @param contentSenders
-     * @param description
-     * @param transport
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId
+     * @param contentCreator creator of the content.
+     * @param contentName name of the content.
+     * @param contentSenders sender of the content.
+     * @param description description of the content.
+     * @param transport used transport.
+     * @return session-initiate stanza.
      */
     public Jingle createSessionInitiate(FullJid recipient,
                                         String sessionId,
@@ -81,14 +82,15 @@ public class JingleUtil {
     }
 
     /**
+     * Initiate a file transfer session.
      * XEP-0234 Example 1.
-     * @param recipient
-     * @param sessionId
-     * @param contentCreator
-     * @param contentName
-     * @param description
-     * @param transport
-     * @return
+     * @param recipient recipient of the file transfer.
+     * @param sessionId sessionId.
+     * @param contentCreator creator of the content.
+     * @param contentName name of the content.
+     * @param description description of the content.
+     * @param transport used transport.
+     * @return session-initiate stanza.
      */
     public Jingle createSessionInitiateFileOffer(FullJid recipient,
                                                  String sessionId,
@@ -130,15 +132,16 @@ public class JingleUtil {
     }
 
     /**
+     * Accept a session.
      * XEP-0166 Example 17.
-     * @param recipient
-     * @param sessionId
-     * @param contentCreator
-     * @param contentName
-     * @param contentSenders
-     * @param description
-     * @param transport
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @param contentCreator creator of the content.
+     * @param contentName name of the content.
+     * @param contentSenders sender of the content.
+     * @param description description of the content.
+     * @param transport proposed transport.
+     * @return session-accept stanza.
      */
     public Jingle createSessionAccept(FullJid recipient,
                                       String sessionId,
@@ -184,11 +187,12 @@ public class JingleUtil {
     }
 
     /**
+     * Create a session-terminate stanza.
      * XEP-0166 §6.7.
-     * @param recipient
-     * @param sessionId
-     * @param reason
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @param reason reason of termination.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminate(FullJid recipient, String sessionId, JingleReason reason) {
         Jingle.Builder jb = Jingle.getBuilder();
@@ -203,6 +207,14 @@ public class JingleUtil {
         return jingle;
     }
 
+    /**
+     * Create a session-terminate stanza.
+     * XEP-0166 §6.7.
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @param reason reason of termination.
+     * @return session-terminate stanza.
+     */
     public Jingle createSessionTerminate(FullJid recipient, String sessionId, JingleReason.Reason reason) {
         return createSessionTerminate(recipient, sessionId, new JingleReason(reason));
     }
@@ -224,10 +236,11 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate the session by declining.
      * XEP-0166 Example 21.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateDecline(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.decline);
@@ -242,10 +255,11 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate the session due to success.
      * XEP-0166 Example 19.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateSuccess(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.success);
@@ -260,10 +274,11 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate the session due to being busy.
      * XEP-0166 Example 20.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateBusy(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.busy);
@@ -278,11 +293,12 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate the session due to the existence of an alternative session.
      * XEP-0166 Example 22.
-     * @param recipient
-     * @param sessionId
-     * @param altSessionId
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @param altSessionId id of the alternative session.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateAlternativeSession(FullJid recipient, String sessionId, String altSessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.AlternativeSession(altSessionId));
@@ -297,11 +313,11 @@ public class JingleUtil {
     }
 
     /**
-     * XEP-0234 Example 9.
      * Cancel all active transfers of the session.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * XEP-0234 Example 9.
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateCancel(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.cancel);
@@ -317,13 +333,13 @@ public class JingleUtil {
     }
 
     /**
+     * Cancel a single contents transfer.
      * XEP-0234 Example 10.
-     * Cancel a single transfer.
-     * @param recipient
-     * @param sessionId
-     * @param contentCreator
-     * @param contentName
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @param contentCreator creator of the content.
+     * @param contentName name of the content.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateContentCancel(FullJid recipient, String sessionId,
                                                       JingleContent.Creator contentCreator, String contentName) {
@@ -350,10 +366,11 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate the session due to unsupported transport methods.
      * XEP-0166 Example 23.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateUnsupportedTransports(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.unsupported_transports);
@@ -367,10 +384,11 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate the session due to failed transports.
      * XEP-0166 Example 24.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateFailedTransport(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.failed_transport);
@@ -384,10 +402,11 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate the session due to unsupported applications.
      * XEP-0166 Example 25.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateUnsupportedApplications(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.unsupported_applications);
@@ -401,10 +420,11 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate the session due to failed application.
      * XEP-0166 Example 26.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @return session-terminate stanza.
      */
     public Jingle createSessionTerminateFailedApplication(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.failed_application);
@@ -418,10 +438,11 @@ public class JingleUtil {
     }
 
     /**
+     * Terminate session due to incompatible parameters.
      * XEP-0166 Example 27.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza
+     * @param sessionId sessionId
+     * @return session-terminate stanza
      */
     public Jingle createSessionTerminateIncompatibleParameters(FullJid recipient, String sessionId) {
         return createSessionTerminate(recipient, sessionId, JingleReason.Reason.incompatible_parameters);
@@ -439,10 +460,11 @@ public class JingleUtil {
     }
 
     /**
+     * Create a session ping stanza.
      * XEP-0166 Example 32.
-     * @param recipient
-     * @param sessionId
-     * @return
+     * @param recipient recipient of the stanza
+     * @param sessionId id of the session
+     * @return ping stanza
      */
     public Jingle createSessionPing(FullJid recipient, String sessionId) {
         Jingle.Builder jb = Jingle.getBuilder();
@@ -464,9 +486,10 @@ public class JingleUtil {
     }
 
     /**
+     * Acknowledge the receipt of a stanza.
      * XEP-0166 Example 5.
-     * @param jingle
-     * @return
+     * @param jingle stanza that was received
+     * @return acknowledgement
      */
     public IQ createAck(Jingle jingle) {
         return IQ.createResultIQ(jingle);
@@ -477,14 +500,15 @@ public class JingleUtil {
     }
 
     /**
+     * Replace a transport with another one.
      * XEP-0260 Example 15.
-     * @param recipient
-     * @param initiator
-     * @param sessionId
-     * @param contentCreator
-     * @param contentName
-     * @param transport
-     * @return
+     * @param recipient recipient of the stanza
+     * @param initiator initiator of the session
+     * @param sessionId sessionId
+     * @param contentCreator creator of the content
+     * @param contentName name of the content
+     * @param transport proposed transport
+     * @return transport-replace stanza
      */
     public Jingle createTransportReplace(FullJid recipient, FullJid initiator, String sessionId,
                                          JingleContent.Creator contentCreator, String contentName,
@@ -514,14 +538,15 @@ public class JingleUtil {
     }
 
     /**
+     * Accept a transport.
      * XEP-0260 Example 17.
-     * @param recipient
-     * @param initiator
-     * @param sessionId
-     * @param contentCreator
-     * @param contentName
-     * @param transport
-     * @return
+     * @param recipient recipient of the stanza
+     * @param initiator initiator of the session
+     * @param sessionId sessionId
+     * @param contentCreator creator of the content
+     * @param contentName name of the content
+     * @param transport transport to accept
+     * @return transport-accept stanza
      */
     public Jingle createTransportAccept(FullJid recipient, FullJid initiator, String sessionId,
                                         JingleContent.Creator contentCreator, String contentName,
@@ -551,14 +576,15 @@ public class JingleUtil {
     }
 
     /**
+     * Reject a transport.
      * XEP-0166 §7.2.14.
-     * @param recipient
-     * @param initiator
-     * @param sessionId
-     * @param contentCreator
-     * @param contentName
-     * @param transport
-     * @return
+     * @param recipient recipient of the stanza
+     * @param initiator initiator of the session
+     * @param sessionId sessionId
+     * @param contentCreator creator of the content
+     * @param contentName name of the content
+     * @param transport transport to reject
+     * @return transport-reject stanza
      */
     public Jingle createTransportReject(FullJid recipient, FullJid initiator, String sessionId,
                                         JingleContent.Creator contentCreator, String contentName,
@@ -592,6 +618,7 @@ public class JingleUtil {
      */
 
     /**
+     * Create an error response to a request with an unknown session id.
      * XEP-0166 Example 29.
      * @param request request with unknown sessionId.
      * @return error stanza.
@@ -609,6 +636,7 @@ public class JingleUtil {
     }
 
     /**
+     * Create an error response to a request coming from a unknown initiator.
      * XEP-0166 Example 12.
      * @param request request from unknown initiator.
      * @return error stanza.
@@ -624,6 +652,7 @@ public class JingleUtil {
     }
 
     /**
+     * Create an error response to a request with an unsupported info.
      * XEP-0166 Example 31.
      * @param request request with unsupported info.
      * @return error stanza.
@@ -641,6 +670,7 @@ public class JingleUtil {
     }
 
     /**
+     * Create an error response to a tie-breaking request.
      * XEP-0166 Example 34.
      * @param request tie-breaking request
      * @return error stanza
@@ -657,6 +687,12 @@ public class JingleUtil {
         connection.sendStanza(createErrorTieBreak(request));
     }
 
+    /**
+     * Create an error response to a request that was out of order.
+     * TODO: Find example.
+     * @param request request out of order.
+     * @return error stanza.
+     */
     public IQ createErrorOutOfOrder(Jingle request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.unexpected_request)
@@ -670,9 +706,10 @@ public class JingleUtil {
     }
 
     /**
+     * Create an error response to a malformed request.
      * XEP-0166 Ex. 16
-     * @param request
-     * @return
+     * @param request malformed request
+     * @return error stanza.
      */
     public IQ createErrorMalformedRequest(Jingle request) {
         XMPPError.Builder error = XMPPError.getBuilder();
