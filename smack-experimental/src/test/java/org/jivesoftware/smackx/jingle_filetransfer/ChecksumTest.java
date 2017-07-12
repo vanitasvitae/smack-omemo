@@ -19,11 +19,13 @@ package org.jivesoftware.smackx.jingle_filetransfer;
 import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Checksum;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
+import org.jivesoftware.smackx.jingle_filetransfer.provider.ChecksumProvider;
 
 import org.junit.Test;
 
@@ -43,6 +45,6 @@ public class ChecksumTest extends SmackTestSuite {
                 "</checksum>";
 
         assertXMLEqual(xml, checksum.toXML().toString());
-        //assertXMLEqual(xml, new ChecksumProvider().parse(TestUtils.getParser(xml)).toXML().toString()); TODO: Fails
+        assertXMLEqual(xml, new ChecksumProvider().parse(TestUtils.getParser(xml)).toXML().toString()); //TODO: Fails
     }
 }
