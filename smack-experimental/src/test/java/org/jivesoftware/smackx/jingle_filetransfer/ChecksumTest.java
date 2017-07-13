@@ -25,6 +25,7 @@ import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Checksum;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
+import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.ChecksumProvider;
 
 import org.junit.Test;
@@ -41,10 +42,26 @@ public class ChecksumTest extends SmackTestSuite {
         Checksum checksum = new Checksum(JingleContent.Creator.initiator, "name", file);
 
         String xml = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator' name='name'>" +
-                file.toXML().toString() +
+                "<file>" +
+                "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=</hash>" +
+                "</file>" +
                 "</checksum>";
 
         assertXMLEqual(xml, checksum.toXML().toString());
         assertXMLEqual(xml, new ChecksumProvider().parse(TestUtils.getParser(xml)).toXML().toString());
+
+        Range range = new Range(12,34);
+        file = new JingleFileTransferChild(null, null, hash, null, null, -1, range);
+        checksum = new Checksum(JingleContent.Creator.initiator, "name", file);
+
+        xml = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator' name='name'>" +
+                "<file>" +
+                "<range offset='12' length='34'/>" +
+                "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=</hash>" +
+                "</file>" +
+                "</checksum>";
+        assertXMLEqual(xml, checksum.toXML().toString());
+        assertXMLEqual(xml, new ChecksumProvider().parse(TestUtils.getParser(xml)).toXML().toString());
+
     }
 }
