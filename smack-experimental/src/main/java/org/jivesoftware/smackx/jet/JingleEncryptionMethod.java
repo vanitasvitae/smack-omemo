@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_encrypted_transfer;
+package org.jivesoftware.smackx.jet;
 
 import java.security.NoSuchAlgorithmException;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.ExtensionElement;
-import org.jivesoftware.smack.provider.ExtensionElementProvider;
 
 import org.jxmpp.jid.FullJid;
 
@@ -34,9 +33,9 @@ public interface JingleEncryptionMethod {
 
     byte[] decryptJingleTransfer(FullJid sender, ExtensionElement encryptionElement) throws JingleEncryptionException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException;
 
-    ExtensionElementProvider<ExtensionElement> getEncryptionElementProvider();
-
     class JingleEncryptionException extends Exception {
+        private static final long serialVersionUID = 1L;
+
         public JingleEncryptionException(Throwable throwable) {
             super(throwable);
         }
