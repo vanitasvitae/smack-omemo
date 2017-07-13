@@ -42,10 +42,12 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Stanza;
 
+import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.carbons.CarbonManager;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
 import org.jivesoftware.smackx.hints.element.StoreHint;
+import org.jivesoftware.smackx.jingle_encrypted_transfer.JingleEncryptionMethod;
 import org.jivesoftware.smackx.mam.MamManager;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
@@ -89,7 +91,7 @@ import org.jxmpp.stringprep.XmppStringprepException;
  * @author Paul Schaub
  */
 
-public final class OmemoManager extends Manager {
+public final class OmemoManager extends Manager implements JingleEncryptionMethod {
     private static final Logger LOGGER = Logger.getLogger(OmemoManager.class.getName());
 
     private static final WeakHashMap<XMPPConnection, WeakHashMap<Integer,OmemoManager>> INSTANCES = new WeakHashMap<>();
@@ -885,5 +887,45 @@ public final class OmemoManager extends Manager {
             omemoCarbonCopyListener = getOmemoService().createOmemoCarbonCopyListener(this);
         }
         return omemoCarbonCopyListener;
+    }
+
+    @Override
+    public ExtensionElement encryptJingleTransfer(FullJid recipient, byte[] keyData) throws JingleEncryptionException, InterruptedException, NoSuchAlgorithmException, SmackException.NotConnectedException, SmackException.NoResponseException {
+        BareJid bareJid = recipient.asBareJid();
+        Message EncryptedMessage;
+        try {
+            EncryptedMessage = encrypt(bareJid, Base64.encodeToString(keyData));
+        } catch (CryptoFailedException | UndecidedOmemoIdentityException | CannotEstablishOmemoSessionException e) {
+            throw new JingleEncryptionException(e);
+        }
+
+        ExtensionElement encryptionElement = EncryptedMessage.getExtension(OmemoElement.ENCRYPTED, OMEMO_NAMESPACE_V_AXOLOTL);
+        if (encryptionElement == null) {
+            throw new AssertionError("OmemoElement MUST NOT be null.");
+        }
+
+        return encryptionElement;
+    }
+
+    @Override
+    public byte[] decryptJingleTransfer(FullJid sender, ExtensionElement encryptionElement) throws JingleEncryptionException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+        if (!encryptionElement.getNamespace().equals(OMEMO_NAMESPACE_V_AXOLOTL)
+                || !encryptionElement.getElementName().equals(OmemoElement.ENCRYPTED)) {
+            throw new IllegalArgumentException("Passed ExtensionElement MUST be an OmemoElement!");
+        }
+
+        OmemoElement omemoElement = (OmemoElement) encryptionElement;
+        Message pseudoMessage = new Message();
+        pseudoMessage.setFrom(sender.asBareJid());
+        pseudoMessage.addExtension(omemoElement);
+
+        ClearTextMessage decryptedPseudoMessage;
+        try {
+            decryptedPseudoMessage = decrypt(sender.asBareJid(), pseudoMessage);
+        } catch (CryptoFailedException | CorruptedOmemoKeyException | NoRawSessionException e) {
+            throw new JingleEncryptionException(e);
+        }
+
+        return Base64.decode(decryptedPseudoMessage.getBody());
     }
 }
