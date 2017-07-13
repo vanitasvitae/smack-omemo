@@ -22,22 +22,22 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smack.util.Objects;
-import org.jivesoftware.smackx.jet.JingleEncryptedTransferManager;
+import org.jivesoftware.smackx.jet.JetManager;
 import org.jivesoftware.smackx.jet.JingleEncryptionMethodManager;
 import org.jivesoftware.smackx.jet.element.SecurityElement;
 
 import org.xmlpull.v1.XmlPullParser;
 
 /**
- * Created by vanitas on 13.07.17.
+ * Provider for the Jingle security element for XEP-XXXX (Jingle Encrypted Transfers).
  */
 public class SecurityProvider extends ExtensionElementProvider<SecurityElement> {
     private static final Logger LOGGER = Logger.getLogger(SecurityProvider.class.getName());
 
     @Override
     public SecurityElement parse(XmlPullParser parser, int initialDepth) throws Exception {
-        String name = parser.getAttributeValue(JingleEncryptedTransferManager.NAMESPACE, SecurityElement.ATTR_NAME);
-        String type = parser.getAttributeValue(JingleEncryptedTransferManager.NAMESPACE, SecurityElement.ATTR_TYPE);
+        String name = parser.getAttributeValue(JetManager.NAMESPACE, SecurityElement.ATTR_NAME);
+        String type = parser.getAttributeValue(JetManager.NAMESPACE, SecurityElement.ATTR_TYPE);
         ExtensionElement child;
 
         Objects.requireNonNull(type);

@@ -25,7 +25,7 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jxmpp.jid.FullJid;
 
 /**
- * Created by vanitas on 13.07.17.
+ * Classes that implement this interface can be used to encrypt Jingle File Transfers.
  */
 public interface JingleEncryptionMethod {
 

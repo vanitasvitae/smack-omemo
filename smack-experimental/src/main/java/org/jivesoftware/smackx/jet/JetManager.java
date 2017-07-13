@@ -24,25 +24,25 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 
 /**
- * Created by vanitas on 13.07.17.
+ * Manager for Jingle Encrypted Transfers (XEP-XXXX).
  */
-public final class JingleEncryptedTransferManager extends Manager {
+public final class JetManager extends Manager {
 
     public static final String NAMESPACE = "urn:xmpp:jingle:jet:0";
 
-    private static final WeakHashMap<XMPPConnection, JingleEncryptedTransferManager> INSTANCES = new WeakHashMap<>();
+    private static final WeakHashMap<XMPPConnection, JetManager> INSTANCES = new WeakHashMap<>();
 
     private static final Map<String, JingleEncryptionMethod> encryptionProviders = new HashMap<>();
 
-    private JingleEncryptedTransferManager(XMPPConnection connection) {
+    private JetManager(XMPPConnection connection) {
         super(connection);
     }
 
-    public static JingleEncryptedTransferManager getInstanceFor(XMPPConnection connection) {
-        JingleEncryptedTransferManager manager = INSTANCES.get(connection);
+    public static JetManager getInstanceFor(XMPPConnection connection) {
+        JetManager manager = INSTANCES.get(connection);
 
         if (manager == null) {
-            manager = new JingleEncryptedTransferManager(connection);
+            manager = new JetManager(connection);
             INSTANCES.put(connection, manager);
         }
 

@@ -18,10 +18,10 @@ package org.jivesoftware.smackx.jet.element;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
-import org.jivesoftware.smackx.jet.JingleEncryptedTransferManager;
+import org.jivesoftware.smackx.jet.JetManager;
 
 /**
- * Created by vanitas on 13.07.17.
+ * Implementation of the Jingle security element as specified in XEP-XXXX (Jingle Encrypted Transfers).
  */
 public class SecurityElement implements ExtensionElement {
     public static final String ELEMENT = "security";
@@ -53,6 +53,6 @@ public class SecurityElement implements ExtensionElement {
 
     @Override
     public String getNamespace() {
-        return JingleEncryptedTransferManager.NAMESPACE;
+        return JetManager.NAMESPACE;
     }
 }

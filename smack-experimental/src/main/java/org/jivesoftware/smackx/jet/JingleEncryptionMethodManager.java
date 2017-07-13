@@ -22,7 +22,7 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
 
 /**
- * Created by vanitas on 13.07.17.
+ * Manager where JingleEncryptionMethods can register their SecurityKeyTransportProviders.
  */
 public final class JingleEncryptionMethodManager {
 
