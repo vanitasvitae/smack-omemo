@@ -50,7 +50,7 @@ public class ChecksumProvider extends ExtensionElementProvider<Checksum> {
         boolean go = true;
         while (go) {
             int tag = parser.nextTag();
-            String n = parser.getText();
+            String n = parser.getName();
 
             if (tag == START_TAG) {
                 switch (n) {

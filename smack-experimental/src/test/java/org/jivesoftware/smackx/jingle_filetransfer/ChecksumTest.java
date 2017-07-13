@@ -45,6 +45,6 @@ public class ChecksumTest extends SmackTestSuite {
                 "</checksum>";
 
         assertXMLEqual(xml, checksum.toXML().toString());
-        assertXMLEqual(xml, new ChecksumProvider().parse(TestUtils.getParser(xml)).toXML().toString()); //TODO: Fails
+        assertXMLEqual(xml, new ChecksumProvider().parse(TestUtils.getParser(xml)).toXML().toString());
     }
 }
