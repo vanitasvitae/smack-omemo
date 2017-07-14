@@ -16,6 +16,10 @@
  */
 package org.jivesoftware.smackx.jingle.element;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jivesoftware.smack.packet.Element;
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smack.util.StringUtils;
@@ -68,17 +72,22 @@ public final class JingleContent implements NamedElement {
 
     private final JingleContentTransport transport;
 
+    private final List<Element> additionalElements = new ArrayList<>();
+
     /**
      * Creates a content description..
      */
     private JingleContent(Creator creator, String disposition, String name, Senders senders,
-                    JingleContentDescription description, JingleContentTransport transport) {
+                    JingleContentDescription description, JingleContentTransport transport, List<Element> additionalElements) {
         this.creator = Objects.requireNonNull(creator, "Jingle content creator must not be null");
         this.disposition = disposition;
         this.name = StringUtils.requireNotNullOrEmpty(name, "Jingle content name must not be null or empty");
         this.senders = senders;
         this.description = description;
         this.transport = transport;
+        if (additionalElements != null) {
+            this.additionalElements.addAll(additionalElements);
+        }
     }
 
     public Creator getCreator() {
@@ -115,6 +124,10 @@ public final class JingleContent implements NamedElement {
         return transport;
     }
 
+    public List<Element> getAdditionalElements() {
+        return additionalElements;
+    }
+
     @Override
     public String getElementName() {
         return ELEMENT;
@@ -131,6 +144,10 @@ public final class JingleContent implements NamedElement {
 
         xml.optAppend(description);
         xml.optElement(transport);
+
+        for (Element element : additionalElements) {
+            xml.element(element);
+        }
 
         xml.closeElement(this);
         return xml;
@@ -152,6 +169,8 @@ public final class JingleContent implements NamedElement {
         private JingleContentDescription description;
 
         private JingleContentTransport transport;
+
+        private List<Element> additionalElements = new ArrayList<>();
 
         private Builder() {
         }
@@ -189,8 +208,15 @@ public final class JingleContent implements NamedElement {
             return this;
         }
 
+        public Builder addAdditionalElements(List<Element> elements) {
+            if (elements != null) {
+                additionalElements.addAll(elements);
+            }
+            return this;
+        }
+
         public JingleContent build() {
-            return new JingleContent(creator, disposition, name, senders, description, transport);
+            return new JingleContent(creator, disposition, name, senders, description, transport, additionalElements);
         }
     }
 }

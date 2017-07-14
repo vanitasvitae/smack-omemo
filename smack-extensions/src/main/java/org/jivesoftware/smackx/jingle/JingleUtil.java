@@ -16,9 +16,12 @@
  */
 package org.jivesoftware.smackx.jingle;
 
+import java.util.List;
+
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Element;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -60,7 +63,8 @@ public class JingleUtil {
                                         String contentName,
                                         JingleContent.Senders contentSenders,
                                         JingleContentDescription description,
-                                        JingleContentTransport transport) {
+                                        JingleContentTransport transport,
+                                        List<Element> additionalElements) {
 
         Jingle.Builder jb = Jingle.getBuilder();
         jb.setAction(JingleAction.session_initiate)
@@ -72,7 +76,8 @@ public class JingleUtil {
                 .setName(contentName)
                 .setSenders(contentSenders)
                 .setDescription(description)
-                .setTransport(transport);
+                .setTransport(transport)
+                .addAdditionalElements(additionalElements);
 
         Jingle jingle = jb.addJingleContent(cb.build()).build();
         jingle.setFrom(connection.getUser());
@@ -97,9 +102,10 @@ public class JingleUtil {
                                                  JingleContent.Creator contentCreator,
                                                  String contentName,
                                                  JingleContentDescription description,
-                                                 JingleContentTransport transport) {
+                                                 JingleContentTransport transport,
+                                                 List<Element> additionalElements) {
         return createSessionInitiate(recipient, sessionId, contentCreator, contentName,
-                JingleContent.Senders.initiator, description, transport);
+                JingleContent.Senders.initiator, description, transport, additionalElements);
     }
 
     public IQ sendSessionInitiateFileOffer(FullJid recipient,
@@ -107,11 +113,12 @@ public class JingleUtil {
                                            JingleContent.Creator contentCreator,
                                            String contentName,
                                            JingleContentDescription description,
-                                           JingleContentTransport transport)
+                                           JingleContentTransport transport,
+                                           List<Element> additionalElements)
             throws SmackException.NotConnectedException, InterruptedException,
             XMPPException.XMPPErrorException, SmackException.NoResponseException {
 
-        Jingle jingle = createSessionInitiateFileOffer(recipient, sessionId, contentCreator, contentName, description, transport);
+        Jingle jingle = createSessionInitiateFileOffer(recipient, sessionId, contentCreator, contentName, description, transport, additionalElements);
         return connection.createStanzaCollectorAndSend(jingle).nextResultOrThrow();
     }
 
@@ -121,12 +128,13 @@ public class JingleUtil {
                                   String contentName,
                                   JingleContent.Senders contentSenders,
                                   JingleContentDescription description,
-                                  JingleContentTransport transport)
+                                  JingleContentTransport transport,
+                                  List<Element> additionalElements)
             throws SmackException.NotConnectedException, InterruptedException,
             XMPPException.XMPPErrorException, SmackException.NoResponseException {
 
         Jingle jingle = createSessionInitiate(recipient, sessionId, contentCreator, contentName, contentSenders,
-                description, transport);
+                description, transport, additionalElements);
 
         return connection.createStanzaCollectorAndSend(jingle).nextResult();
     }

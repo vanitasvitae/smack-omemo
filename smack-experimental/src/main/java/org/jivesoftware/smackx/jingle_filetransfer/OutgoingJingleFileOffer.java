@@ -122,7 +122,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
         state = State.pending;
 
-        Jingle initiate = jutil.createSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transportSession.createTransport());
+        Jingle initiate = jutil.createSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transportSession.createTransport(), null);
         this.contents.addAll(initiate.getContents());
 
         connection.sendStanza(initiate);
