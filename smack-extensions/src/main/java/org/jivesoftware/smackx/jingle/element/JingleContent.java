@@ -16,10 +16,6 @@
  */
 package org.jivesoftware.smackx.jingle.element;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jivesoftware.smack.packet.Element;
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smack.util.StringUtils;
@@ -27,6 +23,11 @@ import org.jivesoftware.smack.util.XmlStringBuilder;
 
 /**
  * Jingle content element.
+ * <jingle>
+ *     <content> <- Me.
+ *         ...
+ *     </content>
+ * </jingle>
  */
 public final class JingleContent implements NamedElement {
 
@@ -72,22 +73,20 @@ public final class JingleContent implements NamedElement {
 
     private final JingleContentTransport transport;
 
-    private final List<Element> additionalElements = new ArrayList<>();
+    private final JingleContentSecurity security;
 
     /**
      * Creates a content description..
      */
     private JingleContent(Creator creator, String disposition, String name, Senders senders,
-                    JingleContentDescription description, JingleContentTransport transport, List<Element> additionalElements) {
+                    JingleContentDescription description, JingleContentTransport transport, JingleContentSecurity security) {
         this.creator = Objects.requireNonNull(creator, "Jingle content creator must not be null");
         this.disposition = disposition;
         this.name = StringUtils.requireNotNullOrEmpty(name, "Jingle content name must not be null or empty");
         this.senders = senders;
         this.description = description;
         this.transport = transport;
-        if (additionalElements != null) {
-            this.additionalElements.addAll(additionalElements);
-        }
+        this.security = security;
     }
 
     public Creator getCreator() {
@@ -120,12 +119,12 @@ public final class JingleContent implements NamedElement {
      * 
      * @return an Iterator for the JingleTransports in the packet.
      */
-    public JingleContentTransport getJingleTransport() {
+    public JingleContentTransport getTransport() {
         return transport;
     }
 
-    public List<Element> getAdditionalElements() {
-        return additionalElements;
+    public JingleContentSecurity getSecurity() {
+        return security;
     }
 
     @Override
@@ -144,10 +143,7 @@ public final class JingleContent implements NamedElement {
 
         xml.optAppend(description);
         xml.optElement(transport);
-
-        for (Element element : additionalElements) {
-            xml.element(element);
-        }
+        xml.optElement(security);
 
         xml.closeElement(this);
         return xml;
@@ -170,7 +166,7 @@ public final class JingleContent implements NamedElement {
 
         private JingleContentTransport transport;
 
-        private List<Element> additionalElements = new ArrayList<>();
+        private JingleContentSecurity security;
 
         private Builder() {
         }
@@ -208,15 +204,13 @@ public final class JingleContent implements NamedElement {
             return this;
         }
 
-        public Builder addAdditionalElements(List<Element> elements) {
-            if (elements != null) {
-                additionalElements.addAll(elements);
-            }
+        public Builder setSecurity(JingleContentSecurity element) {
+            this.security = element;
             return this;
         }
 
         public JingleContent build() {
-            return new JingleContent(creator, disposition, name, senders, description, transport, additionalElements);
+            return new JingleContent(creator, disposition, name, senders, description, transport, security);
         }
     }
 }

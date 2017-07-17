@@ -33,8 +33,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.packet.Element;
 import org.jivesoftware.smack.packet.ExtensionElement;
+import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.element.Jingle;
@@ -140,14 +140,25 @@ public final class JetManager extends Manager {
             return null;
         }
 
+        String contentName = JingleManager.randomId();
+
         ExtensionElement encryptionExtension = encryptionMethod.encryptJingleTransfer(recipient, keyAndIv);
+        JetSecurityElement securityElement = new JetSecurityElement(contentName, encryptionExtension);
 
         OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
 
         JingleFileTransferChild fileTransferChild = JingleFileTransferChild.getBuilder().setFile(file).build();
         JingleFileTransfer fileTransfer = new JingleFileTransfer(Collections.<JingleContentDescriptionChildElement>singletonList(fileTransferChild));
-        Jingle initiate = jutil.createSessionInitiateFileOffer(recipient, JingleManager.randomId(), JingleContent.Creator.initiator,
-                JingleManager.randomId(), fileTransfer, offer.getTransportSession().createTransport(), Collections.<Element>singletonList(encryptionExtension));
+
+        JingleContent content = JingleContent.getBuilder()
+                .setCreator(JingleContent.Creator.initiator)
+                .setName(contentName)
+                .setTransport(offer.getTransportSession().createTransport())
+                .setSecurity(securityElement)
+                .setDescription(fileTransfer)
+                .build();
+
+        Jingle initiate = jutil.createSessionInitiate(recipient, JingleManager.randomId(), content);
         return offer;
     }
 

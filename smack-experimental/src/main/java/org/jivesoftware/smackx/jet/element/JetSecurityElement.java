@@ -19,26 +19,28 @@ package org.jivesoftware.smackx.jet.element;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.jet.JetManager;
+import org.jivesoftware.smackx.jingle.element.JingleContentSecurity;
 
 /**
  * Implementation of the Jingle security element as specified in XEP-XXXX (Jingle Encrypted Transfers).
+ * <jingle>
+ *     <content>
+ *         <description/>
+ *         <transport/>
+ *         <security/> <- You are here.
+ *     </content>
+ * </jingle>
  */
-public class SecurityElement implements ExtensionElement {
-    public static final String ELEMENT = "security";
+public class JetSecurityElement extends JingleContentSecurity {
     public static final String ATTR_NAME = "name";
     public static final String ATTR_TYPE = "type";
 
     private final ExtensionElement child;
     private final String name;
 
-    public SecurityElement(String name, ExtensionElement child) {
+    public JetSecurityElement(String name, ExtensionElement child) {
         this.name = name;
         this.child = child;
-    }
-
-    @Override
-    public String getElementName() {
-        return ELEMENT;
     }
 
     @Override

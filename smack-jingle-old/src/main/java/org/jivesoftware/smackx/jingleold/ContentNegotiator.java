@@ -252,7 +252,7 @@ public class ContentNegotiator extends JingleNegotiator {
         //            // with the audio payload type and the transport
         //            // candidate
         //            result.setDescription(new JingleDescription.Audio(new PayloadType(bestCommonAudioPt)));
-        //            result.addJingleTransport(this.getTransportNegotiator().getJingleTransport(bestRemoteCandidate));
+        //            result.addJingleTransport(this.getTransportNegotiator().getTransport(bestRemoteCandidate));
         if (mediaNeg != null) {
             result.setDescription(mediaNeg.getJingleDescription());
         }

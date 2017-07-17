@@ -118,7 +118,7 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
         assertEquals(1337, file.getSize());
         assertNull(file.getRange());
 
-        assertEquals(transport, content.getJingleTransport());
+        assertEquals(transport, content.getTransport());
         assertEquals("transid", transport.getSessionId());
         assertEquals(JingleIBBTransport.DEFAULT_BLOCK_SIZE, transport.getBlockSize());
 

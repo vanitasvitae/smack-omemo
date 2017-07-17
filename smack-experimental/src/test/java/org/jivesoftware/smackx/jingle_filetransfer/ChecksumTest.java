@@ -50,7 +50,7 @@ public class ChecksumTest extends SmackTestSuite {
         assertXMLEqual(xml, checksum.toXML().toString());
         assertXMLEqual(xml, new ChecksumProvider().parse(TestUtils.getParser(xml)).toXML().toString());
 
-        Range range = new Range(12,34);
+        Range range = new Range(12L,34L);
         file = new JingleFileTransferChild(null, null, hash, null, null, -1, range);
         checksum = new Checksum(JingleContent.Creator.initiator, "name", file);
 

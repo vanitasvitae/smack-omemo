@@ -24,20 +24,20 @@ import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smackx.jet.JetManager;
 import org.jivesoftware.smackx.jet.JingleEncryptionMethodManager;
-import org.jivesoftware.smackx.jet.element.SecurityElement;
+import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 
 import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Provider for the Jingle security element for XEP-XXXX (Jingle Encrypted Transfers).
  */
-public class SecurityProvider extends ExtensionElementProvider<SecurityElement> {
-    private static final Logger LOGGER = Logger.getLogger(SecurityProvider.class.getName());
+public class JetSecurityProvider extends ExtensionElementProvider<JetSecurityElement> {
+    private static final Logger LOGGER = Logger.getLogger(JetSecurityProvider.class.getName());
 
     @Override
-    public SecurityElement parse(XmlPullParser parser, int initialDepth) throws Exception {
-        String name = parser.getAttributeValue(JetManager.NAMESPACE, SecurityElement.ATTR_NAME);
-        String type = parser.getAttributeValue(JetManager.NAMESPACE, SecurityElement.ATTR_TYPE);
+    public JetSecurityElement parse(XmlPullParser parser, int initialDepth) throws Exception {
+        String name = parser.getAttributeValue(JetManager.NAMESPACE, JetSecurityElement.ATTR_NAME);
+        String type = parser.getAttributeValue(JetManager.NAMESPACE, JetSecurityElement.ATTR_TYPE);
         ExtensionElement child;
 
         Objects.requireNonNull(type);
@@ -48,10 +48,10 @@ public class SecurityProvider extends ExtensionElementProvider<SecurityElement> 
         if (encryptionElementProvider != null) {
             child = encryptionElementProvider.parse(parser);
         } else {
-            LOGGER.log(Level.WARNING, "Unknown child element in SecurityElement: " + type);
+            LOGGER.log(Level.WARNING, "Unknown child element in JetSecurityElement: " + type);
             return null;
         }
 
-        return new SecurityElement(name, child);
+        return new JetSecurityElement(name, child);
     }
 }

@@ -20,6 +20,7 @@ import static org.xmlpull.v1.XmlPullParser.END_TAG;
 import static org.xmlpull.v1.XmlPullParser.START_TAG;
 
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
+import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContent;
@@ -59,11 +60,9 @@ public class ChecksumProvider extends ExtensionElementProvider<Checksum> {
                         break;
 
                     case Range.ELEMENT:
-                        String offset = parser.getAttributeValue(null, Range.ATTR_OFFSET);
-                        String length = parser.getAttributeValue(null, Range.ATTR_LENGTH);
-                        int o = offset == null ? 0 : Integer.parseInt(offset);
-                        int l = length == null ? -1 : Integer.parseInt(length);
-                        range = new Range(o, l);
+                        Long offset = ParserUtils.getLongAttribute(parser, Range.ATTR_OFFSET);
+                        Long length = ParserUtils.getLongAttribute(parser, Range.ATTR_LENGTH);
+                        range = new Range(offset, length);
                 }
             } else if (tag == END_TAG) {
                 switch (n) {

@@ -20,6 +20,15 @@ import org.jivesoftware.smack.packet.NamedElement;
 
 /**
  * An element found usually in Jingle 'transport' elements.
+ * <jingle>
+ *     <content>
+ *         <description/>
+ *         <transport>
+ *             <candidate/> <- We are those guys.
+ *             <candidate/> <-/
+ *         </transport>
+ *     </content>
+ * </jingle>
  *
  */
 public abstract class JingleContentTransportCandidate implements NamedElement {

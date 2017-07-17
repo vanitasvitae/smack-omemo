@@ -24,6 +24,13 @@ import org.jivesoftware.smack.util.XmlStringBuilder;
 
 /**
  * Jingle content description.
+ * <jingle>
+ *     <content>
+ *         <description/> <- This element is us.
+ *         <transport/>
+ *         <security/>
+ *     </content>
+ * </jingle>
  *
  */
 public abstract class JingleContentDescription implements ExtensionElement {

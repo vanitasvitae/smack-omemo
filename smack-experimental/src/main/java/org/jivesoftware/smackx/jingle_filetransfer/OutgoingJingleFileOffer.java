@@ -184,7 +184,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
                         LOGGER.log(Level.INFO, "Unsupported transport. Reject transport-replace.");
                         jutil.sendTransportReject(transportReplace.getFrom().asFullJidOrThrow(), transportReplace.getInitiator(),
                                 transportReplace.getSid(), getContents().get(0).getCreator(),
-                                getContents().get(0).getName(), transportReplace.getContents().get(0).getJingleTransport());
+                                getContents().get(0).getName(), transportReplace.getContents().get(0).getTransport());
                     }
                 } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
                     LOGGER.log(Level.SEVERE, "Help me please!", e);

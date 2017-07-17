@@ -16,22 +16,25 @@
  */
 package org.jivesoftware.smackx.jingle.element;
 
-import org.jivesoftware.smack.packet.NamedElement;
+import org.jivesoftware.smack.packet.ExtensionElement;
 
 /**
- * Abstract JingleContentTransportInfo element.
- * The JingleContentTransportInfo element can have certain states defined by the respective Transport XEP.
- * Examples are Jingle Socks5Bytestream's <candidate-used/> (Example 5), <candidate-error/> (Example 7) etc.
+ * Jingle security element.
  * <jingle>
  *     <content>
  *         <description/>
- *         <transport>
- *             <xyz/> <- This is us.
- *         </transport>
- *         <security/>
+ *         <transport/>
+ *         <security/> <- That's me :)
  *     </content>
  * </jingle>
  */
-public abstract class JingleContentTransportInfo implements NamedElement {
+public abstract class JingleContentSecurity implements ExtensionElement {
+
+    public static final String ELEMENT = "security";
+
+    @Override
+    public String getElementName() {
+        return ELEMENT;
+    }
 
 }

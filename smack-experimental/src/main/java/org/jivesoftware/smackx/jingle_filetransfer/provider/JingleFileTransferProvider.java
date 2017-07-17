@@ -21,6 +21,7 @@ import static org.xmlpull.v1.XmlPullParser.START_TAG;
 
 import java.util.ArrayList;
 
+import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
@@ -44,10 +45,7 @@ public class JingleFileTransferProvider
         boolean inRange = false;
         JingleFileTransferChild.Builder builder = JingleFileTransferChild.getBuilder();
         HashElement inRangeHash = null;
-
-        int offset = 0;
-        int length = -1;
-
+        Long length = null, offset = null;
         while (true) {
 
             int tag = parser.nextTag();
@@ -77,10 +75,8 @@ public class JingleFileTransferProvider
 
                     case Range.ELEMENT:
                         inRange = true;
-                        String offsetString = parser.getAttributeValue(null, Range.ATTR_OFFSET);
-                        String lengthString = parser.getAttributeValue(null, Range.ATTR_LENGTH);
-                        offset = (offsetString != null ? Integer.parseInt(offsetString) : 0);
-                        length = (lengthString != null ? Integer.parseInt(lengthString) : -1);
+                        offset = ParserUtils.getLongAttribute(parser, Range.ATTR_OFFSET);
+                        length = ParserUtils.getLongAttribute(parser, Range.ATTR_LENGTH);
 
                         if (parser.isEmptyElementTag()) {
                             inRange = false;

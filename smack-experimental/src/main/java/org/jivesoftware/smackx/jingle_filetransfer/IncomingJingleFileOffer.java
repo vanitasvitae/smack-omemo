@@ -105,7 +105,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
             if (transportManager == null) {
                 //No usable transports.
                 LOGGER.log(Level.WARNING, "No usable transports.");
-                jutil.sendSessionTerminateUnsupportedTransports(getInitiator(), getSessionId());
+                connection.createStanzaCollectorAndSend(jutil.createSessionTerminateUnsupportedTransports(getInitiator(), getSessionId()));
                 state = State.terminated;
                 return jutil.createAck(initiate);
             }
@@ -167,7 +167,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
                         LOGGER.log(Level.INFO, "Unsupported transport. Reject transport-replace.");
                         jutil.sendTransportReject(transportReplace.getFrom().asFullJidOrThrow(), transportReplace.getInitiator(),
                                 transportReplace.getSid(), getContents().get(0).getCreator(),
-                                getContents().get(0).getName(), transportReplace.getContents().get(0).getJingleTransport());
+                                getContents().get(0).getName(), transportReplace.getContents().get(0).getTransport());
                     }
                 } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
                     LOGGER.log(Level.SEVERE, "Help me please!", e);
