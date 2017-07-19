@@ -23,7 +23,7 @@ import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Checksum;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
@@ -36,10 +36,10 @@ import org.xmlpull.v1.XmlPullParser;
 public class ChecksumProvider extends ExtensionElementProvider<Checksum> {
     @Override
     public Checksum parse(XmlPullParser parser, int initialDepth) throws Exception {
-        JingleContent.Creator creator = null;
+        JingleContentElement.Creator creator = null;
         String creatorString = parser.getAttributeValue(null, Checksum.ATTR_CREATOR);
         if (creatorString != null) {
-            creator = JingleContent.Creator.valueOf(creatorString);
+            creator = JingleContentElement.Creator.valueOf(creatorString);
         }
         String name = parser.getAttributeValue(null, Checksum.ATTR_NAME);
 

@@ -16,7 +16,7 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.listener;
 
-import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 
 /**
@@ -24,5 +24,5 @@ import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCal
  */
 public interface JingleFileTransferOfferListener {
 
-    void onFileOffer(Jingle request, IncomingFileOfferCallback callback);
+    void onFileOffer(JingleElement request, IncomingFileOfferCallback callback);
 }

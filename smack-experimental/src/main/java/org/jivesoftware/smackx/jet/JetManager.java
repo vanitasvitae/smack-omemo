@@ -37,9 +37,9 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleUtil;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.OutgoingJingleFileOffer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
@@ -150,15 +150,15 @@ public final class JetManager extends Manager {
         JingleFileTransferChild fileTransferChild = JingleFileTransferChild.getBuilder().setFile(file).build();
         JingleFileTransfer fileTransfer = new JingleFileTransfer(Collections.<JingleContentDescriptionChildElement>singletonList(fileTransferChild));
 
-        JingleContent content = JingleContent.getBuilder()
-                .setCreator(JingleContent.Creator.initiator)
+        JingleContentElement content = JingleContentElement.getBuilder()
+                .setCreator(JingleContentElement.Creator.initiator)
                 .setName(contentName)
                 .setTransport(offer.getTransportSession().createTransport())
                 .setSecurity(securityElement)
                 .setDescription(fileTransfer)
                 .build();
 
-        Jingle initiate = jutil.createSessionInitiate(recipient, JingleManager.randomId(), content);
+        JingleElement initiate = jutil.createSessionInitiate(recipient, JingleManager.randomId(), content);
         return offer;
     }
 

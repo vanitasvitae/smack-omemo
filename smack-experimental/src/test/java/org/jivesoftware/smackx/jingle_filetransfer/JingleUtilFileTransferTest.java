@@ -32,10 +32,10 @@ import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.JingleUtilTest;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleAction;
+import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
@@ -80,9 +80,9 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
 
         String contentName = "content";
 
-        Jingle initiate = jutil.createSessionInitiate(juliet, "letsstart", JingleContent.Creator.initiator, contentName, JingleContent.Senders.initiator, description, transport);
-        Jingle accept = jutil.createSessionAccept(juliet, "acceptID", JingleContent.Creator.initiator, contentName, JingleContent.Senders.initiator, description, transport);
-        Jingle fileOffer = jutil.createSessionInitiateFileOffer(juliet, "fileOffer", JingleContent.Creator.initiator, contentName, description, transport);
+        JingleElement initiate = jutil.createSessionInitiate(juliet, "letsstart", JingleContentElement.Creator.initiator, contentName, JingleContentElement.Senders.initiator, description, transport);
+        JingleElement accept = jutil.createSessionAccept(juliet, "acceptID", JingleContentElement.Creator.initiator, contentName, JingleContentElement.Senders.initiator, description, transport);
+        JingleElement fileOffer = jutil.createSessionInitiateFileOffer(juliet, "fileOffer", JingleContentElement.Creator.initiator, contentName, description, transport);
 
         assertEquals(JingleAction.session_initiate, initiate.getAction());
         assertEquals(JingleAction.session_accept, accept.getAction());
@@ -99,13 +99,13 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
         assertEquals(1, initiate.getContents().size());
         assertEquals(1, accept.getContents().size());
 
-        JingleContent content = initiate.getContents().get(0);
+        JingleContentElement content = initiate.getContents().get(0);
         assertEquals(content.toXML().toString(), initiate.getContents().get(0).toXML().toString());
         assertEquals(content.toXML().toString(), accept.getContents().get(0).toXML().toString());
 
         assertEquals("content", content.getName());
-        assertEquals(JingleContent.Creator.initiator, content.getCreator());
-        assertEquals(JingleContent.Senders.initiator, content.getSenders());
+        assertEquals(JingleContentElement.Creator.initiator, content.getCreator());
+        assertEquals(JingleContentElement.Senders.initiator, content.getSenders());
 
         assertEquals(1, description.getJingleContentDescriptionChildren().size());
         assertEquals(file, description.getJingleContentDescriptionChildren().get(0));

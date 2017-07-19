@@ -24,7 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jingle.element.JingleReason;
+import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 
@@ -90,7 +90,7 @@ public class ReceiveTask implements Runnable {
                 }
             }
 
-            session.notifyEndedListeners(JingleReason.Reason.success);
+            session.notifyEndedListeners(JingleReasonElement.Reason.success);
         }
     }
 }

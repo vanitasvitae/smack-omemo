@@ -548,31 +548,31 @@
     <iqProvider>
       <elementName>jingle</elementName>
       <namespace>urn:xmpp:jingle:1</namespace>
-      <className>org.jivesoftware.smackx.jingle.provider.JingleProvider</className>
+      <className>org.jivesoftware.smackx.jingle3.provider.JingleProvider</className>
     </iqProvider>
 
     <extensionProvider>
       <elementName>out-of-order</elementName>
       <namespace>urn:xmpp:jingle:errors:1</namespace>
-      <className>org.jivesoftware.smackx.jingle.provider.JingleErrorProvider</className>
+      <className>org.jivesoftware.smackx.jingle3.provider.JingleErrorProvider</className>
     </extensionProvider>
 
     <extensionProvider>
       <elementName>unknown-session</elementName>
       <namespace>urn:xmpp:jingle:errors:1</namespace>
-      <className>org.jivesoftware.smackx.jingle.provider.JingleErrorProvider</className>
+      <className>org.jivesoftware.smackx.jingle3.provider.JingleErrorProvider</className>
     </extensionProvider>
 
     <extensionProvider>
       <elementName>unsupported-content</elementName>
       <namespace>urn:xmpp:jingle:errors:1</namespace>
-      <className>org.jivesoftware.smackx.jingle.provider.JingleErrorProvider</className>
+      <className>org.jivesoftware.smackx.jingle3.provider.JingleErrorProvider</className>
     </extensionProvider>
 
     <extensionProvider>
       <elementName>unsupported-transports</elementName>
       <namespace>urn:xmpp:jingle:errors:1</namespace>
-      <className>org.jivesoftware.smackx.jingle.provider.JingleErrorProvider</className>
+      <className>org.jivesoftware.smackx.jingle3.provider.JingleErrorProvider</className>
     </extensionProvider>
 
 </smackProviders>

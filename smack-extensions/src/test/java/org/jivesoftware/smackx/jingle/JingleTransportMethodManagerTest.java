@@ -27,16 +27,16 @@ import java.util.Set;
 import org.jivesoftware.smack.DummyConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleAction;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportManager;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
-import org.jivesoftware.smackx.jingle.transports.jingle_s5b.JingleS5BTransportManager;
-import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransport;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.JingleS5BTransportManager;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransport;
 
 import org.junit.Test;
 import org.jxmpp.jid.impl.JidCreate;
@@ -80,11 +80,11 @@ public class JingleTransportMethodManagerTest extends SmackTestSuite {
         assertEquals(stub, JingleTransportMethodManager.getTransportManager(connection, JingleStubTransportManager.NAMESPACE));
         assertEquals(JingleS5BTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
 
-        Jingle jingle = Jingle.getBuilder().setSessionId("test").setAction(JingleAction.session_initiate)
+        JingleElement jingle = JingleElement.getBuilder().setSessionId("test").setAction(JingleAction.session_initiate)
                 .setInitiator(JidCreate.fullFrom("test@test.test/test"))
                 .addJingleContent(
-                        JingleContent.getBuilder().setCreator(JingleContent.Creator.initiator).setName("content")
-                                .setSenders(JingleContent.Senders.initiator).setTransport(
+                        JingleContentElement.getBuilder().setCreator(JingleContentElement.Creator.initiator).setName("content")
+                                .setSenders(JingleContentElement.Senders.initiator).setTransport(
                                         new JingleIBBTransport("transportId")).build()).build();
         assertEquals(JingleIBBTransportManager.getInstanceFor(connection), jtmm.getTransportManager(jingle));
         assertEquals(JingleIBBTransportManager.getInstanceFor(connection),
@@ -100,7 +100,7 @@ public class JingleTransportMethodManagerTest extends SmackTestSuite {
         assertEquals(stub, JingleTransportMethodManager.getBestAvailableTransportManager(connection));
     }
 
-    private static class JingleStubTransportManager extends JingleTransportManager<JingleContentTransport> {
+    private static class JingleStubTransportManager extends JingleTransportManager<JingleContentTransportElement> {
 
         public static final String NAMESPACE = "urn:xmpp:jingle:transports:stub:0";
 
@@ -114,7 +114,7 @@ public class JingleTransportMethodManagerTest extends SmackTestSuite {
         }
 
         @Override
-        public JingleTransportSession<JingleContentTransport> transportSession(JingleSession jingleSession) {
+        public JingleTransportSession<JingleContentTransportElement> transportSession(JingleSession jingleSession) {
             return null;
         }
 

@@ -31,9 +31,9 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportMethodManager;
 import org.jivesoftware.smackx.jingle.Role;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleReason;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
@@ -65,7 +65,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         }
 
         jutil.sendSessionTerminateCancel(getRemote(), getSessionId());
-        notifyEndedListeners(JingleReason.Reason.cancel);
+        notifyEndedListeners(JingleReasonElement.Reason.cancel);
     }
 
     public enum State {
@@ -96,7 +96,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         String contentName = JingleManager.randomId();
         JingleFileTransfer transfer = JingleFileTransferManager.fileTransferFromFile(file);
 
-        initiateFileOffer(transfer, JingleContent.Creator.initiator, contentName);
+        initiateFileOffer(transfer, JingleContentElement.Creator.initiator, contentName);
     }
 
     public SmackFuture<?> sendAsync(File file) {
@@ -106,7 +106,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
         return null; //TODO
     }
 
-    public void initiateFileOffer(JingleFileTransfer file, JingleContent.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+    public void initiateFileOffer(JingleFileTransfer file, JingleContentElement.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
         if (state != State.fresh) {
             throw new IllegalStateException("This session is not fresh.");
         }
@@ -122,14 +122,14 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
 
         state = State.pending;
 
-        Jingle initiate = jutil.createSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transportSession.createTransport(), null);
+        JingleElement initiate = jutil.createSessionInitiateFileOffer(getResponder(), getSessionId(), creator, name, file, transportSession.createTransport(), null);
         this.contents.addAll(initiate.getContents());
 
         connection.sendStanza(initiate);
     }
 
     @Override
-    public IQ handleSessionAccept(Jingle sessionAccept) throws SmackException.NotConnectedException, InterruptedException {
+    public IQ handleSessionAccept(JingleElement sessionAccept) throws SmackException.NotConnectedException, InterruptedException {
         // Out of order?
         if (state != State.pending) {
             LOGGER.log(Level.WARNING, "Session state is " + state + ", so session-accept is out of order.");
@@ -158,13 +158,13 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     }
 
     @Override
-    public IQ handleSessionTerminate(Jingle sessionTerminate) {
+    public IQ handleSessionTerminate(JingleElement sessionTerminate) {
         state = State.terminated;
         return jutil.createAck(sessionTerminate);
     }
 
     @Override
-    public IQ handleTransportReplace(final Jingle transportReplace)
+    public IQ handleTransportReplace(final JingleElement transportReplace)
             throws InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
         final JingleTransportManager<?> replacementManager = JingleTransportMethodManager.getInstanceFor(connection)
@@ -196,7 +196,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     }
 
     @Override
-    public IQ handleTransportAccept(Jingle transportAccept)
+    public IQ handleTransportAccept(JingleElement transportAccept)
             throws SmackException.NotConnectedException, InterruptedException {
 
         return handleSessionAccept(transportAccept);
@@ -205,7 +205,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     @Override
     public void onTransportMethodFailed(String namespace) {
         state = State.pending;
-        JingleContent content = contents.get(0);
+        JingleContentElement content = contents.get(0);
         failedTransportMethods.add(namespace);
         JingleTransportMethodManager tm = JingleTransportMethodManager.getInstanceFor(getConnection());
         JingleTransportManager<?> next = tm.getBestAvailableTransportManager(failedTransportMethods);

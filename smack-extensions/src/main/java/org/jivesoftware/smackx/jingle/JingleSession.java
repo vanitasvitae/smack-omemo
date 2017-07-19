@@ -27,8 +27,8 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 
 import org.jxmpp.jid.FullJid;
@@ -45,7 +45,7 @@ public abstract class JingleSession implements JingleSessionHandler {
 
     protected final String sid;
 
-    protected final List<JingleContent> contents = new ArrayList<>();
+    protected final List<JingleContentElement> contents = new ArrayList<>();
 
     protected ArrayList<Future<?>> queued = new ArrayList<>();
     protected JingleTransportSession<?> transportSession;
@@ -54,7 +54,7 @@ public abstract class JingleSession implements JingleSessionHandler {
         this(initiator, responder, role, sid, null);
     }
 
-    public JingleSession(FullJid initiator, FullJid responder, Role role, String sid, List<JingleContent> contents) {
+    public JingleSession(FullJid initiator, FullJid responder, Role role, String sid, List<JingleContentElement> contents) {
         if (role == Role.initiator) {
             this.local = initiator;
             this.remote = responder;
@@ -102,7 +102,7 @@ public abstract class JingleSession implements JingleSessionHandler {
         return new FullJidAndSessionId(remote, sid);
     }
 
-    public List<JingleContent> getContents() {
+    public List<JingleContentElement> getContents() {
         return contents;
     }
 
@@ -135,7 +135,7 @@ public abstract class JingleSession implements JingleSessionHandler {
     }
 
     @Override
-    public IQ handleJingleSessionRequest(Jingle jingle) {
+    public IQ handleJingleSessionRequest(JingleElement jingle) {
         try {
             switch (jingle.getAction()) {
                 case content_accept:
@@ -177,61 +177,61 @@ public abstract class JingleSession implements JingleSessionHandler {
         }
     }
 
-    protected IQ handleSessionInitiate(Jingle sessionInitiate) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+    protected IQ handleSessionInitiate(JingleElement sessionInitiate) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
         return IQ.createResultIQ(sessionInitiate);
     }
 
-    protected IQ handleSessionTerminate(Jingle sessionTerminate) {
+    protected IQ handleSessionTerminate(JingleElement sessionTerminate) {
         return IQ.createResultIQ(sessionTerminate);
     }
 
-    protected IQ handleSessionInfo(Jingle sessionInfo) {
+    protected IQ handleSessionInfo(JingleElement sessionInfo) {
         return IQ.createResultIQ(sessionInfo);
     }
 
-    protected IQ handleSessionAccept(Jingle sessionAccept) throws SmackException.NotConnectedException, InterruptedException {
+    protected IQ handleSessionAccept(JingleElement sessionAccept) throws SmackException.NotConnectedException, InterruptedException {
         return IQ.createResultIQ(sessionAccept);
     }
 
-    protected IQ handleContentAdd(Jingle contentAdd) {
+    protected IQ handleContentAdd(JingleElement contentAdd) {
         return IQ.createResultIQ(contentAdd);
     }
 
-    protected IQ handleContentAccept(Jingle contentAccept) {
+    protected IQ handleContentAccept(JingleElement contentAccept) {
         return IQ.createResultIQ(contentAccept);
     }
 
-    protected IQ handleContentModify(Jingle contentModify) {
+    protected IQ handleContentModify(JingleElement contentModify) {
         return IQ.createResultIQ(contentModify);
     }
 
-    protected IQ handleContentReject(Jingle contentReject) {
+    protected IQ handleContentReject(JingleElement contentReject) {
         return IQ.createResultIQ(contentReject);
     }
 
-    protected IQ handleContentRemove(Jingle contentRemove) {
+    protected IQ handleContentRemove(JingleElement contentRemove) {
         return IQ.createResultIQ(contentRemove);
     }
 
-    protected IQ handleDescriptionInfo(Jingle descriptionInfo) {
+    protected IQ handleDescriptionInfo(JingleElement descriptionInfo) {
         return IQ.createResultIQ(descriptionInfo);
     }
 
-    protected IQ handleSecurityInfo(Jingle securityInfo) {
+    protected IQ handleSecurityInfo(JingleElement securityInfo) {
         return IQ.createResultIQ(securityInfo);
     }
 
-    protected IQ handleTransportAccept(Jingle transportAccept) throws SmackException.NotConnectedException, InterruptedException {
+    protected IQ handleTransportAccept(JingleElement transportAccept) throws SmackException.NotConnectedException, InterruptedException {
         return IQ.createResultIQ(transportAccept);
     }
 
-    protected IQ handleTransportReplace(Jingle transportReplace)
+    protected IQ handleTransportReplace(JingleElement transportReplace)
             throws InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
         return IQ.createResultIQ(transportReplace);
     }
 
-    protected IQ handleTransportReject(Jingle transportReject) {
+    protected IQ handleTransportReject(JingleElement transportReject) {
         return IQ.createResultIQ(transportReject);
     }
 

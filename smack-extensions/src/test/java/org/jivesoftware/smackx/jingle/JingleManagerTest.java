@@ -25,7 +25,7 @@ import org.jivesoftware.smack.DummyConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
-import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
 
 import org.junit.Test;
 import org.jxmpp.jid.FullJid;
@@ -80,7 +80,7 @@ public class JingleManagerTest extends SmackTestSuite {
         String stubNamespace = "urn:xmpp:jingle:application:stub:0";
         JingleHandler stub = new JingleHandler() {
             @Override
-            public IQ handleJingleRequest(Jingle jingle) {
+            public IQ handleJingleRequest(JingleElement jingle) {
                 return null;
             }
         };

@@ -20,7 +20,7 @@ import static junit.framework.TestCase.assertEquals;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 
-import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle3.element.JingleAction;
 
 import org.junit.Test;
 

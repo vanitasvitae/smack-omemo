@@ -28,8 +28,8 @@ import java.util.logging.Level;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleReason;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
@@ -78,11 +78,11 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
 
         bftm.addJingleFileTransferOfferListener(new JingleFileTransferOfferListener() {
             @Override
-            public void onFileOffer(Jingle request, IncomingFileOfferCallback callback) {
+            public void onFileOffer(JingleElement request, IncomingFileOfferCallback callback) {
                 FileTransferHandler handler2 = callback.acceptIncomingFileOffer(request, target);
                 handler2.addEndedListener(new FileTransferHandler.EndedListener() {
                     @Override
-                    public void onEnded(JingleReason.Reason reason) {
+                    public void onEnded(JingleReasonElement.Reason reason) {
                         resultSyncPoint2.signal();
                     }
                 });
@@ -93,7 +93,7 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
             FileTransferHandler handler = aftm.sendFile(bob, source);
             handler.addEndedListener(new FileTransferHandler.EndedListener() {
                 @Override
-                public void onEnded(JingleReason.Reason reason) {
+                public void onEnded(JingleReasonElement.Reason reason) {
                     resultSyncPoint1.signal();
                 }
             });

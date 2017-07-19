@@ -23,12 +23,12 @@ import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
-import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransport;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransport;
 
 /**
  * Manager where TransportMethods are registered.
@@ -73,17 +73,17 @@ public final class JingleTransportMethodManager extends Manager {
         return transportManagers.get(namespace);
     }
 
-    public static JingleTransportManager<?> getTransportManager(XMPPConnection connection, Jingle request) {
+    public static JingleTransportManager<?> getTransportManager(XMPPConnection connection, JingleElement request) {
         return getInstanceFor(connection).getTransportManager(request);
     }
-    public JingleTransportManager<?> getTransportManager(Jingle request) {
+    public JingleTransportManager<?> getTransportManager(JingleElement request) {
 
-        JingleContent content = request.getContents().get(0);
+        JingleContentElement content = request.getContents().get(0);
         if (content == null) {
             return null;
         }
 
-        JingleContentTransport transport = content.getTransport();
+        JingleContentTransportElement transport = content.getTransport();
         if (transport == null) {
             return null;
         }

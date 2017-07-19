@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jingle.element.JingleReason;
+import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 
 /**
  * Created by vanitas on 21.06.17.
@@ -78,7 +78,7 @@ public class SendTask implements Runnable {
                 LOGGER.log(Level.SEVERE, "Could not close session.", e);
             }
 
-            session.notifyEndedListeners(JingleReason.Reason.success);
+            session.notifyEndedListeners(JingleReasonElement.Reason.success);
         }
     }
 }

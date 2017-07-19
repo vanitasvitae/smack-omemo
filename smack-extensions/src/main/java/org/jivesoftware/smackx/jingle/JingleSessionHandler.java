@@ -17,10 +17,10 @@
 package org.jivesoftware.smackx.jingle;
 
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
 
 public interface JingleSessionHandler {
 
-    IQ handleJingleSessionRequest(Jingle jingle);
+    IQ handleJingleSessionRequest(JingleElement jingle);
 
 }

@@ -20,11 +20,11 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
-import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
+import org.jivesoftware.smackx.jingle3.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.provider.JingleIBBTransportProvider;
-import org.jivesoftware.smackx.jingle.transports.jingle_s5b.elements.JingleS5BTransport;
-import org.jivesoftware.smackx.jingle.transports.jingle_s5b.provider.JingleS5BTransportProvider;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransport;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.provider.JingleS5BTransportProvider;
 
 import org.junit.Test;
 

@@ -18,13 +18,13 @@ package org.jivesoftware.smackx.jingle_filetransfer.element;
 
 import java.util.List;
 
-import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionChildElement;
 
 /**
  * File element.
  */
-public class JingleFileTransfer extends JingleContentDescription {
+public class JingleFileTransfer extends JingleContentDescriptionElement {
     public static final String NAMESPACE_V5 = "urn:xmpp:jingle:apps:file-transfer:5";
 
     public JingleFileTransfer(List<JingleContentDescriptionChildElement> payloads) {

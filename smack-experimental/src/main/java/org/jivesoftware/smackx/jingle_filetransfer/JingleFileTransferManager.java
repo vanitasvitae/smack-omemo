@@ -32,11 +32,11 @@ import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleHandler;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleUtil;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
-import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleAction;
+import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle3.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
@@ -85,7 +85,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
     }
 
     @Override
-    public IQ handleJingleRequest(Jingle jingle) {
+    public IQ handleJingleRequest(JingleElement jingle) {
         FullJid fullJid = jingle.getFrom().asFullJidOrThrow();
         String sid = jingle.getSid();
 
@@ -107,18 +107,18 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
      * @param request
      * @return
      */
-    private JingleFileTransferSession createSessionHandler(Jingle request) {
+    private JingleFileTransferSession createSessionHandler(JingleElement request) {
         if (request.getAction() != JingleAction.session_initiate) {
             LOGGER.log(Level.WARNING, "First received action must be session-initiate.");
             throw new IllegalArgumentException("Requests action MUST be session-initiate.");
         }
 
-        JingleContent content = request.getContents().get(0);
+        JingleContentElement content = request.getContents().get(0);
         //File Offer
-        if (content.getSenders() == JingleContent.Senders.initiator) {
+        if (content.getSenders() == JingleContentElement.Senders.initiator) {
             return new IncomingJingleFileOffer(connection(), request);
         } //File Request
-        else if (content.getSenders() == JingleContent.Senders.responder) {
+        else if (content.getSenders() == JingleContentElement.Senders.responder) {
             return JingleFileRequest.createIncomingFileRequest(connection(), request);
         }
         else {
@@ -129,7 +129,7 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         }
     }
 
-    public void notifyIncomingFileOffer(Jingle initiate, IncomingFileOfferCallback callback) {
+    public void notifyIncomingFileOffer(JingleElement initiate, IncomingFileOfferCallback callback) {
         for (JingleFileTransferOfferListener l : jingleFileTransferOfferListeners) {
             l.onFileOffer(initiate, callback);
         }

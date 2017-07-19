@@ -31,12 +31,12 @@ import org.jivesoftware.smack.iqrequest.IQRequestHandler.Mode;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleAction;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportManager;
-import org.jivesoftware.smackx.jingle.transports.jingle_s5b.JingleS5BTransportManager;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.JingleS5BTransportManager;
 
 import org.jxmpp.jid.FullJid;
 
@@ -73,10 +73,10 @@ public final class JingleManager extends Manager {
         jutil = new JingleUtil(connection);
 
         connection.registerIQRequestHandler(
-                new AbstractIqRequestHandler(Jingle.ELEMENT, Jingle.NAMESPACE, Type.set, Mode.async) {
+                new AbstractIqRequestHandler(JingleElement.ELEMENT, JingleElement.NAMESPACE, Type.set, Mode.async) {
                     @Override
                     public IQ handleIQRequest(IQ iqRequest) {
-                        final Jingle jingle = (Jingle) iqRequest;
+                        final JingleElement jingle = (JingleElement) iqRequest;
 
                         FullJid fullFrom = jingle.getFrom().asFullJidOrThrow();
                         String sid = jingle.getSid();
@@ -90,8 +90,8 @@ public final class JingleManager extends Manager {
 
                         if (jingle.getAction() == JingleAction.session_initiate) {
 
-                            JingleContent content = jingle.getContents().get(0);
-                            JingleContentDescription description = content.getDescription();
+                            JingleContentElement content = jingle.getContents().get(0);
+                            JingleContentDescriptionElement description = content.getDescription();
                             JingleHandler jingleDescriptionHandler = descriptionHandlers.get(
                                     description.getNamespace());
 

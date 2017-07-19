@@ -28,9 +28,9 @@ import org.jivesoftware.smack.DummyConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.TestIQ;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleAction;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportSession;
 
 import org.junit.Test;
@@ -125,7 +125,7 @@ public class JingleSessionTest {
             super(initiator, responder, role, sid);
         }
 
-        public SimpleSession(FullJid initiator, FullJid responder, Role role, String sid, List<JingleContent> contents) {
+        public SimpleSession(FullJid initiator, FullJid responder, Role role, String sid, List<JingleContentElement> contents) {
             super(initiator, responder, role, sid, contents);
         }
 
@@ -140,77 +140,77 @@ public class JingleSessionTest {
         }
 
         @Override
-        public IQ handleSessionInitiate(Jingle jingle) {
+        public IQ handleSessionInitiate(JingleElement jingle) {
             return sessionInitiateResult;
         }
 
         @Override
-        public IQ handleSessionAccept(Jingle jingle) {
+        public IQ handleSessionAccept(JingleElement jingle) {
             return sessionAcceptResult;
         }
 
         @Override
-        public IQ handleSessionTerminate(Jingle jingle) {
+        public IQ handleSessionTerminate(JingleElement jingle) {
             return sessionTerminateResult;
         }
 
         @Override
-        public IQ handleSessionInfo(Jingle jingle) {
+        public IQ handleSessionInfo(JingleElement jingle) {
             return sessionInfoResult;
         }
 
         @Override
-        public IQ handleTransportAccept(Jingle jingle) {
+        public IQ handleTransportAccept(JingleElement jingle) {
             return transportAcceptResult;
         }
 
         @Override
-        public IQ handleTransportReject(Jingle jingle) {
+        public IQ handleTransportReject(JingleElement jingle) {
             return transportRejectResult;
         }
 
         @Override
-        public IQ handleTransportReplace(Jingle jingle) {
+        public IQ handleTransportReplace(JingleElement jingle) {
             return transportReplaceResult;
         }
 
         @Override
-        public IQ handleContentAdd(Jingle jingle) {
+        public IQ handleContentAdd(JingleElement jingle) {
             return contentAddResult;
         }
 
         @Override
-        public IQ handleContentAccept(Jingle jingle) {
+        public IQ handleContentAccept(JingleElement jingle) {
             return contentAcceptResult;
         }
 
         @Override
-        public IQ handleContentReject(Jingle jingle) {
+        public IQ handleContentReject(JingleElement jingle) {
             return contentRejectResult;
         }
 
         @Override
-        public IQ handleContentRemove(Jingle jingle) {
+        public IQ handleContentRemove(JingleElement jingle) {
             return contentRemoveResult;
         }
 
         @Override
-        public IQ handleContentModify(Jingle jingle) {
+        public IQ handleContentModify(JingleElement jingle) {
             return contentModifyResult;
         }
 
         @Override
-        public IQ handleDescriptionInfo(Jingle jingle) {
+        public IQ handleDescriptionInfo(JingleElement jingle) {
             return descriptionInfoResult;
         }
 
         @Override
-        public IQ handleSecurityInfo(Jingle jingle) {
+        public IQ handleSecurityInfo(JingleElement jingle) {
             return securityInfoResult;
         }
     }
 
-    private Jingle simpleAction(JingleAction action) {
-        return Jingle.getBuilder().setAction(action).setSessionId("test").build();
+    private JingleElement simpleAction(JingleAction action) {
+        return JingleElement.getBuilder().setAction(action).setSessionId("test").build();
     }
 }

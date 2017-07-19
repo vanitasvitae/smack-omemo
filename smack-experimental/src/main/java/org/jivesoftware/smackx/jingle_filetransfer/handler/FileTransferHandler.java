@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jingle_filetransfer.handler;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.jingle.element.JingleReason;
+import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 
 /**
  * Handler that provides some control over the JingleFileOffer session.
@@ -57,7 +57,7 @@ public interface FileTransferHandler {
     /**
      * Notify all registered FinishedListeners that the file transfer has ended.
      */
-    void notifyEndedListeners(JingleReason.Reason reason);
+    void notifyEndedListeners(JingleReasonElement.Reason reason);
 
     /**
      * Notify all registered AcceptedListeners that the file transfer session has been accepted by the remote user.
@@ -68,7 +68,7 @@ public interface FileTransferHandler {
      * A FinishedListener will be notified by the SendFileHandler when the corresponding file transfer is ended.
      */
     interface EndedListener {
-        void onEnded(JingleReason.Reason reason);
+        void onEnded(JingleReasonElement.Reason reason);
     }
 
     /**

@@ -22,7 +22,7 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Checksum;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
@@ -39,7 +39,7 @@ public class ChecksumTest extends SmackTestSuite {
     public void parserTest() throws Exception {
         HashElement hash = new HashElement(HashManager.ALGORITHM.SHA_256, "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=");
         JingleFileTransferChild file = new JingleFileTransferChild(null, null, hash, null, null, -1, null);
-        Checksum checksum = new Checksum(JingleContent.Creator.initiator, "name", file);
+        Checksum checksum = new Checksum(JingleContentElement.Creator.initiator, "name", file);
 
         String xml = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator' name='name'>" +
                 "<file>" +
@@ -52,7 +52,7 @@ public class ChecksumTest extends SmackTestSuite {
 
         Range range = new Range(12L,34L);
         file = new JingleFileTransferChild(null, null, hash, null, null, -1, range);
-        checksum = new Checksum(JingleContent.Creator.initiator, "name", file);
+        checksum = new Checksum(JingleContentElement.Creator.initiator, "name", file);
 
         xml = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator' name='name'>" +
                 "<file>" +

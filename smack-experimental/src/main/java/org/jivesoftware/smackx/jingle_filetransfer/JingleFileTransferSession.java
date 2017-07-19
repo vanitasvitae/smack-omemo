@@ -22,7 +22,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle.Role;
-import org.jivesoftware.smackx.jingle.element.JingleReason;
+import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
@@ -99,7 +99,7 @@ public abstract class JingleFileTransferSession extends JingleSession implements
     }
 
     @Override
-    public void notifyEndedListeners(JingleReason.Reason reason) {
+    public void notifyEndedListeners(JingleReasonElement.Reason reason) {
         ended = true;
         for (EndedListener e : endedListeners) {
             e.onEnded(reason);

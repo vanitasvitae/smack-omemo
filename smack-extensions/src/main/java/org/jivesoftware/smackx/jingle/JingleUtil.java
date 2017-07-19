@@ -22,13 +22,12 @@ import java.util.List;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.XMPPError;
-import org.jivesoftware.smackx.jingle.element.Jingle;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContent;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescription;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransport;
-import org.jivesoftware.smackx.jingle.element.JingleError;
-import org.jivesoftware.smackx.jingle.element.JingleReason;
+import org.jivesoftware.smackx.jingle3.element.JingleAction;
+import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentTransportElement;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle3.element.JingleErrorElement;
+import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 
 import org.jxmpp.jid.FullJid;
 
@@ -51,26 +50,26 @@ public class JingleUtil {
      * @param content content
      * @return session-initiate stanza.
      */
-    public Jingle createSessionInitiate(FullJid recipient,
-                                        String sessionId,
-                                        JingleContent content) {
+    public JingleElement createSessionInitiate(FullJid recipient,
+                                               String sessionId,
+                                               JingleContentElement content) {
         return createSessionInitiate(recipient, sessionId, Collections.singletonList(content));
     }
 
-    public Jingle createSessionInitiate(FullJid recipient,
-                                        String sessionId,
-                                        List<JingleContent> contents) {
+    public JingleElement createSessionInitiate(FullJid recipient,
+                                               String sessionId,
+                                               List<JingleContentElement> contents) {
 
-        Jingle.Builder builder = Jingle.getBuilder();
+        JingleElement.Builder builder = JingleElement.getBuilder();
         builder.setAction(JingleAction.session_initiate)
                 .setSessionId(sessionId)
                 .setInitiator(connection.getUser());
 
-        for (JingleContent content : contents) {
+        for (JingleContentElement content : contents) {
             builder.addJingleContent(content);
         }
 
-        Jingle jingle = builder.build();
+        JingleElement jingle = builder.build();
         jingle.setFrom(connection.getUser());
         jingle.setTo(recipient);
 
@@ -85,118 +84,29 @@ public class JingleUtil {
      * @param content content
      * @return session-accept stanza.
      */
-    public Jingle createSessionAccept(FullJid recipient,
-                                      String sessionId,
-                                      JingleContent content) {
+    public JingleElement createSessionAccept(FullJid recipient,
+                                             String sessionId,
+                                             JingleContentElement content) {
         return createSessionAccept(recipient, sessionId, Collections.singletonList(content));
     }
 
-    public Jingle createSessionAccept(FullJid recipient,
-                                      String sessionId,
-                                      List<JingleContent> contents) {
-        Jingle.Builder jb = Jingle.getBuilder();
+    public JingleElement createSessionAccept(FullJid recipient,
+                                             String sessionId,
+                                             List<JingleContentElement> contents) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
         jb.setResponder(connection.getUser())
                 .setAction(JingleAction.session_accept)
                 .setSessionId(sessionId);
 
-        for (JingleContent content : contents) {
+        for (JingleContentElement content : contents) {
             jb.addJingleContent(content);
         }
 
-        Jingle jingle = jb.build();
+        JingleElement jingle = jb.build();
         jingle.setTo(recipient);
         jingle.setFrom(connection.getUser());
 
         return jingle;
-    }
-
-    /**
-     * Create a session-terminate stanza.
-     * XEP-0166 §6.7.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @param reason reason of termination.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminate(FullJid recipient, String sessionId, JingleReason reason) {
-        Jingle.Builder jb = Jingle.getBuilder();
-        jb.setAction(JingleAction.session_terminate)
-                .setSessionId(sessionId)
-                .setReason(reason);
-
-        Jingle jingle = jb.build();
-        jingle.setFrom(connection.getUser());
-        jingle.setTo(recipient);
-
-        return jingle;
-    }
-
-    /**
-     * Create a session-terminate stanza.
-     * XEP-0166 §6.7.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @param reason reason of termination.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminate(FullJid recipient, String sessionId, JingleReason.Reason reason) {
-        return createSessionTerminate(recipient, sessionId, new JingleReason(reason));
-    }
-
-    /**
-     * Terminate the session by declining.
-     * XEP-0166 Example 21.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateDecline(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.decline);
-    }
-
-    /**
-     * Terminate the session due to success.
-     * XEP-0166 Example 19.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateSuccess(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.success);
-    }
-
-    /**
-     * Terminate the session due to being busy.
-     * XEP-0166 Example 20.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateBusy(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.busy);
-    }
-
-    /**
-     * Terminate the session due to the existence of an alternative session.
-     * XEP-0166 Example 22.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @param altSessionId id of the alternative session.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateAlternativeSession(FullJid recipient, String sessionId, String altSessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.AlternativeSession(altSessionId));
-    }
-
-    /**
-     * Cancel all active transfers of the session.
-     * XEP-0234 Example 9.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateCancel(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.cancel);
     }
 
     /**
@@ -208,79 +118,20 @@ public class JingleUtil {
      * @param contentName name of the content.
      * @return session-terminate stanza.
      */
-    public Jingle createSessionTerminateContentCancel(FullJid recipient, String sessionId,
-                                                      JingleContent.Creator contentCreator, String contentName) {
-        Jingle.Builder jb = Jingle.getBuilder();
+    public JingleElement createSessionTerminateContentCancel(FullJid recipient, String sessionId,
+                                                             JingleContentElement.Creator contentCreator, String contentName) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
         jb.setAction(JingleAction.session_terminate)
-                .setSessionId(sessionId).setReason(JingleReason.Reason.cancel);
+                .setSessionId(sessionId).setReason(JingleReasonElement.Reason.cancel);
 
-        JingleContent.Builder cb = JingleContent.getBuilder();
+        JingleContentElement.Builder cb = JingleContentElement.getBuilder();
         cb.setCreator(contentCreator).setName(contentName);
 
-        Jingle jingle = jb.addJingleContent(cb.build()).build();
+        JingleElement jingle = jb.addJingleContent(cb.build()).build();
         jingle.setFrom(connection.getUser());
         jingle.setTo(recipient);
 
         return jingle;
-    }
-
-    /**
-     * Terminate the session due to unsupported transport methods.
-     * XEP-0166 Example 23.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateUnsupportedTransports(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.unsupported_transports);
-    }
-
-    /**
-     * Terminate the session due to failed transports.
-     * XEP-0166 Example 24.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateFailedTransport(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.failed_transport);
-    }
-
-    /**
-     * Terminate the session due to unsupported applications.
-     * XEP-0166 Example 25.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateUnsupportedApplications(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.unsupported_applications);
-    }
-
-    /**
-     * Terminate the session due to failed application.
-     * XEP-0166 Example 26.
-     * @param recipient recipient of the stanza.
-     * @param sessionId sessionId.
-     * @return session-terminate stanza.
-     */
-    public Jingle createSessionTerminateFailedApplication(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.failed_application);
-    }
-
-    /**
-     * Terminate session due to incompatible parameters.
-     * XEP-0166 Example 27.
-     * @param recipient recipient of the stanza
-     * @param sessionId sessionId
-     * @return session-terminate stanza
-     */
-    public Jingle createSessionTerminateIncompatibleParameters(FullJid recipient, String sessionId) {
-        return createSessionTerminate(recipient, sessionId, JingleReason.Reason.incompatible_parameters);
-    }
-
-    public IQ sendContentRejectFileNotAvailable(FullJid recipient, String sessionId, JingleContentDescription description) {
-        return null; //TODO Later
     }
 
     /**
@@ -290,12 +141,12 @@ public class JingleUtil {
      * @param sessionId id of the session
      * @return ping stanza
      */
-    public Jingle createSessionPing(FullJid recipient, String sessionId) {
-        Jingle.Builder jb = Jingle.getBuilder();
+    public JingleElement createSessionPing(FullJid recipient, String sessionId) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
         jb.setSessionId(sessionId)
                 .setAction(JingleAction.session_info);
 
-        Jingle jingle = jb.build();
+        JingleElement jingle = jb.build();
         jingle.setFrom(connection.getUser());
         jingle.setTo(recipient);
 
@@ -308,7 +159,7 @@ public class JingleUtil {
      * @param jingle stanza that was received
      * @return acknowledgement
      */
-    public IQ createAck(Jingle jingle) {
+    public IQ createAck(JingleElement jingle) {
         return IQ.createResultIQ(jingle);
     }
 
@@ -323,17 +174,17 @@ public class JingleUtil {
      * @param transport proposed transport
      * @return transport-replace stanza
      */
-    public Jingle createTransportReplace(FullJid recipient, FullJid initiator, String sessionId,
-                                         JingleContent.Creator contentCreator, String contentName,
-                                         JingleContentTransport transport) {
-        Jingle.Builder jb = Jingle.getBuilder();
+    public JingleElement createTransportReplace(FullJid recipient, FullJid initiator, String sessionId,
+                                                JingleContentElement.Creator contentCreator, String contentName,
+                                                JingleContentTransportElement transport) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
         jb.setInitiator(initiator)
                 .setSessionId(sessionId)
                 .setAction(JingleAction.transport_replace);
 
-        JingleContent.Builder cb = JingleContent.getBuilder();
+        JingleContentElement.Builder cb = JingleContentElement.getBuilder();
         cb.setName(contentName).setCreator(contentCreator).setTransport(transport);
-        Jingle jingle = jb.addJingleContent(cb.build()).build();
+        JingleElement jingle = jb.addJingleContent(cb.build()).build();
 
         jingle.setTo(recipient);
         jingle.setFrom(connection.getUser());
@@ -352,18 +203,18 @@ public class JingleUtil {
      * @param transport transport to accept
      * @return transport-accept stanza
      */
-    public Jingle createTransportAccept(FullJid recipient, FullJid initiator, String sessionId,
-                                        JingleContent.Creator contentCreator, String contentName,
-                                        JingleContentTransport transport) {
-        Jingle.Builder jb = Jingle.getBuilder();
+    public JingleElement createTransportAccept(FullJid recipient, FullJid initiator, String sessionId,
+                                               JingleContentElement.Creator contentCreator, String contentName,
+                                               JingleContentTransportElement transport) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
         jb.setAction(JingleAction.transport_accept)
                 .setInitiator(initiator)
                 .setSessionId(sessionId);
 
-        JingleContent.Builder cb = JingleContent.getBuilder();
+        JingleContentElement.Builder cb = JingleContentElement.getBuilder();
         cb.setCreator(contentCreator).setName(contentName).setTransport(transport);
 
-        Jingle jingle = jb.addJingleContent(cb.build()).build();
+        JingleElement jingle = jb.addJingleContent(cb.build()).build();
         jingle.setTo(recipient);
         jingle.setFrom(connection.getUser());
 
@@ -381,18 +232,18 @@ public class JingleUtil {
      * @param transport transport to reject
      * @return transport-reject stanza
      */
-    public Jingle createTransportReject(FullJid recipient, FullJid initiator, String sessionId,
-                                        JingleContent.Creator contentCreator, String contentName,
-                                        JingleContentTransport transport) {
-        Jingle.Builder jb = Jingle.getBuilder();
+    public JingleElement createTransportReject(FullJid recipient, FullJid initiator, String sessionId,
+                                               JingleContentElement.Creator contentCreator, String contentName,
+                                               JingleContentTransportElement transport) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
         jb.setAction(JingleAction.transport_reject)
                 .setInitiator(initiator)
                 .setSessionId(sessionId);
 
-        JingleContent.Builder cb = JingleContent.getBuilder();
+        JingleContentElement.Builder cb = JingleContentElement.getBuilder();
         cb.setCreator(contentCreator).setName(contentName).setTransport(transport);
 
-        Jingle jingle = jb.addJingleContent(cb.build()).build();
+        JingleElement jingle = jb.addJingleContent(cb.build()).build();
         jingle.setTo(recipient);
         jingle.setFrom(connection.getUser());
 
@@ -409,10 +260,10 @@ public class JingleUtil {
      * @param request request with unknown sessionId.
      * @return error stanza.
      */
-    public IQ createErrorUnknownSession(Jingle request) {
+    public IQ createErrorUnknownSession(JingleElement request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.item_not_found)
-                .addExtension(JingleError.UNKNOWN_SESSION);
+                .addExtension(JingleErrorElement.UNKNOWN_SESSION);
         return IQ.createErrorResponse(request, error);
     }
 
@@ -422,7 +273,7 @@ public class JingleUtil {
      * @param request request from unknown initiator.
      * @return error stanza.
      */
-    public IQ createErrorUnknownInitiator(Jingle request) {
+    public IQ createErrorUnknownInitiator(JingleElement request) {
         XMPPError.Builder b = XMPPError.getBuilder().setType(XMPPError.Type.CANCEL).setCondition(XMPPError.Condition.service_unavailable);
         return IQ.createErrorResponse(request, b);
     }
@@ -433,10 +284,10 @@ public class JingleUtil {
      * @param request request with unsupported info.
      * @return error stanza.
      */
-    public IQ createErrorUnsupportedInfo(Jingle request) {
+    public IQ createErrorUnsupportedInfo(JingleElement request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.feature_not_implemented)
-                .addExtension(JingleError.UNSUPPORTED_INFO).setType(XMPPError.Type.MODIFY);
+                .addExtension(JingleErrorElement.UNSUPPORTED_INFO).setType(XMPPError.Type.MODIFY);
         return IQ.createErrorResponse(request, error);
     }
 
@@ -446,10 +297,10 @@ public class JingleUtil {
      * @param request tie-breaking request
      * @return error stanza
      */
-    public IQ createErrorTieBreak(Jingle request) {
+    public IQ createErrorTieBreak(JingleElement request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.conflict)
-                .addExtension(JingleError.TIE_BREAK);
+                .addExtension(JingleErrorElement.TIE_BREAK);
         return IQ.createErrorResponse(request, error);
     }
 
@@ -459,10 +310,10 @@ public class JingleUtil {
      * @param request request out of order.
      * @return error stanza.
      */
-    public IQ createErrorOutOfOrder(Jingle request) {
+    public IQ createErrorOutOfOrder(JingleElement request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setCondition(XMPPError.Condition.unexpected_request)
-                .addExtension(JingleError.OUT_OF_ORDER);
+                .addExtension(JingleErrorElement.OUT_OF_ORDER);
         return IQ.createErrorResponse(request, error);
     }
 
@@ -472,7 +323,7 @@ public class JingleUtil {
      * @param request malformed request
      * @return error stanza.
      */
-    public IQ createErrorMalformedRequest(Jingle request) {
+    public IQ createErrorMalformedRequest(JingleElement request) {
         XMPPError.Builder error = XMPPError.getBuilder();
         error.setType(XMPPError.Type.CANCEL);
         error.setCondition(XMPPError.Condition.bad_request);

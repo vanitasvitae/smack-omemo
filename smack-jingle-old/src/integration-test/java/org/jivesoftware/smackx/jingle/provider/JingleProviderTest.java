@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.provider;
+package org.jivesoftware.smackx.jingle3.provider;
 
 import org.jivesoftware.smack.StanzaCollector;
 import org.jivesoftware.smack.SmackConfiguration;

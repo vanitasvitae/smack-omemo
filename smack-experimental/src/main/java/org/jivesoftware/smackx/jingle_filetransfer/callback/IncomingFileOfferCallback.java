@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jingle_filetransfer.callback;
 
 import java.io.File;
 
-import org.jivesoftware.smackx.jingle.element.Jingle;
+import org.jivesoftware.smackx.jingle3.element.JingleElement;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
 /**
@@ -26,7 +26,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
  */
 public interface IncomingFileOfferCallback {
 
-    FileTransferHandler acceptIncomingFileOffer(Jingle request, File target);
+    FileTransferHandler acceptIncomingFileOffer(JingleElement request, File target);
 
-    void declineIncomingFileOffer(Jingle request);
+    void declineIncomingFileOffer(JingleElement request);
 }
