@@ -29,8 +29,6 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.jingle.JingleHandler;
-import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle3.element.JingleElement;

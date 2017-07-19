@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.jingle3.Callback;
-import org.jivesoftware.smackx.jingle3.JingleExtensionManager;
+import org.jivesoftware.smackx.jingle3.JingleManager;
 import org.jivesoftware.smackx.jingle3.adapter.JingleDescriptionAdapter;
 import org.jivesoftware.smackx.jingle3.adapter.JingleSecurityAdapter;
 import org.jivesoftware.smackx.jingle3.adapter.JingleTransportAdapter;
@@ -51,7 +51,7 @@ public class Content {
 
         JingleContentDescriptionElement descriptionElement = content.getDescription();
         if (descriptionElement != null) {
-            JingleDescriptionAdapter<?> descriptionAdapter = JingleExtensionManager.getJingleDescriptionAdapter(content.getDescription().getNamespace());
+            JingleDescriptionAdapter<?> descriptionAdapter = JingleManager.getJingleDescriptionAdapter(content.getDescription().getNamespace());
             if (descriptionAdapter != null) {
                 description = descriptionAdapter.descriptionFromElement(descriptionElement);
             } else {
@@ -62,7 +62,7 @@ public class Content {
 
         JingleContentTransportElement transportElement = content.getTransport();
         if (transportElement != null) {
-            JingleTransportAdapter<?> transportAdapter = JingleExtensionManager.getJingleTransportAdapter(content.getTransport().getNamespace());
+            JingleTransportAdapter<?> transportAdapter = JingleManager.getJingleTransportAdapter(content.getTransport().getNamespace());
             if (transportAdapter != null) {
                 transport = transportAdapter.transportFromElement(transportElement);
             } else {
@@ -73,7 +73,7 @@ public class Content {
 
         JingleContentSecurityElement securityElement = content.getSecurity();
         if (securityElement != null) {
-            JingleSecurityAdapter<?> securityAdapter = JingleExtensionManager.getJingleSecurityAdapter(content.getSecurity().getNamespace());
+            JingleSecurityAdapter<?> securityAdapter = JingleManager.getJingleSecurityAdapter(content.getSecurity().getNamespace());
             if (securityAdapter != null) {
                 security = securityAdapter.securityFromElement(securityElement);
             } else {

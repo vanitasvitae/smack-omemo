@@ -18,44 +18,44 @@ package org.jivesoftware.smackx.jingle3.transport.jingle_s5b.provider;
 
 import static org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream.Mode.tcp;
 import static org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream.Mode.udp;
-import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidate.ATTR_CID;
-import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidate.ATTR_HOST;
-import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidate.ATTR_JID;
-import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidate.ATTR_PORT;
-import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidate.ATTR_PRIORITY;
-import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidate.ATTR_TYPE;
+import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement.ATTR_CID;
+import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement.ATTR_HOST;
+import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement.ATTR_JID;
+import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement.ATTR_PORT;
+import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement.ATTR_PRIORITY;
+import static org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement.ATTR_TYPE;
 import static org.xmlpull.v1.XmlPullParser.END_TAG;
 import static org.xmlpull.v1.XmlPullParser.START_TAG;
 
 import org.jivesoftware.smackx.jingle3.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle3.provider.JingleContentTransportProvider;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransport;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidate;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportInfo;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportElement;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportInfoElement;
 
 import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Provider for JingleSocks5BytestreamTransport elements.
  */
-public class JingleS5BTransportProvider extends JingleContentTransportProvider<JingleS5BTransport> {
+public class JingleS5BTransportProvider extends JingleContentTransportProvider<JingleS5BTransportElement> {
 
     @Override
-    public JingleS5BTransport parse(XmlPullParser parser, int initialDepth) throws Exception {
-        JingleS5BTransport.Builder builder = JingleS5BTransport.getBuilder();
+    public JingleS5BTransportElement parse(XmlPullParser parser, int initialDepth) throws Exception {
+        JingleS5BTransportElement.Builder builder = JingleS5BTransportElement.getBuilder();
 
-        String streamId = parser.getAttributeValue(null, JingleS5BTransport.ATTR_SID);
+        String streamId = parser.getAttributeValue(null, JingleS5BTransportElement.ATTR_SID);
         builder.setStreamId(streamId);
 
-        String dstAddr = parser.getAttributeValue(null, JingleS5BTransport.ATTR_DSTADDR);
+        String dstAddr = parser.getAttributeValue(null, JingleS5BTransportElement.ATTR_DSTADDR);
         builder.setDestinationAddress(dstAddr);
 
-        String mode = parser.getAttributeValue(null, JingleS5BTransport.ATTR_MODE);
+        String mode = parser.getAttributeValue(null, JingleS5BTransportElement.ATTR_MODE);
         if (mode != null) {
             builder.setMode(mode.equals(udp.toString()) ? udp : tcp);
         }
 
-        JingleS5BTransportCandidate.Builder cb;
+        JingleS5BTransportCandidateElement.Builder cb;
         outerloop: while (true) {
             int tag = parser.nextTag();
             String name = parser.getName();
@@ -63,8 +63,8 @@ public class JingleS5BTransportProvider extends JingleContentTransportProvider<J
                 case START_TAG: {
                     switch (name) {
 
-                        case JingleS5BTransportCandidate.ELEMENT:
-                            cb = JingleS5BTransportCandidate.getBuilder();
+                        case JingleS5BTransportCandidateElement.ELEMENT:
+                            cb = JingleS5BTransportCandidateElement.getBuilder();
                             cb.setCandidateId(parser.getAttributeValue(null, ATTR_CID));
                             cb.setHost(parser.getAttributeValue(null, ATTR_HOST));
                             cb.setJid(parser.getAttributeValue(null, ATTR_JID));
@@ -77,29 +77,29 @@ public class JingleS5BTransportProvider extends JingleContentTransportProvider<J
 
                             String typeString = parser.getAttributeValue(null, ATTR_TYPE);
                             if (typeString != null) {
-                                cb.setType(JingleS5BTransportCandidate.Type.fromString(typeString));
+                                cb.setType(JingleS5BTransportCandidateElement.Type.fromString(typeString));
                             }
                             builder.addTransportCandidate(cb.build());
                             break;
 
-                        case JingleS5BTransportInfo.CandidateActivated.ELEMENT:
-                            builder.setTransportInfo(JingleS5BTransportInfo.CandidateActivated(
+                        case JingleS5BTransportInfoElement.CandidateActivated.ELEMENT:
+                            builder.setTransportInfo(JingleS5BTransportInfoElement.CandidateActivated(
                                     parser.getAttributeValue(null,
-                                            JingleS5BTransportInfo.CandidateActivated.ATTR_CID)));
+                                            JingleS5BTransportInfoElement.CandidateActivated.ATTR_CID)));
                             break;
 
-                        case JingleS5BTransportInfo.CandidateUsed.ELEMENT:
-                            builder.setTransportInfo(JingleS5BTransportInfo.CandidateUsed(
+                        case JingleS5BTransportInfoElement.CandidateUsed.ELEMENT:
+                            builder.setTransportInfo(JingleS5BTransportInfoElement.CandidateUsed(
                                     parser.getAttributeValue(null,
-                                            JingleS5BTransportInfo.CandidateUsed.ATTR_CID)));
+                                            JingleS5BTransportInfoElement.CandidateUsed.ATTR_CID)));
                             break;
 
-                        case JingleS5BTransportInfo.CandidateError.ELEMENT:
-                            builder.setTransportInfo(JingleS5BTransportInfo.CandidateError());
+                        case JingleS5BTransportInfoElement.CandidateError.ELEMENT:
+                            builder.setTransportInfo(JingleS5BTransportInfoElement.CandidateError());
                             break;
 
-                        case JingleS5BTransportInfo.ProxyError.ELEMENT:
-                            builder.setTransportInfo(JingleS5BTransportInfo.ProxyError());
+                        case JingleS5BTransportInfoElement.ProxyError.ELEMENT:
+                            builder.setTransportInfo(JingleS5BTransportInfoElement.ProxyError());
                             break;
                     }
                 }

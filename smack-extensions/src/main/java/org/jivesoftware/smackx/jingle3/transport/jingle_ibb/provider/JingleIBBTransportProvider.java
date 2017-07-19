@@ -18,6 +18,7 @@ package org.jivesoftware.smackx.jingle3.transport.jingle_ibb.provider;
 
 import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smackx.jingle3.provider.JingleContentTransportProvider;
+import org.jivesoftware.smackx.jingle3.transport.jingle_ibb.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle3.transport.jingle_ibb.element.JingleIBBTransportElement;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -35,6 +36,6 @@ public class JingleIBBTransportProvider extends JingleContentTransportProvider  
 
     @Override
     public String getNamespace() {
-        return JingleIBBTransportElement.NAMESPACE_V1;
+        return JingleIBBTransport.NAMESPACE;
     }
 }

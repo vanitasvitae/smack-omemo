@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle3.transport.jingle_s5b;
+package org.jivesoftware.smackx.jingle3.transport.legacy;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,14 +30,13 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
-import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle3.element.JingleElement;
 import org.jivesoftware.smackx.jingle3.element.JingleAction;
 import org.jivesoftware.smackx.jingle3.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransport;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.provider.JingleS5BTransportProvider;
 
 import org.jxmpp.jid.FullJid;
@@ -46,7 +45,7 @@ import org.jxmpp.jid.Jid;
 /**
  * Manager for Jingle SOCKS5 Bytestream transports (XEP-0261).
  */
-public final class JingleS5BTransportManager extends JingleTransportManager<JingleS5BTransport> {
+public final class JingleS5BTransportManager extends JingleTransportManager<JingleS5BTransportElement> {
 
     private static final Logger LOGGER = Logger.getLogger(JingleS5BTransportManager.class.getName());
 
@@ -74,11 +73,11 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
 
     @Override
     public String getNamespace() {
-        return JingleS5BTransport.NAMESPACE_V1;
+        return JingleS5BTransportElement.NAMESPACE_V1;
     }
 
     @Override
-    public JingleTransportSession<JingleS5BTransport> transportSession(JingleSession jingleSession) {
+    public JingleTransportSession<JingleS5BTransportElement> transportSession(JingleSession jingleSession) {
         return new JingleS5BTransportSession(jingleSession);
     }
 
@@ -153,7 +152,7 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         JingleContentElement.Builder cb = JingleContentElement.getBuilder();
         cb.setName(contentName).setCreator(contentCreator).setSenders(contentSenders);
 
-        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        JingleS5BTransportElement.Builder tb = JingleS5BTransportElement.getBuilder();
         tb.setCandidateUsed(candidateId).setStreamId(streamId);
 
         JingleElement jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
@@ -170,7 +169,7 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         JingleContentElement.Builder cb = JingleContentElement.getBuilder();
         cb.setName(name).setCreator(creator).setSenders(senders);
 
-        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        JingleS5BTransportElement.Builder tb = JingleS5BTransportElement.getBuilder();
         tb.setCandidateError().setStreamId(streamId);
 
         JingleElement jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
@@ -189,7 +188,7 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         JingleContentElement.Builder cb = JingleContentElement.getBuilder();
         cb.setSenders(senders).setCreator(creator).setName(name);
 
-        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        JingleS5BTransportElement.Builder tb = JingleS5BTransportElement.getBuilder();
         tb.setStreamId(sessionId).setProxyError().setStreamId(streamId);
 
         JingleElement jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
@@ -207,7 +206,7 @@ public final class JingleS5BTransportManager extends JingleTransportManager<Jing
         JingleContentElement.Builder cb = JingleContentElement.getBuilder();
         cb.setName(name).setCreator(creator).setSenders(senders);
 
-        JingleS5BTransport.Builder tb = JingleS5BTransport.getBuilder();
+        JingleS5BTransportElement.Builder tb = JingleS5BTransportElement.getBuilder();
         tb.setStreamId(streamId).setCandidateActivated(candidateId);
 
         JingleElement jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();

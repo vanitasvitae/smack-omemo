@@ -22,7 +22,7 @@ import org.jivesoftware.smackx.jingle3.element.JingleContentTransportInfoElement
 /**
  * Class representing possible SOCKS5 TransportInfo elements.
  */
-public abstract class JingleS5BTransportInfo extends JingleContentTransportInfoElement {
+public abstract class JingleS5BTransportInfoElement extends JingleContentTransportInfoElement {
 
     private static CandidateError CEI;
     private static ProxyError PEI;
@@ -49,7 +49,7 @@ public abstract class JingleS5BTransportInfo extends JingleContentTransportInfoE
         return PEI;
     }
 
-    public static final class CandidateActivated extends JingleS5BTransportInfo {
+    public static final class CandidateActivated extends JingleS5BTransportInfoElement {
         public static final String ELEMENT = "candidate-activated";
         public static final String ATTR_CID = "cid";
 
@@ -89,7 +89,7 @@ public abstract class JingleS5BTransportInfo extends JingleContentTransportInfoE
         }
     }
 
-    public static final class CandidateUsed extends JingleS5BTransportInfo {
+    public static final class CandidateUsed extends JingleS5BTransportInfoElement {
         public static final String ELEMENT = "candidate-used";
         public static final String ATTR_CID = "cid";
 
@@ -129,7 +129,7 @@ public abstract class JingleS5BTransportInfo extends JingleContentTransportInfoE
         }
     }
 
-    public static final class CandidateError extends JingleS5BTransportInfo {
+    public static final class CandidateError extends JingleS5BTransportInfoElement {
         public static final String ELEMENT = "candidate-error";
 
         private CandidateError() {
@@ -160,7 +160,7 @@ public abstract class JingleS5BTransportInfo extends JingleContentTransportInfoE
         }
     }
 
-    public static final class ProxyError extends JingleS5BTransportInfo {
+    public static final class ProxyError extends JingleS5BTransportInfoElement {
         public static final String ELEMENT = "proxy-error";
 
         private ProxyError() {

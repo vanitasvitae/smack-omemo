@@ -31,9 +31,9 @@ import org.jxmpp.stringprep.XmppStringprepException;
 /**
  * TransportCandidate for Jingle Socks5Bytestream transports.
  */
-public final class JingleS5BTransportCandidate extends JingleContentTransportCandidateElement {
+public final class JingleS5BTransportCandidateElement extends JingleContentTransportCandidateElement {
 
-    private static final Logger LOGGER = Logger.getLogger(JingleS5BTransportCandidate.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JingleS5BTransportCandidateElement.class.getName());
 
     public static final String ATTR_CID = "cid";
     public static final String ATTR_HOST = "host";
@@ -49,7 +49,7 @@ public final class JingleS5BTransportCandidate extends JingleContentTransportCan
     private final int priority;
     private final Type type;
 
-    public JingleS5BTransportCandidate(String candidateId, String host, Jid jid, int port, int priority, Type type) {
+    public JingleS5BTransportCandidateElement(String candidateId, String host, Jid jid, int port, int priority, Type type) {
 
         Objects.requireNonNull(candidateId);
         Objects.requireNonNull(host);
@@ -70,7 +70,7 @@ public final class JingleS5BTransportCandidate extends JingleContentTransportCan
         this.type = type;
     }
 
-    public JingleS5BTransportCandidate(Bytestream.StreamHost streamHost, int priority, Type type) {
+    public JingleS5BTransportCandidateElement(Bytestream.StreamHost streamHost, int priority, Type type) {
         this(StringUtils.randomString(24), streamHost.getAddress(), streamHost.getJID(), streamHost.getPort(), priority, type);
     }
 
@@ -197,8 +197,8 @@ public final class JingleS5BTransportCandidate extends JingleContentTransportCan
             return this;
         }
 
-        public JingleS5BTransportCandidate build() {
-            return new JingleS5BTransportCandidate(cid, host, jid, port, priority, type);
+        public JingleS5BTransportCandidateElement build() {
+            return new JingleS5BTransportCandidateElement(cid, host, jid, port, priority, type);
         }
     }
 }

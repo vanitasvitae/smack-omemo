@@ -35,8 +35,8 @@ import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportSession;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportManager;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.JingleS5BTransportManager;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransport;
+import org.jivesoftware.smackx.jingle3.transport.legacy.JingleS5BTransportManager;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportElement;
 
 import org.junit.Test;
 import org.jxmpp.jid.impl.JidCreate;
@@ -51,10 +51,10 @@ public class JingleTransportMethodManagerTest extends SmackTestSuite {
 
         assertNull(jtmm.getBestAvailableTransportManager());
         assertNull(jtmm.getTransportManager(JingleIBBTransport.NAMESPACE_V1));
-        assertNull(jtmm.getTransportManager(JingleS5BTransport.NAMESPACE_V1));
+        assertNull(jtmm.getTransportManager(JingleS5BTransportElement.NAMESPACE_V1));
 
         jtmm.registerTransportManager(JingleIBBTransportManager.getInstanceFor(connection));
-        assertNull(jtmm.getTransportManager(JingleS5BTransport.NAMESPACE_V1));
+        assertNull(jtmm.getTransportManager(JingleS5BTransportElement.NAMESPACE_V1));
         assertNotNull(jtmm.getTransportManager(JingleIBBTransport.NAMESPACE_V1));
         assertEquals(JingleIBBTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
 
@@ -62,7 +62,7 @@ public class JingleTransportMethodManagerTest extends SmackTestSuite {
         assertEquals(JingleS5BTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
 
         jtmm.unregisterTransportManager(JingleS5BTransportManager.getInstanceFor(connection));
-        assertNull(jtmm.getTransportManager(JingleS5BTransport.NAMESPACE_V1));
+        assertNull(jtmm.getTransportManager(JingleS5BTransportElement.NAMESPACE_V1));
         jtmm.unregisterTransportManager(JingleIBBTransportManager.getInstanceFor(connection));
 
         assertNull(jtmm.getBestAvailableTransportManager());
@@ -73,7 +73,7 @@ public class JingleTransportMethodManagerTest extends SmackTestSuite {
         assertEquals(JingleS5BTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager());
 
         assertEquals(JingleIBBTransportManager.getInstanceFor(connection), jtmm.getBestAvailableTransportManager(
-                Collections.singleton(JingleS5BTransport.NAMESPACE_V1)));
+                Collections.singleton(JingleS5BTransportElement.NAMESPACE_V1)));
 
         JingleStubTransportManager stub = new JingleStubTransportManager(connection);
         jtmm.registerTransportManager(stub);
@@ -92,7 +92,7 @@ public class JingleTransportMethodManagerTest extends SmackTestSuite {
 
         Set<String> except = new HashSet<>();
         except.add(JingleIBBTransport.NAMESPACE_V1);
-        except.add(JingleS5BTransport.NAMESPACE_V1);
+        except.add(JingleS5BTransportElement.NAMESPACE_V1);
         assertEquals(stub, jtmm.getBestAvailableTransportManager(except));
 
         jtmm.unregisterTransportManager(JingleS5BTransportManager.getInstanceFor(connection));

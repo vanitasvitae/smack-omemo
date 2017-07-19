@@ -1,4 +1,4 @@
-package org.jivesoftware.smackx.jingle3.transport.ibb;
+package org.jivesoftware.smackx.jingle3.transport.jingle_ibb;
 
 import org.jivesoftware.smackx.jingle3.adapter.JingleTransportAdapter;
 import org.jivesoftware.smackx.jingle3.element.JingleContentTransportElement;
@@ -11,11 +11,11 @@ public class JingleIBBTransportAdapter implements JingleTransportAdapter<JingleI
     @Override
     public JingleIBBTransport transportFromElement(JingleContentTransportElement element) {
         JingleIBBTransportElement transport = (JingleIBBTransportElement) element;
-        return new JingleIBBTransport(transport.getSessionId(), transport.getBlockSize());
+        return new JingleIBBTransport(transport.getSid(), transport.getBlockSize());
     }
 
     @Override
     public String getNamespace() {
-        return JingleIBBTransportElement.NAMESPACE_V1;
+        return JingleIBBTransport.NAMESPACE;
     }
 }

@@ -16,47 +16,34 @@
  */
 package org.jivesoftware.smackx.jingle3.transport.jingle_ibb.element;
 
-import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.jingle3.element.JingleContentTransportElement;
+import org.jivesoftware.smackx.jingle3.transport.jingle_ibb.JingleIBBTransport;
 
 /**
  * Transport Element for JingleInBandBytestream transports.
  */
 public class JingleIBBTransportElement extends JingleContentTransportElement {
-    public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:ibb:1";
     public static final String ATTR_BLOCK_SIZE = "block-size";
     public static final String ATTR_SID = "sid";
 
     public static final short DEFAULT_BLOCK_SIZE = 4096;
 
-    private final short blockSize;
     private final String sid;
+    private final short blockSize;
 
-    public JingleIBBTransportElement() {
-        this(DEFAULT_BLOCK_SIZE);
-    }
-
-    public JingleIBBTransportElement(String sid) {
-        this(DEFAULT_BLOCK_SIZE, sid);
-    }
-
-    public JingleIBBTransportElement(Short blockSize) {
-        this(blockSize, StringUtils.randomString(24));
-    }
-
-    public JingleIBBTransportElement(Short blockSize, String sid) {
+    public JingleIBBTransportElement(String streamId, Short blockSize) {
         super(null);
+        this.sid = streamId;
         this.blockSize = blockSize != null ? blockSize : DEFAULT_BLOCK_SIZE;
-        this.sid = sid;
-    }
-
-    public String getSessionId() {
-        return sid;
     }
 
     public short getBlockSize() {
         return blockSize;
+    }
+
+    public String getSid() {
+        return sid;
     }
 
     @Override
@@ -67,7 +54,7 @@ public class JingleIBBTransportElement extends JingleContentTransportElement {
 
     @Override
     public String getNamespace() {
-        return NAMESPACE_V1;
+        return JingleIBBTransport.NAMESPACE;
     }
 
     @Override

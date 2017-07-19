@@ -51,7 +51,6 @@ public abstract class JingleContentTransportElement implements ExtensionElement 
         else {
             this.candidates = Collections.emptyList();
         }
-
         this.info = info;
     }
 

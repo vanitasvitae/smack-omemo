@@ -23,7 +23,7 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smackx.jingle3.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.provider.JingleIBBTransportProvider;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransport;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.provider.JingleS5BTransportProvider;
 
 import org.junit.Test;
@@ -36,18 +36,18 @@ public class JingleContentProviderManagerTest extends SmackTestSuite {
     @Test
     public void transportProviderTest() {
         JingleContentProviderManager.removeJingleContentTransportProvider(JingleIBBTransport.NAMESPACE_V1);
-        JingleContentProviderManager.removeJingleContentTransportProvider(JingleS5BTransport.NAMESPACE_V1);
+        JingleContentProviderManager.removeJingleContentTransportProvider(JingleS5BTransportElement.NAMESPACE_V1);
 
         assertNull(JingleContentProviderManager.getJingleContentTransportProvider(JingleIBBTransport.NAMESPACE_V1));
-        assertNull(JingleContentProviderManager.getJingleContentTransportProvider(JingleS5BTransport.NAMESPACE_V1));
+        assertNull(JingleContentProviderManager.getJingleContentTransportProvider(JingleS5BTransportElement.NAMESPACE_V1));
 
         JingleIBBTransportProvider ibbProvider = new JingleIBBTransportProvider();
         JingleContentProviderManager.addJingleContentTransportProvider(JingleIBBTransport.NAMESPACE_V1, ibbProvider);
         assertEquals(ibbProvider, JingleContentProviderManager.getJingleContentTransportProvider(JingleIBBTransport.NAMESPACE_V1));
 
-        assertNull(JingleContentProviderManager.getJingleContentTransportProvider(JingleS5BTransport.NAMESPACE_V1));
+        assertNull(JingleContentProviderManager.getJingleContentTransportProvider(JingleS5BTransportElement.NAMESPACE_V1));
         JingleS5BTransportProvider s5bProvider = new JingleS5BTransportProvider();
-        JingleContentProviderManager.addJingleContentTransportProvider(JingleS5BTransport.NAMESPACE_V1, s5bProvider);
-        assertEquals(s5bProvider, JingleContentProviderManager.getJingleContentTransportProvider(JingleS5BTransport.NAMESPACE_V1));
+        JingleContentProviderManager.addJingleContentTransportProvider(JingleS5BTransportElement.NAMESPACE_V1, s5bProvider);
+        assertEquals(s5bProvider, JingleContentProviderManager.getJingleContentTransportProvider(JingleS5BTransportElement.NAMESPACE_V1));
     }
 }

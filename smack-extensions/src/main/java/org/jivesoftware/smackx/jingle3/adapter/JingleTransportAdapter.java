@@ -8,7 +8,7 @@ import org.jivesoftware.smackx.jingle3.internal.Transport;
  */
 public interface JingleTransportAdapter<T extends Transport<?>> {
 
-    T transportFromElement(JingleContentTransportElement xml);
+    T transportFromElement(JingleContentTransportElement element);
 
     String getNamespace();
 }

@@ -35,7 +35,6 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
-import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleUtil;
 import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle3.element.JingleElement;

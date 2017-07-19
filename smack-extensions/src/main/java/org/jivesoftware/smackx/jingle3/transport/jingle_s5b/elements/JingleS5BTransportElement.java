@@ -29,26 +29,26 @@ import org.jivesoftware.smackx.jingle3.element.JingleContentTransportInfoElement
 /**
  * Socks5Bytestream transport element.
  */
-public class JingleS5BTransport extends JingleContentTransportElement {
+public class JingleS5BTransportElement extends JingleContentTransportElement {
     public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:s5b:1";
     public static final String ATTR_DSTADDR = "dstaddr";
     public static final String ATTR_MODE = "mode";
     public static final String ATTR_SID = "sid";
 
-    private final String streamId;
+    private final String sid;
     private final String dstAddr;
     private final Bytestream.Mode mode;
 
-    protected JingleS5BTransport(List<JingleContentTransportCandidateElement> candidates, JingleContentTransportInfoElement info, String streamId, String dstAddr, Bytestream.Mode mode) {
+    protected JingleS5BTransportElement(String streamId, List<JingleContentTransportCandidateElement> candidates, JingleContentTransportInfoElement info, String dstAddr, Bytestream.Mode mode) {
         super(candidates, info);
         StringUtils.requireNotNullOrEmpty(streamId, "sid MUST be neither null, nor empty.");
-        this.streamId = streamId;
+        this.sid = streamId;
         this.dstAddr = dstAddr;
         this.mode = mode;
     }
 
-    public String getStreamId() {
-        return streamId;
+    public String getSid() {
+        return sid;
     }
 
     public String getDestinationAddress() {
@@ -68,16 +68,16 @@ public class JingleS5BTransport extends JingleContentTransportElement {
     protected void addExtraAttributes(XmlStringBuilder xml) {
         xml.optAttribute(ATTR_DSTADDR, dstAddr);
         xml.optAttribute(ATTR_MODE, mode);
-        xml.attribute(ATTR_SID, streamId);
+        xml.attribute(ATTR_SID, sid);
     }
 
     public boolean hasCandidate(String candidateId) {
         return getCandidate(candidateId) != null;
     }
 
-    public JingleS5BTransportCandidate getCandidate(String candidateId) {
+    public JingleS5BTransportCandidateElement getCandidate(String candidateId) {
         for (JingleContentTransportCandidateElement c : candidates) {
-            JingleS5BTransportCandidate candidate = (JingleS5BTransportCandidate) c;
+            JingleS5BTransportCandidateElement candidate = (JingleS5BTransportCandidateElement) c;
             if (candidate.getCandidateId().equals(candidateId)) {
                 return candidate;
             }
@@ -111,7 +111,7 @@ public class JingleS5BTransport extends JingleContentTransportElement {
             return this;
         }
 
-        public Builder addTransportCandidate(JingleS5BTransportCandidate candidate) {
+        public Builder addTransportCandidate(JingleS5BTransportCandidateElement candidate) {
             if (info != null) {
                 throw new IllegalStateException("Builder has already an info set. " +
                         "The transport can only have either an info or transport candidates, not both.");
@@ -133,23 +133,23 @@ public class JingleS5BTransport extends JingleContentTransportElement {
         }
 
         public Builder setCandidateUsed(String candidateId) {
-            return setTransportInfo(JingleS5BTransportInfo.CandidateUsed(candidateId));
+            return setTransportInfo(JingleS5BTransportInfoElement.CandidateUsed(candidateId));
         }
 
         public Builder setCandidateActivated(String candidateId) {
-            return setTransportInfo(JingleS5BTransportInfo.CandidateActivated(candidateId));
+            return setTransportInfo(JingleS5BTransportInfoElement.CandidateActivated(candidateId));
         }
 
         public Builder setCandidateError() {
-            return setTransportInfo(JingleS5BTransportInfo.CandidateError());
+            return setTransportInfo(JingleS5BTransportInfoElement.CandidateError());
         }
 
         public Builder setProxyError() {
-            return setTransportInfo(JingleS5BTransportInfo.ProxyError());
+            return setTransportInfo(JingleS5BTransportInfoElement.ProxyError());
         }
 
-        public JingleS5BTransport build() {
-            return new JingleS5BTransport(candidates, info, streamId, dstAddr, mode);
+        public JingleS5BTransportElement build() {
+            return new JingleS5BTransportElement(streamId, candidates, info, dstAddr, mode);
         }
     }
 }

@@ -14,7 +14,6 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle3.JingleDescriptionManager;
-import org.jivesoftware.smackx.jingle3.JingleExtensionManager;
 import org.jivesoftware.smackx.jingle3.JingleManager;
 import org.jivesoftware.smackx.jingle3.Role;
 import org.jivesoftware.smackx.jingle3.adapter.JingleTransportAdapter;
@@ -23,6 +22,7 @@ import org.jivesoftware.smackx.jingle3.element.JingleAction;
 import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle3.element.JingleContentTransportElement;
+import org.jivesoftware.smackx.jingle3.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle3.element.JingleElement;
 import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle3.exception.UnsupportedDescriptionException;
@@ -135,7 +135,7 @@ public class Session {
 
             }
 
-            JingleTransportAdapter<?> transportAdapter = JingleExtensionManager.getJingleTransportAdapter(
+            JingleTransportAdapter<?> transportAdapter = JingleManager.getJingleTransportAdapter(
                     newTransport.getNamespace());
             // This might be an unknown transport.
             if (transportAdapter == null) {
@@ -145,7 +145,7 @@ public class Session {
             }
 
             //Otherwise, when all went well so far, accept the transport-replace
-            content.setTransport(JingleExtensionManager.getJingleTransportAdapter(newTransport.getNamespace())
+            content.setTransport(JingleManager.getJingleTransportAdapter(newTransport.getNamespace())
                     .transportFromElement(newTransport));
             responses.add(JingleElement.createTransportAccept(getInitiator(), getPeer(), getSessionId(),
                     content.getCreator(), content.getName(), newTransport));
@@ -165,9 +165,11 @@ public class Session {
 
     private IQ handleSessionTerminate(JingleElement request) {
         JingleReasonElement reason = request.getReason();
+
         if (reason == null) {
             throw new AssertionError("Reason MUST not be null! (I guess)...");
         }
+
         switch (reason.asEnum()) {
             case alternative_session:
             case busy:
@@ -192,7 +194,7 @@ public class Session {
             case unsupported_transports:
                 break;
             default:
-                throw new AssertionError("Unknown reson enum: " + reason.asEnum().toString());
+                throw new AssertionError("Unknown reason enum: " + reason.asEnum().toString());
         }
         return IQ.createResultIQ(request);
     }
@@ -209,18 +211,12 @@ public class Session {
 
     private IQ handleTransportInfo(JingleElement request) {
         HashMap<JingleContentElement, Content> affectedContents = getAffectedContents(request);
-        List<JingleElement> responses = new ArrayList<>();
 
         for (Map.Entry<JingleContentElement, Content> entry : affectedContents.entrySet()) {
-            responses.add(entry.getValue().getTransport().handleTransportInfo(entry.getKey().getTransport().getInfo()));
-        }
 
-        for (JingleElement response : responses) {
-            try {
-                getJingleManager().getConnection().createStanzaCollectorAndSend(response).nextResultOrThrow();
-            } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException | SmackException.NotConnectedException e) {
-                LOGGER.log(Level.SEVERE, "Could not send response to transport-info: " + e, e);
-            }
+            Transport<?> transport = entry.getValue().getTransport();
+            JingleContentTransportInfoElement info = entry.getKey().getTransport().getInfo();
+            transport.handleTransportInfo(info);
         }
 
         return IQ.createResultIQ(request);
@@ -307,7 +303,7 @@ public class Session {
         }
 
         for (Map.Entry<String, List<Content>> descriptionCategory : contentsByDescription.entrySet()) {
-            JingleDescriptionManager descriptionManager = JingleExtensionManager.getInstanceFor(getJingleManager().getConnection()).getDescriptionManager(descriptionCategory.getKey());
+            JingleDescriptionManager descriptionManager = JingleManager.getInstanceFor(getJingleManager().getConnection()).getDescriptionManager(descriptionCategory.getKey());
 
             if (descriptionManager == null) {
                 //blabla

@@ -26,9 +26,9 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransport;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidate;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportInfo;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportElement;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement;
+import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportInfoElement;
 import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.provider.JingleS5BTransportProvider;
 
 import org.junit.Test;
@@ -75,7 +75,7 @@ public class JingleS5BTransportTest extends SmackTestSuite {
                         "type='proxy'/>" +
 
                         "</transport>";
-        JingleS5BTransport transport = new JingleS5BTransportProvider().parse(TestUtils.getParser(xml));
+        JingleS5BTransportElement transport = new JingleS5BTransportProvider().parse(TestUtils.getParser(xml));
         assertEquals("972b7bf47291ca609517f67f86b5081086052dad", transport.getDestinationAddress());
         assertEquals("vj3hs98y", transport.getStreamId());
         assertEquals(Bytestream.Mode.tcp, transport.getMode());
@@ -83,35 +83,35 @@ public class JingleS5BTransportTest extends SmackTestSuite {
 
         assertTrue(transport.hasCandidate("hft54dqy"));
         assertFalse(transport.hasCandidate("invalidId"));
-        JingleS5BTransportCandidate candidate1 =
-                (JingleS5BTransportCandidate) transport.getCandidates().get(0);
+        JingleS5BTransportCandidateElement candidate1 =
+                (JingleS5BTransportCandidateElement) transport.getCandidates().get(0);
         assertEquals(candidate1, transport.getCandidate("hft54dqy"));
         assertNotNull(candidate1.getStreamHost());
-        assertEquals(JingleS5BTransportCandidate.Type.direct.getWeight(), candidate1.getType().getWeight());
+        assertEquals(JingleS5BTransportCandidateElement.Type.direct.getWeight(), candidate1.getType().getWeight());
         assertEquals("hft54dqy", candidate1.getCandidateId());
         assertEquals("192.168.4.1", candidate1.getHost());
         assertEquals(JidCreate.from("romeo@montague.lit/orchard"), candidate1.getJid());
         assertEquals(5086, candidate1.getPort());
         assertEquals(8257636, candidate1.getPriority());
-        assertEquals(JingleS5BTransportCandidate.Type.direct, candidate1.getType());
+        assertEquals(JingleS5BTransportCandidateElement.Type.direct, candidate1.getType());
 
-        JingleS5BTransportCandidate candidate2 =
-                (JingleS5BTransportCandidate) transport.getCandidates().get(1);
+        JingleS5BTransportCandidateElement candidate2 =
+                (JingleS5BTransportCandidateElement) transport.getCandidates().get(1);
         assertEquals("hutr46fe", candidate2.getCandidateId());
         assertEquals("24.24.24.1", candidate2.getHost());
         assertEquals(JidCreate.from("romeo@montague.lit/orchard"), candidate2.getJid());
         assertEquals(5087, candidate2.getPort());
         assertEquals(8258636, candidate2.getPriority());
-        assertEquals(JingleS5BTransportCandidate.Type.direct, candidate2.getType());
+        assertEquals(JingleS5BTransportCandidateElement.Type.direct, candidate2.getType());
 
-        JingleS5BTransportCandidate candidate3 =
-                (JingleS5BTransportCandidate) transport.getCandidates().get(2);
+        JingleS5BTransportCandidateElement candidate3 =
+                (JingleS5BTransportCandidateElement) transport.getCandidates().get(2);
         assertEquals("xmdh4b7i", candidate3.getCandidateId());
         assertEquals("123.456.7.8", candidate3.getHost());
         assertEquals(JidCreate.domainBareFrom("streamer.shakespeare.lit"), candidate3.getJid());
         assertEquals(7625, candidate3.getPort());
         assertEquals(7878787, candidate3.getPriority());
-        assertEquals(JingleS5BTransportCandidate.Type.proxy, candidate3.getType());
+        assertEquals(JingleS5BTransportCandidateElement.Type.proxy, candidate3.getType());
 
         assertEquals(xml, transport.toXML().toString());
     }
@@ -122,12 +122,12 @@ public class JingleS5BTransportTest extends SmackTestSuite {
                 "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='vj3hs98y'>" +
                         "<candidate-error/>" +
                         "</transport>";
-        JingleS5BTransport candidateErrorTransport = new JingleS5BTransportProvider()
+        JingleS5BTransportElement candidateErrorTransport = new JingleS5BTransportProvider()
                 .parse(TestUtils.getParser(candidateError));
         assertNull(candidateErrorTransport.getDestinationAddress());
         assertNotNull(candidateErrorTransport.getInfo());
         assertEquals("vj3hs98y", candidateErrorTransport.getStreamId());
-        assertEquals(JingleS5BTransportInfo.CandidateError(),
+        assertEquals(JingleS5BTransportInfoElement.CandidateError(),
                 candidateErrorTransport.getInfo());
         assertEquals(candidateError, candidateErrorTransport.toXML().toString());
 
@@ -135,13 +135,13 @@ public class JingleS5BTransportTest extends SmackTestSuite {
                 "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='vj3hs98y'>" +
                         "<proxy-error/>" +
                         "</transport>";
-        JingleS5BTransport proxyErrorTransport = new JingleS5BTransportProvider()
+        JingleS5BTransportElement proxyErrorTransport = new JingleS5BTransportProvider()
                 .parse(TestUtils.getParser(proxyError));
         assertNull(proxyErrorTransport.getDestinationAddress());
         assertNotNull(proxyErrorTransport.getInfo());
         assertNotNull(candidateErrorTransport.getInfo());
         assertEquals("vj3hs98y", proxyErrorTransport.getStreamId());
-        assertEquals(JingleS5BTransportInfo.ProxyError(),
+        assertEquals(JingleS5BTransportInfoElement.ProxyError(),
                 proxyErrorTransport.getInfo());
         assertEquals(proxyError, proxyErrorTransport.toXML().toString());
 
@@ -149,13 +149,13 @@ public class JingleS5BTransportTest extends SmackTestSuite {
                 "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='vj3hs98y'>" +
                         "<candidate-used cid='hr65dqyd'/>" +
                         "</transport>";
-        JingleS5BTransport candidateUsedTransport = new JingleS5BTransportProvider()
+        JingleS5BTransportElement candidateUsedTransport = new JingleS5BTransportProvider()
                 .parse(TestUtils.getParser(candidateUsed));
         assertNotNull(candidateUsedTransport.getInfo());
-        assertEquals(JingleS5BTransportInfo.CandidateUsed("hr65dqyd"),
+        assertEquals(JingleS5BTransportInfoElement.CandidateUsed("hr65dqyd"),
                 candidateUsedTransport.getInfo());
         assertEquals("hr65dqyd",
-                ((JingleS5BTransportInfo.CandidateUsed)
+                ((JingleS5BTransportInfoElement.CandidateUsed)
                         candidateUsedTransport.getInfo()).getCandidateId());
         assertEquals(candidateUsed, candidateUsedTransport.toXML().toString());
 
@@ -163,41 +163,41 @@ public class JingleS5BTransportTest extends SmackTestSuite {
                 "<transport xmlns='urn:xmpp:jingle:transports:s5b:1' sid='vj3hs98y'>" +
                         "<candidate-activated cid='hr65dqyd'/>" +
                         "</transport>";
-        JingleS5BTransport candidateActivatedTransport = new JingleS5BTransportProvider()
+        JingleS5BTransportElement candidateActivatedTransport = new JingleS5BTransportProvider()
                 .parse(TestUtils.getParser(candidateActivated));
         assertNotNull(candidateActivatedTransport.getInfo());
         assertNotNull(candidateErrorTransport.getInfo());
 
-        assertEquals(JingleS5BTransportInfo.CandidateActivated("hr65dqyd"),
+        assertEquals(JingleS5BTransportInfoElement.CandidateActivated("hr65dqyd"),
                 candidateActivatedTransport.getInfo());
         assertEquals("hr65dqyd",
-                ((JingleS5BTransportInfo.CandidateActivated)
+                ((JingleS5BTransportInfoElement.CandidateActivated)
                         candidateActivatedTransport.getInfo()).getCandidateId());
         assertEquals(candidateActivated, candidateActivatedTransport.toXML().toString());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void candidateBuilderInvalidPortTest() {
-        JingleS5BTransportCandidate.getBuilder().setPort(-5);
+        JingleS5BTransportCandidateElement.getBuilder().setPort(-5);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void candidateBuilderInvalidPriorityTest() {
-        JingleS5BTransportCandidate.getBuilder().setPriority(-1000);
+        JingleS5BTransportCandidateElement.getBuilder().setPriority(-1000);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transportCandidateIllegalPriorityTest() throws XmppStringprepException {
         FullJid jid = JidCreate.fullFrom("test@test.test/test");
-        JingleS5BTransportCandidate candidate = new JingleS5BTransportCandidate(
-                "cid", "host", jid, 5555, -30, JingleS5BTransportCandidate.Type.proxy);
+        JingleS5BTransportCandidateElement candidate = new JingleS5BTransportCandidateElement(
+                "cid", "host", jid, 5555, -30, JingleS5BTransportCandidateElement.Type.proxy);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transportCandidateIllegalPortTest() throws XmppStringprepException {
         FullJid jid = JidCreate.fullFrom("test@test.test/test");
-        JingleS5BTransportCandidate candidate = new JingleS5BTransportCandidate(
-                "cid", "host", jid, -5555, 30, JingleS5BTransportCandidate.Type.proxy);
+        JingleS5BTransportCandidateElement candidate = new JingleS5BTransportCandidateElement(
+                "cid", "host", jid, -5555, 30, JingleS5BTransportCandidateElement.Type.proxy);
     }
 
     @Test
@@ -207,7 +207,7 @@ public class JingleS5BTransportTest extends SmackTestSuite {
         int port = 1234;
         Bytestream.StreamHost streamHost = new Bytestream.StreamHost(jid, host, port);
 
-        JingleS5BTransportCandidate candidate = new JingleS5BTransportCandidate(streamHost, 2000, JingleS5BTransportCandidate.Type.direct);
+        JingleS5BTransportCandidateElement candidate = new JingleS5BTransportCandidateElement(streamHost, 2000, JingleS5BTransportCandidateElement.Type.direct);
 
         assertEquals(2000, candidate.getPriority());
         assertEquals(jid, candidate.getJid());
@@ -219,6 +219,6 @@ public class JingleS5BTransportTest extends SmackTestSuite {
 
     @Test(expected = IllegalArgumentException.class)
     public void typeFromIllegalStringTest() {
-        JingleS5BTransportCandidate.Type.fromString("illegal-type");
+        JingleS5BTransportCandidateElement.Type.fromString("illegal-type");
     }
 }

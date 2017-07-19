@@ -19,9 +19,7 @@ package org.jivesoftware.smackx.jingle_filetransfer;
 import java.util.ArrayList;
 
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.JingleUtil;
-import org.jivesoftware.smackx.jingle.Role;
 import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
