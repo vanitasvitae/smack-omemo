@@ -39,7 +39,7 @@ import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedDescriptionException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedSecurityException;
-import org.jivesoftware.smackx.jingle.internal.Session;
+import org.jivesoftware.smackx.jingle.internal.JingleSession;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 
@@ -63,7 +63,7 @@ public class JingleManager extends Manager {
     private final WeakHashMap<String, JingleTransportManager> transportManagers = new WeakHashMap<>();
     private final WeakHashMap<String, JingleSecurityManager> securityManagers = new WeakHashMap<>();
 
-    private final ConcurrentHashMap<FullJidAndSessionId, Session> jingleSessions = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<FullJidAndSessionId, JingleSession> jingleSessions = new ConcurrentHashMap<>();
 
     private JingleManager(XMPPConnection connection) {
         super(connection);
@@ -78,7 +78,7 @@ public class JingleManager extends Manager {
                         String sid = jingle.getSid();
                         FullJidAndSessionId fullJidAndSessionId = new FullJidAndSessionId(fullFrom, sid);
 
-                        Session session = jingleSessions.get(fullJidAndSessionId);
+                        JingleSession session = jingleSessions.get(fullJidAndSessionId);
 
                         // We have not seen this session before.
                         // Either it is fresh, or unknown.
@@ -87,7 +87,7 @@ public class JingleManager extends Manager {
                             if (jingle.getAction() == JingleAction.session_initiate) {
                                 //fresh. phew!
                                 try {
-                                    session = Session.fromSessionInitiate(JingleManager.this, jingle);
+                                    session = JingleSession.fromSessionInitiate(JingleManager.this, jingle);
                                     jingleSessions.put(fullJidAndSessionId, session);
                                 } catch (UnsupportedDescriptionException e) {
                                     return JingleElement.createSessionTerminate(jingle.getFrom().asFullJidOrThrow(),

@@ -28,17 +28,17 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 /**
  * Class that represents a contents transport component.
  */
-public abstract class Transport<D extends JingleContentTransportElement> {
+public abstract class JingleTransport<D extends JingleContentTransportElement> {
 
-    private Content parent;
-    private final ArrayList<TransportCandidate<?>> candidates = new ArrayList<>();
+    private JingleContent parent;
+    private final ArrayList<JingleTransportCandidate<?>> candidates = new ArrayList<>();
 
-    private Transport peersProposal;
+    private JingleTransport peersProposal;
     private boolean isPeersProposal;
 
     public abstract D getElement();
 
-    public void addCandidate(TransportCandidate<?> candidate) {
+    public void addCandidate(JingleTransportCandidate<?> candidate) {
         // Insert sorted by priority descending
 
         // Empty list -> insert
@@ -50,7 +50,7 @@ public abstract class Transport<D extends JingleContentTransportElement> {
 
         // Find appropriate index
         for (int i = 0; i < candidates.size(); i++) {
-            TransportCandidate<?> c = candidates.get(i);
+            JingleTransportCandidate<?> c = candidates.get(i);
 
             // list already contains element -> return
             if (c == candidate) {
@@ -65,7 +65,7 @@ public abstract class Transport<D extends JingleContentTransportElement> {
         }
     }
 
-    public List<TransportCandidate<?>> getCandidates() {
+    public List<JingleTransportCandidate<?>> getCandidates() {
         return candidates;
     }
 
@@ -77,7 +77,7 @@ public abstract class Transport<D extends JingleContentTransportElement> {
     public abstract void establishOutgoingBytestreamSession(BytestreamSessionEstablishedListener listener,
                                                             XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException;
 
-    public void setPeersProposal(Transport peersProposal) {
+    public void setPeersProposal(JingleTransport peersProposal) {
         this.peersProposal = peersProposal;
         peersProposal.isPeersProposal = true;
     }
@@ -86,19 +86,19 @@ public abstract class Transport<D extends JingleContentTransportElement> {
         return isPeersProposal;
     }
 
-    public Transport<?> getPeersProposal() {
+    public JingleTransport<?> getPeersProposal() {
         return peersProposal;
     }
 
     public abstract void handleTransportInfo(JingleContentTransportInfoElement info);
 
-    public void setParent(Content parent) {
+    public void setParent(JingleContent parent) {
         if (this.parent != parent) {
             this.parent = parent;
         }
     }
 
-    public Content getParent() {
+    public JingleContent getParent() {
         return parent;
     }
 }

@@ -16,24 +16,28 @@
  */
 package org.jivesoftware.smackx.jingle.internal;
 
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
 
 /**
- * Class that represents a contents description component.
+ * Class that represents a contents security component.
  */
-public abstract class Description<D extends JingleContentDescriptionElement> {
+public abstract class JingleSecurity<D extends JingleContentSecurityElement> {
 
-    private Content parent;
+    private JingleContent parent;
 
     public abstract D getElement();
 
-    public void setParent(Content parent) {
+    public abstract JingleElement handleSecurityInfo(JingleContentSecurityInfoElement element);
+
+    public void setParent(JingleContent parent) {
         if (this.parent != parent) {
             this.parent = parent;
         }
     }
 
-    public Content getParent() {
+    public JingleContent getParent() {
         return parent;
     }
 }

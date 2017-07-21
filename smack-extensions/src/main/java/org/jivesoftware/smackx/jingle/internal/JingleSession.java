@@ -50,20 +50,20 @@ import org.jxmpp.jid.FullJid;
 /**
  * Class that represents a Jingle session.
  */
-public class Session {
-    private static final Logger LOGGER = Logger.getLogger(Session.class.getName());
+public class JingleSession {
+    private static final Logger LOGGER = Logger.getLogger(JingleSession.class.getName());
 
-    private final ConcurrentHashMap<String, Content> contents = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, JingleContent> contents = new ConcurrentHashMap<>();
     private final JingleManager jingleManager;
 
     private final FullJid initiator, responder;
     private final Role role;
     private final String sessionId;
 
-    private final Map<Content, PendingJingleAction> pendingJingleActions =
-            Collections.synchronizedMap(new HashMap<Content, PendingJingleAction>());
+    private final Map<JingleContent, PendingJingleAction> pendingJingleActions =
+            Collections.synchronizedMap(new HashMap<JingleContent, PendingJingleAction>());
 
-    public Session(JingleManager manager, FullJid initiator, FullJid responder, Role role, String sessionId) {
+    public JingleSession(JingleManager manager, FullJid initiator, FullJid responder, Role role, String sessionId) {
         this.jingleManager = manager;
         this.initiator = initiator;
         this.responder = responder;
@@ -71,23 +71,23 @@ public class Session {
         this.sessionId = sessionId;
     }
 
-    void addContent(Content content) {
+    void addContent(JingleContent content) {
         contents.put(content.getName(), content);
         content.setParent(this);
     }
 
     void addContent(JingleContentElement content)
             throws UnsupportedSecurityException, UnsupportedTransportException, UnsupportedDescriptionException {
-        addContent(Content.fromElement(content));
+        addContent(JingleContent.fromElement(content));
     }
 
-    public static Session fromSessionInitiate(JingleManager manager, JingleElement initiate)
+    public static JingleSession fromSessionInitiate(JingleManager manager, JingleElement initiate)
             throws UnsupportedSecurityException, UnsupportedDescriptionException, UnsupportedTransportException {
         if (initiate.getAction() != JingleAction.session_initiate) {
             throw new IllegalArgumentException("Jingle-Action MUST be 'session-initiate'.");
         }
 
-        Session session = new Session(manager, initiate.getInitiator(), initiate.getResponder(), Role.responder, initiate.getSid());
+        JingleSession session = new JingleSession(manager, initiate.getInitiator(), initiate.getResponder(), Role.responder, initiate.getSid());
         List<JingleContentElement> initiateContents = initiate.getContents();
 
         for (JingleContentElement content : initiateContents) {
@@ -139,7 +139,7 @@ public class Session {
         List<JingleElement> responses = new ArrayList<>();
 
         for (JingleContentElement affected : affectedContents) {
-            Content content = contents.get(affected.getName());
+            JingleContent content = contents.get(affected.getName());
             JingleContentTransportElement newTransport = affected.getTransport();
             Set<String> blacklist = content.getTransportBlacklist();
 
@@ -216,7 +216,7 @@ public class Session {
     }
 
     private IQ handleTransportReject(JingleElement request) {
-        HashMap<JingleContentElement, Content> affectedContents = getAffectedContents(request);
+        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
 
         return null;
     }
@@ -226,11 +226,11 @@ public class Session {
     }
 
     private IQ handleTransportInfo(JingleElement request) {
-        HashMap<JingleContentElement, Content> affectedContents = getAffectedContents(request);
+        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
 
-        for (Map.Entry<JingleContentElement, Content> entry : affectedContents.entrySet()) {
+        for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
 
-            Transport<?> transport = entry.getValue().getTransport();
+            JingleTransport<?> transport = entry.getValue().getTransport();
             JingleContentTransportInfoElement info = entry.getKey().getTransport().getInfo();
             transport.handleTransportInfo(info);
         }
@@ -239,8 +239,8 @@ public class Session {
     }
 
     private IQ handleTransportAccept(JingleElement request) {
-        HashMap<JingleContentElement, Content> affectedContents = getAffectedContents(request);
-        for (Map.Entry<JingleContentElement, Content> entry : affectedContents.entrySet()) {
+        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
+        for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
 
             PendingJingleAction pending = pendingJingleActions.get(entry.getValue());
             if (pending == null) {
@@ -264,10 +264,10 @@ public class Session {
     }
 
     private IQ handleSecurityInfo(JingleElement request) {
-        HashMap<JingleContentElement, Content> affectedContents = getAffectedContents(request);
+        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
         List<JingleElement> responses = new ArrayList<>();
 
-        for (Map.Entry<JingleContentElement, Content> entry : affectedContents.entrySet()) {
+        for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
             responses.add(entry.getValue().getSecurity().handleSecurityInfo(entry.getKey().getSecurity().getSecurityInfo()));
         }
 
@@ -306,19 +306,19 @@ public class Session {
         final List<JingleContentElement> proposedContents = request.getContents();
         final List<JingleContentElement> acceptedContents = new ArrayList<>();
 
-        final HashMap<String, List<Content>> contentsByDescription = new HashMap<>();
+        final HashMap<String, List<JingleContent>> contentsByDescription = new HashMap<>();
 
         for (JingleContentElement p : proposedContents) {
             JingleContentDescriptionElement description = p.getDescription();
-            List<Content> list = contentsByDescription.get(description.getNamespace());
+            List<JingleContent> list = contentsByDescription.get(description.getNamespace());
             if (list == null) {
                 list = new ArrayList<>();
                 contentsByDescription.put(description.getNamespace(), list);
             }
-            list.add(Content.fromElement(p));
+            list.add(JingleContent.fromElement(p));
         }
 
-        for (Map.Entry<String, List<Content>> descriptionCategory : contentsByDescription.entrySet()) {
+        for (Map.Entry<String, List<JingleContent>> descriptionCategory : contentsByDescription.entrySet()) {
             JingleDescriptionManager descriptionManager = JingleManager.getInstanceFor(getJingleManager().getConnection()).getDescriptionManager(descriptionCategory.getKey());
 
             if (descriptionManager == null) {
@@ -326,7 +326,7 @@ public class Session {
                 continue;
             }
 
-            for (final Content content : descriptionCategory.getValue()) {
+            for (final JingleContent content : descriptionCategory.getValue()) {
                 ContentAddCallback callback = new ContentAddCallback() {
                     @Override
                     public void acceptContentAdd() {
@@ -386,10 +386,10 @@ public class Session {
         return jingleManager;
     }
 
-    private HashMap<JingleContentElement, Content> getAffectedContents(JingleElement request) {
-        HashMap<JingleContentElement, Content> map = new HashMap<>();
+    private HashMap<JingleContentElement, JingleContent> getAffectedContents(JingleElement request) {
+        HashMap<JingleContentElement, JingleContent> map = new HashMap<>();
         for (JingleContentElement e : request.getContents()) {
-            Content c = contents.get(e.getName());
+            JingleContent c = contents.get(e.getName());
             if (c == null) {
                 throw new AssertionError("Unknown content: " + e.getName());
             }

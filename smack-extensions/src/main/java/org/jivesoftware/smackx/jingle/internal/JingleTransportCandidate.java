@@ -16,28 +16,33 @@
  */
 package org.jivesoftware.smackx.jingle.internal;
 
-import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidateElement;
 
 /**
- * Class that represents a contents security component.
+ * Class that represents a transports candidate component.
  */
-public abstract class Security<D extends JingleContentSecurityElement> {
+public abstract class JingleTransportCandidate<E extends JingleContentTransportCandidateElement> {
 
-    private Content parent;
+    private JingleTransport<?> parent;
+    private int priority;
 
-    public abstract D getElement();
-
-    public abstract JingleElement handleSecurityInfo(JingleContentSecurityInfoElement element);
-
-    public void setParent(Content parent) {
-        if (this.parent != parent) {
-            this.parent = parent;
+    public void setParent(JingleTransport<?> transport) {
+        if (parent != transport) {
+            parent = transport;
         }
     }
 
-    public Content getParent() {
+    public JingleTransport<?> getParent() {
         return parent;
     }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public abstract E getElement();
 }

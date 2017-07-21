@@ -36,21 +36,21 @@ import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 /**
  * Internal class that holds the state of a content in a modifiable form.
  */
-public class Content {
+public class JingleContent {
 
-    private Session parent;
+    private JingleSession parent;
     private JingleContentElement.Creator creator;
     private String name;
     private String disposition;
     private JingleContentElement.Senders senders;
-    private Description description;
-    private Transport transport;
-    private Security security;
+    private JingleDescription description;
+    private JingleTransport transport;
+    private JingleSecurity security;
 
     private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
 
-    public Content(Description description, Transport transport, Security security, String name, String disposition, JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
+    public JingleContent(JingleDescription description, JingleTransport transport, JingleSecurity security, String name, String disposition, JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
         this.description = description;
         this.transport = transport;
         this.security = security;
@@ -60,10 +60,10 @@ public class Content {
         this.senders = senders;
     }
 
-    public static Content fromElement(JingleContentElement content) {
-        Description<?> description = null;
-        Transport<?> transport = null;
-        Security<?> security = null;
+    public static JingleContent fromElement(JingleContentElement content) {
+        JingleDescription<?> description = null;
+        JingleTransport<?> transport = null;
+        JingleSecurity<?> security = null;
 
         JingleContentDescriptionElement descriptionElement = content.getDescription();
         if (descriptionElement != null) {
@@ -98,7 +98,7 @@ public class Content {
             }
         }
 
-        return new Content(description, transport, security, content.getName(), content.getDisposition(), content.getCreator(), content.getSenders());
+        return new JingleContent(description, transport, security, content.getName(), content.getDisposition(), content.getCreator(), content.getSenders());
     }
 
     public void addCallback(Callback callback) {
@@ -133,43 +133,43 @@ public class Content {
         return senders;
     }
 
-    public void setParent(Session session) {
+    public void setParent(JingleSession session) {
         if (this.parent != session) {
             this.parent = session;
         }
     }
 
-    public Session getParent() {
+    public JingleSession getParent() {
         return parent;
     }
 
-    public Description<?> getDescription() {
+    public JingleDescription<?> getDescription() {
         return description;
     }
 
-    public void setDescription(Description<?> description) {
+    public void setDescription(JingleDescription<?> description) {
         if (this.description != description) {
             this.description = description;
             description.setParent(this);
         }
     }
 
-    public Transport<?> getTransport() {
+    public JingleTransport<?> getTransport() {
         return transport;
     }
 
-    public void setTransport(Transport<?> transport) {
+    public void setTransport(JingleTransport<?> transport) {
         if (this.transport != transport) {
             this.transport = transport;
             transport.setParent(this);
         }
     }
 
-    public Security<?> getSecurity() {
+    public JingleSecurity<?> getSecurity() {
         return security;
     }
 
-    public void setSecurity(Security<?> security) {
+    public void setSecurity(JingleSecurity<?> security) {
         if (this.security != security) {
             this.security = security;
             security.setParent(this);

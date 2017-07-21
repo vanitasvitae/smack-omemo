@@ -18,7 +18,6 @@ package org.jivesoftware.smackx.jingle;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
 import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
 
 import java.io.IOException;
@@ -28,13 +27,12 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.provider.JingleProvider;
-import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
-import org.jivesoftware.smackx.jingle.transport.legacy.JingleUtil;
+import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTransportElement;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,14 +41,10 @@ import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.xml.sax.SAXException;
 
-
 /**
  * Test the JingleUtil class.
  */
 public class JingleUtilTest extends SmackTestSuite {
-
-    private XMPPConnection connection;
-    private JingleUtil jutil;
 
     private FullJid romeo;
     private FullJid juliet;
@@ -58,27 +52,18 @@ public class JingleUtilTest extends SmackTestSuite {
     @Before
     public void setup() throws XmppStringprepException {
 
-        connection = new DummyConnection(
+        XMPPConnection connection = new DummyConnection(
                 DummyConnection.getDummyConfigurationBuilder()
                         .setUsernameAndPassword("romeo@montague.lit",
                                 "iluvJulibabe13").build());
         JingleManager jm = JingleManager.getInstanceFor(connection);
-        jutil = new JingleUtil(connection);
         romeo = connection.getUser().asFullJidOrThrow();
         juliet = JidCreate.fullFrom("juliet@capulet.lit/balcony");
     }
 
     @Test
-    public void createAckTest() {
-        JingleElement jingle = JingleElement.getBuilder().setAction(JingleAction.session_initiate).setInitiator(romeo).setSessionId("test").build();
-        IQ result = jutil.createAck(jingle);
-        assertEquals(jingle.getStanzaId(), result.getStanzaId());
-        assertTrue(result.getType() == IQ.Type.result);
-    }
-
-    @Test
     public void createSessionTerminateDeclineTest() throws Exception {
-        JingleElement terminate = jutil.createSessionTerminateDecline(juliet, "thisismadness");
+        JingleElement terminate = JingleElement.createSessionTerminate(juliet, "thisismadness", JingleReasonElement.Reason.decline);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -97,7 +82,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateSuccessTest() throws Exception {
-        JingleElement success = jutil.createSessionTerminateSuccess(juliet, "thisissparta");
+        JingleElement success = JingleElement.createSessionTerminate(juliet, "thisissparta", JingleReasonElement.Reason.success);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -116,7 +101,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateBusyTest() throws Exception {
-        JingleElement busy = jutil.createSessionTerminateBusy(juliet, "thisispatrick");
+        JingleElement busy = JingleElement.createSessionTerminate(juliet, "thisispatrick", JingleReasonElement.Reason.busy);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -135,7 +120,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateAlternativeSessionTest() throws Exception {
-        JingleElement busy = jutil.createSessionTerminateAlternativeSession(juliet, "thisistherhythm", "ofthenight");
+        JingleElement busy = JingleElement.createSessionTerminate(juliet, "thisistherhythm", JingleReasonElement.AlternativeSession("ofthenight"));
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -158,7 +143,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateCancelTest() throws Exception {
-        JingleElement cancel = jutil.createSessionTerminateCancel(juliet, "thisistheend");
+        JingleElement cancel = JingleElement.createSessionTerminate(juliet, "thisistheend", JingleReasonElement.Reason.cancel);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -177,7 +162,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateUnsupportedTransportsTest() throws Exception {
-        JingleElement unsupportedTransports = jutil.createSessionTerminateUnsupportedTransports(juliet, "thisisus");
+        JingleElement unsupportedTransports = JingleElement.createSessionTerminate(juliet, "thisisus", JingleReasonElement.Reason.unsupported_transports);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -196,7 +181,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateUnsupportedApplicationsTest() throws Exception {
-        JingleElement unsupportedApplications = jutil.createSessionTerminateUnsupportedApplications(juliet, "thisiswar");
+        JingleElement unsupportedApplications = JingleElement.createSessionTerminate(juliet, "thisiswar", JingleReasonElement.Reason.unsupported_applications);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -215,7 +200,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateFailedTransportTest() throws IOException, SAXException {
-        JingleElement failedTransport = jutil.createSessionTerminateFailedTransport(juliet, "derailed");
+        JingleElement failedTransport = JingleElement.createSessionTerminate(juliet, "derailed", JingleReasonElement.Reason.failed_transport);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -232,7 +217,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateFailedApplicationTest() throws IOException, SAXException {
-        JingleElement failedApplication = jutil.createSessionTerminateFailedApplication(juliet, "crashed");
+        JingleElement failedApplication = JingleElement.createSessionTerminate(juliet, "crashed", JingleReasonElement.Reason.failed_application);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -249,7 +234,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionPingTest() throws Exception {
-        JingleElement ping = jutil.createSessionPing(juliet, "thisisit");
+        JingleElement ping = JingleElement.createSessionPing(juliet, "thisisit");
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-info' " +
@@ -263,7 +248,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateContentCancelTest() throws Exception {
-        JingleElement cancel = jutil.createSessionTerminateContentCancel(juliet, "thisismumbo#5", JingleContentElement.Creator.initiator, "content123");
+        JingleElement cancel = JingleElement.createSessionTerminateContentCancel(juliet, "thisismumbo#5", JingleContentElement.Creator.initiator, "content123");
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -288,7 +273,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createSessionTerminateIncompatibleParameters() throws IOException, SAXException {
-        JingleElement terminate = jutil.createSessionTerminateIncompatibleParameters(juliet, "incompatibleSID");
+        JingleElement terminate = JingleElement.createSessionTerminate(juliet, "incompatibleSID", JingleReasonElement.Reason.incompatible_parameters);
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='session-terminate' " +
@@ -305,7 +290,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createTransportAcceptTest() throws IOException, SAXException {
-        JingleElement transportAccept = jutil.createTransportAccept(juliet, romeo, "transAcc", JingleContentElement.Creator.initiator, "cname", new JingleIBBTransport("transid"));
+        JingleElement transportAccept = JingleElement.createTransportAccept(juliet, romeo, "transAcc", JingleContentElement.Creator.initiator, "cname", new JingleIBBTransportElement("transid", JingleIBBTransportElement.DEFAULT_BLOCK_SIZE));
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='transport-accept' " +
@@ -313,7 +298,7 @@ public class JingleUtilTest extends SmackTestSuite {
                         "sid='transAcc'>" +
                         "<content creator='initiator' name='cname'>" +
                         "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
-                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE + "' " +
+                        "block-size='" + JingleIBBTransportElement.DEFAULT_BLOCK_SIZE + "' " +
                         "sid='transid'/>" +
                         "</content>" +
                         "</jingle>";
@@ -330,7 +315,7 @@ public class JingleUtilTest extends SmackTestSuite {
 
     @Test
     public void createTransportReplaceTest() throws IOException, SAXException {
-        JingleElement transportReplace = jutil.createTransportReplace(juliet, romeo, "transAcc", JingleContentElement.Creator.initiator, "cname", new JingleIBBTransport("transid"));
+        JingleElement transportReplace = JingleElement.createTransportReplace(juliet, romeo, "transAcc", JingleContentElement.Creator.initiator, "cname", new JingleIBBTransportElement("transid", JingleIBBTransportElement.DEFAULT_BLOCK_SIZE));
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='transport-replace' " +
@@ -338,7 +323,7 @@ public class JingleUtilTest extends SmackTestSuite {
                         "sid='transAcc'>" +
                         "<content creator='initiator' name='cname'>" +
                         "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
-                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE + "' " +
+                        "block-size='" + JingleIBBTransportElement.DEFAULT_BLOCK_SIZE + "' " +
                         "sid='transid'/>" +
                         "</content>" +
                         "</jingle>";
@@ -351,7 +336,7 @@ public class JingleUtilTest extends SmackTestSuite {
     @Test
     public void createErrorMalformedRequestTest() throws Exception {
         JingleElement j = defaultJingle(romeo, "error123");
-        IQ error = jutil.createErrorMalformedRequest(j);
+        IQ error = JingleElement.createJingleErrorMalformedRequest(j);
         String xml =
                 "<iq " +
                         "to='" + romeo + "' " +
@@ -368,7 +353,7 @@ public class JingleUtilTest extends SmackTestSuite {
     @Test
     public void createErrorTieBreakTest() throws IOException, SAXException {
         JingleElement j = defaultJingle(romeo, "thisistie");
-        IQ error = jutil.createErrorTieBreak(j);
+        IQ error = JingleElement.createJingleErrorTieBreak(j);
         String xml =
                 "<iq " +
                         "to='" + romeo + "' " +
@@ -386,7 +371,7 @@ public class JingleUtilTest extends SmackTestSuite {
     @Test
     public void createErrorUnknownSessionTest() throws IOException, SAXException {
         JingleElement j = defaultJingle(romeo, "youknownothingjohnsnow");
-        IQ error = jutil.createErrorUnknownSession(j);
+        IQ error = JingleElement.createJingleErrorUnknownSession(j);
         String xml =
                 "<iq " +
                         "to='" + romeo + "' " +
@@ -404,7 +389,7 @@ public class JingleUtilTest extends SmackTestSuite {
     @Test
     public void createErrorUnknownInitiatorTest() throws IOException, SAXException {
         JingleElement j = defaultJingle(romeo, "iamyourfather");
-        IQ error = jutil.createErrorUnknownInitiator(j);
+        IQ error = JingleElement.createJingleErrorUnknownInitiator(j);
         String xml =
                 "<iq " +
                         "to='" + romeo + "' " +
@@ -421,7 +406,7 @@ public class JingleUtilTest extends SmackTestSuite {
     @Test
     public void createErrorOutOfOrderTest() throws IOException, SAXException {
         JingleElement j = defaultJingle(romeo, "yourfatheriam");
-        IQ error = jutil.createErrorOutOfOrder(j);
+        IQ error = JingleElement.createJingleErrorOutOfOrder(j);
         String xml =
                 "<iq " +
                         "to='" + romeo + "' " +
@@ -440,7 +425,7 @@ public class JingleUtilTest extends SmackTestSuite {
     @Test
     public void createErrorUnsupportedInfoTest() throws IOException, SAXException {
         JingleElement j = defaultJingle(romeo, "thisstatementiswrong");
-        IQ error = jutil.createErrorUnsupportedInfo(j);
+        IQ error = JingleElement.createJingleErrorUnsupportedInfo(j);
         String xml =
                 "<iq " +
                         "to='" + romeo + "' " +
@@ -462,6 +447,6 @@ public class JingleUtilTest extends SmackTestSuite {
     }
 
     private JingleElement defaultJingle(FullJid recipient, String sessionId) {
-        return jutil.createSessionPing(recipient, sessionId);
+        return JingleElement.createSessionPing(recipient, sessionId);
     }
 }

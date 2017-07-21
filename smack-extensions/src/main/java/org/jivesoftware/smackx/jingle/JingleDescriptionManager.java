@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jingle;
 
 import org.jivesoftware.smackx.jingle.callbacks.ContentAddCallback;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.internal.Content;
+import org.jivesoftware.smackx.jingle.internal.JingleContent;
 
 /**
  * Manager for JingleDescription components.
@@ -27,5 +27,5 @@ public interface JingleDescriptionManager {
 
     String getNamespace();
 
-    JingleElement notifyContentListeners(Content content, ContentAddCallback callback);
+    JingleElement notifyContentListeners(JingleContent content, ContentAddCallback callback);
 }

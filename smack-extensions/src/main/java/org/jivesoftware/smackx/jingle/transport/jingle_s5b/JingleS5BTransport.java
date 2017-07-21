@@ -33,16 +33,16 @@ import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTran
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
-import org.jivesoftware.smackx.jingle.internal.Content;
-import org.jivesoftware.smackx.jingle.internal.Transport;
-import org.jivesoftware.smackx.jingle.internal.TransportCandidate;
+import org.jivesoftware.smackx.jingle.internal.JingleContent;
+import org.jivesoftware.smackx.jingle.internal.JingleTransport;
+import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
 
 import org.jxmpp.jid.FullJid;
 
 /**
  * Jingle SOCKS5Bytestream transport component.
  */
-public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
+public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElement> {
 
     public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:s5b:1";
     public static final String NAMESPACE = NAMESPACE_V1;
@@ -62,22 +62,22 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
      * @param initiator initiator.
      * @param responder responder.
      */
-    public JingleS5BTransport(FullJid initiator, FullJid responder, String sid, List<TransportCandidate<?>> candidates) {
+    public JingleS5BTransport(FullJid initiator, FullJid responder, String sid, List<JingleTransportCandidate<?>> candidates) {
         this(sid, Socks5Utils.createDigest(sid, initiator, responder), Bytestream.Mode.tcp, candidates);
     }
 
-    public JingleS5BTransport(Content content, JingleS5BTransport other, List<TransportCandidate<?>> candidates) {
+    public JingleS5BTransport(JingleContent content, JingleS5BTransport other, List<JingleTransportCandidate<?>> candidates) {
         this(other.getSid(),
                 Socks5Utils.createDigest(other.getSid(), content.getParent().getInitiator(), content.getParent().getResponder()),
                 other.mode, candidates);
     }
 
-    public JingleS5BTransport(String sid, String dstAddr, Bytestream.Mode mode, List<TransportCandidate<?>> candidates) {
+    public JingleS5BTransport(String sid, String dstAddr, Bytestream.Mode mode, List<JingleTransportCandidate<?>> candidates) {
         this.sid = sid;
         this.dstAddr = dstAddr;
         this.mode = mode;
 
-        for (TransportCandidate<?> c : (candidates != null ?
+        for (JingleTransportCandidate<?> c : (candidates != null ?
                 candidates : Collections.<JingleS5BTransportCandidate>emptySet())) {
             addCandidate(c);
         }
@@ -90,7 +90,7 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
                 .setDestinationAddress(dstAddr)
                 .setMode(mode);
 
-        for (TransportCandidate candidate : getCandidates()) {
+        for (JingleTransportCandidate candidate : getCandidates()) {
             builder.addTransportCandidate((JingleS5BTransportCandidateElement) candidate.getElement());
         }
 
@@ -132,7 +132,7 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
         JingleS5BTransportManager transportManager = JingleS5BTransportManager.getInstanceFor(connection);
         this.selectedCandidate = connectToCandidates(MAX_TIMEOUT);
 
-        if (selectedCandidate == null) {
+        if (selectedCandidate == CANDIDATE_FAILURE) {
             connection.createStanzaCollectorAndSend(transportManager.createCandidateError(this));
         }
 
@@ -140,7 +140,7 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
     }
 
     public JingleS5BTransportCandidate connectToCandidates(int timeout) {
-        for (TransportCandidate c : getCandidates()) {
+        for (JingleTransportCandidate c : getCandidates()) {
             int _timeout = timeout / getCandidates().size(); //TODO: Wise?
             try {
                 return ((JingleS5BTransportCandidate) c).connect(_timeout);
@@ -150,7 +150,7 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
         }
 
         // Failed to connect to any candidate.
-        return null;
+        return CANDIDATE_FAILURE;
     }
 
     @Override
@@ -188,7 +188,7 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
             return;
         }
 
-        Iterator<TransportCandidate<?>> ourCandidates = getCandidates().iterator();
+        Iterator<JingleTransportCandidate<?>> ourCandidates = getCandidates().iterator();
         while (ourCandidates.hasNext()) {
             JingleS5BTransportCandidate candidate = (JingleS5BTransportCandidate) ourCandidates.next();
             if (candidate.getCandidateId().equals(candidateId)) {

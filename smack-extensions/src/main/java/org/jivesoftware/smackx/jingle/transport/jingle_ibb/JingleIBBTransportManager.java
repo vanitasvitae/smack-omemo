@@ -3,8 +3,8 @@ package org.jivesoftware.smackx.jingle.transport.jingle_ibb;
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
-import org.jivesoftware.smackx.jingle.internal.Content;
-import org.jivesoftware.smackx.jingle.internal.Transport;
+import org.jivesoftware.smackx.jingle.internal.JingleContent;
+import org.jivesoftware.smackx.jingle.internal.JingleTransport;
 
 /**
  * Created by vanitas on 21.07.17.
@@ -23,12 +23,12 @@ public class JingleIBBTransportManager extends Manager implements JingleTranspor
     }
 
     @Override
-    public Transport<?> createTransport(Content content) {
+    public JingleTransport<?> createTransport(JingleContent content) {
         return new JingleIBBTransport();
     }
 
     @Override
-    public Transport<?> createTransport(Content content, Transport<?> peersTransport) {
+    public JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport) {
         JingleIBBTransport other = (JingleIBBTransport) peersTransport;
         return new JingleIBBTransport(other.getSid(), (short) Math.min(other.getBlockSize(), MAX_BLOCKSIZE));
     }

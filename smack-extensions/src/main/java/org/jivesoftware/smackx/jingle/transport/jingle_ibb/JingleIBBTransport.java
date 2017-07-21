@@ -24,17 +24,17 @@ import org.jivesoftware.smackx.bytestreams.BytestreamListener;
 import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
-import org.jivesoftware.smackx.jingle.internal.Transport;
-import org.jivesoftware.smackx.jingle.internal.TransportCandidate;
+import org.jivesoftware.smackx.jingle.internal.JingleTransport;
+import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.transport.BytestreamSessionEstablishedListener;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
-import org.jivesoftware.smackx.jingle.internal.Session;
+import org.jivesoftware.smackx.jingle.internal.JingleSession;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTransportElement;
 
 /**
  * Jingle InBandBytestream Transport component.
  */
-public class JingleIBBTransport extends Transport<JingleIBBTransportElement> {
+public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElement> {
 
     public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:ibb:1";
     public static final String NAMESPACE = NAMESPACE_V1;
@@ -71,7 +71,7 @@ public class JingleIBBTransport extends Transport<JingleIBBTransportElement> {
 
     @Override
     public void establishIncomingBytestreamSession(final BytestreamSessionEstablishedListener listener, final XMPPConnection connection) {
-        final Session session = getParent().getParent();
+        final JingleSession session = getParent().getParent();
         InBandBytestreamManager.getByteStreamManager(connection)
                 .addIncomingBytestreamListener(new BytestreamListener() {
                     @Override
@@ -94,7 +94,7 @@ public class JingleIBBTransport extends Transport<JingleIBBTransportElement> {
 
     @Override
     public void establishOutgoingBytestreamSession(BytestreamSessionEstablishedListener listener, XMPPConnection connection) {
-        Session session = getParent().getParent();
+        JingleSession session = getParent().getParent();
         InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
         inBandBytestreamManager.setDefaultBlockSize(blockSize);
         try {
@@ -106,7 +106,7 @@ public class JingleIBBTransport extends Transport<JingleIBBTransportElement> {
     }
 
     @Override
-    public void addCandidate(TransportCandidate<?> candidate) {
+    public void addCandidate(JingleTransportCandidate<?> candidate) {
         // Sorry, we don't want any candidates.
     }
 

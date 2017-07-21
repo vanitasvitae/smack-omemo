@@ -35,10 +35,10 @@ import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.internal.Content;
-import org.jivesoftware.smackx.jingle.internal.Session;
-import org.jivesoftware.smackx.jingle.internal.Transport;
-import org.jivesoftware.smackx.jingle.internal.TransportCandidate;
+import org.jivesoftware.smackx.jingle.internal.JingleContent;
+import org.jivesoftware.smackx.jingle.internal.JingleSession;
+import org.jivesoftware.smackx.jingle.internal.JingleTransport;
+import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
@@ -132,21 +132,21 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     }
 
     @Override
-    public Transport<?> createTransport(Content content) {
-        Session session = content.getParent();
-        List<TransportCandidate<?>> candidates = collectCandidates();
+    public JingleTransport<?> createTransport(JingleContent content) {
+        JingleSession session = content.getParent();
+        List<JingleTransportCandidate<?>> candidates = collectCandidates();
         return new JingleS5BTransport(session.getInitiator(), session.getResponder(), StringUtils.randomString(24), candidates);
     }
 
     @Override
-    public Transport<?> createTransport(Content content, Transport<?> peersTransport) {
+    public JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport) {
         JingleS5BTransport transport = (JingleS5BTransport) peersTransport;
-        List<TransportCandidate<?>> candidates = collectCandidates();
+        List<JingleTransportCandidate<?>> candidates = collectCandidates();
         return new JingleS5BTransport(content, transport, candidates);
     }
 
-    private List<TransportCandidate<?>> collectCandidates() {
-        List<TransportCandidate<?>> candidates = new ArrayList<>();
+    private List<JingleTransportCandidate<?>> collectCandidates() {
+        List<JingleTransportCandidate<?>> candidates = new ArrayList<>();
 
         //Local host
         if (JingleS5BTransportManager.isUseLocalCandidates()) {
@@ -217,8 +217,8 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     }
 
     private JingleElement createTransportInfo(JingleS5BTransport transport, JingleS5BTransportInfoElement info) {
-        Content content = transport.getParent();
-        Session session = content.getParent();
+        JingleContent content = transport.getParent();
+        JingleSession session = content.getParent();
 
         JingleElement.Builder jb = JingleElement.getBuilder()
                 .setSessionId(session.getSessionId())

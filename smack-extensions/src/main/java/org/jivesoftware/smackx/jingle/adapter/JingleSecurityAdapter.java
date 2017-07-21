@@ -17,12 +17,12 @@
 package org.jivesoftware.smackx.jingle.adapter;
 
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
-import org.jivesoftware.smackx.jingle.internal.Security;
+import org.jivesoftware.smackx.jingle.internal.JingleSecurity;
 
 /**
  * Adapter that creates a Security object from an element.
  */
-public interface JingleSecurityAdapter<S extends Security<?>> {
+public interface JingleSecurityAdapter<S extends JingleSecurity<?>> {
 
     S securityFromElement(JingleContentSecurityElement element);
 

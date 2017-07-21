@@ -24,9 +24,9 @@ import org.jivesoftware.smackx.jingle.element.JingleAction;
  */
 public abstract class PendingJingleAction {
     private final JingleAction action;
-    private final Content affectedContent;
+    private final JingleContent affectedContent;
 
-    public PendingJingleAction(JingleAction action, Content content) {
+    public PendingJingleAction(JingleAction action, JingleContent content) {
         this.action = action;
         this.affectedContent = content;
     }
@@ -35,19 +35,19 @@ public abstract class PendingJingleAction {
         return action;
     }
 
-    public Content getAffectedContent() {
+    public JingleContent getAffectedContent() {
         return affectedContent;
     }
 
     public static class TransportReplace extends PendingJingleAction {
-        private final Transport<?> newTransport;
+        private final JingleTransport<?> newTransport;
 
-        public TransportReplace(Content content, Transport<?> newTransport) {
+        public TransportReplace(JingleContent content, JingleTransport<?> newTransport) {
             super(JingleAction.transport_replace, content);
             this.newTransport = newTransport;
         }
 
-        public Transport<?> getNewTransport() {
+        public JingleTransport<?> getNewTransport() {
             return newTransport;
         }
     }

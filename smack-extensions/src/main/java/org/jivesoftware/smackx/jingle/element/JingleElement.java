@@ -228,6 +228,114 @@ public final class JingleElement extends IQ {
     }
 
     /**
+     * Accept a session.
+     * XEP-0166 Example 17.
+     * @param initiator recipient of the stanza.
+     * @param responder our jid.
+     * @param sessionId sessionId.
+     * @param content content
+     * @return session-accept stanza.
+     */
+    public JingleElement createSessionAccept(FullJid initiator,
+                                             FullJid responder,
+                                             String sessionId,
+                                             JingleContentElement content) {
+        return createSessionAccept(initiator, responder, sessionId, Collections.singletonList(content));
+    }
+
+    /**
+     * Accept a session.
+     * XEP-0166 Example 17.
+     * @param initiator recipient of the stanza.
+     * @param responder our jid.
+     * @param sessionId sessionId.
+     * @param contents contents
+     * @return session-accept stanza.
+     */
+    public JingleElement createSessionAccept(FullJid initiator,
+                                             FullJid responder,
+                                             String sessionId,
+                                             List<JingleContentElement> contents) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
+        jb.setResponder(responder)
+                .setAction(JingleAction.session_accept)
+                .setSessionId(sessionId);
+
+        for (JingleContentElement content : contents) {
+            jb.addJingleContent(content);
+        }
+
+        JingleElement jingle = jb.build();
+        jingle.setTo(initiator);
+        jingle.setFrom(responder);
+
+        return jingle;
+    }
+
+    /**
+     * Initiate a Jingle session.
+     * XEP-0166 Example 10.
+     * @param initiator our jid.
+     * @param responder jid of the recipient.
+     * @param sessionId sessionId.
+     * @param content content.
+     * @return session-initiate stanza.
+     */
+    public JingleElement createSessionInitiate(FullJid initiator,
+                                               FullJid responder,
+                                               String sessionId,
+                                               JingleContentElement content) {
+        return createSessionInitiate(initiator, responder, sessionId, Collections.singletonList(content));
+    }
+
+    /**
+     * Initiate a Jingle session.
+     * XEP-0166 Example 10.
+     * @param initiator our jid.
+     * @param responder jid of the recipient.
+     * @param sessionId sessionId.
+     * @param contents contents.
+     * @return session-initiate stanza.
+     */
+    public JingleElement createSessionInitiate(FullJid initiator,
+                                               FullJid responder,
+                                               String sessionId,
+                                               List<JingleContentElement> contents) {
+
+        JingleElement.Builder builder = JingleElement.getBuilder();
+        builder.setAction(JingleAction.session_initiate)
+                .setSessionId(sessionId)
+                .setInitiator(initiator);
+
+        for (JingleContentElement content : contents) {
+            builder.addJingleContent(content);
+        }
+
+        JingleElement jingle = builder.build();
+        jingle.setTo(responder);
+
+        return jingle;
+    }
+
+    /**
+     * Create a session ping stanza.
+     * XEP-0166 Example 32.
+     * @param recipient recipient of the stanza.
+     * @param sessionId id of the session.
+     * @return ping stanza
+     */
+    public static JingleElement createSessionPing(FullJid recipient, String sessionId) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
+        jb.setSessionId(sessionId)
+                .setAction(JingleAction.session_info);
+
+        JingleElement jingle = jb.build();
+        jingle.setTo(recipient);
+
+        return jingle;
+    }
+
+    /**
      * Create a session-terminate stanza.
      * XEP-0166 §6.7.
      * @param recipient recipient of the stanza.
@@ -259,6 +367,42 @@ public final class JingleElement extends IQ {
         return createSessionTerminate(recipient, sessionId, new JingleReasonElement(reason));
     }
 
+    /**
+     * Cancel a single contents transfer.
+     * XEP-0234 Example 10.
+     * @param recipient recipient of the stanza.
+     * @param sessionId sessionId.
+     * @param contentCreator creator of the content.
+     * @param contentName name of the content.
+     * @return session-terminate stanza.
+     */
+    public static JingleElement createSessionTerminateContentCancel(FullJid recipient, String sessionId,
+                                                             JingleContentElement.Creator contentCreator, String contentName) {
+        JingleElement.Builder jb = JingleElement.getBuilder();
+        jb.setAction(JingleAction.session_terminate)
+                .setSessionId(sessionId).setReason(JingleReasonElement.Reason.cancel);
+
+        JingleContentElement.Builder cb = JingleContentElement.getBuilder();
+        cb.setCreator(contentCreator).setName(contentName);
+
+        JingleElement jingle = jb.addJingleContent(cb.build()).build();
+        jingle.setTo(recipient);
+
+        return jingle;
+    }
+
+
+    /**
+     * Accept a transport.
+     * XEP-0260 Example 17.
+     * @param recipient recipient of the stanza
+     * @param initiator initiator of the session
+     * @param sessionId sessionId
+     * @param contentCreator creator of the content
+     * @param contentName name of the content
+     * @param transport transport to accept
+     * @return transport-accept stanza
+     */
     public static JingleElement createTransportAccept(FullJid initiator, FullJid recipient, String sessionId,
                                                       JingleContentElement.Creator contentCreator,
                                                       String contentName, JingleContentTransportElement transport) {
@@ -276,6 +420,17 @@ public final class JingleElement extends IQ {
         return jingle;
     }
 
+    /**
+     * Reject a transport.
+     * XEP-0166 §7.2.14.
+     * @param recipient recipient of the stanza
+     * @param initiator initiator of the session
+     * @param sessionId sessionId
+     * @param contentCreator creator of the content
+     * @param contentName name of the content
+     * @param transport transport to reject
+     * @return transport-reject stanza
+     */
     public static JingleElement createTransportReject(FullJid initiator, FullJid recipient, String sessionId,
                                                       JingleContentElement.Creator contentCreator,
                                                       String contentName, JingleContentTransportElement transport) {
@@ -288,6 +443,38 @@ public final class JingleElement extends IQ {
         cb.setCreator(contentCreator).setName(contentName).setTransport(transport);
 
         JingleElement jingle = jb.addJingleContent(cb.build()).build();
+        jingle.setTo(recipient);
+
+        return jingle;
+    }
+
+    /**
+     * Replace a transport with another one.
+     * XEP-0260 Example 15.
+     * @param recipient recipient of the stanza
+     * @param initiator initiator of the session
+     * @param sessionId sessionId
+     * @param contentCreator creator of the content
+     * @param contentName name of the content
+     * @param transport proposed transport
+     * @return transport-replace stanza
+     */
+    public static JingleElement createTransportReplace(FullJid initiator, FullJid recipient, String sessionId,
+                                                       JingleContentElement.Creator contentCreator,
+                                                       String contentName, JingleContentTransportElement transport) {
+        JingleElement.Builder jb = JingleElement.getBuilder()
+                .setAction(JingleAction.transport_replace)
+                .setSessionId(sessionId)
+                .setInitiator(initiator);
+
+        JingleContentElement content = JingleContentElement.getBuilder()
+                .setCreator(contentCreator)
+                .setName(contentName)
+                .setTransport(transport).build();
+
+        jb.addJingleContent(content);
+
+        JingleElement jingle = jb.build();
         jingle.setTo(recipient);
 
         return jingle;

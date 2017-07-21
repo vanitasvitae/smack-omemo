@@ -26,13 +26,13 @@ import org.jivesoftware.smackx.bytestreams.socks5.Socks5Client;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5ClientForInitiator;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
-import org.jivesoftware.smackx.jingle.internal.Session;
-import org.jivesoftware.smackx.jingle.internal.TransportCandidate;
+import org.jivesoftware.smackx.jingle.internal.JingleSession;
+import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
 
 /**
  * Jingle SOCKS5Bytestream transport candidate.
  */
-public class JingleS5BTransportCandidate extends TransportCandidate<JingleS5BTransportCandidateElement> {
+public class JingleS5BTransportCandidate extends JingleTransportCandidate<JingleS5BTransportCandidateElement> {
 
     private final String candidateId;
     private final Bytestream.StreamHost streamHost;
@@ -81,7 +81,7 @@ public class JingleS5BTransportCandidate extends TransportCandidate<JingleS5BTra
             client = new Socks5Client(getStreamHost(), ((JingleS5BTransport) getParent()).getDstAddr());
         }
         else {
-            Session session = getParent().getParent().getParent();
+            JingleSession session = getParent().getParent().getParent();
             client = new Socks5ClientForInitiator(getStreamHost(), ((JingleS5BTransport) getParent()).getDstAddr(),
                     session.getJingleManager().getConnection(), session.getSessionId(), session.getPeer());
         }

@@ -17,12 +17,12 @@
 package org.jivesoftware.smackx.jingle.adapter;
 
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
-import org.jivesoftware.smackx.jingle.internal.Transport;
+import org.jivesoftware.smackx.jingle.internal.JingleTransport;
 
 /**
  * Adapter that creates a Transport element from an element.
  */
-public interface JingleTransportAdapter<T extends Transport<?>> {
+public interface JingleTransportAdapter<T extends JingleTransport<?>> {
 
     T transportFromElement(JingleContentTransportElement element);
 

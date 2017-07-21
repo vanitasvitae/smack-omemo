@@ -16,8 +16,8 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import org.jivesoftware.smackx.jingle.internal.Content;
-import org.jivesoftware.smackx.jingle.internal.Transport;
+import org.jivesoftware.smackx.jingle.internal.JingleContent;
+import org.jivesoftware.smackx.jingle.internal.JingleTransport;
 
 /**
  * Manager for JingleTransport components.
@@ -26,7 +26,7 @@ public interface JingleTransportManager extends Comparable<JingleTransportManage
 
     String getNamespace();
 
-    Transport<?> createTransport(Content content);
+    JingleTransport<?> createTransport(JingleContent content);
 
-    Transport<?> createTransport(Content content, Transport<?> peersTransport);
+    JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport);
 }

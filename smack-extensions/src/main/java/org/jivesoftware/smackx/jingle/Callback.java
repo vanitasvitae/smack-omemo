@@ -16,16 +16,16 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import org.jivesoftware.smackx.jingle.internal.Content;
+import org.jivesoftware.smackx.jingle.internal.JingleContent;
 
 /**
  * User callback that the user can use to control a jingle content.
  */
 public abstract class Callback {
 
-    private final Content content;
+    private final JingleContent content;
 
-    public Callback(Content content) {
+    public Callback(JingleContent content) {
         this.content = content;
     }
 }

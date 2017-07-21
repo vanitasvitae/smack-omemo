@@ -48,51 +48,7 @@ import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTran
  * Handler that handles Jingle Socks5Bytestream transports (XEP-0260).
  */
 public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BTransportElement> {
-    private static final Logger LOGGER = Logger.getLogger(JingleS5BTransportSession.class.getName());
 
-    public JingleS5BTransportElement createTransport(String sid, Bytestream.Mode mode) {
-        JingleS5BTransportElement.Builder jb = JingleS5BTransportElement.getBuilder()
-                .setStreamId(sid).setMode(mode).setDestinationAddress(
-                        Socks5Utils.createDigest(sid, jingleSession.getLocal(), jingleSession.getRemote()));
-
-        //Local host
-        if (JingleS5BTransportManager.isUseLocalCandidates()) {
-            for (Bytestream.StreamHost host : transportManager().getLocalStreamHosts()) {
-                jb.addTransportCandidate(new JingleS5BTransportCandidateElement(host, 100, JingleS5BTransportCandidateElement.Type.direct));
-            }
-        }
-
-        List<Bytestream.StreamHost> remoteHosts = Collections.emptyList();
-        if (JingleS5BTransportManager.isUseExternalCandidates()) {
-            try {
-                remoteHosts = transportManager().getAvailableStreamHosts();
-            } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
-                LOGGER.log(Level.WARNING, "Could not determine available StreamHosts.", e);
-            }
-        }
-
-        for (Bytestream.StreamHost host : remoteHosts) {
-            jb.addTransportCandidate(new JingleS5BTransportCandidateElement(host, 0, JingleS5BTransportCandidateElement.Type.proxy));
-        }
-
-        return jb.build();
-    }
-
-    public void setTheirTransport(JingleContentTransportElement transport) {
-        theirProposal = (JingleS5BTransportElement) transport;
-    }
-
-    @Override
-    public void initiateOutgoingSession(JingleTransportInitiationCallback callback) {
-        this.callback = callback;
-        initiateSession();
-    }
-
-    @Override
-    public void initiateIncomingSession(JingleTransportInitiationCallback callback) {
-        this.callback = callback;
-        initiateSession();
-    }
 
     private void initiateSession() {
         Socks5Proxy.getSocks5Proxy().addTransfer(createTransport().getDestinationAddress());
@@ -134,56 +90,6 @@ public class JingleS5BTransportSession extends JingleTransportSession<JingleS5BT
         }
         LOGGER.log(Level.WARNING, "Failed to connect to any candidate.");
         return null;
-    }
-
-    private UsedCandidate connectToTheirCandidate(JingleS5BTransportCandidateElement candidate)
-            throws InterruptedException, TimeoutException, SmackException, XMPPException, IOException {
-        Bytestream.StreamHost streamHost = candidate.getStreamHost();
-        String address = streamHost.getAddress();
-        Socks5Client socks5Client = new Socks5Client(streamHost, theirProposal.getDestinationAddress());
-        Socket socket = socks5Client.getSocket(10 * 1000);
-        LOGGER.log(Level.INFO, "Connected to their StreamHost " + address + " using dstAddr "
-                + theirProposal.getDestinationAddress());
-        return new UsedCandidate(theirProposal, candidate, socket);
-    }
-
-    private UsedCandidate connectToOurCandidate(JingleS5BTransportCandidateElement candidate)
-            throws InterruptedException, TimeoutException, SmackException, XMPPException, IOException {
-        Bytestream.StreamHost streamHost = candidate.getStreamHost();
-        String address = streamHost.getAddress();
-        Socks5ClientForInitiator socks5Client = new Socks5ClientForInitiator(
-                streamHost, ourProposal.getDestinationAddress(), jingleSession.getConnection(),
-                ourProposal.getStreamId(), jingleSession.getRemote());
-        Socket socket = socks5Client.getSocket(10 * 1000);
-        LOGGER.log(Level.INFO, "Connected to our StreamHost " + address + " using dstAddr "
-                + ourProposal.getDestinationAddress());
-        return new UsedCandidate(ourProposal, candidate, socket);
-    }
-
-    @Override
-    public String getNamespace() {
-        return JingleS5BTransportElement.NAMESPACE_V1;
-    }
-
-    @Override
-    public IQ handleTransportInfo(JingleElement transportInfo) {
-        JingleS5BTransportInfoElement info = (JingleS5BTransportInfoElement) transportInfo.getContents().get(0).getTransport().getInfo();
-
-        switch (info.getElementName()) {
-            case JingleS5BTransportInfoElement.CandidateUsed.ELEMENT:
-                return handleCandidateUsed(transportInfo);
-
-            case JingleS5BTransportInfoElement.CandidateActivated.ELEMENT:
-                return handleCandidateActivate(transportInfo);
-
-            case JingleS5BTransportInfoElement.CandidateError.ELEMENT:
-                return handleCandidateError(transportInfo);
-
-            case JingleS5BTransportInfoElement.ProxyError.ELEMENT:
-                return handleProxyError(transportInfo);
-        }
-        //We should never go here, but lets be gracious...
-        return IQ.createResultIQ(transportInfo);
     }
 
     public IQ handleCandidateUsed(JingleElement jingle) {
