@@ -21,6 +21,10 @@ public abstract class Transport<D extends JingleContentTransportElement> {
     private Transport peersProposal;
     private boolean isPeersProposal;
 
+    public Transport(Content content) {
+        this.parent = content;
+    }
+
     public abstract D getElement();
 
     public void addCandidate(TransportCandidate<?> candidate) {
@@ -73,6 +77,10 @@ public abstract class Transport<D extends JingleContentTransportElement> {
 
     public boolean isPeersProposal() {
         return isPeersProposal;
+    }
+
+    public Transport<?> getPeersProposal() {
+        return peersProposal;
     }
 
     public abstract void handleTransportInfo(JingleContentTransportInfoElement info);

@@ -58,7 +58,7 @@ public class JingleS5BTransportCandidate extends TransportCandidate<JingleS5BTra
                 getPriority(), getType());
     }
 
-    public Socket connect(int timeout) throws InterruptedException, TimeoutException, SmackException, XMPPException, IOException {
+    public JingleS5BTransportCandidate connect(int timeout) throws InterruptedException, TimeoutException, SmackException, XMPPException, IOException {
         Socks5Client client;
 
         if (getParent().isPeersProposal()) {
@@ -71,6 +71,10 @@ public class JingleS5BTransportCandidate extends TransportCandidate<JingleS5BTra
         }
 
         this.socket = client.getSocket(timeout);
+        return this;
+    }
+
+    public Socket getSocket() {
         return socket;
     }
 }
