@@ -275,6 +275,6 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
 
     @Override
     public int compareTo(JingleTransportManager manager) {
-        return 0;
+        return 1; // We are #1!
     }
 }

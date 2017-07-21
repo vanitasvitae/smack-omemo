@@ -24,6 +24,7 @@ import org.jivesoftware.smackx.bytestreams.BytestreamListener;
 import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.internal.JingleTransport;
 import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.transport.BytestreamSessionEstablishedListener;
@@ -111,7 +112,7 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void handleTransportInfo(JingleContentTransportInfoElement info) {
+    public void handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping) {
         // Nothing to do.
     }
 }

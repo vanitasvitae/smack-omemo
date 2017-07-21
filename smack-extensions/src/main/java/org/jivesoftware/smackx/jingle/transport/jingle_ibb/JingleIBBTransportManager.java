@@ -35,6 +35,6 @@ public class JingleIBBTransportManager extends Manager implements JingleTranspor
 
     @Override
     public int compareTo(JingleTransportManager manager) {
-        return 0;
+        return -1; // We are literally the worst.
     }
 }

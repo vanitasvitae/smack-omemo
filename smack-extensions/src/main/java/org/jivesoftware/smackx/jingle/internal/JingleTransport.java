@@ -22,6 +22,7 @@ import java.util.List;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.transport.BytestreamSessionEstablishedListener;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 
@@ -90,7 +91,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> {
         return peersProposal;
     }
 
-    public abstract void handleTransportInfo(JingleContentTransportInfoElement info);
+    public abstract void handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping);
 
     public void setParent(JingleContent parent) {
         if (this.parent != parent) {

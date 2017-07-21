@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
+import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 
@@ -32,7 +33,7 @@ public class JingleS5BTransportAdapter implements JingleTransportAdapter<JingleS
     @Override
     public JingleS5BTransport transportFromElement(JingleContentTransportElement element) {
         JingleS5BTransportElement s5b = (JingleS5BTransportElement) element;
-        ArrayList<JingleS5BTransportCandidate> candidates = new ArrayList<>();
+        ArrayList<JingleTransportCandidate<?>> candidates = new ArrayList<>();
 
         for (JingleContentTransportCandidateElement e : element.getCandidates()) {
             candidates.add(JingleS5BTransportCandidate.fromElement((JingleS5BTransportCandidateElement) e));

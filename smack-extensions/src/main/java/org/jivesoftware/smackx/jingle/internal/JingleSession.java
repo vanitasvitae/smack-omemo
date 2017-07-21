@@ -232,7 +232,7 @@ public class JingleSession {
 
             JingleTransport<?> transport = entry.getValue().getTransport();
             JingleContentTransportInfoElement info = entry.getKey().getTransport().getInfo();
-            transport.handleTransportInfo(info);
+            transport.handleTransportInfo(info, request);
         }
 
         return IQ.createResultIQ(request);
@@ -376,6 +376,14 @@ public class JingleSession {
 
     public FullJid getOurJid() {
         return role == Role.initiator ? initiator : responder;
+    }
+
+    public boolean isInitiator() {
+        return role == Role.initiator;
+    }
+
+    public boolean isResponder() {
+        return role == Role.responder;
     }
 
     public String getSessionId() {
