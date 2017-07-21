@@ -100,14 +100,18 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
 
     }
 
-    public void connectToCandidates(int timeout) {
+    public JingleS5BTransportCandidate connectToCandidates(int timeout) {
         for (TransportCandidate c : getCandidates()) {
+            int _timeout = timeout / getCandidates().size(); //TODO: Wise?
             try {
-                selectedCandidate = ((JingleS5BTransportCandidate) c).connect(timeout / getCandidates().size()); //TODO: Wise?
+                return ((JingleS5BTransportCandidate) c).connect(_timeout);
             } catch (IOException | TimeoutException | InterruptedException | SmackException | XMPPException e) {
                 e.printStackTrace();
             }
         }
+
+        // Failed to connect to any candidate.
+        return null;
     }
 
     @Override
