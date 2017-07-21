@@ -25,7 +25,7 @@ import org.jivesoftware.smack.DummyConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
-import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 import org.junit.Test;
 import org.jxmpp.jid.FullJid;

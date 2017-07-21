@@ -28,10 +28,9 @@ import org.jivesoftware.smack.DummyConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.TestIQ;
-import org.jivesoftware.smackx.jingle3.FullJidAndSessionId;
-import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle3.element.JingleElement;
-import org.jivesoftware.smackx.jingle3.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.JingleIBBTransportSession;
 
 import org.junit.Test;

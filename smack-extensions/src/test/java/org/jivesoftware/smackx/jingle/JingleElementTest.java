@@ -22,8 +22,8 @@ import static junit.framework.TestCase.assertTrue;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 
-import org.jivesoftware.smackx.jingle3.element.JingleElement;
-import org.jivesoftware.smackx.jingle3.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
 
 import org.junit.Test;
 import org.jxmpp.jid.FullJid;

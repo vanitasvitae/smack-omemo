@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
+import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 
 /**
  * Created by vanitas on 21.06.17.

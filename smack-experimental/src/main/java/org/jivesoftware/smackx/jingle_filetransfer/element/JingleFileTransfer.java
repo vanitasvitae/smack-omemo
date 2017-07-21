@@ -18,8 +18,8 @@ package org.jivesoftware.smackx.jingle_filetransfer.element;
 
 import java.util.List;
 
-import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionElement;
-import org.jivesoftware.smackx.jingle3.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 
 /**
  * File element.

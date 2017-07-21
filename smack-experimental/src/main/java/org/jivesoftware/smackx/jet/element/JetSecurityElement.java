@@ -19,7 +19,7 @@ package org.jivesoftware.smackx.jet.element;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.jet.JetManager;
-import org.jivesoftware.smackx.jingle3.element.JingleContentSecurityElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
 
 /**
  * Implementation of the Jingle security element as specified in XEP-XXXX (Jingle Encrypted Transfers).

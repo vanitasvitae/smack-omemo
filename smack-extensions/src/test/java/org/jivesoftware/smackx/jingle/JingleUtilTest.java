@@ -28,12 +28,13 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
-import org.jivesoftware.smackx.jingle3.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle3.element.JingleElement;
-import org.jivesoftware.smackx.jingle3.element.JingleAction;
-import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
-import org.jivesoftware.smackx.jingle3.provider.JingleProvider;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
+import org.jivesoftware.smackx.jingle.provider.JingleProvider;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
+import org.jivesoftware.smackx.jingle.transport.legacy.JingleUtil;
 
 import org.junit.Before;
 import org.junit.Test;

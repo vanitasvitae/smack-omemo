@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jingle_filetransfer.handler;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.jingle3.element.JingleReasonElement;
+import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 
 /**
  * Handler that provides some control over the JingleFileOffer session.

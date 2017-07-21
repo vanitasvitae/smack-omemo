@@ -17,7 +17,7 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 import org.jxmpp.jid.FullJid;
 

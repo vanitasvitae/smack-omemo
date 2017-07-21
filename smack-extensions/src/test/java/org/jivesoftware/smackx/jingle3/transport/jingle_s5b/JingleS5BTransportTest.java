@@ -26,10 +26,10 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportElement;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportInfoElement;
-import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.provider.JingleS5BTransportProvider;
+import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
+import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
+import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportInfoElement;
+import org.jivesoftware.smackx.jingle.transport.jingle_s5b.provider.JingleS5BTransportProvider;
 
 import org.junit.Test;
 import org.jxmpp.jid.FullJid;

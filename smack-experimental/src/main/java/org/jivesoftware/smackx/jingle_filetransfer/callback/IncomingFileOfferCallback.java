@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jingle_filetransfer.callback;
 
 import java.io.File;
 
-import org.jivesoftware.smackx.jingle3.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
 /**
