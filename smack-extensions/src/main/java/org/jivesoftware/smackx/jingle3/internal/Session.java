@@ -57,7 +57,7 @@ public class Session {
 
     void addContent(Content content) {
         contents.put(content.getName(), content);
-        content.setSession(this);
+        content.setParent(this);
     }
 
     void addContent(JingleContentElement content)

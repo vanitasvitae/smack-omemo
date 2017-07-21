@@ -1,13 +1,14 @@
 package org.jivesoftware.smackx.jingle3.transport.jingle_s5b;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle3.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle3.internal.Transport;
+import org.jivesoftware.smackx.jingle3.internal.TransportCandidate;
 import org.jivesoftware.smackx.jingle3.transport.BytestreamSessionEstablishedListener;
 import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle3.transport.jingle_s5b.elements.JingleS5BTransportElement;
@@ -27,11 +28,8 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
 
     private String dstAddr;
     private Bytestream.Mode mode;
-    private HashMap<String, JingleS5BTransportCandidate> candidates = new HashMap<>();
 
-    private String peerDstAddr;
-    private Bytestream.Mode peerMode;
-    private HashMap<String, JingleS5BTransportCandidate> peerCandidates;
+    private JingleS5BTransport peersProposal;
 
     private JingleS5BTransportCandidate ourChoice, theirChoice;
     private JingleS5BTransportCandidate nominee;
@@ -41,9 +39,9 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
         this.dstAddr = dstAddr;
         this.mode = mode;
 
-        for (JingleS5BTransportCandidate c : (candidates != null ?
+        for (TransportCandidate<JingleS5BTransportCandidateElement> c : (candidates != null ?
                 candidates : Collections.<JingleS5BTransportCandidate>emptySet())) {
-            this.candidates.put(c.getCandidateId(), c);
+            addCandidate(c);
         }
     }
 
@@ -54,12 +52,19 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
                 .setDestinationAddress(dstAddr)
                 .setMode(mode);
 
-        for (JingleS5BTransportCandidate candidate : candidates.values()) {
-            builder.addTransportCandidate(
-                    (JingleS5BTransportCandidateElement) candidate.getElement());
+        for (TransportCandidate candidate : getCandidates()) {
+            builder.addTransportCandidate((JingleS5BTransportCandidateElement) candidate.getElement());
         }
 
         return builder.build();
+    }
+
+    public String getDstAddr() {
+        return dstAddr;
+    }
+
+    public Bytestream.Mode getMode() {
+        return mode;
     }
 
     @Override
@@ -69,20 +74,12 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
 
     @Override
     public void establishIncomingBytestreamSession(FullJid peer, String transportSessionId, BytestreamSessionEstablishedListener listener, XMPPConnection connection) {
-
+        Socks5Proxy.getSocks5Proxy().addTransfer(dstAddr);
     }
 
     @Override
     public void establishOutgoingBytestreamSession(FullJid peer, String transportSessionId, BytestreamSessionEstablishedListener listener, XMPPConnection connection) {
 
-    }
-
-    @Override
-    public void setPeersProposal(Transport<?> peersProposal) {
-        JingleS5BTransport transport = (JingleS5BTransport) peersProposal;
-        peerCandidates = transport.candidates;
-        peerDstAddr = transport.dstAddr;
-        peerMode = transport.mode;
     }
 
     @Override
@@ -112,7 +109,6 @@ public class JingleS5BTransport extends Transport<JingleS5BTransportElement> {
 
     private void handleCandidateUsed(JingleS5BTransportInfoElement info) {
         String candidateId = ((JingleS5BTransportInfoElement.CandidateUsed) info).getCandidateId();
-        theirChoice = candidates.get(candidateId);
 
         if (theirChoice == null) {
             /*

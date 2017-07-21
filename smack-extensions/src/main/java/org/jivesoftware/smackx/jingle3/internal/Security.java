@@ -9,7 +9,19 @@ import org.jivesoftware.smackx.jingle3.element.JingleContentSecurityInfoElement;
  */
 public abstract class Security<D extends JingleContentSecurityElement> {
 
+    private Content parent;
+
     public abstract D getElement();
 
     public abstract JingleElement handleSecurityInfo(JingleContentSecurityInfoElement element);
+
+    public void setParent(Content parent) {
+        if (this.parent != parent) {
+            this.parent = parent;
+        }
+    }
+
+    public Content getParent() {
+        return parent;
+    }
 }

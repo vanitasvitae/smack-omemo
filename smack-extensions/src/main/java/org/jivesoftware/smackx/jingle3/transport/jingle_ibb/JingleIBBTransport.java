@@ -10,6 +10,7 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.jingle3.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle3.internal.Transport;
+import org.jivesoftware.smackx.jingle3.internal.TransportCandidate;
 import org.jivesoftware.smackx.jingle3.transport.BytestreamSessionEstablishedListener;
 import org.jivesoftware.smackx.jingle3.transport.jingle_ibb.element.JingleIBBTransportElement;
 
@@ -25,8 +26,6 @@ public class JingleIBBTransport extends Transport<JingleIBBTransportElement> {
 
     private final String streamId;
     private final Short blockSize;
-
-    private JingleIBBTransport peersProposal;
 
     public JingleIBBTransport(String streamId, Short blockSize) {
         this.streamId = streamId;
@@ -82,12 +81,13 @@ public class JingleIBBTransport extends Transport<JingleIBBTransportElement> {
     }
 
     @Override
-    public void setPeersProposal(Transport<?> peersProposal) {
-        this.peersProposal = (JingleIBBTransport) peersProposal;
+    public void addCandidate(TransportCandidate<?> candidate) {
+        // Sorry, we don't want any candidates.
     }
 
     @Override
     public void handleTransportInfo(JingleContentTransportInfoElement info) {
         // Nothing to do.
+
     }
 }

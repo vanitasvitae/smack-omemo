@@ -22,7 +22,7 @@ import org.jivesoftware.smackx.jingle3.element.JingleContentTransportElement;
  */
 public class Content {
 
-    private Session session;
+    private Session parent;
     private JingleContentElement.Creator creator;
     private String name;
     private String disposition;
@@ -117,8 +117,25 @@ public class Content {
         return senders;
     }
 
-    public Description getDescription() {
+    public void setParent(Session session) {
+        if (this.parent != session) {
+            this.parent = session;
+        }
+    }
+
+    public Session getParent() {
+        return parent;
+    }
+
+    public Description<?> getDescription() {
         return description;
+    }
+
+    public void setDescription(Description<?> description) {
+        if (this.description != description) {
+            this.description = description;
+            description.setParent(this);
+        }
     }
 
     public Transport<?> getTransport() {
@@ -126,17 +143,21 @@ public class Content {
     }
 
     public void setTransport(Transport<?> transport) {
-        this.transport = transport;
-    }
-
-    public void setSession(Session session) {
-        if (this.session != session) {
-            this.session = session;
+        if (this.transport != transport) {
+            this.transport = transport;
+            transport.setParent(this);
         }
     }
 
-    public Security getSecurity() {
+    public Security<?> getSecurity() {
         return security;
+    }
+
+    public void setSecurity(Security<?> security) {
+        if (this.security != security) {
+            this.security = security;
+            security.setParent(this);
+        }
     }
 
     public static String randomName() {
