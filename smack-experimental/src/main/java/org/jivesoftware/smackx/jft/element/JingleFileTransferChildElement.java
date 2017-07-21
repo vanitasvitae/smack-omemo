@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.element;
+package org.jivesoftware.smackx.jft.element;
 
 import java.io.File;
 import java.util.Date;
@@ -26,7 +26,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildEleme
 /**
  * Content of type File.
  */
-public class JingleFileTransferChild extends JingleContentDescriptionChildElement {
+public class JingleFileTransferChildElement extends JingleContentDescriptionChildElement {
     public static final String ELEMENT = "file";
     public static final String ELEM_DATE = "date";
     public static final String ELEM_DESC = "desc";
@@ -42,7 +42,7 @@ public class JingleFileTransferChild extends JingleContentDescriptionChildElemen
     private final int size;
     private final Range range;
 
-    public JingleFileTransferChild(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
+    public JingleFileTransferChildElement(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
         this.date = date;
         this.desc = desc;
         this.hash = hash;
@@ -162,8 +162,8 @@ public class JingleFileTransferChild extends JingleContentDescriptionChildElemen
             return this;
         }
 
-        public JingleFileTransferChild build() {
-            return new JingleFileTransferChild(date, desc, hash, mediaType, name, size, range);
+        public JingleFileTransferChildElement build() {
+            return new JingleFileTransferChildElement(date, desc, hash, mediaType, name, size, range);
         }
 
         public Builder setFile(File file) {

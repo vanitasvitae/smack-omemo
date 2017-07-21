@@ -32,7 +32,7 @@ import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
 import org.jxmpp.jid.FullJid;
@@ -91,7 +91,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
         }
 
         this.contents.addAll(initiate.getContents());
-        this.file = (JingleFileTransfer) contents.get(0).getDescription();
+        this.file = (JingleFileTransferElement) contents.get(0).getDescription();
 
         JingleTransportManager<?> transportManager = tm.getTransportManager(initiate);
         if (transportManager == null) {
@@ -120,7 +120,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
 
         state = State.pending;
 
-        JingleFileTransferManager.getInstanceFor(connection).notifyIncomingFileOffer(initiate,
+        JingleFileTransferManagerAlt.getInstanceFor(connection).notifyIncomingFileOffer(initiate,
                 IncomingJingleFileOffer.this);
 
         return jutil.createAck(initiate);
@@ -183,7 +183,7 @@ public class IncomingJingleFileOffer extends JingleFileTransferSession implement
             return jutil.createErrorOutOfOrder(transportAccept);
         }
 
-        JingleFileTransferManager.getInstanceFor(connection)
+        JingleFileTransferManagerAlt.getInstanceFor(connection)
                 .notifyIncomingFileOffer(pendingSessionInitiate, this);
         transportSession.processJingle(transportAccept);
         state = State.pending;

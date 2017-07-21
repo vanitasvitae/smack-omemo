@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.element;
+package org.jivesoftware.smackx.jft.element;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.Objects;
@@ -24,16 +24,16 @@ import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 /**
  * Checksum element.
  */
-public class Checksum implements ExtensionElement {
+public class ChecksumElement implements ExtensionElement {
     public static final String ELEMENT = "checksum";
     public static final String ATTR_CREATOR = "creator";
     public static final String ATTR_NAME = "name";
 
     private final JingleContentElement.Creator creator;
     private final String name;
-    private final JingleFileTransferChild file;
+    private final JingleFileTransferChildElement file;
 
-    public Checksum(JingleContentElement.Creator creator, String name, JingleFileTransferChild file) {
+    public ChecksumElement(JingleContentElement.Creator creator, String name, JingleFileTransferChildElement file) {
         this.creator = creator;
         this.name = name;
         this.file = Objects.requireNonNull(file, "file MUST NOT be null.");
@@ -58,6 +58,6 @@ public class Checksum implements ExtensionElement {
 
     @Override
     public String getNamespace() {
-        return JingleFileTransfer.NAMESPACE_V5;
+        return JingleFileTransferElement.NAMESPACE_V5;
     }
 }

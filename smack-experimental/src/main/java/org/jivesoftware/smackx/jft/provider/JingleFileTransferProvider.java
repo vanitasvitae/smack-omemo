@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.provider;
+package org.jivesoftware.smackx.jft.provider;
 
 import static org.xmlpull.v1.XmlPullParser.END_TAG;
 import static org.xmlpull.v1.XmlPullParser.START_TAG;
@@ -26,9 +26,9 @@ import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
-import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jft.element.Range;
 
 import org.jxmpp.util.XmppDateTime;
 import org.xmlpull.v1.XmlPullParser;
@@ -37,13 +37,13 @@ import org.xmlpull.v1.XmlPullParser;
  * Provider for JingleContentDescriptionFileTransfer elements.
  */
 public class JingleFileTransferProvider
-        extends JingleContentDescriptionProvider<JingleFileTransfer> {
+        extends JingleContentDescriptionProvider<JingleFileTransferElement> {
 
     @Override
-    public JingleFileTransfer parse(XmlPullParser parser, int initialDepth) throws Exception {
+    public JingleFileTransferElement parse(XmlPullParser parser, int initialDepth) throws Exception {
         ArrayList<JingleContentDescriptionChildElement> payloads = new ArrayList<>();
         boolean inRange = false;
-        JingleFileTransferChild.Builder builder = JingleFileTransferChild.getBuilder();
+        JingleFileTransferChildElement.Builder builder = JingleFileTransferChildElement.getBuilder();
         HashElement inRangeHash = null;
         Long length = null, offset = null;
         while (true) {
@@ -53,23 +53,23 @@ public class JingleFileTransferProvider
 
             if (tag == START_TAG) {
                 switch (elem) {
-                    case JingleFileTransferChild.ELEM_DATE:
+                    case JingleFileTransferChildElement.ELEM_DATE:
                         builder.setDate(XmppDateTime.parseXEP0082Date(parser.nextText()));
                         break;
 
-                    case JingleFileTransferChild.ELEM_DESC:
+                    case JingleFileTransferChildElement.ELEM_DESC:
                         builder.setDescription(parser.nextText());
                         break;
 
-                    case JingleFileTransferChild.ELEM_MEDIA_TYPE:
+                    case JingleFileTransferChildElement.ELEM_MEDIA_TYPE:
                         builder.setMediaType(parser.nextText());
                         break;
 
-                    case JingleFileTransferChild.ELEM_NAME:
+                    case JingleFileTransferChildElement.ELEM_NAME:
                         builder.setName(parser.nextText());
                         break;
 
-                    case JingleFileTransferChild.ELEM_SIZE:
+                    case JingleFileTransferChildElement.ELEM_SIZE:
                         builder.setSize(Integer.parseInt(parser.nextText()));
                         break;
 
@@ -102,13 +102,13 @@ public class JingleFileTransferProvider
                         inRangeHash = null;
                         break;
 
-                    case JingleFileTransferChild.ELEMENT:
+                    case JingleFileTransferChildElement.ELEMENT:
                         payloads.add(builder.build());
-                        builder = JingleFileTransferChild.getBuilder();
+                        builder = JingleFileTransferChildElement.getBuilder();
                         break;
 
-                    case JingleFileTransfer.ELEMENT:
-                        return new JingleFileTransfer(payloads);
+                    case JingleFileTransferElement.ELEMENT:
+                        return new JingleFileTransferElement(payloads);
                 }
             }
         }

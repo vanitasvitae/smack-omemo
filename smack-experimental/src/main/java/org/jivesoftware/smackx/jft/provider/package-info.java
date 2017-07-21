@@ -17,6 +17,6 @@
 
 /**
  * Smack's API for <a href="https://xmpp.org/extensions/xep-0234.html">XEP-0234: Jingle File Transfer</a>.
- * Elements.
+ * Providers.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.element;
+package org.jivesoftware.smackx.jft.provider;

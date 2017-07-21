@@ -73,8 +73,8 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
         File source = prepareNewTestFile("source");
         final File target = new File(tempDir, "target");
 
-        JingleFileTransferManager aftm = JingleFileTransferManager.getInstanceFor(conOne);
-        JingleFileTransferManager bftm = JingleFileTransferManager.getInstanceFor(conTwo);
+        JingleFileTransferManagerAlt aftm = JingleFileTransferManagerAlt.getInstanceFor(conOne);
+        JingleFileTransferManagerAlt bftm = JingleFileTransferManagerAlt.getInstanceFor(conTwo);
 
         bftm.addJingleFileTransferOfferListener(new JingleFileTransferOfferListener() {
             @Override

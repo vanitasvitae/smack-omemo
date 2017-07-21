@@ -34,14 +34,15 @@ import javax.crypto.spec.SecretKeySpec;
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.ExtensionElement;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
-import org.jivesoftware.smackx.jingle.transport.legacy.JingleUtil;
+import org.jivesoftware.smackx.jingle.JingleManager;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.OutgoingJingleFileOffer;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
 import org.jxmpp.jid.FullJid;
@@ -53,16 +54,12 @@ public final class JetManager extends Manager {
 
     private static final Logger LOGGER = Logger.getLogger(JetManager.class.getName());
 
-    public static final String NAMESPACE = "urn:xmpp:jingle:jet:0";
-
     private static final WeakHashMap<XMPPConnection, JetManager> INSTANCES = new WeakHashMap<>();
-    private final JingleUtil jutil;
 
     private static final Map<String, JingleEncryptionMethod> encryptionMethods = new HashMap<>();
 
     private JetManager(XMPPConnection connection) {
         super(connection);
-        jutil = new JingleUtil(connection);
     }
 
     public static JetManager getInstanceFor(XMPPConnection connection) {
@@ -139,15 +136,15 @@ public final class JetManager extends Manager {
             return null;
         }
 
-        String contentName = JingleManager.randomId();
+        String contentName = StringUtils.randomString(24);
 
         ExtensionElement encryptionExtension = encryptionMethod.encryptJingleTransfer(recipient, keyAndIv);
         JetSecurityElement securityElement = new JetSecurityElement(contentName, encryptionExtension);
 
         OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
 
-        JingleFileTransferChild fileTransferChild = JingleFileTransferChild.getBuilder().setFile(file).build();
-        JingleFileTransfer fileTransfer = new JingleFileTransfer(Collections.<JingleContentDescriptionChildElement>singletonList(fileTransferChild));
+        JingleFileTransferChildElement fileTransferChild = JingleFileTransferChildElement.getBuilder().setFile(file).build();
+        JingleFileTransferElement fileTransfer = new JingleFileTransferElement(Collections.<JingleContentDescriptionChildElement>singletonList(fileTransferChild));
 
         JingleContentElement content = JingleContentElement.getBuilder()
                 .setCreator(JingleContentElement.Creator.initiator)

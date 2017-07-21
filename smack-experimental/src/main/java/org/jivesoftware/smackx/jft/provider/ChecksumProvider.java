@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.provider;
+package org.jivesoftware.smackx.jft.provider;
 
 import static org.xmlpull.v1.XmlPullParser.END_TAG;
 import static org.xmlpull.v1.XmlPullParser.START_TAG;
@@ -24,27 +24,27 @@ import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.Checksum;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
-import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
+import org.jivesoftware.smackx.jft.element.ChecksumElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jft.element.Range;
 
 import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Provider for the Checksum element.
  */
-public class ChecksumProvider extends ExtensionElementProvider<Checksum> {
+public class ChecksumProvider extends ExtensionElementProvider<ChecksumElement> {
     @Override
-    public Checksum parse(XmlPullParser parser, int initialDepth) throws Exception {
+    public ChecksumElement parse(XmlPullParser parser, int initialDepth) throws Exception {
         JingleContentElement.Creator creator = null;
-        String creatorString = parser.getAttributeValue(null, Checksum.ATTR_CREATOR);
+        String creatorString = parser.getAttributeValue(null, ChecksumElement.ATTR_CREATOR);
         if (creatorString != null) {
             creator = JingleContentElement.Creator.valueOf(creatorString);
         }
-        String name = parser.getAttributeValue(null, Checksum.ATTR_NAME);
+        String name = parser.getAttributeValue(null, ChecksumElement.ATTR_NAME);
 
 
-        JingleFileTransferChild.Builder cb = JingleFileTransferChild.getBuilder();
+        JingleFileTransferChildElement.Builder cb = JingleFileTransferChildElement.getBuilder();
         HashElement hashElement = null;
         Range range = null;
 
@@ -73,7 +73,7 @@ public class ChecksumProvider extends ExtensionElementProvider<Checksum> {
                         }
                         break;
 
-                    case JingleFileTransferChild.ELEMENT:
+                    case JingleFileTransferChildElement.ELEMENT:
                         if (hashElement != null) {
                             cb.setHash(hashElement);
                         }
@@ -84,6 +84,6 @@ public class ChecksumProvider extends ExtensionElementProvider<Checksum> {
                 }
             }
         }
-        return new Checksum(creator, name, cb.build());
+        return new ChecksumElement(creator, name, cb.build());
     }
 }

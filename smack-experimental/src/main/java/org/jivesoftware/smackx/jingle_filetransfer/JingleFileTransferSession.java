@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.transport.legacy.JingleUtil;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
 import org.jxmpp.jid.FullJid;
@@ -45,7 +45,7 @@ public abstract class JingleFileTransferSession extends JingleSession implements
     protected final XMPPConnection connection;
     protected final JingleUtil jutil;
 
-    protected JingleFileTransfer file;
+    protected JingleFileTransferElement file;
 
     private final Type type;
 

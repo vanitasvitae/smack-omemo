@@ -151,7 +151,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         }
 
         connection.createStanzaCollectorAndSend(transportManager.createCandidateUsed(this, selectedCandidate));
-        //connectIfReady();
+        connectIfReady();
     }
 
     public JingleS5BTransportCandidate connectToCandidates(int timeout) {
@@ -314,7 +314,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             //TODO: Alert! Illegal candidateId!
         }
 
-        //connectIfReady();
+        connectIfReady();
     }
 
     private void handleCandidateActivate(JingleS5BTransportInfoElement info) {
@@ -325,7 +325,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     private void handleCandidateError(JingleS5BTransportInfoElement info) {
         ((JingleS5BTransport) getPeersProposal()).setSelectedCandidate(CANDIDATE_FAILURE);
-        //connectIfReady();
+        connectIfReady();
     }
 
     private void handleProxyError(JingleS5BTransportInfoElement info) {

@@ -36,9 +36,9 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.transports.jingle_ibb.element.JingleIBBTransport;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
-import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferProvider;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jft.provider.JingleFileTransferProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -74,8 +74,8 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
         JingleIBBTransport transport = new JingleIBBTransport("transid");
         Date date = new Date();
         HashElement hash = new HashElement(HashManager.ALGORITHM.SHA_256, "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=");
-        JingleFileTransferChild file = new JingleFileTransferChild(date, "desc", hash, "application/octet-stream", "name", 1337, null);
-        JingleFileTransfer description = new JingleFileTransfer(Collections.<JingleContentDescriptionChildElement>singletonList(file));
+        JingleFileTransferChildElement file = new JingleFileTransferChildElement(date, "desc", hash, "application/octet-stream", "name", 1337, null);
+        JingleFileTransferElement description = new JingleFileTransferElement(Collections.<JingleContentDescriptionChildElement>singletonList(file));
 
         String contentName = "content";
 
@@ -108,8 +108,8 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
 
         assertEquals(1, description.getJingleContentDescriptionChildren().size());
         assertEquals(file, description.getJingleContentDescriptionChildren().get(0));
-        assertEquals(JingleFileTransferChild.ELEMENT, file.getElementName());
-        assertEquals(JingleFileTransfer.NAMESPACE_V5, description.getNamespace());
+        assertEquals(JingleFileTransferChildElement.ELEMENT, file.getElementName());
+        assertEquals(JingleFileTransferElement.NAMESPACE_V5, description.getNamespace());
         assertEquals(date, file.getDate());
         assertEquals(hash, file.getHash());
         assertEquals("application/octet-stream", file.getMediaType());
@@ -142,7 +142,7 @@ public class JingleUtilFileTransferTest extends SmackTestSuite {
                 "</description>";
         assertXMLEqual(descriptionXML, description.toXML().toString());
 
-        JingleFileTransfer parsed = new JingleFileTransferProvider().parse(TestUtils.getParser(descriptionXML));
+        JingleFileTransferElement parsed = new JingleFileTransferProvider().parse(TestUtils.getParser(descriptionXML));
         assertEquals(1, parsed.getJingleContentDescriptionChildren().size());
         assertEquals(file.toXML().toString(), parsed.getJingleContentDescriptionChildren().get(0).toXML().toString());
 

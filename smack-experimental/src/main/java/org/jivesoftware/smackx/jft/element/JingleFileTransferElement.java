@@ -14,25 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.element;
+package org.jivesoftware.smackx.jft.element;
 
 import java.util.List;
 
+import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 
 /**
  * File element.
  */
-public class JingleFileTransfer extends JingleContentDescriptionElement {
-    public static final String NAMESPACE_V5 = "urn:xmpp:jingle:apps:file-transfer:5";
+public class JingleFileTransferElement extends JingleContentDescriptionElement {
 
-    public JingleFileTransfer(List<JingleContentDescriptionChildElement> payloads) {
+
+    public JingleFileTransferElement(List<JingleContentDescriptionChildElement> payloads) {
         super(payloads);
     }
 
     @Override
     public String getNamespace() {
-        return NAMESPACE_V5;
+        return JingleFileTransfer.NAMESPACE;
     }
 }

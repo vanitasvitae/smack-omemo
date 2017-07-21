@@ -29,45 +29,46 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.jingle.transport.legacy.JingleUtil;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
+import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
+import org.jivesoftware.smackx.jft.provider.JingleFileTransferProvider;
+import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
+import org.jivesoftware.smackx.jingle.transport.legacy.JingleUtil;
 import org.jivesoftware.smackx.jingle_filetransfer.callback.IncomingFileOfferCallback;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
 import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.JingleFileTransferOfferListener;
-import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferProvider;
 
 import org.jxmpp.jid.FullJid;
 
 /**
  * Manager for JingleFileTransfer (XEP-0234).
  */
-public final class JingleFileTransferManager extends Manager implements JingleHandler {
-    private static final Logger LOGGER = Logger.getLogger(JingleFileTransferManager.class.getName());
+public final class JingleFileTransferManagerAlt extends Manager {
+    private static final Logger LOGGER = Logger.getLogger(JingleFileTransferManagerAlt.class.getName());
 
-    private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
+    private static final WeakHashMap<XMPPConnection, JingleFileTransferManagerAlt> INSTANCES = new WeakHashMap<>();
     private final ArrayList<JingleFileTransferOfferListener> jingleFileTransferOfferListeners = new ArrayList<>();
-    private final JingleUtil jutil;
 
-    private JingleFileTransferManager(XMPPConnection connection) {
+    private JingleFileTransferManagerAlt(XMPPConnection connection) {
         super(connection);
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(JingleFileTransfer.NAMESPACE_V5);
         JingleManager jingleManager = JingleManager.getInstanceFor(connection);
-        jingleManager.registerDescriptionHandler(JingleFileTransfer.NAMESPACE_V5, this);
+        jingleManager.addJingleDescriptionManager(this);
         JingleContentProviderManager.addJingleContentDescriptionProvider(
-                JingleFileTransfer.NAMESPACE_V5, new JingleFileTransferProvider());
+                JingleFileTransferElement.NAMESPACE_V5, new JingleFileTransferProvider());
         jutil = new JingleUtil(connection);
     }
 
-    public static JingleFileTransferManager getInstanceFor(XMPPConnection connection) {
-        JingleFileTransferManager manager = INSTANCES.get(connection);
+    public static JingleFileTransferManagerAlt getInstanceFor(XMPPConnection connection) {
+        JingleFileTransferManagerAlt manager = INSTANCES.get(connection);
         if (manager == null) {
-            manager = new JingleFileTransferManager(connection);
+            manager = new JingleFileTransferManagerAlt(connection);
             INSTANCES.put(connection, manager);
         }
         return manager;
@@ -141,12 +142,12 @@ public final class JingleFileTransferManager extends Manager implements JingleHa
         jingleFileTransferOfferListeners.remove(listener);
     }
 
-    public static JingleFileTransfer fileTransferFromFile(File file) {
-        JingleFileTransferChild.Builder fb = JingleFileTransferChild.getBuilder();
+    public static JingleFileTransferElement fileTransferFromFile(File file) {
+        JingleFileTransferChildElement.Builder fb = JingleFileTransferChildElement.getBuilder();
         fb.setFile(file)
                 .setDescription("A file.")
                 .setMediaType("application/octet-stream");
 
-        return new JingleFileTransfer(Collections.<JingleContentDescriptionChildElement>singletonList(fb.build()));
+        return new JingleFileTransferElement(Collections.<JingleContentDescriptionChildElement>singletonList(fb.build()));
     }
 }

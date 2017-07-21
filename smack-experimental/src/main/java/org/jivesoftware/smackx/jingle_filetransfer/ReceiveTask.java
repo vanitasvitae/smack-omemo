@@ -25,8 +25,8 @@ import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 
 /**
  * Thread for receiving data.
@@ -35,11 +35,11 @@ public class ReceiveTask implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ReceiveTask.class.getName());
 
     private final BytestreamSession byteStream;
-    private final JingleFileTransfer fileTransfer;
+    private final JingleFileTransferElement fileTransfer;
     private final File target;
     private final JingleFileTransferSession session;
 
-    public ReceiveTask(JingleFileTransferSession session, BytestreamSession byteStream, JingleFileTransfer fileTransfer, File target) {
+    public ReceiveTask(JingleFileTransferSession session, BytestreamSession byteStream, JingleFileTransferElement fileTransfer, File target) {
         this.byteStream = byteStream;
         this.fileTransfer = fileTransfer;
         this.target = target;
@@ -48,7 +48,7 @@ public class ReceiveTask implements Runnable {
 
     @Override
     public void run() {
-        JingleFileTransferChild transfer = (JingleFileTransferChild) fileTransfer.getJingleContentDescriptionChildren().get(0);
+        JingleFileTransferChildElement transfer = (JingleFileTransferChildElement) fileTransfer.getJingleContentDescriptionChildren().get(0);
         FileOutputStream outputStream = null;
         InputStream inputStream;
 

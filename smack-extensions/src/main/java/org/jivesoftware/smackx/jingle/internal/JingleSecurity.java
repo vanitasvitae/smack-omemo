@@ -29,7 +29,7 @@ public abstract class JingleSecurity<D extends JingleContentSecurityElement> {
 
     public abstract D getElement();
 
-    public abstract JingleElement handleSecurityInfo(JingleContentSecurityInfoElement element);
+    public abstract JingleElement handleSecurityInfo(JingleContentSecurityInfoElement element, JingleElement wrapping);
 
     public void setParent(JingleContent parent) {
         if (this.parent != parent) {

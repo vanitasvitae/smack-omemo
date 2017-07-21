@@ -23,10 +23,10 @@ import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle_filetransfer.element.Checksum;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChild;
-import org.jivesoftware.smackx.jingle_filetransfer.element.Range;
-import org.jivesoftware.smackx.jingle_filetransfer.provider.ChecksumProvider;
+import org.jivesoftware.smackx.jft.element.ChecksumElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jft.element.Range;
+import org.jivesoftware.smackx.jft.provider.ChecksumProvider;
 
 import org.junit.Test;
 
@@ -38,8 +38,8 @@ public class ChecksumTest extends SmackTestSuite {
     @Test
     public void parserTest() throws Exception {
         HashElement hash = new HashElement(HashManager.ALGORITHM.SHA_256, "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=");
-        JingleFileTransferChild file = new JingleFileTransferChild(null, null, hash, null, null, -1, null);
-        Checksum checksum = new Checksum(JingleContentElement.Creator.initiator, "name", file);
+        JingleFileTransferChildElement file = new JingleFileTransferChildElement(null, null, hash, null, null, -1, null);
+        ChecksumElement checksum = new ChecksumElement(JingleContentElement.Creator.initiator, "name", file);
 
         String xml = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator' name='name'>" +
                 "<file>" +
@@ -51,8 +51,8 @@ public class ChecksumTest extends SmackTestSuite {
         assertXMLEqual(xml, new ChecksumProvider().parse(TestUtils.getParser(xml)).toXML().toString());
 
         Range range = new Range(12L,34L);
-        file = new JingleFileTransferChild(null, null, hash, null, null, -1, range);
-        checksum = new Checksum(JingleContentElement.Creator.initiator, "name", file);
+        file = new JingleFileTransferChildElement(null, null, hash, null, null, -1, range);
+        checksum = new ChecksumElement(JingleContentElement.Creator.initiator, "name", file);
 
         xml = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator' name='name'>" +
                 "<file>" +

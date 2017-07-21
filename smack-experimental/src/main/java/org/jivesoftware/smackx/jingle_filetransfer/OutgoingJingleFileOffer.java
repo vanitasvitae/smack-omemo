@@ -33,7 +33,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportInitiationCallback;
 import org.jivesoftware.smackx.jingle.transports.JingleTransportManager;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransfer;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
 
 import org.jxmpp.jid.FullJid;
 
@@ -91,7 +91,7 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
             SmackException.NotConnectedException, SmackException.NoResponseException {
         source = file;
         String contentName = JingleManager.randomId();
-        JingleFileTransfer transfer = JingleFileTransferManager.fileTransferFromFile(file);
+        JingleFileTransferElement transfer = JingleFileTransferManagerAlt.fileTransferFromFile(file);
 
         initiateFileOffer(transfer, JingleContentElement.Creator.initiator, contentName);
     }
@@ -99,11 +99,11 @@ public class OutgoingJingleFileOffer extends JingleFileTransferSession {
     public SmackFuture<?> sendAsync(File file) {
         source = file;
         String contentName = "jft-" + StringUtils.randomString(20);
-        JingleFileTransfer transfer = JingleFileTransferManager.fileTransferFromFile(file);
+        JingleFileTransferElement transfer = JingleFileTransferManagerAlt.fileTransferFromFile(file);
         return null; //TODO
     }
 
-    public void initiateFileOffer(JingleFileTransfer file, JingleContentElement.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+    public void initiateFileOffer(JingleFileTransferElement file, JingleContentElement.Creator creator, String name) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
         if (state != State.fresh) {
             throw new IllegalStateException("This session is not fresh.");
         }

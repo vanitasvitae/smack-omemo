@@ -34,6 +34,8 @@ import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.internal.JingleContent;
 import org.jivesoftware.smackx.jingle.internal.JingleSession;
@@ -68,53 +70,12 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
 
     private JingleS5BTransportManager(XMPPConnection connection) {
         super(connection);
+        ServiceDiscoveryManager.getInstanceFor(connection).addFeature(getNamespace());
+        JingleManager jingleManager = JingleManager.getInstanceFor(connection);
+        jingleManager.addJingleTransportManager(this);
         JingleContentProviderManager.addJingleContentTransportProvider(getNamespace(), new JingleS5BTransportProvider());
-        connection.addConnectionListener(new ConnectionListener() {
 
-            @Override
-            public void connected(XMPPConnection connection) {
-            }
-
-            @Override
-            public void authenticated(XMPPConnection connection, boolean resumed) {
-                if (connection.equals(connection())) {
-                    try {
-                        Socks5Proxy socks5Proxy = Socks5Proxy.getSocks5Proxy();
-                        if (!socks5Proxy.isRunning()) {
-                            socks5Proxy.start();
-                        }
-                        localStreamHosts = queryLocalStreamHosts();
-                        availableStreamHosts = queryAvailableStreamHosts();
-                    } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
-                        LOGGER.log(Level.WARNING, "Could not query available StreamHosts: " + e, e);
-                    }
-                }
-            }
-
-            @Override
-            public void connectionClosed() {
-                Socks5Proxy proxy = Socks5Proxy.getSocks5Proxy();
-                if (proxy.isRunning()) {
-                    Socks5Proxy.getSocks5Proxy().stop();
-                }
-            }
-
-            @Override
-            public void connectionClosedOnError(Exception e) {
-            }
-
-            @Override
-            public void reconnectionSuccessful() {
-            }
-
-            @Override
-            public void reconnectingIn(int seconds) {
-            }
-
-            @Override
-            public void reconnectionFailed(Exception e) {
-            }
-        });
+        connection.addConnectionListener(connectionListener);
     }
 
     public static JingleS5BTransportManager getInstanceFor(XMPPConnection connection) {
@@ -277,4 +238,51 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     public int compareTo(JingleTransportManager manager) {
         return 1; // We are #1!
     }
+
+    private ConnectionListener connectionListener = new ConnectionListener() {
+
+        @Override
+        public void connected(XMPPConnection connection) {
+        }
+
+        @Override
+        public void authenticated(XMPPConnection connection, boolean resumed) {
+            if (connection.equals(connection())) {
+                try {
+                    Socks5Proxy socks5Proxy = Socks5Proxy.getSocks5Proxy();
+                    if (!socks5Proxy.isRunning()) {
+                        socks5Proxy.start();
+                    }
+                    localStreamHosts = queryLocalStreamHosts();
+                    availableStreamHosts = queryAvailableStreamHosts();
+                } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+                    LOGGER.log(Level.WARNING, "Could not query available StreamHosts: " + e, e);
+                }
+            }
+        }
+
+        @Override
+        public void connectionClosed() {
+            Socks5Proxy proxy = Socks5Proxy.getSocks5Proxy();
+            if (proxy.isRunning()) {
+                Socks5Proxy.getSocks5Proxy().stop();
+            }
+        }
+
+        @Override
+        public void connectionClosedOnError(Exception e) {
+        }
+
+        @Override
+        public void reconnectionSuccessful() {
+        }
+
+        @Override
+        public void reconnectingIn(int seconds) {
+        }
+
+        @Override
+        public void reconnectionFailed(Exception e) {
+        }
+    };
 }
