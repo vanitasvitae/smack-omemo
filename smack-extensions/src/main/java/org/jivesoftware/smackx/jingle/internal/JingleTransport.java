@@ -21,10 +21,10 @@ import java.util.List;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.transport.BytestreamSessionEstablishedListener;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
  * Class that represents a contents transport component.
@@ -36,6 +36,8 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> {
 
     private JingleTransport peersProposal;
     private boolean isPeersProposal;
+
+    protected BytestreamSession bytestreamSession;
 
     public abstract D getElement();
 
@@ -72,11 +74,11 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> {
 
     public abstract String getNamespace();
 
-    public abstract void establishIncomingBytestreamSession(BytestreamSessionEstablishedListener listener,
-                                                            XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException;
+    public abstract void establishIncomingBytestreamSession(XMPPConnection connection)
+            throws SmackException.NotConnectedException, InterruptedException;
 
-    public abstract void establishOutgoingBytestreamSession(BytestreamSessionEstablishedListener listener,
-                                                            XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException;
+    public abstract void establishOutgoingBytestreamSession(XMPPConnection connection)
+            throws SmackException.NotConnectedException, InterruptedException;
 
     public void setPeersProposal(JingleTransport peersProposal) {
         this.peersProposal = peersProposal;
@@ -101,5 +103,9 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> {
 
     public JingleContent getParent() {
         return parent;
+    }
+
+    public BytestreamSession getBytestreamSession() {
+        return bytestreamSession;
     }
 }

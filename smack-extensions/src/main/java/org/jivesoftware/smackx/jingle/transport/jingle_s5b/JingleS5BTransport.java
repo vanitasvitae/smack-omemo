@@ -35,11 +35,11 @@ import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.exception.FailedTransportException;
 import org.jivesoftware.smackx.jingle.internal.JingleContent;
 import org.jivesoftware.smackx.jingle.internal.JingleSession;
 import org.jivesoftware.smackx.jingle.internal.JingleTransport;
 import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
-import org.jivesoftware.smackx.jingle.transport.BytestreamSessionEstablishedListener;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportInfoElement;
@@ -124,18 +124,18 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @Override
-    public void establishIncomingBytestreamSession(BytestreamSessionEstablishedListener listener, XMPPConnection connection)
+    public void establishIncomingBytestreamSession(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException {
-        establishBytestreamSession(listener, connection);
+        establishBytestreamSession(connection);
     }
 
     @Override
-    public void establishOutgoingBytestreamSession(BytestreamSessionEstablishedListener listener, XMPPConnection connection)
+    public void establishOutgoingBytestreamSession(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException {
-        establishBytestreamSession(listener, connection);
+        establishBytestreamSession(connection);
     }
 
-    void establishBytestreamSession(BytestreamSessionEstablishedListener listener, XMPPConnection connection)
+    void establishBytestreamSession(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException {
         Socks5Proxy.getSocks5Proxy().addTransfer(dstAddr);
         JingleS5BTransportManager transportManager = JingleS5BTransportManager.getInstanceFor(connection);
@@ -181,7 +181,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
         if (getSelectedCandidate() == CANDIDATE_FAILURE && peers.getSelectedCandidate() == CANDIDATE_FAILURE) {
             LOGGER.log(Level.INFO, "Failure.");
-            //jingleSession.onTransportMethodFailed(getNamespace());
+            getParent().onTransportFailed(new FailedTransportException(null));
             return;
         }
 
@@ -190,6 +190,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         //Determine nominated candidate.
         JingleS5BTransportCandidate nominated;
         if (getSelectedCandidate() != CANDIDATE_FAILURE && peers.getSelectedCandidate() != CANDIDATE_FAILURE) {
+
             if (getSelectedCandidate().getPriority() > peers.getSelectedCandidate().getPriority()) {
                 nominated = getSelectedCandidate();
             } else if (getSelectedCandidate().getPriority() < peers.getSelectedCandidate().getPriority()) {
@@ -197,6 +198,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             } else {
                 nominated = getParent().getParent().isInitiator() ? getSelectedCandidate() : peers.getSelectedCandidate();
             }
+
         } else if (getSelectedCandidate() != CANDIDATE_FAILURE) {
             nominated = getSelectedCandidate();
         } else {
@@ -204,17 +206,20 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         }
 
         if (nominated == peers.getSelectedCandidate()) {
+
             LOGGER.log(Level.INFO, "Their choice, so our proposed candidate is used.");
             boolean isProxy = nominated.getType() == JingleS5BTransportCandidateElement.Type.proxy;
+
             try {
                 nominated = nominated.connect(MAX_TIMEOUT);
             } catch (InterruptedException | IOException | XMPPException | SmackException | TimeoutException e) {
                 LOGGER.log(Level.INFO, "Could not connect to our candidate.", e);
-                //TODO: Proxy-Error
+                getParent().onTransportFailed(new S5BTransportException.CandidateError(e));
                 return;
             }
 
             if (isProxy) {
+
                 LOGGER.log(Level.INFO, "Is external proxy. Activate it.");
                 Bytestream activate = new Bytestream(getSid());
                 activate.setMode(null);
@@ -227,6 +232,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
                     getParent().getParent().getJingleManager().getConnection().createStanzaCollectorAndSend(activate).nextResultOrThrow();
                 } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
                     LOGGER.log(Level.WARNING, "Could not activate proxy.", e);
+                    getParent().onTransportFailed(new S5BTransportException.ProxyError(e));
                     return;
                 }
 
@@ -238,13 +244,14 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
                             .nextResultOrThrow();
                 } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
                     LOGGER.log(Level.WARNING, "Could not send candidate-activated", e);
+                    getParent().onTransportFailed(new S5BTransportException.ProxyError(e));
                     return;
                 }
             }
 
             LOGGER.log(Level.INFO, "Start transmission.");
-            Socks5BytestreamSession bs = new Socks5BytestreamSession(nominated.getSocket(), !isProxy);
-            //callback.onSessionInitiated(bs);
+            this.bytestreamSession = new Socks5BytestreamSession(nominated.getSocket(), !isProxy);
+            getParent().onTransportReady();
 
         }
         //Our choice
@@ -253,8 +260,8 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             boolean isProxy = nominated.getType() == JingleS5BTransportCandidateElement.Type.proxy;
             if (!isProxy) {
                 LOGGER.log(Level.INFO, "Direct connection.");
-                Socks5BytestreamSession bs = new Socks5BytestreamSession(nominated.getSocket(), true);
-                //callback.onSessionInitiated(bs);
+                this.bytestreamSession = new Socks5BytestreamSession(nominated.getSocket(), true);
+                getParent().onTransportReady();
             } else {
                 LOGGER.log(Level.INFO, "Our choice was their external proxy. wait for candidate-activate.");
             }

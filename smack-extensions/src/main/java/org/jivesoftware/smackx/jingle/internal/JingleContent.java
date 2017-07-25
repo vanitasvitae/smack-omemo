@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
@@ -174,6 +175,20 @@ public class JingleContent {
             this.security = security;
             security.setParent(this);
         }
+    }
+
+    public void onTransportReady() {
+        BytestreamSession bytestreamSession = transport.getBytestreamSession();
+
+        if (bytestreamSession == null) {
+            throw new AssertionError("bytestreamSession MUST NOT be null at this point.");
+        }
+
+        description.onTransportReady(bytestreamSession);
+    }
+
+    public void onTransportFailed(Exception e) {
+
     }
 
     public static String randomName() {

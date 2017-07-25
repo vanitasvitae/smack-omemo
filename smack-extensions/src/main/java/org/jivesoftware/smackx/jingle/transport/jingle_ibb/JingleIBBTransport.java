@@ -20,16 +20,16 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.bytestreams.BytestreamListener;
-import org.jivesoftware.smackx.bytestreams.BytestreamRequest;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamListener;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
+import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamRequest;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.internal.JingleSession;
 import org.jivesoftware.smackx.jingle.internal.JingleTransport;
 import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.transport.BytestreamSessionEstablishedListener;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
-import org.jivesoftware.smackx.jingle.internal.JingleSession;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTransportElement;
 
 /**
@@ -71,38 +71,48 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void establishIncomingBytestreamSession(final BytestreamSessionEstablishedListener listener, final XMPPConnection connection) {
+    public void establishIncomingBytestreamSession(final XMPPConnection connection) {
         final JingleSession session = getParent().getParent();
-        InBandBytestreamManager.getByteStreamManager(connection)
-                .addIncomingBytestreamListener(new BytestreamListener() {
-                    @Override
-                    public void incomingBytestreamRequest(BytestreamRequest request) {
-                        if (request.getFrom().asFullJidIfPossible().equals(session.getPeer())
-                                && request.getSessionID().equals(getSid())) {
-                            BytestreamSession bytestreamSession;
 
-                            try {
-                                bytestreamSession = request.accept();
-                            } catch (InterruptedException | SmackException | XMPPException.XMPPErrorException e) {
-                                listener.onBytestreamSessionFailed(e);
-                                return;
-                            }
-                            listener.onBytestreamSessionEstablished(bytestreamSession);
-                        }
+        final InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
+
+        InBandBytestreamListener bytestreamListener = new InBandBytestreamListener() {
+            @Override
+            public void incomingBytestreamRequest(InBandBytestreamRequest request) {
+                if (request.getFrom().asFullJidIfPossible().equals(session.getPeer())
+                        && request.getSessionID().equals(getSid())) {
+                    BytestreamSession bytestreamSession;
+
+                    inBandBytestreamManager.removeIncomingBytestreamListener(this);
+
+                    try {
+                        bytestreamSession = request.accept();
+                    } catch (InterruptedException | SmackException e) {
+                        getParent().onTransportFailed(e);
+                        return;
                     }
-                });
+
+                    JingleIBBTransport.this.bytestreamSession = bytestreamSession;
+
+                    getParent().onTransportReady();
+                }
+            }
+        };
+
+        InBandBytestreamManager.getByteStreamManager(connection)
+                .addIncomingBytestreamListener(bytestreamListener);
     }
 
     @Override
-    public void establishOutgoingBytestreamSession(BytestreamSessionEstablishedListener listener, XMPPConnection connection) {
+    public void establishOutgoingBytestreamSession(XMPPConnection connection) {
         JingleSession session = getParent().getParent();
         InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
         inBandBytestreamManager.setDefaultBlockSize(blockSize);
         try {
-            BytestreamSession bytestreamSession = inBandBytestreamManager.establishSession(session.getPeer(), getSid());
-            listener.onBytestreamSessionEstablished(bytestreamSession);
+            JingleIBBTransport.this.bytestreamSession = inBandBytestreamManager.establishSession(session.getPeer(), getSid());
+            getParent().onTransportReady();
         } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException | SmackException.NotConnectedException e) {
-            listener.onBytestreamSessionFailed(e);
+            getParent().onTransportFailed(e);
         }
     }
 

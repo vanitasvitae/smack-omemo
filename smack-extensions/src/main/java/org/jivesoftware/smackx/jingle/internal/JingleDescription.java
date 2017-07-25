@@ -16,6 +16,7 @@
  */
 package org.jivesoftware.smackx.jingle.internal;
 
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 
 /**
@@ -36,4 +37,6 @@ public abstract class JingleDescription<D extends JingleContentDescriptionElemen
     public JingleContent getParent() {
         return parent;
     }
+
+    public abstract void onTransportReady(BytestreamSession bytestreamSession);
 }
