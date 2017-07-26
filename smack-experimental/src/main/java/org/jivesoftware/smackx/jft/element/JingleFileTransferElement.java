@@ -16,6 +16,7 @@
  */
 package org.jivesoftware.smackx.jft.element;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
@@ -27,6 +28,9 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildEleme
  */
 public class JingleFileTransferElement extends JingleContentDescriptionElement {
 
+    public JingleFileTransferElement(JingleContentDescriptionChildElement payload) {
+        this(Collections.singletonList(payload));
+    }
 
     public JingleFileTransferElement(List<JingleContentDescriptionChildElement> payloads) {
         super(payloads);

@@ -11,8 +11,4 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
     public static final String NAMESPACE_V5 = "urn:xmpp:jingle:apps:file-transfer:5";
     public static final String NAMESPACE = NAMESPACE_V5;
 
-    @Override
-    public JingleFileTransferElement getElement() {
-        return null;
-    }
 }

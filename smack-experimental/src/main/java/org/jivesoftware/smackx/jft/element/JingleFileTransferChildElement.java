@@ -39,10 +39,10 @@ public class JingleFileTransferChildElement extends JingleContentDescriptionChil
     private final HashElement hash;
     private final String mediaType;
     private final String name;
-    private final int size;
+    private final long size;
     private final Range range;
 
-    public JingleFileTransferChildElement(Date date, String desc, HashElement hash, String mediaType, String name, int size, Range range) {
+    public JingleFileTransferChildElement(Date date, String desc, HashElement hash, String mediaType, String name, long size, Range range) {
         this.date = date;
         this.desc = desc;
         this.hash = hash;
@@ -72,7 +72,7 @@ public class JingleFileTransferChildElement extends JingleContentDescriptionChil
         return name;
     }
 
-    public int getSize() {
+    public long getSize() {
         return size;
     }
 
@@ -96,7 +96,7 @@ public class JingleFileTransferChildElement extends JingleContentDescriptionChil
         sb.optElement(ELEM_NAME, name);
         sb.optElement(range);
         if (size > 0) {
-            sb.element(ELEM_SIZE, Integer.toString(size));
+            sb.element(ELEM_SIZE, Long.toString(size));
         }
         sb.optElement(hash);
         sb.closeElement(this);
@@ -113,7 +113,7 @@ public class JingleFileTransferChildElement extends JingleContentDescriptionChil
         private HashElement hash;
         private String mediaType;
         private String name;
-        private int size;
+        private long size;
         private Range range;
 
         private Builder() {
@@ -152,7 +152,7 @@ public class JingleFileTransferChildElement extends JingleContentDescriptionChil
             return this;
         }
 
-        public Builder setSize(int size) {
+        public Builder setSize(long size) {
             this.size = size;
             return this;
         }
