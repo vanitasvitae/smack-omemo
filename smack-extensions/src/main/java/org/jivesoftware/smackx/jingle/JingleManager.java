@@ -29,19 +29,21 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
 import org.jivesoftware.smack.iqrequest.IQRequestHandler;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
-import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.exception.UnsupportedTransportException;
-import org.jivesoftware.smackx.jingle.provider.JingleContentSecurityProvider;
 import org.jivesoftware.smackx.jingle.adapter.JingleSecurityAdapter;
+import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedDescriptionException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedSecurityException;
+import org.jivesoftware.smackx.jingle.exception.UnsupportedTransportException;
 import org.jivesoftware.smackx.jingle.internal.JingleSession;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
+import org.jivesoftware.smackx.jingle.provider.JingleContentSecurityProvider;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
+import org.jivesoftware.smackx.jingle.transport.JingleTransportManager;
 
 import org.jxmpp.jid.FullJid;
 
@@ -64,6 +66,8 @@ public class JingleManager extends Manager {
     private final WeakHashMap<String, JingleSecurityManager> securityManagers = new WeakHashMap<>();
 
     private final ConcurrentHashMap<FullJidAndSessionId, JingleSession> jingleSessions = new ConcurrentHashMap<>();
+
+    public static boolean ALLOW_MULTIPLE_CONTENT_PER_SESSION = false;
 
     private JingleManager(XMPPConnection connection) {
         super(connection);
@@ -198,7 +202,7 @@ public class JingleManager extends Manager {
         return getAvailableTransportManagers(Collections.<String>emptySet());
     }
 
-    private List<JingleTransportManager> getAvailableTransportManagers(Set<String> except) {
+    public List<JingleTransportManager> getAvailableTransportManagers(Set<String> except) {
         Set<String> available = new HashSet<>(transportManagers.keySet());
         available.removeAll(except);
         List<JingleTransportManager> remaining = new ArrayList<>();
@@ -207,10 +211,42 @@ public class JingleManager extends Manager {
             remaining.add(transportManagers.get(namespace));
         }
 
+        Collections.sort(remaining);
+
         return remaining;
+    }
+
+    public JingleTransportManager getBestAvailableTransportManager() {
+        return getBestAvailableTransportManager(Collections.<String>emptySet());
+    }
+
+    public JingleTransportManager getBestAvailableTransportManager(Set<String> except) {
+        List<JingleTransportManager> managers = getAvailableTransportManagers(except);
+        Collections.sort(managers);
+
+        if (managers.size() > 0) {
+            return managers.get(0);
+        }
+
+        return null;
     }
 
     public XMPPConnection getConnection() {
         return connection();
+    }
+
+    public JingleSession createSession(Role role, FullJid peer) {
+        JingleSession session;
+
+        if (role == Role.initiator) {
+            session = new JingleSession(this, connection().getUser().asDomainFullJidOrThrow(), peer,
+                    role, StringUtils.randomString(24));
+        } else {
+            session = new JingleSession(this, peer, connection().getUser().asDomainFullJidOrThrow(),
+                    role, StringUtils.randomString(24));
+        }
+
+        jingleSessions.put(new FullJidAndSessionId(peer, session.getSessionId()), session);
+        return session;
     }
 }

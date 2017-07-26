@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackFuture;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
@@ -29,7 +30,7 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
 /**
  * Class that represents a contents transport component.
  */
-public abstract class JingleTransport<D extends JingleContentTransportElement> {
+public abstract class JingleTransport<D extends JingleContentTransportElement> extends SmackFuture<BytestreamSession> {
 
     private JingleContent parent;
     private final ArrayList<JingleTransportCandidate<?>> candidates = new ArrayList<>();
@@ -42,7 +43,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> {
     public abstract D getElement();
 
     public void addCandidate(JingleTransportCandidate<?> candidate) {
-        // Insert sorted by priority descending
+        // Insert sorted by descending priority
 
         // Empty list -> insert
         if (candidates.isEmpty()) {

@@ -1,7 +1,7 @@
 package org.jivesoftware.smackx.jft.internal;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,11 +21,11 @@ public class JingleIncomingFileOffer extends JingleFileOffer<RemoteFile> {
 
     @Override
     public void onTransportReady(BytestreamSession bytestreamSession) {
-        OutputStream outputStream;
+        InputStream inputStream;
         try {
-            outputStream = bytestreamSession.getOutputStream();
+            inputStream = bytestreamSession.getInputStream();
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Cannot get OutputStream from BytestreamSession: " + e, e);
+            LOGGER.log(Level.SEVERE, "Cannot get InputStream from BytestreamSession: " + e, e);
             return;
         }
     }

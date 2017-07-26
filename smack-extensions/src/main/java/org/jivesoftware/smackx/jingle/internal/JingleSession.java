@@ -71,12 +71,12 @@ public class JingleSession {
         this.sessionId = sessionId;
     }
 
-    void addContent(JingleContent content) {
+    public void addContent(JingleContent content) {
         contents.put(content.getName(), content);
         content.setParent(this);
     }
 
-    void addContent(JingleContentElement content)
+    public void addContent(JingleContentElement content)
             throws UnsupportedSecurityException, UnsupportedTransportException, UnsupportedDescriptionException {
         addContent(JingleContent.fromElement(content));
     }
@@ -95,6 +95,19 @@ public class JingleSession {
         }
 
         return session;
+    }
+
+    public JingleElement createSessionInitiate() {
+        if (role != Role.initiator) {
+            throw new IllegalStateException("Sessions role is not initiator.");
+        }
+
+        List<JingleContentElement> contentElements = new ArrayList<>();
+        for (JingleContent c : contents.values()) {
+            contentElements.add(c.getElement());
+        }
+
+        return JingleElement.createSessionInitiate(getInitiator(), getResponder(), getSessionId(), contentElements);
     }
 
     public IQ handleJingleRequest(JingleElement request) {
@@ -268,7 +281,7 @@ public class JingleSession {
         List<JingleElement> responses = new ArrayList<>();
 
         for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
-            responses.add(entry.getValue().getSecurity().handleSecurityInfo(entry.getKey().getSecurity().getSecurityInfo()));
+            responses.add(entry.getValue().getSecurity().handleSecurityInfo(entry.getKey().getSecurity().getSecurityInfo(), request));
         }
 
         for (JingleElement response : responses) {

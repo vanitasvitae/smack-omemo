@@ -46,7 +46,7 @@ import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTran
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportInfoElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.provider.JingleS5BTransportProvider;
-import org.jivesoftware.smackx.jingle.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.transport.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 

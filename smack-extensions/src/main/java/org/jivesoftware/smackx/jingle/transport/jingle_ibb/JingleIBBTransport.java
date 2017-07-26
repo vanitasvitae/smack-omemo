@@ -19,6 +19,7 @@ package org.jivesoftware.smackx.jingle.transport.jingle_ibb;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamListener;
@@ -29,7 +30,6 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.internal.JingleSession;
 import org.jivesoftware.smackx.jingle.internal.JingleTransport;
 import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
-import org.jivesoftware.smackx.jingle.transport.BytestreamSessionEstablishedListener;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTransportElement;
 
 /**
@@ -124,5 +124,15 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     @Override
     public void handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping) {
         // Nothing to do.
+    }
+
+    @Override
+    protected boolean isNonFatalException(Exception exception) {
+        return false;
+    }
+
+    @Override
+    protected void handleStanza(Stanza stanza) throws SmackException.NotConnectedException, InterruptedException {
+
     }
 }

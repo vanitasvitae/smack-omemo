@@ -51,6 +51,10 @@ public class JingleContent {
     private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
 
+    public JingleContent(JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
+        this(null, null, null, StringUtils.randomString(24), null, creator, senders);
+    }
+
     public JingleContent(JingleDescription description, JingleTransport transport, JingleSecurity security, String name, String disposition, JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
         this.description = description;
         this.transport = transport;

@@ -6,7 +6,7 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.transport.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.internal.JingleContent;
 import org.jivesoftware.smackx.jingle.internal.JingleTransport;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;

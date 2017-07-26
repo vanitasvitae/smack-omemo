@@ -236,7 +236,7 @@ public final class JingleElement extends IQ {
      * @param content content
      * @return session-accept stanza.
      */
-    public JingleElement createSessionAccept(FullJid initiator,
+    public static JingleElement createSessionAccept(FullJid initiator,
                                              FullJid responder,
                                              String sessionId,
                                              JingleContentElement content) {
@@ -252,7 +252,7 @@ public final class JingleElement extends IQ {
      * @param contents contents
      * @return session-accept stanza.
      */
-    public JingleElement createSessionAccept(FullJid initiator,
+    public static JingleElement createSessionAccept(FullJid initiator,
                                              FullJid responder,
                                              String sessionId,
                                              List<JingleContentElement> contents) {
@@ -281,7 +281,7 @@ public final class JingleElement extends IQ {
      * @param content content.
      * @return session-initiate stanza.
      */
-    public JingleElement createSessionInitiate(FullJid initiator,
+    public static JingleElement createSessionInitiate(FullJid initiator,
                                                FullJid responder,
                                                String sessionId,
                                                JingleContentElement content) {
@@ -297,7 +297,7 @@ public final class JingleElement extends IQ {
      * @param contents contents.
      * @return session-initiate stanza.
      */
-    public JingleElement createSessionInitiate(FullJid initiator,
+    public static JingleElement createSessionInitiate(FullJid initiator,
                                                FullJid responder,
                                                String sessionId,
                                                List<JingleContentElement> contents) {
