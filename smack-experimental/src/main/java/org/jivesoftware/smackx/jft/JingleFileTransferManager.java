@@ -21,14 +21,12 @@ import org.jivesoftware.smackx.jft.listener.IncomingFileRequestListener;
 import org.jivesoftware.smackx.jft.provider.JingleFileTransferProvider;
 import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.util.Role;
-import org.jivesoftware.smackx.jingle.callbacks.ContentAddCallback;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
-import org.jivesoftware.smackx.jingle.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.util.Role;
 
 import org.jxmpp.jid.FullJid;
 
@@ -126,7 +124,14 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
     }
 
     @Override
-    public JingleElement notifyContentListeners(JingleContent content, ContentAddCallback callback) {
+    public void notifySessionInitiate(JingleSession session) {
+        JingleContent content = session.getSoleContentOrThrow();
+        AbstractJingleFileTransfer transfer = (AbstractJingleFileTransfer) content.getDescription();
 
+        if (transfer.isOffer()) {
+            notifyIncomingFileOfferListeners((JingleIncomingFileOffer) transfer);
+        } else {
+            notifyIncomingFileRequestListeners((JingleIncomingFileRequest) transfer);
+        }
     }
 }

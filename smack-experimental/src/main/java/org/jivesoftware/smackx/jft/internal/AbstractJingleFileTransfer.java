@@ -11,4 +11,7 @@ public abstract class AbstractJingleFileTransfer extends JingleDescription<Jingl
     public static final String NAMESPACE_V5 = "urn:xmpp:jingle:apps:file-transfer:5";
     public static final String NAMESPACE = NAMESPACE_V5;
 
+    public abstract boolean isOffer();
+    public abstract boolean isRequest();
+
 }

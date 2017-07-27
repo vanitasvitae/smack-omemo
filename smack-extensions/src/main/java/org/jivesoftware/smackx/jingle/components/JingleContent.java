@@ -260,7 +260,7 @@ public class JingleContent {
         connection.createStanzaCollectorAndSend(transportReplace).nextResultOrThrow();
     }
 
-    public void onContentAccept(XMPPConnection connection, )
+    public void onContentAccept(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException {
         //Establish transport
         if (isReceiving()) {

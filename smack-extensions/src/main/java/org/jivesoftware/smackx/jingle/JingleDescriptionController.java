@@ -4,7 +4,6 @@ package org.jivesoftware.smackx.jingle;
  * Created by vanitas on 27.07.17.
  */
 public interface JingleDescriptionController {
-
     enum State {
         pending,            //Not yet accepted by us/peer
         negotiating,        //Accepted, but still negotiating transports etc.

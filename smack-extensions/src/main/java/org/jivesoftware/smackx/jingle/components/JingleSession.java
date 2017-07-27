@@ -81,6 +81,26 @@ public class JingleSession {
         addContent(JingleContent.fromElement(content));
     }
 
+    public ConcurrentHashMap<String, JingleContent> getContents() {
+        return contents;
+    }
+
+    public JingleContent getContent(String name) {
+        return contents.get(name);
+    }
+
+    public JingleContent getSoleContentOrThrow() {
+        if (contents.isEmpty()) {
+            return null;
+        }
+
+        if (contents.size() > 1) {
+            throw new IllegalStateException();
+        }
+
+        return contents.values().iterator().next();
+    }
+
     public static JingleSession fromSessionInitiate(JingleManager manager, JingleElement initiate)
             throws UnsupportedSecurityException, UnsupportedDescriptionException, UnsupportedTransportException {
         if (initiate.getAction() != JingleAction.session_initiate) {
