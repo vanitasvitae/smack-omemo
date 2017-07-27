@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.jft;
 
 import java.io.File;
@@ -11,7 +27,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileRequestController;
-import org.jivesoftware.smackx.jft.internal.AbstractJingleFileTransfer;
+import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
 import org.jivesoftware.smackx.jft.internal.JingleIncomingFileOffer;
 import org.jivesoftware.smackx.jft.internal.JingleIncomingFileRequest;
 import org.jivesoftware.smackx.jft.internal.JingleOutgoingFileOffer;
@@ -120,10 +136,10 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
 
     @Override
     public String getNamespace() {
-        return AbstractJingleFileTransfer.NAMESPACE;
+        return JingleFileTransfer.NAMESPACE;
     }
 
-    private void notifyTransfer(AbstractJingleFileTransfer transfer) {
+    private void notifyTransfer(JingleFileTransfer transfer) {
         if (transfer.isOffer()) {
             notifyIncomingFileOfferListeners((JingleIncomingFileOffer) transfer);
         } else {
@@ -134,11 +150,11 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
     @Override
     public void notifySessionInitiate(JingleSession session) {
         JingleContent content = session.getSoleContentOrThrow();
-        notifyTransfer((AbstractJingleFileTransfer) content.getDescription());
+        notifyTransfer((JingleFileTransfer) content.getDescription());
     }
 
     @Override
     public void notifyContentAdd(JingleContent content) {
-        notifyTransfer((AbstractJingleFileTransfer) content.getDescription());
+        notifyTransfer((JingleFileTransfer) content.getDescription());
     }
 }

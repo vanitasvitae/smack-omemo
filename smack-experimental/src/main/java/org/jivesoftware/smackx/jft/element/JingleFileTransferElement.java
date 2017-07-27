@@ -19,7 +19,7 @@ package org.jivesoftware.smackx.jft.element;
 import java.util.Collections;
 import java.util.List;
 
-import org.jivesoftware.smackx.jft.internal.AbstractJingleFileTransfer;
+import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 
@@ -38,6 +38,6 @@ public class JingleFileTransferElement extends JingleContentDescriptionElement {
 
     @Override
     public String getNamespace() {
-        return AbstractJingleFileTransfer.NAMESPACE;
+        return JingleFileTransfer.NAMESPACE;
     }
 }

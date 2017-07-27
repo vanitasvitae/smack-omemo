@@ -35,7 +35,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     private JingleContent parent;
     private final ArrayList<JingleTransportCandidate<?>> candidates = new ArrayList<>();
 
-    private JingleTransport peersProposal;
+    private JingleTransport<?> peersProposal;
     private boolean isPeersProposal;
 
     protected BytestreamSession bytestreamSession;
@@ -81,7 +81,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     public abstract void establishOutgoingBytestreamSession(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException;
 
-    public void setPeersProposal(JingleTransport peersProposal) {
+    public void setPeersProposal(JingleTransport<?> peersProposal) {
         this.peersProposal = peersProposal;
         peersProposal.isPeersProposal = true;
     }

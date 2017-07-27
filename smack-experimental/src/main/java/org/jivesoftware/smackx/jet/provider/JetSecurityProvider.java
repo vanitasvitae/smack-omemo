@@ -22,9 +22,9 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smack.util.Objects;
-import org.jivesoftware.smackx.jet.JetManager;
 import org.jivesoftware.smackx.jet.JingleEncryptionMethodManager;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
+import org.jivesoftware.smackx.jet.internal.JetSecurity;
 
 import org.xmlpull.v1.XmlPullParser;
 
@@ -36,8 +36,8 @@ public class JetSecurityProvider extends ExtensionElementProvider<JetSecurityEle
 
     @Override
     public JetSecurityElement parse(XmlPullParser parser, int initialDepth) throws Exception {
-        String name = parser.getAttributeValue(JetManager.NAMESPACE, JetSecurityElement.ATTR_NAME);
-        String type = parser.getAttributeValue(JetManager.NAMESPACE, JetSecurityElement.ATTR_TYPE);
+        String name = parser.getAttributeValue(JetSecurity.NAMESPACE, JetSecurityElement.ATTR_NAME);
+        String type = parser.getAttributeValue(JetSecurity.NAMESPACE, JetSecurityElement.ATTR_TYPE);
         ExtensionElement child;
 
         Objects.requireNonNull(type);

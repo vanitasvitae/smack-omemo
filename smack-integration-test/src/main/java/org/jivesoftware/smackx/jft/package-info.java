@@ -14,18 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle_filetransfer.callback;
-
-import java.io.File;
-
-import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
- * Callback used to accept/decline file requests.
+ * TODO describe me.
  */
-public interface IncomingFileRequestCallback {
-
-    void acceptIncomingFileRequest(JingleElement request, File source);
-
-    void declineIncomingFileRequest(JingleElement request);
-}
+package org.jivesoftware.smackx.jft;

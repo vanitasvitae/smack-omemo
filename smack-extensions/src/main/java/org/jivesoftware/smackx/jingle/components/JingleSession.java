@@ -29,21 +29,20 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.util.Role;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
-import org.jivesoftware.smackx.jingle.callbacks.ContentAddCallback;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedDescriptionException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedSecurityException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedTransportException;
-import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
+import org.jivesoftware.smackx.jingle.util.Role;
 
 import org.jxmpp.jid.FullJid;
 
@@ -360,21 +359,6 @@ public class JingleSession {
 
             for (final JingleContent content : descriptionCategory.getValue()) {
                 descriptionManager.notifyContentAdd(content);
-
-                ContentAddCallback callback = new ContentAddCallback() {
-                    @Override
-                    public void acceptContentAdd() {
-                        contents.put(content.getName(), content);
-                        acceptedContents.add(content.getElement());
-                        // TODO: Send content-accept
-                    }
-
-                    @Override
-                    public void rejectContentAdd() {
-                        // TODO: Send content-reject
-                    }
-                };
-                descriptionManager
             }
         }
 

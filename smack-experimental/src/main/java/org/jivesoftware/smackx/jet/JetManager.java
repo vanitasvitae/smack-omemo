@@ -36,14 +36,12 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
-import org.jivesoftware.smackx.jingle.JingleManager;
+import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
+import org.jivesoftware.smackx.jft.internal.JingleOutgoingFileOffer;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle_filetransfer.OutgoingJingleFileOffer;
-import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
-import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
-import org.jivesoftware.smackx.jingle_filetransfer.handler.FileTransferHandler;
 
 import org.jxmpp.jid.FullJid;
 
@@ -73,7 +71,7 @@ public final class JetManager extends Manager {
         return manager;
     }
 
-    public FileTransferHandler sendEncryptedFile(FullJid recipient, File file, String encryptionMethodNamespace) throws Exception {
+    public OutgoingFileOfferController sendEncryptedFile(FullJid recipient, File file, String encryptionMethodNamespace) throws Exception {
 
         JingleEncryptionMethod encryptionMethod = getEncryptionMethod(encryptionMethodNamespace);
         if (encryptionMethod == null) {
@@ -141,7 +139,7 @@ public final class JetManager extends Manager {
         ExtensionElement encryptionExtension = encryptionMethod.encryptJingleTransfer(recipient, keyAndIv);
         JetSecurityElement securityElement = new JetSecurityElement(contentName, encryptionExtension);
 
-        OutgoingJingleFileOffer offer = new OutgoingJingleFileOffer(connection(), recipient);
+        JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(file);
 
         JingleFileTransferChildElement fileTransferChild = JingleFileTransferChildElement.getBuilder().setFile(file).build();
         JingleFileTransferElement fileTransfer = new JingleFileTransferElement(Collections.<JingleContentDescriptionChildElement>singletonList(fileTransferChild));
@@ -149,12 +147,11 @@ public final class JetManager extends Manager {
         JingleContentElement content = JingleContentElement.getBuilder()
                 .setCreator(JingleContentElement.Creator.initiator)
                 .setName(contentName)
-                .setTransport(offer.getTransportSession().createTransport())
+                //.setTransport(offer.getTransportSession().createTransport())
                 .setSecurity(securityElement)
                 .setDescription(fileTransfer)
                 .build();
 
-        JingleElement initiate = jutil.createSessionInitiate(recipient, JingleManager.randomId(), content);
         return offer;
     }
 

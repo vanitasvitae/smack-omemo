@@ -18,26 +18,14 @@ package org.jivesoftware.smackx.jet;
 
 import java.io.File;
 
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smackx.jingle_filetransfer.OutgoingJingleFileOffer;
-
-import org.jxmpp.jid.FullJid;
+import org.jivesoftware.smackx.jft.internal.JingleOutgoingFileOffer;
 
 /**
  * Created by vanitas on 14.07.17.
  */
-public class OutgoingJetOffer extends OutgoingJingleFileOffer {
+public class OutgoingJetOffer extends JingleOutgoingFileOffer {
 
-    public OutgoingJetOffer(XMPPConnection connection, FullJid responder, String sid) {
-        super(connection, responder, sid);
-    }
-
-    public OutgoingJetOffer(XMPPConnection connection, FullJid recipient) {
-        super(connection, recipient);
-    }
-
-    @Override
-    public void send(File file) {
-
+    public OutgoingJetOffer(File file) {
+        super(file);
     }
 }

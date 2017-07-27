@@ -100,7 +100,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
                 .setDestinationAddress(dstAddr)
                 .setMode(mode);
 
-        for (JingleTransportCandidate candidate : getCandidates()) {
+        for (JingleTransportCandidate<?> candidate : getCandidates()) {
             builder.addTransportCandidate((JingleS5BTransportCandidateElement) candidate.getElement());
         }
 
@@ -156,7 +156,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     public JingleS5BTransportCandidate connectToCandidates(int timeout) {
-        for (JingleTransportCandidate c : getCandidates()) {
+        for (JingleTransportCandidate<?> c : getCandidates()) {
             int _timeout = timeout / getCandidates().size(); //TODO: Wise?
             try {
                 return ((JingleS5BTransportCandidate) c).connect(_timeout);

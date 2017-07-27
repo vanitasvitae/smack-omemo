@@ -19,6 +19,7 @@ package org.jivesoftware.smackx.jft.element;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smack.util.XmlStringBuilder;
+import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 
 /**
@@ -58,6 +59,6 @@ public class ChecksumElement implements ExtensionElement {
 
     @Override
     public String getNamespace() {
-        return JingleFileTransferElement.NAMESPACE_V5;
+        return JingleFileTransfer.NAMESPACE;
     }
 }

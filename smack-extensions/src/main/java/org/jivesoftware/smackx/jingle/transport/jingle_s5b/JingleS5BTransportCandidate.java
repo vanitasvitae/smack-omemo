@@ -67,6 +67,7 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
         return type;
     }
 
+    @Override
     public JingleS5BTransportCandidateElement getElement() {
         return new JingleS5BTransportCandidateElement(
                 getCandidateId(), getStreamHost().getAddress(),
