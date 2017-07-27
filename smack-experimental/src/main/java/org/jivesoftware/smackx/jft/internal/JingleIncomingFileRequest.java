@@ -14,6 +14,16 @@ public class JingleIncomingFileRequest extends AbstractJingleFileRequest impleme
     }
 
     @Override
+    public boolean isOffer() {
+        return false;
+    }
+
+    @Override
+    public boolean isRequest() {
+        return true;
+    }
+
+    @Override
     public void onTransportReady(BytestreamSession bytestreamSession) {
 
     }

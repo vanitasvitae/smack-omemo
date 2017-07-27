@@ -16,6 +16,7 @@
  */
 package org.jivesoftware.smackx.jingle;
 
+import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
 
 /**
@@ -26,4 +27,6 @@ public interface JingleDescriptionManager {
     String getNamespace();
 
     void notifySessionInitiate(JingleSession session);
+
+    void notifyContentAdd(JingleContent content);
 }

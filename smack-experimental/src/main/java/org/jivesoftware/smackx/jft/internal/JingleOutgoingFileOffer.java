@@ -19,4 +19,14 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
     public void onTransportReady(BytestreamSession bytestreamSession) {
         
     }
+
+    @Override
+    public boolean isOffer() {
+        return true;
+    }
+
+    @Override
+    public boolean isRequest() {
+        return false;
+    }
 }

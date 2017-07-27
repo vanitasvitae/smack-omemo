@@ -3,5 +3,5 @@ package org.jivesoftware.smackx.jft.controller;
 /**
  * Created by vanitas on 27.07.17.
  */
-public interface OutgoingFileOfferController {
+public interface OutgoingFileOfferController extends JingleFileTransferController {
 }

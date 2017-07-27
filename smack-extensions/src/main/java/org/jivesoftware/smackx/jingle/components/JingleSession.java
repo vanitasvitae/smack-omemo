@@ -359,6 +359,8 @@ public class JingleSession {
             }
 
             for (final JingleContent content : descriptionCategory.getValue()) {
+                descriptionManager.notifyContentAdd(content);
+
                 ContentAddCallback callback = new ContentAddCallback() {
                     @Override
                     public void acceptContentAdd() {
@@ -372,7 +374,7 @@ public class JingleSession {
                         // TODO: Send content-reject
                     }
                 };
-                descriptionManager.notifySessionInitiate();
+                descriptionManager
             }
         }
 

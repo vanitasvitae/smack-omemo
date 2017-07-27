@@ -31,4 +31,14 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
             return;
         }
     }
+
+    @Override
+    public boolean isOffer() {
+        return true;
+    }
+
+    @Override
+    public boolean isRequest() {
+        return false;
+    }
 }

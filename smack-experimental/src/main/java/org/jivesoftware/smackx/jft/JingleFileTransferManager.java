@@ -123,15 +123,22 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         return AbstractJingleFileTransfer.NAMESPACE;
     }
 
-    @Override
-    public void notifySessionInitiate(JingleSession session) {
-        JingleContent content = session.getSoleContentOrThrow();
-        AbstractJingleFileTransfer transfer = (AbstractJingleFileTransfer) content.getDescription();
-
+    private void notifyTransfer(AbstractJingleFileTransfer transfer) {
         if (transfer.isOffer()) {
             notifyIncomingFileOfferListeners((JingleIncomingFileOffer) transfer);
         } else {
             notifyIncomingFileRequestListeners((JingleIncomingFileRequest) transfer);
         }
+    }
+
+    @Override
+    public void notifySessionInitiate(JingleSession session) {
+        JingleContent content = session.getSoleContentOrThrow();
+        notifyTransfer((AbstractJingleFileTransfer) content.getDescription());
+    }
+
+    @Override
+    public void notifyContentAdd(JingleContent content) {
+        notifyTransfer((AbstractJingleFileTransfer) content.getDescription());
     }
 }
