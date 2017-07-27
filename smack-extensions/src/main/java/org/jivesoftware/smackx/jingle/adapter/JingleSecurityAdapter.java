@@ -17,7 +17,7 @@
 package org.jivesoftware.smackx.jingle.adapter;
 
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
-import org.jivesoftware.smackx.jingle.internal.JingleSecurity;
+import org.jivesoftware.smackx.jingle.components.JingleSecurity;
 
 /**
  * Adapter that creates a Security object from an element.

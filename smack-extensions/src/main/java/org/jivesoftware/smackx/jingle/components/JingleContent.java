@@ -14,14 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.internal;
+package org.jivesoftware.smackx.jingle.components;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.JingleManager;
@@ -33,11 +38,16 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.Callback;
 import org.jivesoftware.smackx.jingle.adapter.JingleSecurityAdapter;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
 
 /**
  * Internal class that holds the state of a content in a modifiable form.
  */
 public class JingleContent {
+
+    private static final Logger LOGGER = Logger.getLogger(JingleContent.class.getName());
 
     private JingleSession parent;
     private JingleContentElement.Creator creator;
@@ -51,8 +61,18 @@ public class JingleContent {
     private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
 
+    public enum STATE {
+        pending_accept,
+        pending_transmission_start,
+        pending_transport_replace,
+        transmission_in_progress,
+        transmission_successful,
+        transmission_failed,
+        transmission_cancelled
+    }
+
     public JingleContent(JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
-        this(null, null, null, StringUtils.randomString(24), null, creator, senders);
+        this(null, null, null, randomName(), null, creator, senders);
     }
 
     public JingleContent(JingleDescription description, JingleTransport transport, JingleSecurity security, String name, String disposition, JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
@@ -181,6 +201,18 @@ public class JingleContent {
         }
     }
 
+    private boolean isSending() {
+        return (getSenders() == JingleContentElement.Senders.initiator && getParent().isInitiator()) ||
+                (getSenders() == JingleContentElement.Senders.responder && getParent().isResponder()) ||
+                getSenders() == JingleContentElement.Senders.both;
+    }
+
+    private boolean isReceiving() {
+        return (getSenders() == JingleContentElement.Senders.initiator && getParent().isResponder()) ||
+                (getSenders() == JingleContentElement.Senders.responder && getParent().isInitiator()) ||
+                getSenders() == JingleContentElement.Senders.both;
+    }
+
     public void onTransportReady() {
         BytestreamSession bytestreamSession = transport.getBytestreamSession();
 
@@ -192,7 +224,50 @@ public class JingleContent {
     }
 
     public void onTransportFailed(Exception e) {
+        //Add current transport to blacklist.
+        getTransportBlacklist().add(transport.getNamespace());
 
+        //Replace transport.
+        if (getParent().isInitiator()) {
+            try {
+                replaceTransport(getTransportBlacklist(), getParent().getJingleManager().getConnection());
+            } catch (SmackException.NotConnectedException | InterruptedException | SmackException.NoResponseException | XMPPException.XMPPErrorException e1) {
+                LOGGER.log(Level.SEVERE, "Could not send transport-replace: " + e, e);
+            }
+        }
+    }
+
+    private void replaceTransport(Set<String> blacklist, XMPPConnection connection)
+            throws SmackException.NotConnectedException, InterruptedException,
+            XMPPException.XMPPErrorException, SmackException.NoResponseException {
+
+        JingleSession session = getParent();
+        JingleManager jingleManager = session.getJingleManager();
+
+        JingleTransportManager rManager = jingleManager.getBestAvailableTransportManager(blacklist);
+        if (rManager == null) {
+            JingleElement failedTransport = JingleElement.createSessionTerminate(session.getPeer(),
+                    session.getSessionId(), JingleReasonElement.Reason.failed_transport);
+            connection.createStanzaCollectorAndSend(failedTransport).nextResultOrThrow();
+            return;
+        }
+
+        JingleTransport<?> rTransport = rManager.createTransport(this);
+
+        JingleElement transportReplace = JingleElement.createTransportReplace(session.getInitiator(), session.getPeer(),
+                session.getSessionId(), getCreator(), getName(), rTransport.getElement());
+
+        connection.createStanzaCollectorAndSend(transportReplace).nextResultOrThrow();
+    }
+
+    public void onContentAccept(XMPPConnection connection, )
+            throws SmackException.NotConnectedException, InterruptedException {
+        //Establish transport
+        if (isReceiving()) {
+            getTransport().establishIncomingBytestreamSession(connection);
+        } else if (isSending()) {
+            getTransport().establishOutgoingBytestreamSession(connection);
+        }
     }
 
     public static String randomName() {

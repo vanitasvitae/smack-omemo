@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.internal;
+package org.jivesoftware.smackx.jingle.components;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +30,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.Role;
+import org.jivesoftware.smackx.jingle.util.Role;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
 import org.jivesoftware.smackx.jingle.callbacks.ContentAddCallback;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
@@ -161,7 +161,6 @@ public class JingleSession {
                 responses.add(JingleElement.createTransportReject(getInitiator(), getPeer(), getSessionId(),
                         content.getCreator(), content.getName(), newTransport));
                 continue;
-
             }
 
             JingleTransportAdapter<?> transportAdapter = JingleManager.getJingleTransportAdapter(
@@ -353,7 +352,7 @@ public class JingleSession {
                         // TODO: Send content-reject
                     }
                 };
-                descriptionManager.notifyContentListeners(content, callback);
+                descriptionManager.notifySessionInitiate();
             }
         }
 

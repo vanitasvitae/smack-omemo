@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.transport;
+package org.jivesoftware.smackx.jingle;
 
-import org.jivesoftware.smackx.jingle.internal.JingleContent;
-import org.jivesoftware.smackx.jingle.internal.JingleTransport;
+import org.jivesoftware.smackx.jingle.components.JingleContent;
+import org.jivesoftware.smackx.jingle.components.JingleTransport;
 
 /**
  * Manager for JingleTransport components.

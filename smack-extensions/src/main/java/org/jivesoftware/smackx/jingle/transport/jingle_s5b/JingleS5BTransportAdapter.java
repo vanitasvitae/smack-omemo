@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
-import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 

@@ -27,9 +27,9 @@ import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamRequest;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.internal.JingleSession;
-import org.jivesoftware.smackx.jingle.internal.JingleTransport;
-import org.jivesoftware.smackx.jingle.internal.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.components.JingleSession;
+import org.jivesoftware.smackx.jingle.components.JingleTransport;
+import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTransportElement;
 
 /**

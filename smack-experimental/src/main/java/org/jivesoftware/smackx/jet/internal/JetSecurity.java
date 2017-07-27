@@ -4,7 +4,7 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.internal.JingleSecurity;
+import org.jivesoftware.smackx.jingle.components.JingleSecurity;
 
 /**
  * Created by vanitas on 22.07.17.

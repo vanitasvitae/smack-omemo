@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle;
+package org.jivesoftware.smackx.jingle.util;
 
 import org.jxmpp.jid.FullJid;
 

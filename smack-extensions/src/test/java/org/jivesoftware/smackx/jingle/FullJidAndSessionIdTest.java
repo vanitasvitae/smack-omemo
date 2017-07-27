@@ -21,6 +21,7 @@ import static junit.framework.TestCase.assertNotSame;
 import static junit.framework.TestCase.assertTrue;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smackx.jingle.util.FullJidAndSessionId;
 
 import org.junit.Test;
 import org.jxmpp.jid.FullJid;

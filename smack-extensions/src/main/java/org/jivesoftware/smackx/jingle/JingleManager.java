@@ -39,11 +39,12 @@ import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedDescriptionException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedSecurityException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedTransportException;
-import org.jivesoftware.smackx.jingle.internal.JingleSession;
+import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
 import org.jivesoftware.smackx.jingle.provider.JingleContentSecurityProvider;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
-import org.jivesoftware.smackx.jingle.transport.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.util.FullJidAndSessionId;
+import org.jivesoftware.smackx.jingle.util.Role;
 
 import org.jxmpp.jid.FullJid;
 

@@ -17,7 +17,7 @@
 package org.jivesoftware.smackx.jingle.adapter;
 
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
-import org.jivesoftware.smackx.jingle.internal.JingleTransport;
+import org.jivesoftware.smackx.jingle.components.JingleTransport;
 
 /**
  * Adapter that creates a Transport element from an element.

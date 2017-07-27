@@ -31,7 +31,7 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
-import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
+import org.jivesoftware.smackx.jft.internal.AbstractJingleFileTransfer;
 import org.jivesoftware.smackx.jft.provider.JingleFileTransferProvider;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
@@ -57,7 +57,7 @@ public final class JingleFileTransferManagerAlt extends Manager {
 
     private JingleFileTransferManagerAlt(XMPPConnection connection) {
         super(connection);
-        ServiceDiscoveryManager.getInstanceFor(connection).addFeature(JingleFileTransfer.NAMESPACE_V5);
+        ServiceDiscoveryManager.getInstanceFor(connection).addFeature(AbstractJingleFileTransfer.NAMESPACE_V5);
         JingleManager jingleManager = JingleManager.getInstanceFor(connection);
         jingleManager.addJingleDescriptionManager(this);
         JingleContentProviderManager.addJingleContentDescriptionProvider(

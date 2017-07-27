@@ -16,7 +16,7 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import org.jivesoftware.smackx.jingle.internal.JingleContent;
+import org.jivesoftware.smackx.jingle.components.JingleContent;
 
 /**
  * User callback that the user can use to control a jingle content.

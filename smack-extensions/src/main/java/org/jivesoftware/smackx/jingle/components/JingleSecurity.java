@@ -14,19 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.internal;
+package org.jivesoftware.smackx.jingle.components;
 
-import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
- * Class that represents a contents description component.
+ * Class that represents a contents security component.
  */
-public abstract class JingleDescription<D extends JingleContentDescriptionElement> {
+public abstract class JingleSecurity<D extends JingleContentSecurityElement> {
 
     private JingleContent parent;
 
     public abstract D getElement();
+
+    public abstract JingleElement handleSecurityInfo(JingleContentSecurityInfoElement element, JingleElement wrapping);
 
     public void setParent(JingleContent parent) {
         if (this.parent != parent) {
@@ -37,6 +40,4 @@ public abstract class JingleDescription<D extends JingleContentDescriptionElemen
     public JingleContent getParent() {
         return parent;
     }
-
-    public abstract void onTransportReady(BytestreamSession bytestreamSession);
 }
