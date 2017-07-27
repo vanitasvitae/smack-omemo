@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
@@ -166,46 +167,50 @@ public class JingleSession {
         }
     }
 
-    private IQ handleTransportReplace(JingleElement request) {
-        List<JingleContentElement> affectedContents = request.getContents();
-        List<JingleElement> responses = new ArrayList<>();
+    private IQ handleTransportReplace(final JingleElement request) {
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                List<JingleContentElement> affectedContents = request.getContents();
+                List<JingleElement> responses = new ArrayList<>();
 
-        for (JingleContentElement affected : affectedContents) {
-            JingleContent content = contents.get(affected.getName());
-            JingleContentTransportElement newTransport = affected.getTransport();
-            Set<String> blacklist = content.getTransportBlacklist();
+                for (JingleContentElement affected : affectedContents) {
+                    JingleContent content = contents.get(affected.getName());
+                    JingleContentTransportElement newTransport = affected.getTransport();
+                    Set<String> blacklist = content.getTransportBlacklist();
 
-            // Proposed transport method might already be on the blacklist (eg. because of previous failures)
-            if (blacklist.contains(newTransport.getNamespace())) {
-                responses.add(JingleElement.createTransportReject(getInitiator(), getPeer(), getSessionId(),
-                        content.getCreator(), content.getName(), newTransport));
-                continue;
+                    // Proposed transport method might already be on the blacklist (eg. because of previous failures)
+                    if (blacklist.contains(newTransport.getNamespace())) {
+                        responses.add(JingleElement.createTransportReject(getInitiator(), getPeer(), getSessionId(),
+                                content.getCreator(), content.getName(), newTransport));
+                        continue;
+                    }
+
+                    JingleTransportAdapter<?> transportAdapter = JingleManager.getJingleTransportAdapter(
+                            newTransport.getNamespace());
+                    // This might be an unknown transport.
+                    if (transportAdapter == null) {
+                        responses.add(JingleElement.createTransportReject(getInitiator(), getPeer(), getSessionId(),
+                                content.getCreator(), content.getName(), newTransport));
+                        continue;
+                    }
+
+                    //Otherwise, when all went well so far, accept the transport-replace
+                    content.setTransport(JingleManager.getJingleTransportAdapter(newTransport.getNamespace())
+                            .transportFromElement(newTransport));
+                    responses.add(JingleElement.createTransportAccept(getInitiator(), getPeer(), getSessionId(),
+                            content.getCreator(), content.getName(), newTransport));
+                }
+
+                for (JingleElement response : responses) {
+                    try {
+                        jingleManager.getConnection().createStanzaCollectorAndSend(response).nextResultOrThrow();
+                    } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException | SmackException.NotConnectedException e) {
+                        LOGGER.log(Level.SEVERE, "Could not send response to transport-replace: " + e, e);
+                    }
+                }
             }
-
-            JingleTransportAdapter<?> transportAdapter = JingleManager.getJingleTransportAdapter(
-                    newTransport.getNamespace());
-            // This might be an unknown transport.
-            if (transportAdapter == null) {
-                responses.add(JingleElement.createTransportReject(getInitiator(), getPeer(), getSessionId(),
-                        content.getCreator(), content.getName(), newTransport));
-                continue;
-            }
-
-            //Otherwise, when all went well so far, accept the transport-replace
-            content.setTransport(JingleManager.getJingleTransportAdapter(newTransport.getNamespace())
-                    .transportFromElement(newTransport));
-            responses.add(JingleElement.createTransportAccept(getInitiator(), getPeer(), getSessionId(),
-                    content.getCreator(), content.getName(), newTransport));
-        }
-
-        //TODO: Put in Thread?
-        for (JingleElement response : responses) {
-            try {
-                jingleManager.getConnection().createStanzaCollectorAndSend(response).nextResultOrThrow();
-            } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException | SmackException.NotConnectedException e) {
-                LOGGER.log(Level.SEVERE, "Could not send response to transport-replace: " + e, e);
-            }
-        }
+        });
 
         return IQ.createResultIQ(request);
     }
@@ -217,32 +222,10 @@ public class JingleSession {
             throw new AssertionError("Reason MUST not be null! (I guess)...");
         }
 
-        switch (reason.asEnum()) {
-            case alternative_session:
-            case busy:
-            case cancel:
-            case connectivity_error:
-            case decline:
-                // :(
-            case expired:
-            case failed_application:
-            case failed_transport:
-            case general_error:
-                // well... shit.
-            case gone:
-            case incompatible_parameters:
-            case media_error:
-            case security_error:
-            case success:
-                // Weeeeeh
-                break;
-            case timeout:
-            case unsupported_applications:
-            case unsupported_transports:
-                break;
-            default:
-                throw new AssertionError("Unknown reason enum: " + reason.asEnum().toString());
-        }
+        //TODO: Inform client.
+
+        jingleManager.removeSession(this);
+
         return IQ.createResultIQ(request);
     }
 
@@ -270,7 +253,6 @@ public class JingleSession {
         HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
 
         for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
-
             JingleTransport<?> transport = entry.getValue().getTransport();
             JingleContentTransportInfoElement info = entry.getKey().getTransport().getInfo();
             transport.handleTransportInfo(info, request);
@@ -328,7 +310,22 @@ public class JingleSession {
     }
 
     private IQ handleDescriptionInfo(JingleElement request) {
-        return null;
+        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
+        List<JingleElement> responses = new ArrayList<>();
+
+        for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
+            responses.add(entry.getValue().getDescription().handleDescriptionInfo(entry.getKey().getDescription().getDescriptionInfo()));
+        }
+
+        for (JingleElement response : responses) {
+            try {
+                getJingleManager().getConnection().createStanzaCollectorAndSend(response).nextResultOrThrow();
+            } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | InterruptedException e) {
+                LOGGER.log(Level.SEVERE, "Could not send response to description-info: " + e, e);
+            }
+        }
+
+        return IQ.createResultIQ(request);
     }
 
     private IQ handleContentRemove(JingleElement request) {

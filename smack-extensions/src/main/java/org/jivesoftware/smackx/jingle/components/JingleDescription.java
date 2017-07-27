@@ -18,6 +18,8 @@ package org.jivesoftware.smackx.jingle.components;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
  * Class that represents a contents description component.
@@ -33,6 +35,8 @@ public abstract class JingleDescription<D extends JingleContentDescriptionElemen
             this.parent = parent;
         }
     }
+
+    public abstract JingleElement handleDescriptionInfo(JingleContentDescriptionInfoElement info);
 
     public JingleContent getParent() {
         return parent;

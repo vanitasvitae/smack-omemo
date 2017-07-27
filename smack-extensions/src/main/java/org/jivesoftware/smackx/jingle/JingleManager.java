@@ -253,4 +253,8 @@ public final class JingleManager extends Manager {
         jingleSessions.put(new FullJidAndSessionId(peer, session.getSessionId()), session);
         return session;
     }
+
+    public void removeSession(JingleSession session) {
+        jingleSessions.remove(new FullJidAndSessionId(session.getPeer(), session.getSessionId()));
+    }
 }

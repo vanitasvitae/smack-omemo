@@ -57,6 +57,10 @@ public abstract class JingleContentDescriptionElement implements ExtensionElemen
         return payloads;
     }
 
+    public JingleContentDescriptionInfoElement getDescriptionInfo() {
+        return null; //TODO
+    }
+
     protected void addExtraAttributes(XmlStringBuilder xml) {
 
     }
