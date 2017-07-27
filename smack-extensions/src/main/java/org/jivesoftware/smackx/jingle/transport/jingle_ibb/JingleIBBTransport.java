@@ -72,9 +72,7 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void establishIncomingBytestreamSession(final XMPPConnection connection, final JingleTransportCallback callback) {
-        final JingleSession session = getParent().getParent();
-
+    public void establishIncomingBytestreamSession(final XMPPConnection connection, final JingleTransportCallback callback, final JingleSession session) {
         final InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
 
         InBandBytestreamListener bytestreamListener = new InBandBytestreamListener() {
@@ -104,8 +102,7 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback) {
-        JingleSession session = getParent().getParent();
+    public void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, final JingleSession session) {
         InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
         inBandBytestreamManager.setDefaultBlockSize(blockSize);
         try {

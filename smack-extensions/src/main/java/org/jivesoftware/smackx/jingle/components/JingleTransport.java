@@ -76,10 +76,10 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
 
     public abstract String getNamespace();
 
-    public abstract void establishIncomingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback)
+    public abstract void establishIncomingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
             throws SmackException.NotConnectedException, InterruptedException;
 
-    public abstract void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback)
+    public abstract void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
             throws SmackException.NotConnectedException, InterruptedException;
 
     public void setPeersProposal(JingleTransport<?> peersProposal) {

@@ -128,14 +128,14 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @Override
-    public void establishIncomingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback)
+    public void establishIncomingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
             throws SmackException.NotConnectedException, InterruptedException {
         this.callback = callback;
         establishBytestreamSession(connection);
     }
 
     @Override
-    public void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback)
+    public void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
             throws SmackException.NotConnectedException, InterruptedException {
         this.callback = callback;
         establishBytestreamSession(connection);

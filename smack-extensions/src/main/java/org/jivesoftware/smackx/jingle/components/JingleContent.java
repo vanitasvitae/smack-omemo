@@ -266,9 +266,9 @@ public class JingleContent implements JingleTransportCallback {
             throws SmackException.NotConnectedException, InterruptedException {
         //Establish transport
         if (isReceiving()) {
-            getTransport().establishIncomingBytestreamSession(connection, this);
+            getTransport().establishIncomingBytestreamSession(connection, this, getParent());
         } else if (isSending()) {
-            getTransport().establishOutgoingBytestreamSession(connection, this);
+            getTransport().establishOutgoingBytestreamSession(connection, this, getParent());
         }
     }
 
