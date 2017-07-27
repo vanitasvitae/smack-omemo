@@ -28,6 +28,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
@@ -325,9 +326,9 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     private void handleCandidateActivate(JingleS5BTransportInfoElement info) {
-        //Socks5BytestreamSession bs = new Socks5BytestreamSession(ourChoice.socket,
-        //        ourChoice.candidate.getJid().asBareJid().equals(jingleSession.getRemote().asBareJid()));
-        //callback.onSessionInitiated(bs);
+        this.bytestreamSession = new Socks5BytestreamSession(getSelectedCandidate().getSocket(),
+                getSelectedCandidate().getStreamHost().getJID().asBareJid().equals(getParent().getParent().getPeer().asBareJid()));
+        getParent().onTransportReady();
     }
 
     private void handleCandidateError(JingleS5BTransportInfoElement info) {
@@ -352,4 +353,14 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
      * Kinda depressing, isn't it?
      */
     private final static JingleS5BTransportCandidate CANDIDATE_FAILURE = new JingleS5BTransportCandidate(null, null, -1, null);
+
+    @Override
+    protected boolean isNonFatalException(Exception exception) {
+        return false;
+    }
+
+    @Override
+    protected void handleStanza(Stanza stanza) throws SmackException.NotConnectedException, InterruptedException {
+
+    }
 }

@@ -29,4 +29,11 @@ public interface JingleTransportManager extends Comparable<JingleTransportManage
     JingleTransport<?> createTransport(JingleContent content);
 
     JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport);
+
+    /**
+     * Return a (usually) positive integer, which is used to define a strict order over the set of available transport
+     * managers.
+     * @return priority.
+     */
+    int getPriority();
 }

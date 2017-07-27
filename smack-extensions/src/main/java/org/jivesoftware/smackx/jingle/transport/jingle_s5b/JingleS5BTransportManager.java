@@ -106,6 +106,11 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         return new JingleS5BTransport(content, transport, candidates);
     }
 
+    @Override
+    public int getPriority() {
+        return 10000;
+    }
+
     private List<JingleTransportCandidate<?>> collectCandidates() {
         List<JingleTransportCandidate<?>> candidates = new ArrayList<>();
 
@@ -236,7 +241,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
 
     @Override
     public int compareTo(JingleTransportManager manager) {
-        return 1; // We are #1!
+        return Integer.compare(getPriority(), manager.getPriority());
     }
 
     private ConnectionListener connectionListener = new ConnectionListener() {

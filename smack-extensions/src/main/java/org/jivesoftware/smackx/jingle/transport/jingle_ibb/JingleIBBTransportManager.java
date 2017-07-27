@@ -57,7 +57,12 @@ public class JingleIBBTransportManager extends Manager implements JingleTranspor
     }
 
     @Override
+    public int getPriority() {
+        return -1;
+    }
+
+    @Override
     public int compareTo(JingleTransportManager manager) {
-        return -1; // We are literally the worst.
+        return Integer.compare(getPriority(), manager.getPriority());
     }
 }
