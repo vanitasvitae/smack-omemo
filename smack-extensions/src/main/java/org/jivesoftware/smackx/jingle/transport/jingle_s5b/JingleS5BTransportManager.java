@@ -36,19 +36,19 @@ import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.components.JingleTransport;
 import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportInfoElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.provider.JingleS5BTransportProvider;
-import org.jivesoftware.smackx.jingle.JingleTransportManager;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 
 import org.jxmpp.jid.Jid;
 
@@ -240,8 +240,8 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     }
 
     @Override
-    public int compareTo(JingleTransportManager manager) {
-        return Integer.compare(getPriority(), manager.getPriority());
+    public int compareTo(JingleTransportManager other) {
+        return getPriority() > other.getPriority() ? 1 : -1;
     }
 
     private ConnectionListener connectionListener = new ConnectionListener() {

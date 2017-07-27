@@ -33,7 +33,7 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
 
     @Override
     public void onTransportReady(BytestreamSession bytestreamSession) {
-        
+
     }
 
     @Override

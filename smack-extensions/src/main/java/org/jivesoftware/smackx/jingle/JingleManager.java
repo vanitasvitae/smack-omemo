@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
@@ -33,13 +35,13 @@ import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleSecurityAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
+import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedDescriptionException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedSecurityException;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedTransportException;
-import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
 import org.jivesoftware.smackx.jingle.provider.JingleContentSecurityProvider;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
@@ -51,7 +53,8 @@ import org.jxmpp.jid.FullJid;
 /**
  * Manager for Jingle (XEP-0166).
  */
-public class JingleManager extends Manager {
+public final class JingleManager extends Manager {
+    private static final Logger LOGGER = Logger.getLogger(JingleManager.class.getName());
     private static final WeakHashMap<XMPPConnection, JingleManager> INSTANCES = new WeakHashMap<>();
 
     private static final WeakHashMap<String, JingleContentDescriptionProvider<?>> descriptionProviders = new WeakHashMap<>();
@@ -101,7 +104,7 @@ public class JingleManager extends Manager {
                                     return JingleElement.createSessionTerminate(jingle.getFrom().asFullJidOrThrow(),
                                             jingle.getSid(), JingleReasonElement.Reason.unsupported_transports);
                                 } catch (UnsupportedSecurityException e) {
-                                    e.printStackTrace();
+                                    LOGGER.log(Level.SEVERE, "Unsupported Security: " + e, e);
                                     return null;
                                 }
 

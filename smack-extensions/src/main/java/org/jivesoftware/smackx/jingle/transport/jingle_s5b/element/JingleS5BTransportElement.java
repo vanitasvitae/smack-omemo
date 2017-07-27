@@ -22,8 +22,8 @@ import java.util.List;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidateElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.JingleS5BTransport;
 

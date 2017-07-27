@@ -16,6 +16,6 @@
  */
 
 /**
- * Tests for XEP-0234 - Jingle File Transfer.
+ * Tests for Jingle.
  */
-package org.jivesoftware.smackx.jft;
+package org.jivesoftware.smackx.jingle;

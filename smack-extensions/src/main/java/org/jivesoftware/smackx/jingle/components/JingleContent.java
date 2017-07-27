@@ -29,19 +29,19 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.jingle.Callback;
 import org.jivesoftware.smackx.jingle.JingleManager;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
+import org.jivesoftware.smackx.jingle.adapter.JingleSecurityAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
 import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
-import org.jivesoftware.smackx.jingle.Callback;
-import org.jivesoftware.smackx.jingle.adapter.JingleSecurityAdapter;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
-import org.jivesoftware.smackx.jingle.JingleTransportManager;
 
 /**
  * Internal class that holds the state of a content in a modifiable form.

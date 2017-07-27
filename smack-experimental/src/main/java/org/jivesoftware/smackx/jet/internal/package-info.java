@@ -16,6 +16,7 @@
  */
 
 /**
- * Tests for XEP-0234 - Jingle File Transfer.
+ * Smack's API for XEP-XXXX: Jingle Encrypted Transfers</a>.
+ * Internal classes.
  */
-package org.jivesoftware.smackx.jft;
+package org.jivesoftware.smackx.jet.internal;

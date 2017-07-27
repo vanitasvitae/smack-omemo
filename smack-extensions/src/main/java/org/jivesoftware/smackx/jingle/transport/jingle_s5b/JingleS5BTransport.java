@@ -35,13 +35,13 @@ import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.exception.FailedTransportException;
 import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.components.JingleTransport;
 import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.exception.FailedTransportException;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportInfoElement;
@@ -166,7 +166,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             try {
                 return ((JingleS5BTransportCandidate) c).connect(_timeout);
             } catch (IOException | TimeoutException | InterruptedException | SmackException | XMPPException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Exception while connecting to candidate: " + e, e);
             }
         }
 

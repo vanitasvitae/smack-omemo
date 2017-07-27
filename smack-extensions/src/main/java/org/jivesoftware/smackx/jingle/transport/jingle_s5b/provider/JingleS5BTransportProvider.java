@@ -30,11 +30,12 @@ import static org.xmlpull.v1.XmlPullParser.START_TAG;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentTransportProvider;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.JingleS5BTransport;
-import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
+import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportInfoElement;
 
 import org.xmlpull.v1.XmlPullParser;
+
 
 /**
  * Provider for JingleSocks5BytestreamTransport elements.

@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright 2017 Paul Schaub
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.jingle.transport.jingle_ibb;
 
 import java.util.WeakHashMap;
@@ -15,7 +31,7 @@ import org.jivesoftware.smackx.jingle.transport.jingle_ibb.provider.JingleIBBTra
 /**
  * Created by vanitas on 21.07.17.
  */
-public class JingleIBBTransportManager extends Manager implements JingleTransportManager {
+public final class JingleIBBTransportManager extends Manager implements JingleTransportManager {
 
     public static final short MAX_BLOCKSIZE = 8192;
 
@@ -62,7 +78,7 @@ public class JingleIBBTransportManager extends Manager implements JingleTranspor
     }
 
     @Override
-    public int compareTo(JingleTransportManager manager) {
-        return Integer.compare(getPriority(), manager.getPriority());
+    public int compareTo(JingleTransportManager other) {
+        return getPriority() > other.getPriority() ? 1 : -1;
     }
 }

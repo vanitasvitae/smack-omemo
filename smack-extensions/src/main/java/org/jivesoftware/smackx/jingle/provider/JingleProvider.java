@@ -20,14 +20,12 @@ import java.util.logging.Logger;
 
 import org.jivesoftware.smack.provider.IQProvider;
 import org.jivesoftware.smack.util.ParserUtils;
-
+import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
-import org.jivesoftware.smackx.jingle.element.JingleReasonElement.Reason;
 
 import org.jxmpp.jid.FullJid;
 import org.xmlpull.v1.XmlPullParser;
@@ -75,7 +73,7 @@ public class JingleProvider extends IQProvider<JingleElement> {
                         String sid = parser.nextText();
                         reason = new JingleReasonElement.AlternativeSession(sid);
                     } else {
-                        reason = new JingleReasonElement(Reason.fromString(reasonString));
+                        reason = new JingleReasonElement(JingleReasonElement.Reason.fromString(reasonString));
                     }
                     builder.setReason(reason);
                     break;

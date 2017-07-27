@@ -20,8 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 
 /**
  * File element.

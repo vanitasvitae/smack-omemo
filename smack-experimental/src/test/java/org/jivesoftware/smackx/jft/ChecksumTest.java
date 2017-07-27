@@ -22,11 +22,11 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jft.element.ChecksumElement;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jft.element.Range;
 import org.jivesoftware.smackx.jft.provider.ChecksumProvider;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 
 import org.junit.Test;
 

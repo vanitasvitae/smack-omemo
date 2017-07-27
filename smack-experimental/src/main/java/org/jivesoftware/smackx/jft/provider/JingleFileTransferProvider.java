@@ -24,12 +24,12 @@ import java.util.ArrayList;
 import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
+import org.jivesoftware.smackx.jft.element.Range;
 import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
-import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
-import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
-import org.jivesoftware.smackx.jft.element.Range;
 
 import org.jxmpp.util.XmppDateTime;
 import org.xmlpull.v1.XmlPullParser;

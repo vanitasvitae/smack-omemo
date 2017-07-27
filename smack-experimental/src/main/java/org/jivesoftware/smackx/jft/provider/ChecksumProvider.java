@@ -23,12 +23,13 @@ import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jft.element.ChecksumElement;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jft.element.Range;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 
 import org.xmlpull.v1.XmlPullParser;
+
 
 /**
  * Provider for the Checksum element.

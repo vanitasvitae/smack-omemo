@@ -294,7 +294,7 @@ public class JingleElementTest extends SmackTestSuite {
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='transport-accept' " +
-                        "initiator='" + romeo + "' " +
+                        "initiator='" + juliet + "' " +
                         "sid='transAcc'>" +
                         "<content creator='initiator' name='cname'>" +
                         "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
@@ -302,7 +302,7 @@ public class JingleElementTest extends SmackTestSuite {
                         "sid='transid'/>" +
                         "</content>" +
                         "</jingle>";
-        String xml = getIQXML(romeo, juliet, transportAccept.getStanzaId(), jingleXML);
+        String xml = getIQXML(juliet, romeo, transportAccept.getStanzaId(), jingleXML);
         assertXMLEqual(xml, transportAccept.toXML().toString());
         assertEquals(JingleAction.transport_accept, transportAccept.getAction());
         assertEquals("transAcc", transportAccept.getSid());
@@ -319,7 +319,7 @@ public class JingleElementTest extends SmackTestSuite {
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='transport-replace' " +
-                        "initiator='" + romeo + "' " +
+                        "initiator='" + juliet + "' " +
                         "sid='transAcc'>" +
                         "<content creator='initiator' name='cname'>" +
                         "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
@@ -327,7 +327,7 @@ public class JingleElementTest extends SmackTestSuite {
                         "sid='transid'/>" +
                         "</content>" +
                         "</jingle>";
-        String xml = getIQXML(romeo, juliet, transportReplace.getStanzaId(), jingleXML);
+        String xml = getIQXML(juliet, romeo, transportReplace.getStanzaId(), jingleXML);
         assertXMLEqual(xml, transportReplace.toXML().toString());
         assertEquals(JingleAction.transport_replace, transportReplace.getAction());
         assertEquals("transAcc", transportReplace.getSid());
@@ -339,7 +339,6 @@ public class JingleElementTest extends SmackTestSuite {
         IQ error = JingleElement.createJingleErrorMalformedRequest(j);
         String xml =
                 "<iq " +
-                        "to='" + romeo + "' " +
                         "from='" + romeo + "' " +
                         "id='" + j.getStanzaId() + "' " +
                         "type='error'>" +
@@ -356,7 +355,6 @@ public class JingleElementTest extends SmackTestSuite {
         IQ error = JingleElement.createJingleErrorTieBreak(j);
         String xml =
                 "<iq " +
-                        "to='" + romeo + "' " +
                         "from='" + romeo + "' " +
                         "id='" + j.getStanzaId() + "' " +
                         "type='error'>" +
@@ -374,7 +372,6 @@ public class JingleElementTest extends SmackTestSuite {
         IQ error = JingleElement.createJingleErrorUnknownSession(j);
         String xml =
                 "<iq " +
-                        "to='" + romeo + "' " +
                         "from='" + romeo + "' " +
                         "id='" + j.getStanzaId() + "' " +
                         "type='error'>" +
@@ -392,7 +389,6 @@ public class JingleElementTest extends SmackTestSuite {
         IQ error = JingleElement.createJingleErrorUnknownInitiator(j);
         String xml =
                 "<iq " +
-                        "to='" + romeo + "' " +
                         "from='" + romeo + "' " +
                         "id='" + j.getStanzaId() + "' " +
                         "type='error'>" +
@@ -409,7 +405,6 @@ public class JingleElementTest extends SmackTestSuite {
         IQ error = JingleElement.createJingleErrorOutOfOrder(j);
         String xml =
                 "<iq " +
-                        "to='" + romeo + "' " +
                         "from='" + romeo + "' " +
                         "id='" + j.getStanzaId() + "' " +
                         "type='error'>" +
@@ -428,7 +423,6 @@ public class JingleElementTest extends SmackTestSuite {
         IQ error = JingleElement.createJingleErrorUnsupportedInfo(j);
         String xml =
                 "<iq " +
-                        "to='" + romeo + "' " +
                         "from='" + romeo + "' " +
                         "id='" + j.getStanzaId() + "' " +
                         "type='error'>" +
@@ -441,7 +435,7 @@ public class JingleElementTest extends SmackTestSuite {
     }
 
     public static String getIQXML(FullJid from, FullJid to, String stanzaId, String jingleXML) {
-        return "<iq from='" + from + "' id='" + stanzaId + "' to='" + to + "' type='set'>" +
+        return "<iq id='" + stanzaId + "' to='" + to + "' type='set'>" +
                 jingleXML +
                 "</iq>";
     }
