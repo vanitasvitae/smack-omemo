@@ -32,6 +32,7 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
+import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
@@ -45,7 +46,7 @@ import org.jivesoftware.smackx.jingle.JingleTransportManager;
 /**
  * Internal class that holds the state of a content in a modifiable form.
  */
-public class JingleContent {
+public class JingleContent implements JingleTransportCallback {
 
     private static final Logger LOGGER = Logger.getLogger(JingleContent.class.getName());
 
@@ -213,8 +214,8 @@ public class JingleContent {
                 getSenders() == JingleContentElement.Senders.both;
     }
 
-    public void onTransportReady() {
-        BytestreamSession bytestreamSession = transport.getBytestreamSession();
+    @Override
+    public void onTransportReady(BytestreamSession bytestreamSession) {
 
         if (bytestreamSession == null) {
             throw new AssertionError("bytestreamSession MUST NOT be null at this point.");
@@ -223,6 +224,7 @@ public class JingleContent {
         description.onTransportReady(bytestreamSession);
     }
 
+    @Override
     public void onTransportFailed(Exception e) {
         //Add current transport to blacklist.
         getTransportBlacklist().add(transport.getNamespace());
@@ -264,9 +266,9 @@ public class JingleContent {
             throws SmackException.NotConnectedException, InterruptedException {
         //Establish transport
         if (isReceiving()) {
-            getTransport().establishIncomingBytestreamSession(connection);
+            getTransport().establishIncomingBytestreamSession(connection, this);
         } else if (isSending()) {
-            getTransport().establishOutgoingBytestreamSession(connection);
+            getTransport().establishOutgoingBytestreamSession(connection, this);
         }
     }
 

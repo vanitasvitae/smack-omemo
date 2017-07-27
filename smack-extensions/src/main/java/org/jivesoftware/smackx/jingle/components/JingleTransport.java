@@ -23,6 +23,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackFuture;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
@@ -75,10 +76,10 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
 
     public abstract String getNamespace();
 
-    public abstract void establishIncomingBytestreamSession(XMPPConnection connection)
+    public abstract void establishIncomingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback)
             throws SmackException.NotConnectedException, InterruptedException;
 
-    public abstract void establishOutgoingBytestreamSession(XMPPConnection connection)
+    public abstract void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback)
             throws SmackException.NotConnectedException, InterruptedException;
 
     public void setPeersProposal(JingleTransport<?> peersProposal) {

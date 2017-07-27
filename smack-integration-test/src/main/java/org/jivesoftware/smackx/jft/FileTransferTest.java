@@ -117,7 +117,7 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
 
     }
     */
-    
+
     private File prepareNewTestFile(String name) {
         File testFile = new File(tempDir, name);
         try {

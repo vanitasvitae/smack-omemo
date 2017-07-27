@@ -25,11 +25,12 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamListener;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamManager;
 import org.jivesoftware.smackx.bytestreams.ibb.InBandBytestreamRequest;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
-import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.components.JingleTransport;
 import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTransportElement;
 
 /**
@@ -71,7 +72,7 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void establishIncomingBytestreamSession(final XMPPConnection connection) {
+    public void establishIncomingBytestreamSession(final XMPPConnection connection, final JingleTransportCallback callback) {
         final JingleSession session = getParent().getParent();
 
         final InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
@@ -81,20 +82,19 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
             public void incomingBytestreamRequest(InBandBytestreamRequest request) {
                 if (request.getFrom().asFullJidIfPossible().equals(session.getPeer())
                         && request.getSessionID().equals(getSid())) {
-                    BytestreamSession bytestreamSession;
 
                     inBandBytestreamManager.removeIncomingBytestreamListener(this);
 
+                    BytestreamSession bytestreamSession;
                     try {
                         bytestreamSession = request.accept();
                     } catch (InterruptedException | SmackException e) {
-                        getParent().onTransportFailed(e);
+                        callback.onTransportFailed(e);
                         return;
                     }
 
                     JingleIBBTransport.this.bytestreamSession = bytestreamSession;
-
-                    getParent().onTransportReady();
+                    callback.onTransportReady(JingleIBBTransport.this.bytestreamSession);
                 }
             }
         };
@@ -104,15 +104,15 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void establishOutgoingBytestreamSession(XMPPConnection connection) {
+    public void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback) {
         JingleSession session = getParent().getParent();
         InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
         inBandBytestreamManager.setDefaultBlockSize(blockSize);
         try {
             JingleIBBTransport.this.bytestreamSession = inBandBytestreamManager.establishSession(session.getPeer(), getSid());
-            getParent().onTransportReady();
+            callback.onTransportReady(this.bytestreamSession);
         } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException | SmackException.NotConnectedException e) {
-            getParent().onTransportFailed(e);
+            callback.onTransportFailed(e);
         }
     }
 
