@@ -16,9 +16,12 @@
  */
 package org.jivesoftware.smackx.jft.controller;
 
+import java.io.File;
+import java.util.concurrent.Future;
+
 /**
  * Created by vanitas on 27.07.17.
  */
 public interface IncomingFileOfferController extends JingleFileTransferController {
-
+    Future<Void> accept(File target);
 }

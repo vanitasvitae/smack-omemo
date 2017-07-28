@@ -16,20 +16,35 @@
  */
 package org.jivesoftware.smackx.jft;
 
+import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertArrayEquals;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
 
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
+import org.jivesoftware.smackx.jft.controller.IncomingFileOfferController;
+import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
+import org.jivesoftware.smackx.jft.listener.IncomingFileOfferListener;
+import org.jivesoftware.smackx.jft.listener.ProgressListener;
+import org.jivesoftware.smackx.jingle.transport.jingle_ibb.JingleIBBTransportManager;
 
 import org.igniterealtime.smack.inttest.AbstractSmackIntegrationTest;
+import org.igniterealtime.smack.inttest.SmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
+import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 import org.junit.AfterClass;
+import org.jxmpp.jid.FullJid;
 
 /**
  * Created by vanitas on 29.06.17.
  */
-public class FileTransferTest extends AbstractSmackIntegrationTest {
+public class JingleFileTransferTest extends AbstractSmackIntegrationTest {
 
     private static final File tempDir;
 
@@ -43,13 +58,16 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
         }
     }
 
-    public FileTransferTest(SmackIntegrationTestEnvironment environment) {
+    public JingleFileTransferTest(SmackIntegrationTestEnvironment environment) {
         super(environment);
     }
 
-    /*
     @SmackIntegrationTest
-    public void basicFileTransferTest() {
+    public void basicFileTransferTest() throws Exception {
+        JingleIBBTransportManager.getInstanceFor(conOne);
+        JingleIBBTransportManager.getInstanceFor(conTwo);
+
+
         final SimpleResultSyncPoint resultSyncPoint1 = new SimpleResultSyncPoint();
         final SimpleResultSyncPoint resultSyncPoint2 = new SimpleResultSyncPoint();
 
@@ -59,45 +77,55 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
         File source = prepareNewTestFile("source");
         final File target = new File(tempDir, "target");
 
-        JingleFileTransferManagerAlt aftm = JingleFileTransferManagerAlt.getInstanceFor(conOne);
-        JingleFileTransferManagerAlt bftm = JingleFileTransferManagerAlt.getInstanceFor(conTwo);
+        JingleFileTransferManager aftm = JingleFileTransferManager.getInstanceFor(conOne);
+        JingleFileTransferManager bftm = JingleFileTransferManager.getInstanceFor(conTwo);
 
-        bftm.addJingleFileTransferOfferListener(new JingleFileTransferOfferListener() {
+        final ArrayList<Future<Void>> receiveFuture = new ArrayList<>(); //Uglaay
+
+        bftm.addIncomingFileOfferListener(new IncomingFileOfferListener() {
             @Override
-            public void onFileOffer(JingleElement request, IncomingFileOfferCallback callback) {
-                FileTransferHandler handler2 = callback.acceptIncomingFileOffer(request, target);
-                handler2.addEndedListener(new FileTransferHandler.EndedListener() {
+            public void onIncomingFileOffer(IncomingFileOfferController offer) {
+                LOGGER.log(Level.INFO, "INCOMING FILE TRANSFER!");
+                offer.addProgressListener(new ProgressListener() {
                     @Override
-                    public void onEnded(JingleReasonElement.Reason reason) {
+                    public void started() {
+
+                    }
+
+                    @Override
+                    public void progress(float percent) {
+
+                    }
+
+                    @Override
+                    public void finished() {
                         resultSyncPoint2.signal();
                     }
                 });
+                receiveFuture.add(offer.accept(target));
             }
         });
 
-        try {
-            FileTransferHandler handler = aftm.sendFile(bob, source);
-            handler.addEndedListener(new FileTransferHandler.EndedListener() {
-                @Override
-                public void onEnded(JingleReasonElement.Reason reason) {
-                    resultSyncPoint1.signal();
-                }
-            });
-        } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
-            fail();
-        }
+        OutgoingFileOfferController sending = aftm.sendFile(source, bob);
+        sending.addProgressListener(new ProgressListener() {
+            @Override
+            public void started() {
 
-        try {
-            resultSyncPoint1.waitForResult(10 * 1000);
-        } catch (Exception e) {
-            fail();
-        }
+            }
 
-        try {
-            resultSyncPoint2.waitForResult(10 * 1000);
-        } catch (Exception e) {
-            fail();
-        }
+            @Override
+            public void progress(float percent) {
+
+            }
+
+            @Override
+            public void finished() {
+                resultSyncPoint1.signal();
+            }
+        });
+
+        resultSyncPoint1.waitForResult(60 * 1000);
+        resultSyncPoint2.waitForResult(60 * 1000);
 
         byte[] sBytes = new byte[(int) source.length()];
         byte[] tBytes = new byte[(int) target.length()];
@@ -116,7 +144,6 @@ public class FileTransferTest extends AbstractSmackIntegrationTest {
         LOGGER.log(Level.INFO, "SUCCESSFULLY SENT AND RECEIVED");
 
     }
-    */
 
     private File prepareNewTestFile(String name) {
         File testFile = new File(tempDir, name);

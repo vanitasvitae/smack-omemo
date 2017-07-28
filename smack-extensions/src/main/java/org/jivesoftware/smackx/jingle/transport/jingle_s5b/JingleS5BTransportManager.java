@@ -68,6 +68,10 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     private static boolean useLocalCandidates = true;
     private static boolean useExternalCandidates = true;
 
+    static {
+        JingleManager.addJingleTransportAdapter(new JingleS5BTransportAdapter());
+    }
+
     private JingleS5BTransportManager(XMPPConnection connection) {
         super(connection);
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(getNamespace());

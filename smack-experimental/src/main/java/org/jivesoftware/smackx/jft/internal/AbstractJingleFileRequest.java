@@ -16,9 +16,15 @@
  */
 package org.jivesoftware.smackx.jft.internal;
 
+import org.jivesoftware.smackx.jft.internal.file.AbstractJingleFileTransferFile;
+
 /**
  * Created by vanitas on 22.07.17.
  */
-public abstract class AbstractJingleFileRequest extends JingleFileTransfer {
+public abstract class AbstractJingleFileRequest<D extends AbstractJingleFileTransferFile> extends JingleFileTransfer {
+
+    public AbstractJingleFileRequest(D fileTransferFile) {
+        super(fileTransferFile);
+    }
 
 }

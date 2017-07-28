@@ -95,7 +95,7 @@ public class JingleContent implements JingleTransportCallback {
         if (descriptionElement != null) {
             JingleDescriptionAdapter<?> descriptionAdapter = JingleManager.getJingleDescriptionAdapter(content.getDescription().getNamespace());
             if (descriptionAdapter != null) {
-                description = descriptionAdapter.descriptionFromElement(descriptionElement);
+                description = descriptionAdapter.descriptionFromElement(content.getCreator(), content.getSenders(), content.getName(), content.getDisposition(), descriptionElement);
             } else {
                 throw new AssertionError("DescriptionProvider for " + descriptionElement.getNamespace() +
                         " seems to be registered, but no corresponding JingleDescriptionAdapter was found.");
@@ -108,7 +108,7 @@ public class JingleContent implements JingleTransportCallback {
             if (transportAdapter != null) {
                 transport = transportAdapter.transportFromElement(transportElement);
             } else {
-                throw new AssertionError("DescriptionProvider for " + transportElement.getNamespace() +
+                throw new AssertionError("TransportProvider for " + transportElement.getNamespace() +
                         " seems to be registered, but no corresponding JingleTransportAdapter was found.");
             }
         }
@@ -132,15 +132,19 @@ public class JingleContent implements JingleTransportCallback {
     }
 
     public JingleContentElement getElement() {
-        return JingleContentElement.getBuilder()
+        JingleContentElement.Builder builder = JingleContentElement.getBuilder()
                 .setName(name)
                 .setCreator(creator)
                 .setSenders(senders)
                 .setDescription(description.getElement())
                 .setTransport(transport.getElement())
-                .setSecurity(security.getElement())
-                .setDisposition(disposition)
-                .build();
+                .setDisposition(disposition);
+
+        if (security != null) {
+            builder.setSecurity(security.getElement());
+        }
+
+        return builder.build();
     }
 
     public Set<String> getTransportBlacklist() {

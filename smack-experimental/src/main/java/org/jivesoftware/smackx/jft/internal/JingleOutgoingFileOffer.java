@@ -21,6 +21,8 @@ import java.io.File;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jft.internal.file.LocalFile;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
  * Created by vanitas on 26.07.17.
@@ -29,6 +31,11 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
 
     public JingleOutgoingFileOffer(File file) {
         super(new LocalFile(file));
+    }
+
+    @Override
+    public JingleElement handleDescriptionInfo(JingleContentDescriptionInfoElement info) {
+        return null;
     }
 
     @Override

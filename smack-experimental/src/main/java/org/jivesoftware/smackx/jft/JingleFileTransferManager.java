@@ -23,8 +23,11 @@ import java.util.List;
 import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.jft.adapter.JingleFileTransferAdapter;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileRequestController;
 import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
@@ -32,6 +35,7 @@ import org.jivesoftware.smackx.jft.internal.JingleIncomingFileOffer;
 import org.jivesoftware.smackx.jft.internal.JingleIncomingFileRequest;
 import org.jivesoftware.smackx.jft.internal.JingleOutgoingFileOffer;
 import org.jivesoftware.smackx.jft.internal.JingleOutgoingFileRequest;
+import org.jivesoftware.smackx.jft.internal.file.RemoteFile;
 import org.jivesoftware.smackx.jft.listener.IncomingFileOfferListener;
 import org.jivesoftware.smackx.jft.listener.IncomingFileRequestListener;
 import org.jivesoftware.smackx.jft.provider.JingleFileTransferProvider;
@@ -59,6 +63,10 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
     private final List<IncomingFileRequestListener> requestListeners =
             Collections.synchronizedList(new ArrayList<IncomingFileRequestListener>());
 
+    static {
+        JingleManager.addJingleDescriptionAdapter(new JingleFileTransferAdapter());
+    }
+
     private JingleFileTransferManager(XMPPConnection connection) {
         super(connection);
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(getNamespace());
@@ -78,7 +86,10 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         return manager;
     }
 
-    public OutgoingFileOfferController sendFile(File file, FullJid to) {
+    public OutgoingFileOfferController sendFile(File file, FullJid to)
+            throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NoResponseException {
+
         if (file == null || !file.exists()) {
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
         }
@@ -94,12 +105,13 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager();
         content.setTransport(transportManager.createTransport(content));
 
-        //TODO
+        session.initiate(connection());
+
         return offer;
     }
 
-    public OutgoingFileRequestController requestFile() {
-        JingleOutgoingFileRequest request = new JingleOutgoingFileRequest();
+    public OutgoingFileRequestController requestFile(RemoteFile file) {
+        JingleOutgoingFileRequest request = new JingleOutgoingFileRequest(file);
 
         //TODO at some point.
 
@@ -116,7 +128,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
 
     public void notifyIncomingFileOfferListeners(JingleIncomingFileOffer offer) {
         for (IncomingFileOfferListener l : offerListeners) {
-            l.onIncomingFileTransfer(offer);
+            l.onIncomingFileOffer(offer);
         }
     }
 

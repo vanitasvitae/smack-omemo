@@ -27,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.util.Async;
@@ -60,6 +61,15 @@ public class JingleSession {
     private final Role role;
     private final String sessionId;
 
+    public enum SessionState {
+        fresh,      //pre-session-inititate
+        pending,    //pre-session-accept
+        active,     //pre-session-terminate
+        ended       //post-session-terminate
+    }
+
+    private SessionState sessionState;
+
     private final Map<JingleContent, PendingJingleAction> pendingJingleActions =
             Collections.synchronizedMap(new HashMap<JingleContent, PendingJingleAction>());
 
@@ -69,6 +79,7 @@ public class JingleSession {
         this.responder = responder;
         this.role = role;
         this.sessionId = sessionId;
+        this.sessionState = SessionState.fresh;
     }
 
     public void addContent(JingleContent content) {
@@ -114,7 +125,14 @@ public class JingleSession {
             session.addContent(content);
         }
 
+        session.sessionState = SessionState.pending;
+
         return session;
+    }
+
+    public void initiate(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
+        connection.createStanzaCollectorAndSend(createSessionInitiate()).nextResultOrThrow();
+        this.sessionState = SessionState.pending;
     }
 
     public JingleElement createSessionInitiate() {
@@ -216,6 +234,7 @@ public class JingleSession {
     }
 
     private IQ handleSessionTerminate(JingleElement request) {
+        this.sessionState = SessionState.ended;
         JingleReasonElement reason = request.getReason();
 
         if (reason == null) {
@@ -223,7 +242,6 @@ public class JingleSession {
         }
 
         //TODO: Inform client.
-
         jingleManager.removeSession(this);
 
         return IQ.createResultIQ(request);
@@ -231,7 +249,9 @@ public class JingleSession {
 
     private IQ handleTransportReject(JingleElement request) {
         HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
+        for (JingleContent c : affectedContents.values()) {
 
+        }
         return null;
     }
 
@@ -283,6 +303,8 @@ public class JingleSession {
     }
 
     private IQ handleSessionAccept(JingleElement request) {
+        this.sessionState = SessionState.active;
+
         return null;
     }
 
@@ -429,5 +451,9 @@ public class JingleSession {
             map.put(e, c);
         }
         return map;
+    }
+
+    public SessionState getSessionState() {
+        return sessionState;
     }
 }

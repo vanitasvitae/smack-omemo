@@ -16,8 +16,10 @@
  */
 package org.jivesoftware.smackx.jft.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +27,9 @@ import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jft.controller.IncomingFileOfferController;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jft.internal.file.RemoteFile;
+import org.jivesoftware.smackx.jingle.components.JingleSession;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
  * Created by vanitas on 26.07.17.
@@ -35,6 +40,11 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
 
     public JingleIncomingFileOffer(JingleFileTransferChildElement offer) {
         super(new RemoteFile(offer));
+    }
+
+    @Override
+    public JingleElement handleDescriptionInfo(JingleContentDescriptionInfoElement info) {
+        return null;
     }
 
     @Override
@@ -56,5 +66,15 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
     @Override
     public boolean isRequest() {
         return false;
+    }
+
+    @Override
+    public Future<Void> accept(File target) {
+        JingleSession session = getParent().getParent();
+        if (session.getSessionState() == JingleSession.SessionState.pending) {
+            //session.accept();
+        }
+
+        return null;
     }
 }

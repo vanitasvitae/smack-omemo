@@ -243,10 +243,10 @@ public final class JingleManager extends Manager {
         JingleSession session;
 
         if (role == Role.initiator) {
-            session = new JingleSession(this, connection().getUser().asDomainFullJidOrThrow(), peer,
+            session = new JingleSession(this, connection().getUser().asFullJidOrThrow(), peer,
                     role, StringUtils.randomString(24));
         } else {
-            session = new JingleSession(this, peer, connection().getUser().asDomainFullJidOrThrow(),
+            session = new JingleSession(this, peer, connection().getUser().asFullJidOrThrow(),
                     role, StringUtils.randomString(24));
         }
 

@@ -18,14 +18,21 @@ package org.jivesoftware.smackx.jft.internal;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileRequestController;
-import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
+import org.jivesoftware.smackx.jft.internal.file.RemoteFile;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
  * Created by vanitas on 27.07.17.
  */
-public class JingleOutgoingFileRequest extends AbstractJingleFileRequest implements OutgoingFileRequestController {
+public class JingleOutgoingFileRequest extends AbstractJingleFileRequest<RemoteFile> implements OutgoingFileRequestController {
+
+    public JingleOutgoingFileRequest(RemoteFile file) {
+        super(file);
+    }
+
     @Override
-    public JingleFileTransferElement getElement() {
+    public JingleElement handleDescriptionInfo(JingleContentDescriptionInfoElement info) {
         return null;
     }
 

@@ -23,5 +23,5 @@ import org.jivesoftware.smackx.jft.controller.IncomingFileOfferController;
  */
 public interface IncomingFileOfferListener {
 
-    void onIncomingFileTransfer(IncomingFileOfferController offer);
+    void onIncomingFileOffer(IncomingFileOfferController offer);
 }

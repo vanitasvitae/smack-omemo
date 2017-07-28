@@ -37,6 +37,10 @@ public final class JingleIBBTransportManager extends Manager implements JingleTr
 
     private static final WeakHashMap<XMPPConnection, JingleIBBTransportManager> INSTANCES = new WeakHashMap<>();
 
+    static {
+        JingleManager.addJingleTransportAdapter(new JingleIBBTransportAdapter());
+    }
+
     private JingleIBBTransportManager(XMPPConnection connection) {
         super(connection);
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(getNamespace());
