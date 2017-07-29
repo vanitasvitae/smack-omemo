@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.jft.controller.IncomingFileOfferController;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
@@ -86,6 +88,7 @@ public class JingleFileTransferTest extends AbstractSmackIntegrationTest {
             @Override
             public void onIncomingFileOffer(IncomingFileOfferController offer) {
                 LOGGER.log(Level.INFO, "INCOMING FILE TRANSFER!");
+
                 offer.addProgressListener(new ProgressListener() {
                     @Override
                     public void started() {
@@ -102,11 +105,17 @@ public class JingleFileTransferTest extends AbstractSmackIntegrationTest {
                         resultSyncPoint2.signal();
                     }
                 });
-                receiveFuture.add(offer.accept(target));
+
+                try {
+                    receiveFuture.add(offer.accept(conTwo, target));
+                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                    fail(e.toString());
+                }
             }
         });
 
         OutgoingFileOfferController sending = aftm.sendFile(source, bob);
+
         sending.addProgressListener(new ProgressListener() {
             @Override
             public void started() {

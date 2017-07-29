@@ -166,7 +166,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
     }
 
     @Override
-    public void notifyContentAdd(JingleContent content) {
+    public void notifyContentAdd(JingleSession session, JingleContent content) {
         notifyTransfer((JingleFileTransfer) content.getDescription());
     }
 }

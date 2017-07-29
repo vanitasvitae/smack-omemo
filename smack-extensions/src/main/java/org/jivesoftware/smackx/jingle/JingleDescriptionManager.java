@@ -28,5 +28,5 @@ public interface JingleDescriptionManager {
 
     void notifySessionInitiate(JingleSession session);
 
-    void notifyContentAdd(JingleContent content);
+    void notifyContentAdd(JingleSession session, JingleContent content);
 }

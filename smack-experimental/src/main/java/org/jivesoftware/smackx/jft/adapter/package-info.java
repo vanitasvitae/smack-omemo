@@ -14,13 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.element;
-
-import org.jivesoftware.smack.packet.NamedElement;
 
 /**
- * Created by vanitas on 28.07.17.
+ * Smack's API for <a href="https://xmpp.org/extensions/xep-0234.html">XEP-0234: Jingle File Transfer</a>.
+ * Adapters.
  */
-public abstract class JingleContentDescriptionInfoElement implements NamedElement {
-
-}
+package org.jivesoftware.smackx.jft.adapter;

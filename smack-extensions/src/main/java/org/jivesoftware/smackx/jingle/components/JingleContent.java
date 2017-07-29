@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.Callback;
@@ -62,6 +63,69 @@ public class JingleContent implements JingleTransportCallback {
     private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
 
+    public IQ handleJingleRequest(JingleElement request, XMPPConnection connection) {
+        switch (request.getAction()) {
+            case content_modify:
+                return handleContentModify(request, connection);
+            case description_info:
+                return handleDescriptionInfo(request, connection);
+            case security_info:
+                return handleSecurityInfo(request, connection);
+            case session_info:
+                return handleSessionInfo(request, connection);
+            case transport_accept:
+                return handleTransportAccept(request, connection);
+            case transport_info:
+                return handleTransportInfo(request, connection);
+            case transport_reject:
+                return handleTransportReject(request, connection);
+            case transport_replace:
+                return handleTransportReplace(request, connection);
+            default:
+                throw new AssertionError("Illegal jingle action: " + request.getAction() + " is not allowed here.");
+        }
+    }
+
+    public IQ handleSessionAccept(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleContentModify(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleDescriptionInfo(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public void handleContentRemove(JingleSession session, XMPPConnection connection) {
+
+    }
+
+    public IQ handleSecurityInfo(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleSessionInfo(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleTransportAccept(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleTransportInfo(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleTransportReject(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleTransportReplace(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
     public enum STATE {
         pending_accept,
         pending_transmission_start,
@@ -77,9 +141,9 @@ public class JingleContent implements JingleTransportCallback {
     }
 
     public JingleContent(JingleDescription<?> description, JingleTransport<?> transport, JingleSecurity<?> security, String name, String disposition, JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
-        this.description = description;
-        this.transport = transport;
-        this.security = security;
+        setDescription(description);
+        setTransport(transport);
+        setSecurity(security);
         this.name = name;
         this.disposition = disposition;
         this.creator = creator;
@@ -178,7 +242,7 @@ public class JingleContent implements JingleTransportCallback {
     }
 
     public void setDescription(JingleDescription<?> description) {
-        if (this.description != description) {
+        if (description != null && this.description != description) {
             this.description = description;
             description.setParent(this);
         }
@@ -189,7 +253,7 @@ public class JingleContent implements JingleTransportCallback {
     }
 
     public void setTransport(JingleTransport<?> transport) {
-        if (this.transport != transport) {
+        if (transport != null && this.transport != transport) {
             this.transport = transport;
             transport.setParent(this);
         }
@@ -200,7 +264,7 @@ public class JingleContent implements JingleTransportCallback {
     }
 
     public void setSecurity(JingleSecurity<?> security) {
-        if (this.security != security) {
+        if (security != null && this.security != security) {
             this.security = security;
             security.setParent(this);
         }
@@ -266,13 +330,16 @@ public class JingleContent implements JingleTransportCallback {
         connection.createStanzaCollectorAndSend(transportReplace).nextResultOrThrow();
     }
 
-    public void onContentAccept(XMPPConnection connection)
-            throws SmackException.NotConnectedException, InterruptedException {
+    public void handleContentAccept(JingleElement request, XMPPConnection connection) {
         //Establish transport
-        if (isReceiving()) {
-            getTransport().establishIncomingBytestreamSession(connection, this, getParent());
-        } else if (isSending()) {
-            getTransport().establishOutgoingBytestreamSession(connection, this, getParent());
+        try {
+            if (isReceiving()) {
+                getTransport().establishIncomingBytestreamSession(connection, this, getParent());
+            } else if (isSending()) {
+                getTransport().establishOutgoingBytestreamSession(connection, this, getParent());
+            }
+        } catch (SmackException.NotConnectedException | InterruptedException e) {
+            LOGGER.log(Level.SEVERE, "Error establishing connection: " + e, e);
         }
     }
 

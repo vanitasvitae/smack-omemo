@@ -23,6 +23,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jft.controller.IncomingFileOfferController;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
@@ -69,10 +72,12 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
     }
 
     @Override
-    public Future<Void> accept(File target) {
+    public Future<Void> accept(XMPPConnection connection, File target)
+            throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
+            SmackException.NoResponseException {
         JingleSession session = getParent().getParent();
         if (session.getSessionState() == JingleSession.SessionState.pending) {
-            //session.accept();
+            session.accept(connection);
         }
 
         return null;

@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,12 +32,8 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.exception.UnsupportedDescriptionException;
@@ -55,6 +50,7 @@ public class JingleSession {
     private static final Logger LOGGER = Logger.getLogger(JingleSession.class.getName());
 
     private final ConcurrentHashMap<String, JingleContent> contents = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, JingleContent> proposedContents = new ConcurrentHashMap<>();
     private final JingleManager jingleManager;
 
     private final FullJid initiator, responder;
@@ -82,36 +78,6 @@ public class JingleSession {
         this.sessionState = SessionState.fresh;
     }
 
-    public void addContent(JingleContent content) {
-        contents.put(content.getName(), content);
-        content.setParent(this);
-    }
-
-    public void addContent(JingleContentElement content)
-            throws UnsupportedSecurityException, UnsupportedTransportException, UnsupportedDescriptionException {
-        addContent(JingleContent.fromElement(content));
-    }
-
-    public ConcurrentHashMap<String, JingleContent> getContents() {
-        return contents;
-    }
-
-    public JingleContent getContent(String name) {
-        return contents.get(name);
-    }
-
-    public JingleContent getSoleContentOrThrow() {
-        if (contents.isEmpty()) {
-            return null;
-        }
-
-        if (contents.size() > 1) {
-            throw new IllegalStateException();
-        }
-
-        return contents.values().iterator().next();
-    }
-
     public static JingleSession fromSessionInitiate(JingleManager manager, JingleElement initiate)
             throws UnsupportedSecurityException, UnsupportedDescriptionException, UnsupportedTransportException {
         if (initiate.getAction() != JingleAction.session_initiate) {
@@ -131,8 +97,21 @@ public class JingleSession {
     }
 
     public void initiate(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
+        if (this.sessionState != SessionState.fresh) {
+            throw new IllegalStateException("Session is not in fresh state.");
+        }
+
         connection.createStanzaCollectorAndSend(createSessionInitiate()).nextResultOrThrow();
         this.sessionState = SessionState.pending;
+    }
+
+    public void accept(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
+        if (this.sessionState != SessionState.pending) {
+            throw new IllegalStateException("Session is not in pending state.");
+        }
+
+        connection.createStanzaCollectorAndSend(createSessionAccept()).nextResultOrThrow();
+        this.sessionState = SessionState.active;
     }
 
     public JingleElement createSessionInitiate() {
@@ -148,87 +127,81 @@ public class JingleSession {
         return JingleElement.createSessionInitiate(getInitiator(), getResponder(), getSessionId(), contentElements);
     }
 
+    public JingleElement createSessionAccept() {
+        if (role != Role.responder) {
+            throw new IllegalStateException("Sessions role is not responder.");
+        }
+
+        List<JingleContentElement> contentElements = new ArrayList<>();
+        for (JingleContent c : contents.values()) {
+            contentElements.add(c.getElement());
+        }
+
+        return JingleElement.createSessionAccept(getInitiator(), getResponder(), getSessionId(), contentElements);
+    }
+
     public IQ handleJingleRequest(JingleElement request) {
         switch (request.getAction()) {
+            case content_modify:
+            case description_info:
+            case security_info:
+            case session_info:
+            case transport_accept:
+            case transport_info:
+            case transport_reject:
+            case transport_replace:
+                return getSoleAffectedContentOrThrow(request).handleJingleRequest(request, jingleManager.getConnection());
             case content_accept:
                 return handleContentAccept(request);
             case content_add:
                 return handleContentAdd(request);
-            case content_modify:
-                return handleContentModify(request);
             case content_reject:
                 return handleContentReject(request);
             case content_remove:
                 return handleContentRemove(request);
-            case description_info:
-                return handleDescriptionInfo(request);
-            case session_info:
-                return handleSessionInfo(request);
-            case security_info:
-                return handleSecurityInfo(request);
             case session_accept:
                 return handleSessionAccept(request);
-            case transport_accept:
-                return handleTransportAccept(request);
-            case transport_info:
-                return handleTransportInfo(request);
             case session_initiate:
                 return handleSessionInitiate(request);
-            case transport_reject:
-                return handleTransportReject(request);
             case session_terminate:
                 return handleSessionTerminate(request);
-            case transport_replace:
-                return handleTransportReplace(request);
             default:
-                throw new AssertionError("Unknown Jingle Action enum! " + request.getAction());
+                throw new AssertionError("Illegal jingle action: " + request.getAction());
         }
     }
 
-    private IQ handleTransportReplace(final JingleElement request) {
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                List<JingleContentElement> affectedContents = request.getContents();
-                List<JingleElement> responses = new ArrayList<>();
+    /* ############## Processed in this class ############## */
 
-                for (JingleContentElement affected : affectedContents) {
-                    JingleContent content = contents.get(affected.getName());
-                    JingleContentTransportElement newTransport = affected.getTransport();
-                    Set<String> blacklist = content.getTransportBlacklist();
+    /**
+     * Handle incoming session-accept stanza.
+     * @param request session-accept stanza.
+     * @return result.
+     */
+    private IQ handleSessionAccept(final JingleElement request) {
+        this.sessionState = SessionState.active;
 
-                    // Proposed transport method might already be on the blacklist (eg. because of previous failures)
-                    if (blacklist.contains(newTransport.getNamespace())) {
-                        responses.add(JingleElement.createTransportReject(getInitiator(), getPeer(), getSessionId(),
-                                content.getCreator(), content.getName(), newTransport));
-                        continue;
-                    }
-
-                    JingleTransportAdapter<?> transportAdapter = JingleManager.getJingleTransportAdapter(
-                            newTransport.getNamespace());
-                    // This might be an unknown transport.
-                    if (transportAdapter == null) {
-                        responses.add(JingleElement.createTransportReject(getInitiator(), getPeer(), getSessionId(),
-                                content.getCreator(), content.getName(), newTransport));
-                        continue;
-                    }
-
-                    //Otherwise, when all went well so far, accept the transport-replace
-                    content.setTransport(JingleManager.getJingleTransportAdapter(newTransport.getNamespace())
-                            .transportFromElement(newTransport));
-                    responses.add(JingleElement.createTransportAccept(getInitiator(), getPeer(), getSessionId(),
-                            content.getCreator(), content.getName(), newTransport));
+        for (final JingleContent content : contents.values()) {
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    content.handleSessionAccept(request, jingleManager.getConnection());
                 }
+            });
+        }
 
-                for (JingleElement response : responses) {
-                    try {
-                        jingleManager.getConnection().createStanzaCollectorAndSend(response).nextResultOrThrow();
-                    } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException | SmackException.NotConnectedException e) {
-                        LOGGER.log(Level.SEVERE, "Could not send response to transport-replace: " + e, e);
-                    }
-                }
-            }
-        });
+        return IQ.createResultIQ(request);
+    }
+
+    private IQ handleSessionInitiate(JingleElement request) {
+        JingleDescription<?> description = getSoleContentOrThrow().getDescription();
+        JingleDescriptionManager descriptionManager = jingleManager.getDescriptionManager(description.getNamespace());
+
+        if (descriptionManager == null) {
+            LOGGER.log(Level.WARNING, "Unsupported description type: " + description.getNamespace());
+            return JingleElement.createSessionTerminate(getPeer(), getSessionId(), JingleReasonElement.Reason.unsupported_applications);
+        }
+
+        descriptionManager.notifySessionInitiate(this);
 
         return IQ.createResultIQ(request);
     }
@@ -247,167 +220,192 @@ public class JingleSession {
         return IQ.createResultIQ(request);
     }
 
-    private IQ handleTransportReject(JingleElement request) {
-        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
-        for (JingleContent c : affectedContents.values()) {
+    private IQ handleContentAccept(final JingleElement request) {
+        for (JingleContentElement a : request.getContents()) {
+            final JingleContent accepted = proposedContents.get(a.getName());
 
-        }
-        return null;
-    }
-
-    private IQ handleSessionInitiate(JingleElement request) {
-        JingleDescription<?> description = getSoleContentOrThrow().getDescription();
-        JingleDescriptionManager descriptionManager = jingleManager.getDescriptionManager(description.getNamespace());
-
-        if (descriptionManager == null) {
-            LOGGER.log(Level.WARNING, "Unsupported description type: " + description.getNamespace());
-            return JingleElement.createSessionTerminate(getPeer(), getSessionId(), JingleReasonElement.Reason.unsupported_applications);
-        }
-
-        descriptionManager.notifySessionInitiate(this);
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleTransportInfo(JingleElement request) {
-        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
-
-        for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
-            JingleTransport<?> transport = entry.getValue().getTransport();
-            JingleContentTransportInfoElement info = entry.getKey().getTransport().getInfo();
-            transport.handleTransportInfo(info, request);
-        }
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleTransportAccept(JingleElement request) {
-        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
-        for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
-
-            PendingJingleAction pending = pendingJingleActions.get(entry.getValue());
-            if (pending == null) {
-                continue;
+            if (accepted == null) {
+                throw new AssertionError("Illegal content name!");
             }
 
-            if (pending.getAction() != JingleAction.transport_replace) {
-                //TODO: Are multiple contents even possible here?
-                //TODO: How to react to partially illegal requests?
-                return JingleElement.createJingleErrorOutOfOrder(request);
-            }
+            proposedContents.remove(accepted.getName());
+            contents.put(accepted.getName(), accepted);
 
-            entry.getValue().setTransport(((PendingJingleAction.TransportReplace) pending).getNewTransport());
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    accepted.handleContentAccept(request, jingleManager.getConnection());
+                }
+            });
         }
 
         return IQ.createResultIQ(request);
-    }
-
-    private IQ handleSessionAccept(JingleElement request) {
-        this.sessionState = SessionState.active;
-
-        return null;
-    }
-
-    private IQ handleSecurityInfo(JingleElement request) {
-        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
-        List<JingleElement> responses = new ArrayList<>();
-
-        for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
-            responses.add(entry.getValue().getSecurity().handleSecurityInfo(entry.getKey().getSecurity().getSecurityInfo(), request));
-        }
-
-        for (JingleElement response : responses) {
-            try {
-                getJingleManager().getConnection().createStanzaCollectorAndSend(response).nextResultOrThrow();
-            } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "Could not send response to security-info: " + e, e);
-            }
-        }
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleSessionInfo(JingleElement request) {
-        return null;
-    }
-
-    private IQ handleDescriptionInfo(JingleElement request) {
-        HashMap<JingleContentElement, JingleContent> affectedContents = getAffectedContents(request);
-        List<JingleElement> responses = new ArrayList<>();
-
-        for (Map.Entry<JingleContentElement, JingleContent> entry : affectedContents.entrySet()) {
-            responses.add(entry.getValue().getDescription().handleDescriptionInfo(entry.getKey().getDescription().getDescriptionInfo()));
-        }
-
-        for (JingleElement response : responses) {
-            try {
-                getJingleManager().getConnection().createStanzaCollectorAndSend(response).nextResultOrThrow();
-            } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "Could not send response to description-info: " + e, e);
-            }
-        }
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleContentRemove(JingleElement request) {
-        return null;
-    }
-
-    private IQ handleContentReject(JingleElement request) {
-        return null;
-    }
-
-    private IQ handleContentModify(JingleElement request) {
-        return null;
     }
 
     private IQ handleContentAdd(JingleElement request) {
-        final List<JingleContentElement> proposedContents = request.getContents();
-        final List<JingleContentElement> acceptedContents = new ArrayList<>();
+        final JingleContent proposed = getSoleProposedContentOrThrow(request);
 
-        final HashMap<String, List<JingleContent>> contentsByDescription = new HashMap<>();
+        final JingleDescriptionManager descriptionManager = jingleManager.getDescriptionManager(proposed.getDescription().getNamespace());
 
-        for (JingleContentElement p : proposedContents) {
-            JingleContentDescriptionElement description = p.getDescription();
-            List<JingleContent> list = contentsByDescription.get(description.getNamespace());
-            if (list == null) {
-                list = new ArrayList<>();
-                contentsByDescription.put(description.getNamespace(), list);
-            }
-            list.add(JingleContent.fromElement(p));
+        if (descriptionManager == null) {
+            throw new AssertionError("DescriptionManager is null: " + proposed.getDescription().getNamespace());
         }
 
-        for (Map.Entry<String, List<JingleContent>> descriptionCategory : contentsByDescription.entrySet()) {
-            JingleDescriptionManager descriptionManager = JingleManager.getInstanceFor(getJingleManager().getConnection()).getDescriptionManager(descriptionCategory.getKey());
-
-            if (descriptionManager == null) {
-                //blabla
-                continue;
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                descriptionManager.notifyContentAdd(JingleSession.this, proposed);
             }
-
-            for (final JingleContent content : descriptionCategory.getValue()) {
-                descriptionManager.notifyContentAdd(content);
-            }
-        }
-
-        if (acceptedContents.size() > 0) {
-            JingleElement accept = JingleElement.createContentAccept(getPeer(), getSessionId(), acceptedContents);
-            try {
-                getJingleManager().getConnection().createStanzaCollectorAndSend(accept).nextResultOrThrow();
-            } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException | SmackException.NotConnectedException e) {
-                LOGGER.log(Level.SEVERE, "Could not send response to content-add: " + e, e);
-            }
-        }
-
-        //TODO: send content-reject for rejected contents!
+        });
 
         return IQ.createResultIQ(request);
     }
 
-    private IQ handleContentAccept(JingleElement request) {
-        return null;
+    private IQ handleContentReject(JingleElement request) {
+        for (JingleContentElement r : request.getContents()) {
+            final JingleContent rejected = proposedContents.get(r.getName());
+
+            if (rejected == null) {
+                throw new AssertionError("Illegal content name!");
+            }
+
+            proposedContents.remove(rejected.getName());
+
+            /*
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    rejected.handleContentReject(request, jingleManager.getConnection());
+                }
+            });
+            */
+        }
+
+        return IQ.createResultIQ(request);
     }
+
+    private IQ handleContentRemove(final JingleElement request) {
+        for (JingleContentElement r : request.getContents()) {
+            final JingleContent removed = contents.get(r.getName());
+
+            if (removed == null) {
+                throw new AssertionError("Illegal content name!");
+            }
+
+            contents.remove(removed.getName());
+
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    removed.handleContentRemove(JingleSession.this, jingleManager.getConnection());
+                }
+            });
+        }
+
+        return IQ.createResultIQ(request);
+    }
+
+    /* ############## Processed further down ############## */
+
+    private IQ handleContentModify(final JingleElement request) {
+        final JingleContent content = getSoleAffectedContentOrThrow(request);
+
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                content.handleContentModify(request, jingleManager.getConnection());
+            }
+        });
+
+        return IQ.createResultIQ(request);
+    }
+
+    private IQ handleDescriptionInfo(final JingleElement request) {
+        final JingleContent content = getSoleAffectedContentOrThrow(request);
+
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                content.handleDescriptionInfo(request, jingleManager.getConnection());
+            }
+        });
+
+        return IQ.createResultIQ(request);
+    }
+
+    private IQ handleSecurityInfo(final JingleElement request) {
+        final JingleContent content = getSoleAffectedContentOrThrow(request);
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                content.handleSecurityInfo(request, jingleManager.getConnection());
+            }
+        });
+
+        return IQ.createResultIQ(request);
+    }
+
+    private IQ handleSessionInfo(final JingleElement request) {
+        final JingleContent content = getSoleAffectedContentOrThrow(request);
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                content.handleSessionInfo(request, jingleManager.getConnection());
+            }
+        });
+
+        return IQ.createResultIQ(request);
+    }
+
+    private IQ handleTransportAccept(final JingleElement request) {
+        final JingleContent content = getSoleAffectedContentOrThrow(request);
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                content.handleTransportAccept(request, jingleManager.getConnection());
+            }
+        });
+
+        return IQ.createResultIQ(request);
+    }
+
+    private IQ handleTransportInfo(final JingleElement request) {
+        final JingleContent content = getSoleAffectedContentOrThrow(request);
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                content.handleTransportInfo(request, jingleManager.getConnection());
+            }
+        });
+
+        return IQ.createResultIQ(request);
+    }
+
+    private IQ handleTransportReject(final JingleElement request) {
+        final JingleContent content = getSoleAffectedContentOrThrow(request);
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                content.handleTransportReject(request, jingleManager.getConnection());
+            }
+        });
+
+        return IQ.createResultIQ(request);
+    }
+
+    private IQ handleTransportReplace(final JingleElement request) {
+        final JingleContent content = getSoleAffectedContentOrThrow(request);
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                content.handleTransportReplace(request, jingleManager.getConnection());
+            }
+        });
+
+        return IQ.createResultIQ(request);
+    }
+
+    /* ################ Other getters and setters ############### */
 
     public FullJid getInitiator() {
         return initiator;
@@ -451,6 +449,57 @@ public class JingleSession {
             map.put(e, c);
         }
         return map;
+    }
+
+    private JingleContent getSoleAffectedContentOrThrow(JingleElement request) {
+        if (request.getContents().size() != 1) {
+            throw new AssertionError("More/less than 1 content in request!");
+        }
+
+        JingleContent content = contents.get(request.getContents().get(0).getName());
+        if (content == null) {
+            throw new AssertionError("Illegal content name!");
+        }
+
+        return content;
+    }
+
+    private JingleContent getSoleProposedContentOrThrow(JingleElement request) {
+        if (request.getContents().size() != 1) {
+            throw new AssertionError("More/less than 1 content in request!");
+        }
+
+        return JingleContent.fromElement(request.getContents().get(0));
+    }
+
+    public void addContent(JingleContent content) {
+        contents.put(content.getName(), content);
+        content.setParent(this);
+    }
+
+    public void addContent(JingleContentElement content)
+            throws UnsupportedSecurityException, UnsupportedTransportException, UnsupportedDescriptionException {
+        addContent(JingleContent.fromElement(content));
+    }
+
+    public ConcurrentHashMap<String, JingleContent> getContents() {
+        return contents;
+    }
+
+    public JingleContent getContent(String name) {
+        return contents.get(name);
+    }
+
+    public JingleContent getSoleContentOrThrow() {
+        if (contents.isEmpty()) {
+            return null;
+        }
+
+        if (contents.size() > 1) {
+            throw new IllegalStateException();
+        }
+
+        return contents.values().iterator().next();
     }
 
     public SessionState getSessionState() {
