@@ -16,9 +16,13 @@
  */
 package org.jivesoftware.smackx.jingle.transport.jingle_ibb;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
@@ -37,6 +41,7 @@ import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTran
  * Jingle InBandBytestream Transport component.
  */
 public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElement> {
+    private static final Logger LOGGER = Logger.getLogger(JingleIBBTransport.class.getName());
 
     public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:ibb:1";
     public static final String NAMESPACE = NAMESPACE_V1;
@@ -74,10 +79,11 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     @Override
     public void establishIncomingBytestreamSession(final XMPPConnection connection, final JingleTransportCallback callback, final JingleSession session) {
         final InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
-
+        LOGGER.log(Level.INFO, "Listen for incoming IBB transports from " + session.getPeer() + ":" + getSid());
         InBandBytestreamListener bytestreamListener = new InBandBytestreamListener() {
             @Override
             public void incomingBytestreamRequest(InBandBytestreamRequest request) {
+                LOGGER.log(Level.INFO, "Incoming IBB stream: " + request.getFrom().asFullJidIfPossible() + ":" + request.getSessionID());
                 if (request.getFrom().asFullJidIfPossible().equals(session.getPeer())
                         && request.getSessionID().equals(getSid())) {
 
@@ -119,8 +125,8 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping) {
-        // Nothing to do.
+    public IQ handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping) {
+        return IQ.createResultIQ(wrapping);
     }
 
     @Override

@@ -275,28 +275,30 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @Override
-    public void handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping) {
+    public IQ handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping) {
         switch (info.getElementName()) {
 
             case JingleS5BTransportInfoElement.CandidateUsed.ELEMENT:
                 handleCandidateUsed((JingleS5BTransportInfoElement) info, wrapping);
-                return;
+                break;
 
             case JingleS5BTransportInfoElement.CandidateActivated.ELEMENT:
                 handleCandidateActivate((JingleS5BTransportInfoElement) info);
-                return;
+                break;
 
             case JingleS5BTransportInfoElement.CandidateError.ELEMENT:
                 handleCandidateError((JingleS5BTransportInfoElement) info);
-                return;
+                break;
 
             case JingleS5BTransportInfoElement.ProxyError.ELEMENT:
                 handleProxyError((JingleS5BTransportInfoElement) info);
-                return;
+                break;
 
             default:
                 throw new AssertionError("Unknown transport-info element: " + info.getElementName());
         }
+
+        return IQ.createResultIQ(wrapping);
     }
 
     private void handleCandidateUsed(JingleS5BTransportInfoElement info, JingleElement wrapping) {

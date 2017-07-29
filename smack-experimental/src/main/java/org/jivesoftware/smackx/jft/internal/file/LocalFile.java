@@ -88,4 +88,8 @@ public class LocalFile extends AbstractJingleFileTransferFile {
     public void setHashElement(HashElement hashElement) {
         this.hashElement = hashElement;
     }
+
+    public File getFile() {
+        return file;
+    }
 }

@@ -110,6 +110,10 @@ public class JingleSession {
             throw new IllegalStateException("Session is not in pending state.");
         }
 
+        for (JingleContent content : contents.values()) {
+            content.onAccept(connection);
+        }
+
         connection.createStanzaCollectorAndSend(createSessionAccept()).nextResultOrThrow();
         this.sessionState = SessionState.active;
     }

@@ -17,6 +17,12 @@
 package org.jivesoftware.smackx.jft.internal;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
@@ -28,6 +34,7 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
  * Created by vanitas on 26.07.17.
  */
 public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> implements OutgoingFileOfferController {
+    private static final Logger LOGGER = Logger.getLogger(JingleOutgoingFileOffer.class.getName());
 
     public JingleOutgoingFileOffer(File file) {
         super(new LocalFile(file));
@@ -40,7 +47,34 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
 
     @Override
     public void onTransportReady(BytestreamSession bytestreamSession) {
+        File mFile = ((LocalFile) file).getFile();
+        OutputStream outputStream = null;
+        InputStream inputStream = null;
 
+        try {
+            outputStream = bytestreamSession.getOutputStream();
+            inputStream = new FileInputStream(mFile);
+
+            byte[] fileBuf = new byte[(int) mFile.length()];
+
+            inputStream.read(fileBuf);
+
+            outputStream.write(fileBuf);
+            outputStream.flush();
+
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Exception while sending file: " + e, e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, "Could not close FileInputStream: " + e, e);
+                }
+            }
+        }
+
+        notifyProgressListenersFinished();
     }
 
     @Override

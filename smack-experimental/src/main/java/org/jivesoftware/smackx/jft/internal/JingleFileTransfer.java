@@ -63,6 +63,18 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
         }
     }
 
+    public void notifyProgressListenersFinished() {
+        for (ProgressListener p : progressListeners) {
+            p.finished();
+        }
+    }
+
+    public void notifyProgressListenersStarted() {
+        for (ProgressListener p : progressListeners) {
+            p.started();
+        }
+    }
+
     @Override
     public String getNamespace() {
         return JingleFileTransfer.NAMESPACE;

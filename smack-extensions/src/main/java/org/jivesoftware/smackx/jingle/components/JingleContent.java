@@ -28,6 +28,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.Callback;
@@ -60,71 +61,10 @@ public class JingleContent implements JingleTransportCallback {
     private JingleTransport<?> transport;
     private JingleSecurity<?> security;
 
+    private JingleTransport<?> replaceTransport = null;
+
     private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
-
-    public IQ handleJingleRequest(JingleElement request, XMPPConnection connection) {
-        switch (request.getAction()) {
-            case content_modify:
-                return handleContentModify(request, connection);
-            case description_info:
-                return handleDescriptionInfo(request, connection);
-            case security_info:
-                return handleSecurityInfo(request, connection);
-            case session_info:
-                return handleSessionInfo(request, connection);
-            case transport_accept:
-                return handleTransportAccept(request, connection);
-            case transport_info:
-                return handleTransportInfo(request, connection);
-            case transport_reject:
-                return handleTransportReject(request, connection);
-            case transport_replace:
-                return handleTransportReplace(request, connection);
-            default:
-                throw new AssertionError("Illegal jingle action: " + request.getAction() + " is not allowed here.");
-        }
-    }
-
-    public IQ handleSessionAccept(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
-
-    public IQ handleContentModify(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
-
-    public IQ handleDescriptionInfo(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
-
-    public void handleContentRemove(JingleSession session, XMPPConnection connection) {
-
-    }
-
-    public IQ handleSecurityInfo(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
-
-    public IQ handleSessionInfo(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
-
-    public IQ handleTransportAccept(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
-
-    public IQ handleTransportInfo(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
-
-    public IQ handleTransportReject(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
-
-    public IQ handleTransportReplace(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
-    }
 
     public enum STATE {
         pending_accept,
@@ -190,6 +130,91 @@ public class JingleContent implements JingleTransportCallback {
 
         return new JingleContent(description, transport, security, content.getName(), content.getDisposition(), content.getCreator(), content.getSenders());
     }
+
+    /* HANDLEXYZ */
+
+    public IQ handleJingleRequest(JingleElement request, XMPPConnection connection) {
+        switch (request.getAction()) {
+            case content_modify:
+                return handleContentModify(request, connection);
+            case description_info:
+                return handleDescriptionInfo(request, connection);
+            case security_info:
+                return handleSecurityInfo(request, connection);
+            case session_info:
+                return handleSessionInfo(request, connection);
+            case transport_accept:
+                return handleTransportAccept(request, connection);
+            case transport_info:
+                return handleTransportInfo(request, connection);
+            case transport_reject:
+                return handleTransportReject(request, connection);
+            case transport_replace:
+                return handleTransportReplace(request, connection);
+            default:
+                throw new AssertionError("Illegal jingle action: " + request.getAction() + " is not allowed here.");
+        }
+    }
+
+    public void handleContentAccept(JingleElement request, XMPPConnection connection) {
+        onAccept(connection);
+    }
+
+
+    public IQ handleSessionAccept(JingleElement request, XMPPConnection connection) {
+        LOGGER.log(Level.INFO, "RECEIVED SESSION ACCEPT!");
+        onAccept(connection);
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleContentModify(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleDescriptionInfo(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public void handleContentRemove(JingleSession session, XMPPConnection connection) {
+
+    }
+
+    public IQ handleSecurityInfo(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleSessionInfo(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleTransportAccept(JingleElement request, XMPPConnection connection) {
+        if (replaceTransport == null) {
+            LOGGER.log(Level.WARNING, "Received transport-accept, but apparently we did not try to replace the transport.");
+            return JingleElement.createJingleErrorOutOfOrder(request);
+        }
+        transport = replaceTransport;
+
+        onAccept(connection);
+
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleTransportInfo(JingleElement request, XMPPConnection connection) {
+        assert request.getContents().size() == 1;
+        JingleContentElement content = request.getContents().get(0);
+
+        return transport.handleTransportInfo(content.getTransport().getInfo(), request);
+    }
+
+    public IQ handleTransportReject(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    public IQ handleTransportReplace(JingleElement request, XMPPConnection connection) {
+        return IQ.createResultIQ(request);
+    }
+
+    /* MISCELLANEOUS */
 
     public void addCallback(Callback callback) {
         callbacks.add(callback);
@@ -282,9 +307,29 @@ public class JingleContent implements JingleTransportCallback {
                 getSenders() == JingleContentElement.Senders.both;
     }
 
+    public void onAccept(final XMPPConnection connection) {
+        //Establish transport
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (isReceiving()) {
+                        LOGGER.log(Level.INFO, "Establish incoming bytestream.");
+                        getTransport().establishIncomingBytestreamSession(connection, JingleContent.this, getParent());
+                    } else if (isSending()) {
+                        LOGGER.log(Level.INFO, "Establish outgoing bytestream.");
+                        getTransport().establishOutgoingBytestreamSession(connection, JingleContent.this, getParent());
+                    }
+                } catch (SmackException.NotConnectedException | InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, "Error establishing connection: " + e, e);
+                }
+            }
+        });
+    }
+
     @Override
     public void onTransportReady(BytestreamSession bytestreamSession) {
-
+        LOGGER.log(Level.INFO, "TransportReady: " + (isReceiving() ? "Send" : "Receive"));
         if (bytestreamSession == null) {
             throw new AssertionError("bytestreamSession MUST NOT be null at this point.");
         }
@@ -328,19 +373,6 @@ public class JingleContent implements JingleTransportCallback {
                 session.getSessionId(), getCreator(), getName(), rTransport.getElement());
 
         connection.createStanzaCollectorAndSend(transportReplace).nextResultOrThrow();
-    }
-
-    public void handleContentAccept(JingleElement request, XMPPConnection connection) {
-        //Establish transport
-        try {
-            if (isReceiving()) {
-                getTransport().establishIncomingBytestreamSession(connection, this, getParent());
-            } else if (isSending()) {
-                getTransport().establishOutgoingBytestreamSession(connection, this, getParent());
-            }
-        } catch (SmackException.NotConnectedException | InterruptedException e) {
-            LOGGER.log(Level.SEVERE, "Error establishing connection: " + e, e);
-        }
     }
 
     public static String randomName() {

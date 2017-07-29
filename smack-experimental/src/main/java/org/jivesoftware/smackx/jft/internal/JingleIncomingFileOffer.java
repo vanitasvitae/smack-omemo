@@ -17,8 +17,10 @@
 package org.jivesoftware.smackx.jft.internal;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +43,8 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
 
     private static final Logger LOGGER = Logger.getLogger(JingleIncomingFileOffer.class.getName());
 
+    private File target;
+
     public JingleIncomingFileOffer(JingleFileTransferChildElement offer) {
         super(new RemoteFile(offer));
     }
@@ -52,13 +56,61 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
 
     @Override
     public void onTransportReady(BytestreamSession bytestreamSession) {
-        InputStream inputStream;
+        LOGGER.log(Level.INFO, "Receive file to " + target.getAbsolutePath());
+        File mFile = target;
+        if (!mFile.exists()) {
+            try {
+                mFile.createNewFile();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Could not create new File!");
+            }
+        }
+
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
         try {
             inputStream = bytestreamSession.getInputStream();
+            outputStream = new FileOutputStream(mFile);
+
+            byte[] filebuf = new byte[(int) file.getSize()];
+            int read = 0;
+            byte[] bufbuf = new byte[4096];
+            LOGGER.log(Level.INFO, "Begin receiving bytes.");
+            while (read < filebuf.length) {
+                int r = inputStream.read(bufbuf);
+                if (r >= 0) {
+                    System.arraycopy(bufbuf, 0, filebuf, read, r);
+                    read += r;
+                    LOGGER.log(Level.INFO, "Read " + r + " (" + read + " of " + filebuf.length + ") bytes.");
+                } else {
+                    break;
+                }
+            }
+
+            outputStream.write(filebuf);
+            outputStream.flush();
+            
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Cannot get InputStream from BytestreamSession: " + e, e);
-            return;
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, "Could not close InputStream: " + e, e);
+                }
+            }
+
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, "Could not close OutputStream: " + e, e);
+                }
+            }
         }
+
+        notifyProgressListenersFinished();
     }
 
     @Override
@@ -75,6 +127,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
     public Future<Void> accept(XMPPConnection connection, File target)
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
             SmackException.NoResponseException {
+        this.target = target;
         JingleSession session = getParent().getParent();
         if (session.getSessionState() == JingleSession.SessionState.pending) {
             session.accept(connection);
