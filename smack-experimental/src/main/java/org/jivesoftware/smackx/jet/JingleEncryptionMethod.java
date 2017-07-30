@@ -19,6 +19,7 @@ package org.jivesoftware.smackx.jet;
 import java.security.NoSuchAlgorithmException;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.ExtensionElement;
 
@@ -40,4 +41,8 @@ public interface JingleEncryptionMethod {
             super(throwable);
         }
     }
+
+    XMPPConnection getConnection();
+
+    String getNamespace();
 }

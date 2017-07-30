@@ -57,4 +57,16 @@ public class JetSecurityElement extends JingleContentSecurityElement {
     public String getNamespace() {
         return JetSecurity.NAMESPACE;
     }
+
+    public String getMethodNamespace() {
+        return child.getNamespace();
+    }
+
+    public ExtensionElement getChild() {
+        return child;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

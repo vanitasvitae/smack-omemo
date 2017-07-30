@@ -102,8 +102,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
             if (descriptionAdapter != null) {
                 description = descriptionAdapter.descriptionFromElement(content.getCreator(), content.getSenders(), content.getName(), content.getDisposition(), descriptionElement);
             } else {
-                throw new AssertionError("DescriptionProvider for " + descriptionElement.getNamespace() +
-                        " seems to be registered, but no corresponding JingleDescriptionAdapter was found.");
+                throw new AssertionError("Unsupported Description: " + descriptionElement.getNamespace());
             }
         }
 
@@ -113,8 +112,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
             if (transportAdapter != null) {
                 transport = transportAdapter.transportFromElement(transportElement);
             } else {
-                throw new AssertionError("TransportProvider for " + transportElement.getNamespace() +
-                        " seems to be registered, but no corresponding JingleTransportAdapter was found.");
+                throw new AssertionError("Unsupported Transport: " + transportElement.getNamespace());
             }
         }
 
@@ -124,8 +122,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
             if (securityAdapter != null) {
                 security = securityAdapter.securityFromElement(securityElement);
             } else {
-                throw new AssertionError("SecurityProvider for " + securityElement.getNamespace() +
-                        " seems to be registered, but no corresponding JingleSecurityAdapter was found.");
+                throw new AssertionError("Unsupported Security: " + securityElement.getNamespace());
             }
         }
 
@@ -341,7 +338,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
                 getSecurity().decryptIncomingBytestream(bytestreamSession, this);
             } else if (isSending()) {
                 LOGGER.log(Level.INFO, "Encrypt outgoing Bytestream.");
-                getSecurity().encryptIncomingBytestream(bytestreamSession, this);
+                getSecurity().encryptOutgoingBytestream(bytestreamSession, this);
             }
         } else {
             description.onBytestreamReady(bytestreamSession);

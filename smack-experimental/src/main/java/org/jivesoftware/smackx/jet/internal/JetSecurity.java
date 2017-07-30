@@ -20,24 +20,22 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
-import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jet.JetManager;
+import org.jivesoftware.smackx.ciphers.Aes256GcmNoPadding;
+import org.jivesoftware.smackx.ciphers.AesGcmNoPadding;
 import org.jivesoftware.smackx.jet.JingleEncryptionMethod;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jingle.callbacks.JingleSecurityCallback;
 import org.jivesoftware.smackx.jingle.components.JingleSecurity;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
+
+import org.jxmpp.jid.FullJid;
 
 /**
  * Created by vanitas on 22.07.17.
@@ -49,49 +47,35 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
 
     private final String methodNamespace;
 
-    private final Cipher cipher;
-
+    private AesGcmNoPadding aesKey;
     private ExtensionElement child;
+    private String name;
 
-    public JetSecurity(Cipher cipher, ExtensionElement child) {
+    public JetSecurity(JetSecurityElement element) {
         super();
-        this.cipher = cipher;
-        this.child = child;
-        this.methodNamespace = child.getNamespace();
+        this.child = element.getChild();
+        this.methodNamespace = element.getMethodNamespace();
+        this.name = element.getName();
     }
 
-    public JetSecurity(String methodNamespace, XMPPConnection connection)
+    public JetSecurity(JingleEncryptionMethod method, FullJid recipient, String name)
             throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException,
-            InvalidAlgorithmParameterException, InvalidKeyException {
-        this.methodNamespace = methodNamespace;
+            InvalidAlgorithmParameterException, InvalidKeyException, InterruptedException,
+            JingleEncryptionMethod.JingleEncryptionException, SmackException.NotConnectedException,
+            SmackException.NoResponseException {
 
-        JetManager jetManager = JetManager.getInstanceFor(connection);
-        JingleEncryptionMethod encryptionMethod = jetManager.getEncryptionMethod(methodNamespace);
-        if (encryptionMethod == null) {
-            throw new IllegalStateException("No encryption method with namespace " + methodNamespace + " registered.");
-        }
+        this.methodNamespace = method.getNamespace();
+        this.aesKey = new Aes256GcmNoPadding();
+        this.child = method.encryptJingleTransfer(recipient, aesKey.getKeyAndIv());
+        this.name = name;
+    }
 
-        //Create key and cipher
-        int keyLength = 256;
-        String keyType = "AES";
-        String cipherMode = "AES/GCM/NoPadding";
-
-        KeyGenerator keyGenerator = KeyGenerator.getInstance(keyType);
-        keyGenerator.init(keyLength);
-        byte[] key = keyGenerator.generateKey().getEncoded();
-
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] iv = new byte[keyLength];
-        secureRandom.nextBytes(iv);
-
-        byte[] keyAndIv = new byte[2 * keyLength];
-        System.arraycopy(key, 0, keyAndIv, 0, keyLength);
-        System.arraycopy(iv, 0, keyAndIv, keyLength, keyLength);
-
-        SecretKey secretKey = new SecretKeySpec(key, keyType);
-        IvParameterSpec ivSpec = new IvParameterSpec(iv);
-        cipher = Cipher.getInstance(cipherMode, "BC");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
+    public void decryptEncryptionKey(JingleEncryptionMethod method, FullJid sender)
+            throws InterruptedException, JingleEncryptionMethod.JingleEncryptionException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException, NoSuchAlgorithmException,
+            InvalidAlgorithmParameterException, NoSuchProviderException, InvalidKeyException, NoSuchPaddingException {
+        byte[] keyAndIv = method.decryptJingleTransfer(sender, child);
+        aesKey = new Aes256GcmNoPadding(keyAndIv);
     }
 
     @Override
@@ -106,13 +90,20 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
 
     @Override
     public void decryptIncomingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callback) {
-        JetSecurityBytestreamSession securityBytestreamSession = new JetSecurityBytestreamSession(bytestreamSession, cipher);
+        if (aesKey == null) {
+            throw new IllegalStateException("Encryption key has not yet been decrypted.");
+        }
+        JetSecurityBytestreamSession securityBytestreamSession = new JetSecurityBytestreamSession(bytestreamSession, aesKey.getCipher());
         callback.onSecurityReady(securityBytestreamSession);
     }
 
     @Override
-    public void encryptIncomingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callback) {
-        JetSecurityBytestreamSession securityBytestreamSession = new JetSecurityBytestreamSession(bytestreamSession, cipher);
+    public void encryptOutgoingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callback) {
+        JetSecurityBytestreamSession securityBytestreamSession = new JetSecurityBytestreamSession(bytestreamSession, aesKey.getCipher());
         callback.onSecurityReady(securityBytestreamSession);
+    }
+
+    public String getMethodNamespace() {
+        return methodNamespace;
     }
 }

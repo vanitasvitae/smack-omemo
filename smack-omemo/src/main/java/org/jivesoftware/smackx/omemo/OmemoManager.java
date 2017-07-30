@@ -799,8 +799,14 @@ public final class OmemoManager extends Manager implements JingleEncryptionMetho
      *
      * @return the connection of this manager
      */
-    XMPPConnection getConnection() {
+    @Override
+    public XMPPConnection getConnection() {
         return connection();
+    }
+
+    @Override
+    public String getNamespace() {
+        return OMEMO_NAMESPACE_V_AXOLOTL;
     }
 
     /**

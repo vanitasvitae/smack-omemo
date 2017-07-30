@@ -45,5 +45,5 @@ public abstract class JingleSecurity<D extends JingleContentSecurityElement> {
 
     public abstract void decryptIncomingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callback);
 
-    public abstract void encryptIncomingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callbacks);
+    public abstract void encryptOutgoingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callbacks);
 }

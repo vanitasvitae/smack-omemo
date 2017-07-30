@@ -20,13 +20,14 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jet.internal.JetSecurity;
+import org.jivesoftware.smackx.jft.JingleFileTransferManager;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jft.internal.JingleOutgoingFileOffer;
+import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.components.JingleContent;
@@ -39,15 +40,16 @@ import org.jxmpp.jid.FullJid;
 /**
  * Manager for Jingle Encrypted Transfers (XEP-XXXX).
  */
-public final class JetManager extends Manager {
-
-    private static final Logger LOGGER = Logger.getLogger(JetManager.class.getName());
+public final class JetManager extends Manager implements JingleDescriptionManager {
 
     private static final WeakHashMap<XMPPConnection, JetManager> INSTANCES = new WeakHashMap<>();
-
     private static final Map<String, JingleEncryptionMethod> encryptionMethods = new HashMap<>();
 
     private final JingleManager jingleManager;
+
+    static {
+        JingleManager.addJingleSecurityAdapter(new JetSecurityAdapter());
+    }
 
     private JetManager(XMPPConnection connection) {
         super(connection);
@@ -65,7 +67,7 @@ public final class JetManager extends Manager {
         return manager;
     }
 
-    public OutgoingFileOfferController sendEncryptedFile(FullJid recipient, File file, String encryptionMethodNamespace) throws Exception {
+    public OutgoingFileOfferController sendEncryptedFile(FullJid recipient, File file, JingleEncryptionMethod method) throws Exception {
         if (file == null || !file.exists()) {
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
         }
@@ -81,16 +83,15 @@ public final class JetManager extends Manager {
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager();
         content.setTransport(transportManager.createTransport(content));
 
-        JetSecurity security = new JetSecurity(encryptionMethodNamespace, connection());
+        JetSecurity security = new JetSecurity(method, recipient, content.getName());
         content.setSecurity(security);
         session.initiate(connection());
 
         return offer;
     }
 
-
-    public void registerEncryptionMethod(String namespace, JingleEncryptionMethod method) {
-        encryptionMethods.put(namespace, method);
+    public void registerEncryptionMethod(JingleEncryptionMethod method) {
+        encryptionMethods.put(method.getNamespace(), method);
     }
 
     public void unregisterEncryptionMethod(String namespace) {
@@ -101,4 +102,18 @@ public final class JetManager extends Manager {
         return encryptionMethods.get(namespace);
     }
 
+    @Override
+    public String getNamespace() {
+        return JetSecurity.NAMESPACE;
+    }
+
+    @Override
+    public void notifySessionInitiate(JingleSession session) {
+        JingleFileTransferManager.getInstanceFor(connection()).notifySessionInitiate(session);
+    }
+
+    @Override
+    public void notifyContentAdd(JingleSession session, JingleContent content) {
+        JingleFileTransferManager.getInstanceFor(connection()).notifyContentAdd(session, content);
+    }
 }
