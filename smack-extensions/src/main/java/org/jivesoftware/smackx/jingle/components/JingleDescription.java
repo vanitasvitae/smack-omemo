@@ -42,7 +42,7 @@ public abstract class JingleDescription<D extends JingleContentDescriptionElemen
         return parent;
     }
 
-    public abstract void onTransportReady(BytestreamSession bytestreamSession);
+    public abstract void onBytestreamReady(BytestreamSession bytestreamSession);
 
     public abstract String getNamespace();
 }

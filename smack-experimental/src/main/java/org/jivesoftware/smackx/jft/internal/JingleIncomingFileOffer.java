@@ -55,7 +55,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
     }
 
     @Override
-    public void onTransportReady(BytestreamSession bytestreamSession) {
+    public void onBytestreamReady(BytestreamSession bytestreamSession) {
         LOGGER.log(Level.INFO, "Receive file to " + target.getAbsolutePath());
         File mFile = target;
         if (!mFile.exists()) {
@@ -89,7 +89,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
 
             outputStream.write(filebuf);
             outputStream.flush();
-            
+
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Cannot get InputStream from BytestreamSession: " + e, e);
         } finally {

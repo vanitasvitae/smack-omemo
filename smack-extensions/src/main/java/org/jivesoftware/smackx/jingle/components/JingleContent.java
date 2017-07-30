@@ -37,6 +37,7 @@ import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleSecurityAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
+import org.jivesoftware.smackx.jingle.callbacks.JingleSecurityCallback;
 import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
@@ -48,7 +49,7 @@ import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 /**
  * Internal class that holds the state of a content in a modifiable form.
  */
-public class JingleContent implements JingleTransportCallback {
+public class JingleContent implements JingleTransportCallback, JingleSecurityCallback {
 
     private static final Logger LOGGER = Logger.getLogger(JingleContent.class.getName());
 
@@ -131,7 +132,7 @@ public class JingleContent implements JingleTransportCallback {
         return new JingleContent(description, transport, security, content.getName(), content.getDisposition(), content.getCreator(), content.getSenders());
     }
 
-    /* HANDLEXYZ */
+    /* HANDLE_XYZ */
 
     public IQ handleJingleRequest(JingleElement request, XMPPConnection connection) {
         switch (request.getAction()) {
@@ -334,7 +335,17 @@ public class JingleContent implements JingleTransportCallback {
             throw new AssertionError("bytestreamSession MUST NOT be null at this point.");
         }
 
-        description.onTransportReady(bytestreamSession);
+        if (security != null) {
+            if (isReceiving()) {
+                LOGGER.log(Level.INFO, "Decrypt incoming Bytestream.");
+                getSecurity().decryptIncomingBytestream(bytestreamSession, this);
+            } else if (isSending()) {
+                LOGGER.log(Level.INFO, "Encrypt outgoing Bytestream.");
+                getSecurity().encryptIncomingBytestream(bytestreamSession, this);
+            }
+        } else {
+            description.onBytestreamReady(bytestreamSession);
+        }
     }
 
     @Override
@@ -350,6 +361,16 @@ public class JingleContent implements JingleTransportCallback {
                 LOGGER.log(Level.SEVERE, "Could not send transport-replace: " + e, e);
             }
         }
+    }
+
+    @Override
+    public void onSecurityReady(BytestreamSession bytestreamSession) {
+        getDescription().onBytestreamReady(bytestreamSession);
+    }
+
+    @Override
+    public void onSecurityFailed(Exception e) {
+        LOGGER.log(Level.SEVERE, "Security failed: " + e, e);
     }
 
     private void replaceTransport(Set<String> blacklist, XMPPConnection connection)

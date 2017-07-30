@@ -46,7 +46,7 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
     }
 
     @Override
-    public void onTransportReady(BytestreamSession bytestreamSession) {
+    public void onBytestreamReady(BytestreamSession bytestreamSession) {
         File mFile = ((LocalFile) file).getFile();
         OutputStream outputStream = null;
         InputStream inputStream = null;

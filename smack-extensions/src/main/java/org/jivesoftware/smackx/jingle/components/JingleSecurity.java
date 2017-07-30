@@ -16,6 +16,8 @@
  */
 package org.jivesoftware.smackx.jingle.components;
 
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.jingle.callbacks.JingleSecurityCallback;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
@@ -40,4 +42,8 @@ public abstract class JingleSecurity<D extends JingleContentSecurityElement> {
     public JingleContent getParent() {
         return parent;
     }
+
+    public abstract void decryptIncomingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callback);
+
+    public abstract void encryptIncomingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callbacks);
 }
