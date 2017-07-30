@@ -154,7 +154,7 @@ public class JingleFileTransferTest extends AbstractSmackIntegrationTest {
 
     }
 
-    private File prepareNewTestFile(String name) {
+    public static File prepareNewTestFile(String name) {
         File testFile = new File(tempDir, name);
         try {
             if (!testFile.exists()) {

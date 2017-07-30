@@ -23,6 +23,7 @@ import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jet.internal.JetSecurity;
 import org.jivesoftware.smackx.jft.JingleFileTransferManager;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
@@ -54,6 +55,8 @@ public final class JetManager extends Manager implements JingleDescriptionManage
     private JetManager(XMPPConnection connection) {
         super(connection);
         this.jingleManager = JingleManager.getInstanceFor(connection);
+        ServiceDiscoveryManager.getInstanceFor(connection).addFeature(getNamespace());
+        jingleManager.addJingleDescriptionManager(this);
     }
 
     public static JetManager getInstanceFor(XMPPConnection connection) {

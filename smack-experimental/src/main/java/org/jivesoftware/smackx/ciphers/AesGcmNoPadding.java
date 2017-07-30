@@ -37,21 +37,22 @@ public abstract class AesGcmNoPadding {
     protected final Cipher cipher;
     protected final byte[] key, iv, keyAndIv;
 
-    public AesGcmNoPadding(int length) throws NoSuchAlgorithmException, NoSuchProviderException,
+    public AesGcmNoPadding(int bits) throws NoSuchAlgorithmException, NoSuchProviderException,
             NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException {
-        this.length = length;
+        this.length = bits;
+        int bytes = bits / 8;
 
         KeyGenerator keyGenerator = KeyGenerator.getInstance(keyType);
-        keyGenerator.init(length);
+        keyGenerator.init(bits);
         key = keyGenerator.generateKey().getEncoded();
 
         SecureRandom secureRandom = new SecureRandom();
-        iv = new byte[length];
+        iv = new byte[bytes];
         secureRandom.nextBytes(iv);
 
-        keyAndIv = new byte[2 * length];
-        System.arraycopy(key, 0, keyAndIv, 0, length);
-        System.arraycopy(iv, 0, keyAndIv, length, length);
+        keyAndIv = new byte[2 * bytes];
+        System.arraycopy(key, 0, keyAndIv, 0, bytes);
+        System.arraycopy(iv, 0, keyAndIv, bytes, bytes);
 
         SecretKey secretKey = new SecretKeySpec(key, keyType);
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
@@ -65,9 +66,11 @@ public abstract class AesGcmNoPadding {
         this.key = key;
         this.iv = iv;
 
-        keyAndIv = new byte[2 * length];
-        System.arraycopy(key, 0, keyAndIv, 0, length);
-        System.arraycopy(iv, 0, keyAndIv, length, length);
+        int bytes = length / 8;
+
+        keyAndIv = new byte[2 * bytes];
+        System.arraycopy(key, 0, keyAndIv, 0, bytes);
+        System.arraycopy(iv, 0, keyAndIv, bytes, bytes);
 
         cipher = Cipher.getInstance(cipherMode, "BC");
         SecretKeySpec keySpec = new SecretKeySpec(key, keyType);
