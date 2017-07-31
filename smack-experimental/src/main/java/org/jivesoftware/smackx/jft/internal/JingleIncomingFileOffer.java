@@ -72,30 +72,25 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
             inputStream = bytestreamSession.getInputStream();
             outputStream = new FileOutputStream(mFile);
 
-            byte[] filebuf = new byte[(int) file.getSize()];
+            int length = 0;
             int read = 0;
             byte[] bufbuf = new byte[4096];
-            LOGGER.log(Level.INFO, "Begin receiving bytes.");
-            while (read < filebuf.length) {
-                int r = inputStream.read(bufbuf);
-                if (r >= 0) {
-                    System.arraycopy(bufbuf, 0, filebuf, read, r);
-                    read += r;
-                    LOGGER.log(Level.INFO, "Read " + r + " (" + read + " of " + filebuf.length + ") bytes.");
-                } else {
+            while ((length = inputStream.read(bufbuf)) >= 0) {
+                outputStream.write(bufbuf, 0, length);
+                read += length;
+                LOGGER.log(Level.INFO, "Read " + read + " (" + length + ") of " + file.getSize() + " bytes.");
+                if (read == (int) file.getSize()) {
                     break;
                 }
             }
-
-            outputStream.write(filebuf);
-            outputStream.flush();
-
+            LOGGER.log(Level.INFO, "Reading/Writing finished.");
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Cannot get InputStream from BytestreamSession: " + e, e);
         } finally {
             if (inputStream != null) {
                 try {
                     inputStream.close();
+                    LOGGER.log(Level.INFO, "CipherInputStream closed.");
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Could not close InputStream: " + e, e);
                 }
@@ -104,12 +99,12 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
             if (outputStream != null) {
                 try {
                     outputStream.close();
+                    LOGGER.log(Level.INFO, "FileOutputStream closed.");
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Could not close OutputStream: " + e, e);
                 }
             }
         }
-
         notifyProgressListenersFinished();
     }
 

@@ -61,6 +61,7 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
 
             outputStream.write(fileBuf);
             outputStream.flush();
+            outputStream.close();
 
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception while sending file: " + e, e);

@@ -25,7 +25,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public abstract class AesGcmNoPadding {
@@ -54,10 +54,10 @@ public abstract class AesGcmNoPadding {
         System.arraycopy(key, 0, keyAndIv, 0, bytes);
         System.arraycopy(iv, 0, keyAndIv, bytes, bytes);
 
-        SecretKey secretKey = new SecretKeySpec(key, keyType);
-        IvParameterSpec ivSpec = new IvParameterSpec(iv);
         cipher = Cipher.getInstance(cipherMode, "BC");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
+        SecretKey keySpec = new SecretKeySpec(key, keyType);
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);
     }
 
     public AesGcmNoPadding(byte[] key, byte[] iv) throws NoSuchPaddingException, NoSuchAlgorithmException,
@@ -72,8 +72,8 @@ public abstract class AesGcmNoPadding {
 
         cipher = Cipher.getInstance(cipherMode, "BC");
         SecretKeySpec keySpec = new SecretKeySpec(key, keyType);
-        IvParameterSpec ivSpec = new IvParameterSpec(iv);
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmSpec);
     }
 
     public byte[] getKeyAndIv() {
