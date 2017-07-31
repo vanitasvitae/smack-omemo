@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
@@ -45,7 +47,6 @@ import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.util.Role;
 
 import org.jxmpp.jid.FullJid;
@@ -54,6 +55,7 @@ import org.jxmpp.jid.FullJid;
  * Created by vanitas on 22.07.17.
  */
 public final class JingleFileTransferManager extends Manager implements JingleDescriptionManager {
+    private static final Logger LOGGER = Logger.getLogger(JingleFileTransferManager.class.getName());
 
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();
     private final JingleManager jingleManager;
@@ -65,6 +67,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
 
     static {
         JingleManager.addJingleDescriptionAdapter(new JingleFileTransferAdapter());
+        JingleManager.addJingleDescriptionProvider(new JingleFileTransferProvider());
     }
 
     private JingleFileTransferManager(XMPPConnection connection) {
@@ -72,7 +75,6 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(getNamespace());
         jingleManager = JingleManager.getInstanceFor(connection);
         jingleManager.addJingleDescriptionManager(this);
-        JingleContentProviderManager.addJingleContentDescriptionProvider(getNamespace(), new JingleFileTransferProvider());
     }
 
     public static JingleFileTransferManager getInstanceFor(XMPPConnection connection) {
@@ -127,6 +129,9 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
     }
 
     public void notifyIncomingFileOfferListeners(JingleIncomingFileOffer offer) {
+        LOGGER.log(Level.INFO, "Incoming File transfer: [" + offer.getNamespace() + ", "
+                + offer.getParent().getTransport().getNamespace() + ", "
+                + offer.getParent().getSecurity().getNamespace());
         for (IncomingFileOfferListener l : offerListeners) {
             l.onIncomingFileOffer(offer);
         }

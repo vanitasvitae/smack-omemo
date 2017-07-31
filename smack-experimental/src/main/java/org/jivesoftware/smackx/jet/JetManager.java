@@ -18,13 +18,15 @@ package org.jivesoftware.smackx.jet;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jet.internal.JetSecurity;
+import org.jivesoftware.smackx.jet.provider.JetSecurityProvider;
 import org.jivesoftware.smackx.jft.JingleFileTransferManager;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jft.internal.JingleOutgoingFileOffer;
@@ -43,13 +45,17 @@ import org.jxmpp.jid.FullJid;
  */
 public final class JetManager extends Manager implements JingleDescriptionManager {
 
+    private static final Logger LOGGER = Logger.getLogger(JetManager.class.getName());
+
     private static final WeakHashMap<XMPPConnection, JetManager> INSTANCES = new WeakHashMap<>();
-    private static final Map<String, JingleEncryptionMethod> encryptionMethods = new HashMap<>();
+    private static final HashMap<String, JingleEncryptionMethod> encryptionMethods = new HashMap<>();
+    private static final HashMap<String, ExtensionElementProvider<?>> encryptionMethodProviders = new HashMap<>();
 
     private final JingleManager jingleManager;
 
     static {
         JingleManager.addJingleSecurityAdapter(new JetSecurityAdapter());
+        JingleManager.addJingleSecurityProvider(new JetSecurityProvider());
     }
 
     private JetManager(XMPPConnection connection) {
@@ -103,6 +109,18 @@ public final class JetManager extends Manager implements JingleDescriptionManage
 
     public JingleEncryptionMethod getEncryptionMethod(String namespace) {
         return encryptionMethods.get(namespace);
+    }
+
+    public static void registerEncryptionMethodProvider(String namespace, ExtensionElementProvider<?> provider) {
+        encryptionMethodProviders.put(namespace, provider);
+    }
+
+    public static void removeEncryptionMethodProvider(String namespace) {
+        encryptionMethodProviders.remove(namespace);
+    }
+
+    public static ExtensionElementProvider<?> getEncryptionMethodProvider(String namespace) {
+        return encryptionMethodProviders.get(namespace);
     }
 
     @Override

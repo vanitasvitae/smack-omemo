@@ -22,28 +22,29 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smack.util.Objects;
-import org.jivesoftware.smackx.jet.JingleEncryptionMethodManager;
+import org.jivesoftware.smackx.jet.JetManager;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jet.internal.JetSecurity;
+import org.jivesoftware.smackx.jingle.provider.JingleContentSecurityProvider;
 
 import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Provider for the Jingle security element for XEP-XXXX (Jingle Encrypted Transfers).
  */
-public class JetSecurityProvider extends ExtensionElementProvider<JetSecurityElement> {
+public class JetSecurityProvider extends JingleContentSecurityProvider<JetSecurityElement> {
     private static final Logger LOGGER = Logger.getLogger(JetSecurityProvider.class.getName());
 
     @Override
     public JetSecurityElement parse(XmlPullParser parser, int initialDepth) throws Exception {
-        String name = parser.getAttributeValue(JetSecurity.NAMESPACE, JetSecurityElement.ATTR_NAME);
-        String type = parser.getAttributeValue(JetSecurity.NAMESPACE, JetSecurityElement.ATTR_TYPE);
+        String name = parser.getAttributeValue("", JetSecurityElement.ATTR_NAME);
+        String type = parser.getAttributeValue("", JetSecurityElement.ATTR_TYPE);
         ExtensionElement child;
 
         Objects.requireNonNull(type);
 
-        ExtensionElementProvider<ExtensionElement> encryptionElementProvider =
-                JingleEncryptionMethodManager.getSecurityKeyTransportProvider(type);
+        ExtensionElementProvider<?> encryptionElementProvider =
+                JetManager.getEncryptionMethodProvider(type);
 
         if (encryptionElementProvider != null) {
             child = encryptionElementProvider.parse(parser);
@@ -53,5 +54,10 @@ public class JetSecurityProvider extends ExtensionElementProvider<JetSecurityEle
         }
 
         return new JetSecurityElement(name, child);
+    }
+
+    @Override
+    public String getNamespace() {
+        return JetSecurity.NAMESPACE;
     }
 }

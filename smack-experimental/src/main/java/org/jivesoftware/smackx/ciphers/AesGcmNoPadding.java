@@ -62,15 +62,13 @@ public abstract class AesGcmNoPadding {
 
     public AesGcmNoPadding(byte[] key, byte[] iv) throws NoSuchPaddingException, NoSuchAlgorithmException,
             NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException {
-        this.length = key.length;
+        this.length = key.length * 8;
         this.key = key;
         this.iv = iv;
 
-        int bytes = length / 8;
-
-        keyAndIv = new byte[2 * bytes];
-        System.arraycopy(key, 0, keyAndIv, 0, bytes);
-        System.arraycopy(iv, 0, keyAndIv, bytes, bytes);
+        keyAndIv = new byte[key.length + iv.length];
+        System.arraycopy(key, 0, keyAndIv, 0, key.length);
+        System.arraycopy(iv, 0, keyAndIv, key.length, iv.length);
 
         cipher = Cipher.getInstance(cipherMode, "BC");
         SecretKeySpec keySpec = new SecretKeySpec(key, keyType);

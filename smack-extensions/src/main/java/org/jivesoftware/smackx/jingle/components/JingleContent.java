@@ -306,6 +306,9 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public void onAccept(final XMPPConnection connection) {
+        if (security != null) {
+            security.prepare(connection, getParent().getPeer());
+        }
         //Establish transport
         Async.go(new Runnable() {
             @Override

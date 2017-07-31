@@ -20,14 +20,18 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.NoSuchPaddingException;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.ciphers.Aes256GcmNoPadding;
 import org.jivesoftware.smackx.ciphers.AesGcmNoPadding;
+import org.jivesoftware.smackx.jet.JetManager;
 import org.jivesoftware.smackx.jet.JingleEncryptionMethod;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jingle.callbacks.JingleSecurityCallback;
@@ -41,6 +45,7 @@ import org.jxmpp.jid.FullJid;
  * Created by vanitas on 22.07.17.
  */
 public class JetSecurity extends JingleSecurity<JetSecurityElement> {
+    private static final Logger LOGGER = Logger.getLogger(JetSecurity.class.getName());
 
     public static final String NAMESPACE_V0 = "urn:xmpp:jingle:jet:0";
     public static final String NAMESPACE = NAMESPACE_V0;
@@ -75,6 +80,7 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
             SmackException.NotConnectedException, SmackException.NoResponseException, NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, NoSuchProviderException, InvalidKeyException, NoSuchPaddingException {
         byte[] keyAndIv = method.decryptJingleTransfer(sender, child);
+        LOGGER.log(Level.INFO, "Transported JET Key has length: " + keyAndIv.length);
         aesKey = new Aes256GcmNoPadding(keyAndIv);
     }
 
@@ -101,6 +107,32 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
     public void encryptOutgoingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callback) {
         JetSecurityBytestreamSession securityBytestreamSession = new JetSecurityBytestreamSession(bytestreamSession, aesKey.getCipher());
         callback.onSecurityReady(securityBytestreamSession);
+    }
+
+    @Override
+    public String getNamespace() {
+        return NAMESPACE;
+    }
+
+    @Override
+    public void prepare(XMPPConnection connection, FullJid sender) {
+        if (getParent().getParent().isInitiator()) {
+            return;
+        }
+
+        if (aesKey != null) {
+            return;
+        }
+
+        JingleEncryptionMethod method = JetManager.getInstanceFor(connection).getEncryptionMethod(getMethodNamespace());
+        if (method == null) {
+            throw new AssertionError("No JingleEncryptionMethodManager found for " + getMethodNamespace());
+        }
+        try {
+            decryptEncryptionKey(method, sender);
+        } catch (InterruptedException | NoSuchPaddingException | InvalidKeyException | NoSuchProviderException | InvalidAlgorithmParameterException | NoSuchAlgorithmException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException | JingleEncryptionMethod.JingleEncryptionException e) {
+            LOGGER.log(Level.SEVERE, "Could not decrypt security key: " + e, e);
+        }
     }
 
     public String getMethodNamespace() {

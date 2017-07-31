@@ -25,7 +25,6 @@ import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleTransport;
-import org.jivesoftware.smackx.jingle.provider.JingleContentProviderManager;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.provider.JingleIBBTransportProvider;
 
 /**
@@ -39,6 +38,7 @@ public final class JingleIBBTransportManager extends Manager implements JingleTr
 
     static {
         JingleManager.addJingleTransportAdapter(new JingleIBBTransportAdapter());
+        JingleManager.addJingleTransportProvider(new JingleIBBTransportProvider());
     }
 
     private JingleIBBTransportManager(XMPPConnection connection) {
@@ -46,7 +46,6 @@ public final class JingleIBBTransportManager extends Manager implements JingleTr
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(getNamespace());
         JingleManager jingleManager = JingleManager.getInstanceFor(connection);
         jingleManager.addJingleTransportManager(this);
-        JingleContentProviderManager.addJingleContentTransportProvider(getNamespace(), new JingleIBBTransportProvider());
     }
 
     public static JingleIBBTransportManager getInstanceFor(XMPPConnection connection) {

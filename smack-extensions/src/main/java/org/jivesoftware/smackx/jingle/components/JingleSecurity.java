@@ -16,11 +16,14 @@
  */
 package org.jivesoftware.smackx.jingle.components;
 
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jingle.callbacks.JingleSecurityCallback;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
+
+import org.jxmpp.jid.FullJid;
 
 /**
  * Class that represents a contents security component.
@@ -46,4 +49,8 @@ public abstract class JingleSecurity<D extends JingleContentSecurityElement> {
     public abstract void decryptIncomingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callback);
 
     public abstract void encryptOutgoingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callbacks);
+
+    public abstract String getNamespace();
+
+    public abstract void prepare(XMPPConnection connection, FullJid sender);
 }
