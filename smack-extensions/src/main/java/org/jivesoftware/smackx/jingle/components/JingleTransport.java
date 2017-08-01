@@ -18,6 +18,8 @@ package org.jivesoftware.smackx.jingle.components;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackFuture;
@@ -34,6 +36,8 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
  */
 public abstract class JingleTransport<D extends JingleContentTransportElement> extends SmackFuture<BytestreamSession> {
 
+    private static final Logger LOGGER = Logger.getLogger(JingleTransport.class.getName());
+
     private JingleContent parent;
     private final ArrayList<JingleTransportCandidate<?>> candidates = new ArrayList<>();
 
@@ -45,6 +49,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     public abstract D getElement();
 
     public void addCandidate(JingleTransportCandidate<?> candidate) {
+        LOGGER.log(Level.INFO, "Insert candidate.");
         // Insert sorted by descending priority
 
         // Empty list -> insert
@@ -59,7 +64,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
             JingleTransportCandidate<?> c = candidates.get(i);
 
             // list already contains element -> return
-            if (c == candidate) {
+            if (c == candidate || c.equals(candidate)) {
                 return;
             }
 
@@ -67,6 +72,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
             if (c.getPriority() <= candidate.getPriority()) {
                 candidates.add(i, candidate);
                 candidate.setParent(this);
+                return;
             }
         }
     }
@@ -85,6 +91,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
 
     public void setPeersProposal(JingleTransport<?> peersProposal) {
         this.peersProposal = peersProposal;
+        peersProposal.setParent(getParent());
         peersProposal.isPeersProposal = true;
     }
 

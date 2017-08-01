@@ -137,6 +137,8 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
             candidates.add(new JingleS5BTransportCandidate(StringUtils.randomString(16), host, 0, JingleS5BTransportCandidateElement.Type.proxy));
         }
 
+        LOGGER.log(Level.INFO, "Collected candidates.");
+
         return candidates;
     }
 
@@ -191,8 +193,13 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
 
         JingleElement.Builder jb = JingleElement.getBuilder()
                 .setSessionId(session.getSessionId())
-                .setInitiator(session.getInitiator())
                 .setAction(JingleAction.transport_info);
+
+        if (session.isInitiator()) {
+            jb.setInitiator(session.getInitiator());
+        } else {
+            jb.setResponder(session.getResponder());
+        }
 
         JingleContentElement.Builder cb = JingleContentElement.getBuilder()
                 .setCreator(content.getCreator())

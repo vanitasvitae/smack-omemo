@@ -19,13 +19,17 @@ package org.jivesoftware.smackx.jingle.transport.jingle_s5b;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Client;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5ClientForInitiator;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
+import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
+import org.jivesoftware.smackx.jingle.components.JingleTransport;
 import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 
@@ -33,6 +37,7 @@ import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTran
  * Jingle SOCKS5Bytestream transport candidate.
  */
 public class JingleS5BTransportCandidate extends JingleTransportCandidate<JingleS5BTransportCandidateElement> {
+    private static final Logger LOGGER = Logger.getLogger(JingleS5BTransportCandidate.class.getName());
 
     private final String candidateId;
     private final Bytestream.StreamHost streamHost;
@@ -75,16 +80,20 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
                 getPriority(), getType());
     }
 
-    public JingleS5BTransportCandidate connect(int timeout) throws InterruptedException, TimeoutException, SmackException, XMPPException, IOException {
+    public JingleS5BTransportCandidate connect(int timeout, boolean peersProposal) throws InterruptedException, TimeoutException, SmackException, XMPPException, IOException {
         Socks5Client client;
 
-        if (getParent().isPeersProposal()) {
+        if (peersProposal) {
+            LOGGER.log(Level.INFO, "Connect to foreign candidate " + getCandidateId());
             client = new Socks5Client(getStreamHost(), ((JingleS5BTransport) getParent()).getDstAddr());
         }
         else {
-            JingleSession session = getParent().getParent().getParent();
+            LOGGER.log(Level.INFO, "Connect to our candidate " + getCandidateId());
+            JingleTransport<?> transport = getParent();
+            JingleContent content = transport.getParent();
+            JingleSession session = content.getParent();
             client = new Socks5ClientForInitiator(getStreamHost(), ((JingleS5BTransport) getParent()).getDstAddr(),
-                    session.getJingleManager().getConnection(), session.getSessionId(), session.getPeer());
+                    session.getJingleManager().getConnection(), ((JingleS5BTransport) getParent()).getSid(), getStreamHost().getJID());
         }
 
         this.socket = client.getSocket(timeout);

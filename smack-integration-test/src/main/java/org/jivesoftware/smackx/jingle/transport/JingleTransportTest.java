@@ -24,8 +24,10 @@ import java.io.OutputStream;
 import java.util.Random;
 import java.util.logging.Level;
 
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
 import org.jivesoftware.smackx.jingle.components.JingleContent;
@@ -41,7 +43,9 @@ import org.igniterealtime.smack.inttest.AbstractSmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 
 /**
  * Test the JingleIBBTransport in a very basic case.
@@ -52,33 +56,52 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
         super(environment);
     }
 
+    @Before
+    public void setup() {
+        Socks5Proxy socks5Proxy = Socks5Proxy.getSocks5Proxy();
+        if (!socks5Proxy.isRunning()) {
+            socks5Proxy.start();
+        }
+    }
+
     @SmackIntegrationTest
     public void JingleIBBTest() throws Exception {
-        JingleIBBTransport sender = new JingleIBBTransport();
-        final JingleIBBTransport receiver = new JingleIBBTransport(sender.getSid(), sender.getBlockSize());
+        JingleIBBTransport sTransport = new JingleIBBTransport();
+        final JingleIBBTransport rTransport = new JingleIBBTransport(sTransport.getSid(), sTransport.getBlockSize());
 
-        basicTransportTest(sender, receiver);
+        JingleSession sSession = new JingleSession(JingleManager.getInstanceFor(conOne), conOne.getUser().asFullJidOrThrow(), conTwo.getUser().asFullJidOrThrow(), Role.initiator, "session");
+        JingleSession rSession = new JingleSession(JingleManager.getInstanceFor(conTwo), conOne.getUser().asFullJidOrThrow(), conTwo.getUser().asFullJidOrThrow(), Role.responder, "session");
+
+        basicTransportTest(sSession, rSession, sTransport, rTransport);
     }
 
     @SmackIntegrationTest
     public void JingleS5BTest() throws Exception {
-        JingleSession sSession = new JingleSession(JingleManager.getInstanceFor(conOne), conOne.getUser().asFullJidOrThrow(), conTwo.getUser().asFullJidOrThrow(), Role.initiator, "session");
-        JingleSession rSession = new JingleSession(JingleManager.getInstanceFor(conTwo), conTwo.getUser().asFullJidOrThrow(), conOne.getUser().asFullJidOrThrow(), Role.responder, "session");
+        XMPPConnection sender = conOne;
+        XMPPConnection receiver = conTwo;
+        JingleSession sSession = new JingleSession(JingleManager.getInstanceFor(sender), sender.getUser().asFullJidOrThrow(), receiver.getUser().asFullJidOrThrow(), Role.initiator, "session");
+        JingleSession rSession = new JingleSession(JingleManager.getInstanceFor(receiver), sender.getUser().asFullJidOrThrow(), receiver.getUser().asFullJidOrThrow(), Role.responder, "session");
+        LOGGER.log(Level.INFO, sender.getUser().asFullJidOrThrow() + " adds " + sSession.getPeer() + " " + sSession.getSessionId());
+        JingleManager.getInstanceFor(sender).addSession(sSession);
+        LOGGER.log(Level.INFO, receiver.getUser().asFullJidOrThrow() + " adds " + rSession.getPeer() + " " + rSession.getSessionId());
+        JingleManager.getInstanceFor(receiver).addSession(rSession);
+
         JingleContent sContent = new JingleContent(null, null, null, "content", null, JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
         JingleContent rContent = new JingleContent(null, null, null, "content", null, JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
         sSession.addContent(sContent);
         rSession.addContent(rContent);
-        JingleS5BTransport sender = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(conOne).createTransport(sContent);
-        JingleS5BTransport receiver = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(conTwo).createTransport(rContent, sender);
+        JingleS5BTransport sTransport = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(sender).createTransport(sContent);
+        JingleS5BTransport rTransport = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(receiver).createTransport(rContent, sTransport);
+        sContent.setTransport(sTransport);
+        rContent.setTransport(rTransport);
+        sTransport.setPeersProposal(new JingleS5BTransport(rTransport));
+        rTransport.setPeersProposal(new JingleS5BTransport(sTransport));
 
-        basicTransportTest(sender, receiver);
+        basicTransportTest(sSession, rSession, sTransport, rTransport);
     }
 
 
-    public void basicTransportTest(final JingleTransport<?> sender, final JingleTransport<?> receiver) throws Exception {
-        JingleSession senderSession = new JingleSession(null, conTwo.getUser().asFullJidOrThrow(), conOne.getUser().asFullJidOrThrow(), Role.initiator, "sid");
-        JingleSession receiverSession = new JingleSession(null, conTwo.getUser().asFullJidOrThrow(), conOne.getUser().asFullJidOrThrow(), Role.responder, "sid");
-
+    public void basicTransportTest(JingleSession sSession, JingleSession rSession, final JingleTransport<?> sTransport, final JingleTransport<?> rTransport) throws Exception {
         final SimpleResultSyncPoint recvPoint = new SimpleResultSyncPoint();
 
         final int size = 16000;
@@ -86,7 +109,7 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
         new Random().nextBytes(data);
         final byte[] recv = new byte[size];
 
-        receiver.establishIncomingBytestreamSession(conOne, new JingleTransportCallback() {
+        rTransport.establishIncomingBytestreamSession(rSession.getJingleManager().getConnection(), new JingleTransportCallback() {
             @Override
             public void onTransportReady(final BytestreamSession bytestreamSession) {
                 LOGGER.log(Level.INFO, "Receiving!");
@@ -106,6 +129,7 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
                                 } else {
                                     break;
                                 }
+                                LOGGER.log(Level.INFO, "Read " + r + " bytes (" + read + " of " + size + ")");
                             }
 
                             LOGGER.log(Level.INFO, "Success!");
@@ -124,9 +148,9 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
                 LOGGER.log(Level.SEVERE, e.toString());
                 recvPoint.signal();
             }
-        }, receiverSession);
+        }, rSession);
 
-        sender.establishOutgoingBytestreamSession(conTwo, new JingleTransportCallback() {
+        sTransport.establishOutgoingBytestreamSession(sSession.getJingleManager().getConnection(), new JingleTransportCallback() {
             @Override
             public void onTransportReady(final BytestreamSession bytestreamSession) {
                 LOGGER.log(Level.INFO, "Sending!");
@@ -141,6 +165,7 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
                         } catch (IOException e) {
                             fail(e.toString());
                         }
+                        LOGGER.log(Level.INFO, "Sending finished!");
                     }
                 });
             }
@@ -149,9 +174,19 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
             public void onTransportFailed(Exception e) {
                 LOGGER.log(Level.SEVERE, e.toString());
             }
-        }, senderSession);
+        }, sSession);
 
         recvPoint.waitForResult(60 * 1000);
         Assert.assertArrayEquals(data, recv);
+        sSession.getJingleManager().removeSession(sSession);
+        rSession.getJingleManager().removeSession(rSession);
+    }
+
+    @After
+    public void tearDown() {
+        Socks5Proxy socks5Proxy = Socks5Proxy.getSocks5Proxy();
+        if (socks5Proxy.isRunning()) {
+            socks5Proxy.stop();
+        }
     }
 }

@@ -71,9 +71,7 @@ public final class JingleManager extends Manager {
 
     private final ConcurrentHashMap<FullJidAndSessionId, JingleSession> jingleSessions = new ConcurrentHashMap<>();
 
-    public static boolean ALLOW_MULTIPLE_CONTENT_PER_SESSION = false;
-
-    private JingleManager(XMPPConnection connection) {
+    private JingleManager(final XMPPConnection connection) {
         super(connection);
 
         connection.registerIQRequestHandler(
@@ -91,7 +89,7 @@ public final class JingleManager extends Manager {
                         // We have not seen this session before.
                         // Either it is fresh, or unknown.
                         if (session == null) {
-
+                            LOGGER.log(Level.INFO, connection().getUser().asFullJidOrThrow() + " received unknown session: " + jingle.getFrom().asFullJidOrThrow() + " " + jingle.getSid());
                             if (jingle.getAction() == JingleAction.session_initiate) {
                                 //fresh. phew!
                                 try {
@@ -264,6 +262,12 @@ public final class JingleManager extends Manager {
 
         jingleSessions.put(new FullJidAndSessionId(peer, session.getSessionId()), session);
         return session;
+    }
+
+    public void addSession(JingleSession session) {
+        if (!jingleSessions.containsValue(session)) {
+            jingleSessions.put(new FullJidAndSessionId(session.getPeer(), session.getSessionId()), session);
+        }
     }
 
     public void removeSession(JingleSession session) {

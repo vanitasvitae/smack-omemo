@@ -83,6 +83,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         this(other.getSid(),
                 Socks5Utils.createDigest(other.getSid(), content.getParent().getInitiator(), content.getParent().getResponder()),
                 other.mode, candidates);
+        setPeersProposal(other);
     }
 
     public JingleS5BTransport(String sid, String dstAddr, Bytestream.Mode mode, List<JingleTransportCandidate<?>> candidates) {
@@ -94,6 +95,10 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
                 candidates : Collections.<JingleS5BTransportCandidate>emptySet())) {
             addCandidate(c);
         }
+    }
+
+    public JingleS5BTransport(JingleS5BTransport transport) {
+        this(transport.sid, transport.dstAddr, transport.mode, transport.getCandidates());
     }
 
     @Override
@@ -161,10 +166,10 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     public JingleS5BTransportCandidate connectToCandidates(int timeout) {
-        for (JingleTransportCandidate<?> c : getCandidates()) {
+        for (JingleTransportCandidate<?> c : getPeersProposal().getCandidates()) {
             int _timeout = timeout / getCandidates().size(); //TODO: Wise?
             try {
-                return ((JingleS5BTransportCandidate) c).connect(_timeout);
+                return ((JingleS5BTransportCandidate) c).connect(_timeout, true);
             } catch (IOException | TimeoutException | InterruptedException | SmackException | XMPPException e) {
                 LOGGER.log(Level.WARNING, "Exception while connecting to candidate: " + e, e);
             }
@@ -179,7 +184,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         JingleS5BTransport peers = (JingleS5BTransport) getPeersProposal();
         JingleSession session = getParent().getParent();
 
-        if (getSelectedCandidate() == null || peers.getSelectedCandidate() == null) {
+        if (getSelectedCandidate() == null || peers == null || peers.getSelectedCandidate() == null) {
             // Not yet ready if we or peer did not yet decide on a candidate.
             LOGGER.log(Level.INFO, "Not ready.");
             return;
@@ -217,7 +222,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             boolean isProxy = nominated.getType() == JingleS5BTransportCandidateElement.Type.proxy;
 
             try {
-                nominated = nominated.connect(MAX_TIMEOUT);
+                nominated = nominated.connect(MAX_TIMEOUT, false);
             } catch (InterruptedException | IOException | XMPPException | SmackException | TimeoutException e) {
                 LOGGER.log(Level.INFO, "Could not connect to our candidate.", e);
                 callback.onTransportFailed(new S5BTransportException.CandidateError(e));
@@ -255,7 +260,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
                 }
             }
 
-            LOGGER.log(Level.INFO, "Start transmission.");
+            LOGGER.log(Level.INFO, "Start transmission on " + nominated.getCandidateId());
             this.bytestreamSession = new Socks5BytestreamSession(nominated.getSocket(), !isProxy);
             callback.onTransportReady(this.bytestreamSession);
 
@@ -265,7 +270,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             LOGGER.log(Level.INFO, "Our choice, so their candidate was used.");
             boolean isProxy = nominated.getType() == JingleS5BTransportCandidateElement.Type.proxy;
             if (!isProxy) {
-                LOGGER.log(Level.INFO, "Direct connection.");
+                LOGGER.log(Level.INFO, "Start transmission on " + nominated.getCandidateId());
                 this.bytestreamSession = new Socks5BytestreamSession(nominated.getSocket(), true);
                 callback.onTransportReady(this.bytestreamSession);
             } else {
@@ -310,7 +315,8 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         // Received second candidate-used -> out-of-order!
         if (peers.getSelectedCandidate() != null) {
             try {
-                jingleManager.getConnection().createStanzaCollectorAndSend(JingleElement.createJingleErrorOutOfOrder(wrapping));
+                jingleManager.getConnection().sendStanza(JingleElement.createJingleErrorOutOfOrder(wrapping));
+                //jingleManager.getConnection().createStanzaCollectorAndSend(JingleElement.createJingleErrorOutOfOrder(wrapping));
             } catch (SmackException.NotConnectedException | InterruptedException e) {
                 LOGGER.log(Level.SEVERE, "Could not respond to candidate-used transport-info: " + e, e);
             }
@@ -320,12 +326,14 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         Iterator<JingleTransportCandidate<?>> ourCandidates = getCandidates().iterator();
         while (ourCandidates.hasNext()) {
             JingleS5BTransportCandidate candidate = (JingleS5BTransportCandidate) ourCandidates.next();
+            LOGGER.log(Level.INFO, "CandidateID: " + candidate.getCandidateId() + " " + candidateId);
             if (candidate.getCandidateId().equals(candidateId)) {
                 peers.setSelectedCandidate(candidate);
             }
         }
 
         if (peers.getSelectedCandidate() == null) {
+            LOGGER.log(Level.SEVERE, "ILLEGAL CANDIDATE ID!!!");
             //TODO: Alert! Illegal candidateId!
         }
 
