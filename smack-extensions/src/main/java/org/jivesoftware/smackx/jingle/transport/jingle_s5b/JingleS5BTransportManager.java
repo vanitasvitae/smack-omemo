@@ -106,7 +106,9 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     public JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport) {
         JingleS5BTransport transport = (JingleS5BTransport) peersTransport;
         List<JingleTransportCandidate<?>> candidates = collectCandidates();
-        return new JingleS5BTransport(content, transport, candidates);
+        JingleS5BTransport mTransport = new JingleS5BTransport(content, transport, candidates);
+        mTransport.setPeersProposal(transport);
+        return mTransport;
     }
 
     @Override
@@ -120,7 +122,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         //Local host
         if (JingleS5BTransportManager.isUseLocalCandidates()) {
             for (Bytestream.StreamHost host : getLocalStreamHosts()) {
-                candidates.add(new JingleS5BTransportCandidate(StringUtils.randomString(16), host, 100, JingleS5BTransportCandidateElement.Type.direct));
+                candidates.add(new JingleS5BTransportCandidate(StringUtils.randomString(16), host, 100, JingleS5BTransportCandidateElement.Type.proxy));
             }
         }
 

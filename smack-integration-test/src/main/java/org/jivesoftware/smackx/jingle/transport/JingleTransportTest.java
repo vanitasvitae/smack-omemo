@@ -45,7 +45,6 @@ import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 
 /**
  * Test the JingleIBBTransport in a very basic case.
@@ -56,27 +55,27 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
         super(environment);
     }
 
-    @Before
-    public void setup() {
-        Socks5Proxy socks5Proxy = Socks5Proxy.getSocks5Proxy();
-        if (!socks5Proxy.isRunning()) {
-            socks5Proxy.start();
-        }
-    }
-
-    @SmackIntegrationTest
+    //@SmackIntegrationTest
     public void JingleIBBTest() throws Exception {
-        JingleIBBTransport sTransport = new JingleIBBTransport();
-        final JingleIBBTransport rTransport = new JingleIBBTransport(sTransport.getSid(), sTransport.getBlockSize());
+        XMPPConnection sender = conOne;
+        XMPPConnection receiver = conTwo;
 
-        JingleSession sSession = new JingleSession(JingleManager.getInstanceFor(conOne), conOne.getUser().asFullJidOrThrow(), conTwo.getUser().asFullJidOrThrow(), Role.initiator, "session");
-        JingleSession rSession = new JingleSession(JingleManager.getInstanceFor(conTwo), conOne.getUser().asFullJidOrThrow(), conTwo.getUser().asFullJidOrThrow(), Role.responder, "session");
+        JingleIBBTransport sTransport = new JingleIBBTransport();
+        JingleIBBTransport rTransport = new JingleIBBTransport(sTransport.getSid(), sTransport.getBlockSize());
+
+        JingleSession sSession = new JingleSession(JingleManager.getInstanceFor(sender), sender.getUser().asFullJidOrThrow(), receiver.getUser().asFullJidOrThrow(), Role.initiator, "session");
+        JingleSession rSession = new JingleSession(JingleManager.getInstanceFor(receiver), sender.getUser().asFullJidOrThrow(), receiver.getUser().asFullJidOrThrow(), Role.responder, "session");
 
         basicTransportTest(sSession, rSession, sTransport, rTransport);
     }
 
     @SmackIntegrationTest
     public void JingleS5BTest() throws Exception {
+        Socks5Proxy socks5Proxy = Socks5Proxy.getSocks5Proxy();
+        if (!socks5Proxy.isRunning()) {
+            socks5Proxy.start();
+        }
+        
         XMPPConnection sender = conOne;
         XMPPConnection receiver = conTwo;
         JingleSession sSession = new JingleSession(JingleManager.getInstanceFor(sender), sender.getUser().asFullJidOrThrow(), receiver.getUser().asFullJidOrThrow(), Role.initiator, "session");
