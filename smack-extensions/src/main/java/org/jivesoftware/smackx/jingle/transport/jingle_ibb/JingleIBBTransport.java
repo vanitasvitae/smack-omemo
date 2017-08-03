@@ -47,7 +47,7 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     public static final String NAMESPACE = NAMESPACE_V1;
 
     private final String streamId;
-    private final Short blockSize;
+    private Short blockSize;
 
     public JingleIBBTransport(String streamId, Short blockSize) {
         this.streamId = streamId;
@@ -120,7 +120,14 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void addCandidate(JingleTransportCandidate<?> candidate) {
+    public void setPeersProposal(JingleTransport<?> peersProposal) {
+        JingleIBBTransport transport = (JingleIBBTransport) peersProposal;
+        //Respect peers wish for smaller block size.
+        blockSize = (blockSize < transport.blockSize ? blockSize : transport.blockSize);
+    }
+
+    @Override
+    public void addOurCandidate(JingleTransportCandidate<?> candidate) {
         // Sorry, we don't want any candidates.
     }
 

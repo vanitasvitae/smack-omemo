@@ -18,6 +18,7 @@ package org.jivesoftware.smackx.jingle;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -225,7 +226,12 @@ public final class JingleManager extends Manager {
             remaining.add(transportManagers.get(namespace));
         }
 
-        Collections.sort(remaining);
+        Collections.sort(remaining, new Comparator<JingleTransportManager>() {
+            @Override
+            public int compare(JingleTransportManager t0, JingleTransportManager t1) {
+                return t1.compareTo(t0); //Invert otherwise ascending order to descending.
+            }
+        });
 
         return remaining;
     }
@@ -236,7 +242,6 @@ public final class JingleManager extends Manager {
 
     public JingleTransportManager getBestAvailableTransportManager(Set<String> except) {
         List<JingleTransportManager> managers = getAvailableTransportManagers(except);
-        Collections.sort(managers);
 
         if (managers.size() > 0) {
             return managers.get(0);

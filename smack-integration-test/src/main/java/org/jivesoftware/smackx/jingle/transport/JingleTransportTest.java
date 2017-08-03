@@ -55,7 +55,7 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
         super(environment);
     }
 
-    //@SmackIntegrationTest
+    @SmackIntegrationTest
     public void JingleIBBTest() throws Exception {
         XMPPConnection sender = conOne;
         XMPPConnection receiver = conTwo;

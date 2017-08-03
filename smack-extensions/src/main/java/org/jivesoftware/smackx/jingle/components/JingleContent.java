@@ -161,6 +161,13 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
 
     public IQ handleSessionAccept(JingleElement request, XMPPConnection connection) {
         LOGGER.log(Level.INFO, "RECEIVED SESSION ACCEPT!");
+        for (JingleContentElement contentElement : request.getContents()) {
+            if (contentElement.getName().equals(getName())) {
+                JingleContent content = fromElement(contentElement);
+                getTransport().setPeersProposal(content.getTransport());
+                break;
+            }
+        }
         onAccept(connection);
         return IQ.createResultIQ(request);
     }

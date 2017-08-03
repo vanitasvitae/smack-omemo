@@ -18,7 +18,6 @@ package org.jivesoftware.smackx.jingle.components;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.SmackException;
@@ -39,29 +38,26 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     private static final Logger LOGGER = Logger.getLogger(JingleTransport.class.getName());
 
     private JingleContent parent;
-    private final ArrayList<JingleTransportCandidate<?>> candidates = new ArrayList<>();
-
-    private JingleTransport<?> peersProposal;
-    private boolean isPeersProposal;
+    private final ArrayList<JingleTransportCandidate<?>> ourCandidates = new ArrayList<>();
+    private final ArrayList<JingleTransportCandidate<?>> theirCandidates = new ArrayList<>();
 
     protected BytestreamSession bytestreamSession;
 
     public abstract D getElement();
 
-    public void addCandidate(JingleTransportCandidate<?> candidate) {
-        LOGGER.log(Level.INFO, "Insert candidate.");
-        // Insert sorted by descending priority
+    public void addOurCandidate(JingleTransportCandidate<?> candidate) {
 
+        // Insert sorted by descending priority
         // Empty list -> insert
-        if (candidates.isEmpty()) {
-            candidates.add(candidate);
+        if (ourCandidates.isEmpty()) {
+            ourCandidates.add(candidate);
             candidate.setParent(this);
             return;
         }
 
         // Find appropriate index
-        for (int i = 0; i < candidates.size(); i++) {
-            JingleTransportCandidate<?> c = candidates.get(i);
+        for (int i = 0; i < ourCandidates.size(); i++) {
+            JingleTransportCandidate<?> c = ourCandidates.get(i);
 
             // list already contains element -> return
             if (c == candidate || c.equals(candidate)) {
@@ -70,15 +66,46 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
 
             //Found the index
             if (c.getPriority() <= candidate.getPriority()) {
-                candidates.add(i, candidate);
+                ourCandidates.add(i, candidate);
                 candidate.setParent(this);
                 return;
             }
         }
     }
 
-    public List<JingleTransportCandidate<?>> getCandidates() {
-        return candidates;
+    public void addTheirCandidate(JingleTransportCandidate<?> candidate) {
+        // Insert sorted by descending priority
+        // Empty list -> insert
+        if (theirCandidates.isEmpty()) {
+            theirCandidates.add(candidate);
+            candidate.setParent(this);
+            return;
+        }
+
+        // Find appropriate index
+        for (int i = 0; i < theirCandidates.size(); i++) {
+            JingleTransportCandidate<?> c = theirCandidates.get(i);
+
+            // list already contains element -> return
+            if (c == candidate || c.equals(candidate)) {
+                return;
+            }
+
+            //Found the index
+            if (c.getPriority() <= candidate.getPriority()) {
+                theirCandidates.add(i, candidate);
+                candidate.setParent(this);
+                return;
+            }
+        }
+    }
+
+    public List<JingleTransportCandidate<?>> getOurCandidates() {
+        return ourCandidates;
+    }
+
+    public List<JingleTransportCandidate<?>> getTheirCandidates() {
+        return theirCandidates;
     }
 
     public abstract String getNamespace();
@@ -89,19 +116,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     public abstract void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
             throws SmackException.NotConnectedException, InterruptedException;
 
-    public void setPeersProposal(JingleTransport<?> peersProposal) {
-        this.peersProposal = peersProposal;
-        peersProposal.setParent(getParent());
-        peersProposal.isPeersProposal = true;
-    }
-
-    public boolean isPeersProposal() {
-        return isPeersProposal;
-    }
-
-    public JingleTransport<?> getPeersProposal() {
-        return peersProposal;
-    }
+    public abstract void setPeersProposal(JingleTransport<?> peersProposal);
 
     public abstract IQ handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping);
 

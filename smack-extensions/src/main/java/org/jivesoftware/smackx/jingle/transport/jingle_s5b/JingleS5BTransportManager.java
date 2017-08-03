@@ -99,7 +99,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     public JingleTransport<?> createTransport(JingleContent content) {
         JingleSession session = content.getParent();
         List<JingleTransportCandidate<?>> candidates = collectCandidates();
-        return new JingleS5BTransport(session.getInitiator(), session.getResponder(), StringUtils.randomString(24), candidates);
+        return new JingleS5BTransport(session.getInitiator(), session.getResponder(), StringUtils.randomString(24), candidates, null);
     }
 
     @Override
