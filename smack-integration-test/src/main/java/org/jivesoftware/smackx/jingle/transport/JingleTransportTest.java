@@ -75,7 +75,7 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
         if (!socks5Proxy.isRunning()) {
             socks5Proxy.start();
         }
-        
+
         XMPPConnection sender = conOne;
         XMPPConnection receiver = conTwo;
         JingleSession sSession = new JingleSession(JingleManager.getInstanceFor(sender), sender.getUser().asFullJidOrThrow(), receiver.getUser().asFullJidOrThrow(), Role.initiator, "session");
