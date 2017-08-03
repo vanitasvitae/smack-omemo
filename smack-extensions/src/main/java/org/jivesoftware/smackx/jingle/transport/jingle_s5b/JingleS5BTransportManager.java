@@ -64,7 +64,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     private List<Bytestream.StreamHost> localStreamHosts = null;
     private List<Bytestream.StreamHost> availableStreamHosts = null;
 
-    private static boolean useLocalCandidates = true;
+    private static boolean useLocalCandidates = false;
     private static boolean useExternalCandidates = true;
 
     static {
@@ -99,16 +99,13 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     public JingleTransport<?> createTransport(JingleContent content) {
         JingleSession session = content.getParent();
         List<JingleTransportCandidate<?>> candidates = collectCandidates();
-        return new JingleS5BTransport(session.getInitiator(), session.getResponder(), StringUtils.randomString(24), candidates, null);
+        return new JingleS5BTransport(session.getInitiator(), session.getResponder(), StringUtils.randomString(24), Bytestream.Mode.tcp, candidates);
     }
 
     @Override
     public JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport) {
-        JingleS5BTransport transport = (JingleS5BTransport) peersTransport;
-        List<JingleTransportCandidate<?>> candidates = collectCandidates();
-        JingleS5BTransport mTransport = new JingleS5BTransport(content, transport, candidates);
-        mTransport.setPeersProposal(transport);
-        return mTransport;
+        JingleSession session = content.getParent();
+        return new JingleS5BTransport(session.getInitiator(), session.getResponder(), collectCandidates(), (JingleS5BTransport) peersTransport);
     }
 
     @Override
@@ -116,7 +113,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         return 10000;
     }
 
-    private List<JingleTransportCandidate<?>> collectCandidates() {
+    public List<JingleTransportCandidate<?>> collectCandidates() {
         List<JingleTransportCandidate<?>> candidates = new ArrayList<>();
 
         //Local host

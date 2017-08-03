@@ -39,7 +39,7 @@ public class JingleS5BTransportAdapter implements JingleTransportAdapter<JingleS
             candidates.add(JingleS5BTransportCandidate.fromElement((JingleS5BTransportCandidateElement) e));
         }
 
-        return new JingleS5BTransport(s5b.getSid(), s5b.getDestinationAddress(), s5b.getMode(), null, candidates);
+        return new JingleS5BTransport(s5b.getSid(), null, s5b.getMode(), null, s5b.getDestinationAddress(), null, candidates);
     }
 
     @Override

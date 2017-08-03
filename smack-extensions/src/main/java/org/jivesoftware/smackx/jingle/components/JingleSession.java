@@ -17,10 +17,8 @@
 package org.jivesoftware.smackx.jingle.components;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,9 +64,6 @@ public class JingleSession {
 
     private SessionState sessionState;
 
-    private final Map<JingleContent, PendingJingleAction> pendingJingleActions =
-            Collections.synchronizedMap(new HashMap<JingleContent, PendingJingleAction>());
-
     public JingleSession(JingleManager manager, FullJid initiator, FullJid responder, Role role, String sessionId) {
         this.jingleManager = manager;
         this.initiator = initiator;
@@ -88,7 +83,7 @@ public class JingleSession {
         List<JingleContentElement> initiateContents = initiate.getContents();
 
         for (JingleContentElement content : initiateContents) {
-            session.addContent(content);
+            session.addContent(content, manager);
         }
 
         session.sessionState = SessionState.pending;
@@ -481,7 +476,7 @@ public class JingleSession {
         content.setParent(this);
     }
 
-    public void addContent(JingleContentElement content)
+    public void addContent(JingleContentElement content, JingleManager manager)
             throws UnsupportedSecurityException, UnsupportedTransportException, UnsupportedDescriptionException {
         addContent(JingleContent.fromElement(content));
     }

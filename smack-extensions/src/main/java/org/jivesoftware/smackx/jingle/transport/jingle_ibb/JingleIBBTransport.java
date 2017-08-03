@@ -33,6 +33,7 @@ import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.components.JingleTransport;
 import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTransportElement;
@@ -74,6 +75,12 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     @Override
     public String getNamespace() {
         return NAMESPACE;
+    }
+
+    @Override
+    public void handleSessionAccept(JingleContentTransportElement transportElement, XMPPConnection connection) {
+        JingleIBBTransportElement element = (JingleIBBTransportElement) transportElement;
+        blockSize = (blockSize < element.getBlockSize() ? blockSize : element.getBlockSize());
     }
 
     @Override
@@ -120,15 +127,13 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
-    public void setPeersProposal(JingleTransport<?> peersProposal) {
-        JingleIBBTransport transport = (JingleIBBTransport) peersProposal;
-        //Respect peers wish for smaller block size.
-        blockSize = (blockSize < transport.blockSize ? blockSize : transport.blockSize);
+    public void addOurCandidate(JingleTransportCandidate<?> candidate) {
+        // Sorry, we don't want any candidates.
     }
 
     @Override
-    public void addOurCandidate(JingleTransportCandidate<?> candidate) {
-        // Sorry, we don't want any candidates.
+    public void prepare(XMPPConnection connection) {
+        // Nuffin taddooh.
     }
 
     @Override

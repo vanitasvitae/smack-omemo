@@ -35,10 +35,11 @@ import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.callbacks.JingleTransportCallback;
-import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleSession;
 import org.jivesoftware.smackx.jingle.components.JingleTransport;
 import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportCandidateElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.exception.FailedTransportException;
@@ -62,8 +63,11 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     private final String sid;
 
-    private String dstAddr;
-    private Bytestream.Mode mode;
+    private String ourDstAddr;
+    private String theirDstAddr;
+
+    private Bytestream.Mode ourMode;
+    private Bytestream.Mode theirMode;
 
     // PEERS candidate of OUR choice.
     private JingleS5BTransportCandidate ourSelectedCandidate;
@@ -71,59 +75,106 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     private JingleTransportCallback callback;
 
-    /**
-     * Create fresh JingleS5BTransport.
-     * @param initiator initiator.
-     * @param responder responder.
-     */
-    public JingleS5BTransport(FullJid initiator, FullJid responder, String sid, List<JingleTransportCandidate<?>> ourCandidates, List<JingleTransportCandidate<?>> theirCandidates) {
-        this(sid, Socks5Utils.createDigest(sid, initiator, responder), Bytestream.Mode.tcp, ourCandidates, theirCandidates);
+    @Override
+    public void handleSessionAccept(JingleContentTransportElement transportElement, XMPPConnection connection) {
+        JingleS5BTransportElement transport = (JingleS5BTransportElement) transportElement;
+        theirDstAddr = transport.getDestinationAddress();
+        theirMode = transport.getMode();
+        for (JingleContentTransportCandidateElement c : transport.getCandidates()) {
+            JingleS5BTransportCandidateElement candidate = (JingleS5BTransportCandidateElement) c;
+            addTheirCandidate(new JingleS5BTransportCandidate(candidate));
+        }
     }
 
     /**
-     * Create a JingleS5BTransport as response to another JingleS5BTransport proposal.
-     * @param content content which this transport will be child of.
-     * @param other other JingleS5BTransport proposal.
-     * @param candidates list of available JingleS5BTransportCandidates.
-     */
-    public JingleS5BTransport(JingleContent content, JingleS5BTransport other, List<JingleTransportCandidate<?>> candidates) {
-        this(other.getSid(),
-                Socks5Utils.createDigest(other.getSid(), content.getParent().getInitiator(), content.getParent().getResponder()),
-                other.mode, candidates, other.getOurCandidates());
-        setPeersProposal(other);
-    }
-
-    /**
-     * Create a new JingleS5BTransport.
+     * Create transport as initiator.
+     * @param initiator
+     * @param responder
      * @param sid
-     * @param dstAddr
      * @param mode
-     * @param candidates
+     * @param ourCandidates
      */
-    public JingleS5BTransport(String sid, String dstAddr, Bytestream.Mode mode, List<JingleTransportCandidate<?>> candidates, List<JingleTransportCandidate<?>> theirCandidates) {
+    public JingleS5BTransport(FullJid initiator, FullJid responder, String sid, Bytestream.Mode mode, List<JingleTransportCandidate<?>> ourCandidates) {
         this.sid = sid;
-        this.dstAddr = dstAddr;
-        this.mode = mode;
+        this.ourMode = mode;
+        this.ourDstAddr = Socks5Utils.createDigest(sid, initiator, responder);
+        Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
 
-        for (JingleTransportCandidate<?> c : (candidates != null ?
-                candidates : Collections.<JingleS5BTransportCandidate>emptySet())) {
+        for (JingleTransportCandidate<?> c : ourCandidates) {
+            addOurCandidate(c);
+        }
+    }
+
+    /**
+     * Create simple transport as responder.
+     * @param initiator
+     * @param responder
+     * @param ourCandidates
+     * @param other
+     */
+    public JingleS5BTransport(FullJid initiator, FullJid responder, List<JingleTransportCandidate<?>> ourCandidates, JingleS5BTransport other) {
+        this.sid = other.sid;
+        this.ourMode = other.theirMode;
+        this.ourDstAddr = Socks5Utils.createDigest(other.sid, initiator, responder);
+        Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
+        this.theirMode = other.theirMode;
+        this.theirDstAddr = other.theirDstAddr;
+
+        for (JingleTransportCandidate<?> c : ourCandidates) {
             addOurCandidate(c);
         }
 
-        for (JingleTransportCandidate<?> c : (theirCandidates != null ?
-                theirCandidates : Collections.<JingleS5BTransportCandidate>emptySet())) {
+        for (JingleTransportCandidate<?> c : other.getTheirCandidates()) {
+            addTheirCandidate(c);
+        }
+    }
+
+    /**
+     * Create custom transport as responder.
+     * @param sid
+     * @param ourMode
+     * @param theirMode
+     * @param ourDstAddr
+     * @param theirDstAddr
+     * @param ourCandidates
+     * @param theirCandidates
+     */
+    public JingleS5BTransport(String sid, Bytestream.Mode ourMode, Bytestream.Mode theirMode, String ourDstAddr, String theirDstAddr, List<JingleTransportCandidate<?>> ourCandidates, List<JingleTransportCandidate<?>> theirCandidates) {
+        this.sid = sid;
+        this.ourMode = ourMode;
+        this.theirMode = theirMode;
+        this.ourDstAddr = ourDstAddr;
+        Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
+        this.theirDstAddr = theirDstAddr;
+
+        for (JingleTransportCandidate<?> c : (ourCandidates != null ? ourCandidates :
+                Collections.<JingleS5BTransportCandidate>emptySet())) {
+            addOurCandidate(c);
+        }
+
+        for (JingleTransportCandidate<?> c : (theirCandidates != null ? theirCandidates :
+                Collections.<JingleS5BTransportCandidate>emptySet())) {
             addTheirCandidate(c);
         }
     }
 
     /**
      * Copy constructor.
-     * @param transport which will be copied.
+     * @param original
      */
-    public JingleS5BTransport(JingleS5BTransport transport) {
-        this(transport.sid, transport.dstAddr, transport.mode, null, null);
-        for (JingleTransportCandidate<?> c : transport.getOurCandidates()) {
-            this.addOurCandidate(new JingleS5BTransportCandidate((JingleS5BTransportCandidate) c));
+    public JingleS5BTransport(JingleS5BTransport original) {
+        this.sid = original.sid;
+        this.ourDstAddr = original.ourDstAddr;
+        this.theirDstAddr = original.theirDstAddr;
+        this.ourMode = original.ourMode;
+        this.theirMode = original.theirMode;
+
+        for (JingleTransportCandidate<?> c : original.getOurCandidates()) {
+            addOurCandidate(new JingleS5BTransportCandidate((JingleS5BTransportCandidate) c));
+        }
+
+        for (JingleTransportCandidate<?> c : original.getTheirCandidates()) {
+            addTheirCandidate(new JingleS5BTransportCandidate((JingleS5BTransportCandidate) c));
         }
     }
 
@@ -131,8 +182,8 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     public JingleS5BTransportElement getElement() {
         JingleS5BTransportElement.Builder builder = JingleS5BTransportElement.getBuilder()
                 .setStreamId(sid)
-                .setDestinationAddress(dstAddr)
-                .setMode(mode);
+                .setDestinationAddress(ourDstAddr)
+                .setMode(ourMode);
 
         for (JingleTransportCandidate<?> candidate : getOurCandidates()) {
             builder.addTransportCandidate((JingleS5BTransportCandidateElement) candidate.getElement());
@@ -145,12 +196,16 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         return sid;
     }
 
-    public String getDstAddr() {
-        return dstAddr;
+    public String getOurDstAddr() {
+        return ourDstAddr;
     }
 
-    public Bytestream.Mode getMode() {
-        return mode;
+    public String getTheirDstAddr() {
+        return theirDstAddr;
+    }
+
+    public Bytestream.Mode getOurMode() {
+        return ourMode;
     }
 
     @Override
@@ -166,24 +221,35 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @Override
+    public void prepare(XMPPConnection connection) {
+        JingleSession session = getParent().getParent();
+        if (getOurDstAddr() == null) {
+            ourDstAddr = Socks5Utils.createDigest(session.getSessionId(), session.getInitiator(), session.getResponder());
+            Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
+        }
+
+        if (ourMode == null) {
+            ourMode = Bytestream.Mode.tcp;
+        }
+
+        if (getOurCandidates().size() == 0) {
+            List<JingleTransportCandidate<?>> candidates = JingleS5BTransportManager.getInstanceFor(connection).collectCandidates();
+            for (JingleTransportCandidate<?> c : candidates) {
+                addOurCandidate(c);
+            }
+        }
+    }
+
+    @Override
     public void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
             throws SmackException.NotConnectedException, InterruptedException {
         this.callback = callback;
         establishBytestreamSession(connection);
     }
 
-    @Override
-    public void setPeersProposal(JingleTransport<?> peersProposal) {
-        JingleS5BTransport transport = (JingleS5BTransport) peersProposal;
-        getTheirCandidates().clear();
-        for (JingleTransportCandidate<?> c : transport.getOurCandidates()) {
-            addTheirCandidate(c);
-        }
-    }
-
     void establishBytestreamSession(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException {
-        Socks5Proxy.getSocks5Proxy().addTransfer(dstAddr);
+        Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
         JingleS5BTransportManager transportManager = JingleS5BTransportManager.getInstanceFor(connection);
         this.ourSelectedCandidate = connectToCandidates(MAX_TIMEOUT);
 

@@ -44,6 +44,10 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
 
     private Socket socket;
 
+    public JingleS5BTransportCandidate(JingleS5BTransportCandidateElement element) {
+        this(element.getCandidateId(), new Bytestream.StreamHost(element.getJid(), element.getHost(), element.getPort()), element.getPriority(), element.getType());
+    }
+
     public JingleS5BTransportCandidate(String candidateId,
                                        Bytestream.StreamHost streamHost,
                                        int priority,
@@ -91,14 +95,14 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
 
         Socks5Client client;
         if (peersProposal) {
-            LOGGER.log(Level.INFO, "Connect to foreign candidate " + getCandidateId() + " using " + transport.getDstAddr());
-            client = new Socks5Client(getStreamHost(), transport.getDstAddr());
+            LOGGER.log(Level.INFO, "Connect to foreign candidate " + getCandidateId() + " using " + transport.getTheirDstAddr());
+            client = new Socks5Client(getStreamHost(), transport.getTheirDstAddr());
         }
         else {
-            LOGGER.log(Level.INFO, "Connect to our candidate " + getCandidateId() + " using " + ((JingleS5BTransport) getParent()).getDstAddr());
+            LOGGER.log(Level.INFO, "Connect to our candidate " + getCandidateId() + " using " + transport.getOurDstAddr());
             JingleContent content = transport.getParent();
             JingleSession session = content.getParent();
-            client = new Socks5ClientForInitiator(getStreamHost(), transport.getDstAddr(), session.getJingleManager().getConnection(), transport.getSid(), session.getPeer());
+            client = new Socks5ClientForInitiator(getStreamHost(), transport.getOurDstAddr(), session.getJingleManager().getConnection(), transport.getSid(), session.getPeer());
         }
 
         this.socket = client.getSocket(timeout);

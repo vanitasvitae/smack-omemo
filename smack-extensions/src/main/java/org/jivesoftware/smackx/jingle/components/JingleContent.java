@@ -161,13 +161,18 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
 
     public IQ handleSessionAccept(JingleElement request, XMPPConnection connection) {
         LOGGER.log(Level.INFO, "RECEIVED SESSION ACCEPT!");
-        for (JingleContentElement contentElement : request.getContents()) {
-            if (contentElement.getName().equals(getName())) {
-                JingleContent content = fromElement(contentElement);
-                getTransport().setPeersProposal(content.getTransport());
-                break;
+        JingleContentElement contentElement = null;
+        for (JingleContentElement c : request.getContents()) {
+            if (c.getName().equals(getName())) {
+                contentElement = c;
             }
         }
+
+        if (contentElement == null) {
+            throw new AssertionError("Session Accept did not contain this content.");
+        }
+
+        getTransport().handleSessionAccept(contentElement.getTransport(), connection);
         onAccept(connection);
         return IQ.createResultIQ(request);
     }
@@ -313,9 +318,12 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public void onAccept(final XMPPConnection connection) {
+        transport.prepare(connection);
+
         if (security != null) {
             security.prepare(connection, getParent().getPeer());
         }
+
         //Establish transport
         Async.go(new Runnable() {
             @Override

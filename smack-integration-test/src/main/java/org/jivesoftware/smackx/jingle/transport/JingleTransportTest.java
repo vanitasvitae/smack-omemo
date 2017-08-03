@@ -93,8 +93,8 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
         JingleS5BTransport rTransport = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(receiver).createTransport(rContent, sTransport);
         sContent.setTransport(sTransport);
         rContent.setTransport(rTransport);
-        sTransport.setPeersProposal(new JingleS5BTransport(rTransport));
-        rTransport.setPeersProposal(new JingleS5BTransport(sTransport));
+        sTransport.handleSessionAccept(rTransport.getElement(), sender);
+        rTransport.handleSessionAccept(sTransport.getElement(), receiver);
 
         basicTransportTest(sSession, rSession, sTransport, rTransport);
     }

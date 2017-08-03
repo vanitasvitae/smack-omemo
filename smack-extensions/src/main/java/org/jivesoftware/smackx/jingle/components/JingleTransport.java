@@ -100,6 +100,8 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
         }
     }
 
+    public abstract void prepare(XMPPConnection connection);
+
     public List<JingleTransportCandidate<?>> getOurCandidates() {
         return ourCandidates;
     }
@@ -116,8 +118,6 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     public abstract void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
             throws SmackException.NotConnectedException, InterruptedException;
 
-    public abstract void setPeersProposal(JingleTransport<?> peersProposal);
-
     public abstract IQ handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping);
 
     public void setParent(JingleContent parent) {
@@ -133,4 +133,6 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     public BytestreamSession getBytestreamSession() {
         return bytestreamSession;
     }
+
+    public abstract void handleSessionAccept(JingleContentTransportElement transportElement, XMPPConnection connection);
 }
