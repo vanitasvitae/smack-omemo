@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jet.internal;
+package org.jivesoftware.smackx.jet.component;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -34,7 +34,7 @@ import org.jivesoftware.smackx.jet.JetManager;
 import org.jivesoftware.smackx.jet.JingleEncryptionMethod;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jingle.callbacks.JingleSecurityCallback;
-import org.jivesoftware.smackx.jingle.components.JingleSecurity;
+import org.jivesoftware.smackx.jingle.component.JingleSecurity;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 

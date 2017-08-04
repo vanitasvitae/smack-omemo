@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jft.internal;
+package org.jivesoftware.smackx.jft.component;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,8 +31,8 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.jft.controller.IncomingFileOfferController;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
-import org.jivesoftware.smackx.jft.internal.file.RemoteFile;
-import org.jivesoftware.smackx.jingle.components.JingleSession;
+import org.jivesoftware.smackx.jft.component.file.RemoteFile;
+import org.jivesoftware.smackx.jingle.component.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 

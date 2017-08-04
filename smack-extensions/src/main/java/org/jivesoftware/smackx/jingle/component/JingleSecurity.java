@@ -14,21 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jingle.components;
+package org.jivesoftware.smackx.jingle.component;
 
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
+import org.jivesoftware.smackx.jingle.callbacks.JingleSecurityCallback;
+import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentSecurityInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 
+import org.jxmpp.jid.FullJid;
+
 /**
- * Class that represents a contents description component.
+ * Class that represents a contents security component.
  */
-public abstract class JingleDescription<D extends JingleContentDescriptionElement> {
+public abstract class JingleSecurity<D extends JingleContentSecurityElement> {
 
     private JingleContent parent;
 
     public abstract D getElement();
+
+    public abstract JingleElement handleSecurityInfo(JingleContentSecurityInfoElement element, JingleElement wrapping);
 
     public void setParent(JingleContent parent) {
         if (this.parent != parent) {
@@ -36,13 +42,15 @@ public abstract class JingleDescription<D extends JingleContentDescriptionElemen
         }
     }
 
-    public abstract JingleElement handleDescriptionInfo(JingleContentDescriptionInfoElement info);
-
     public JingleContent getParent() {
         return parent;
     }
 
-    public abstract void onBytestreamReady(BytestreamSession bytestreamSession);
+    public abstract void decryptIncomingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callback);
+
+    public abstract void encryptOutgoingBytestream(BytestreamSession bytestreamSession, JingleSecurityCallback callbacks);
 
     public abstract String getNamespace();
+
+    public abstract void prepare(XMPPConnection connection, FullJid sender);
 }

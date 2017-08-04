@@ -27,9 +27,9 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Client;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5ClientForInitiator;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
-import org.jivesoftware.smackx.jingle.components.JingleContent;
-import org.jivesoftware.smackx.jingle.components.JingleSession;
-import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.component.JingleContent;
+import org.jivesoftware.smackx.jingle.component.JingleSession;
+import org.jivesoftware.smackx.jingle.component.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 
 /**

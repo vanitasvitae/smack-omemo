@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jet.internal;
+package org.jivesoftware.smackx.jet.component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +24,7 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jingle.components.JingleSecurityBytestreamSession;
+import org.jivesoftware.smackx.jingle.component.JingleSecurityBytestreamSession;
 
 public class JetSecurityBytestreamSession extends JingleSecurityBytestreamSession {
     private final Cipher cipher;

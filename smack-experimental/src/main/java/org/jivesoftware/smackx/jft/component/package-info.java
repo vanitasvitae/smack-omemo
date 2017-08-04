@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2017 Florian Schmaus, Paul Schaub
+ * Copyright 2017 Paul Schaub
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  */
 
 /**
- * Smack's API for <a href="https://xmpp.org/extensions/xep-0166.html">XEP-0166: Jingle</a>.
- * Internal components.
+ * Smack's API for <a href="https://xmpp.org/extensions/xep-0234.html">XEP-0234: Jingle File Transfer</a>.
+ * Internal classes.
  */
-package org.jivesoftware.smackx.jingle.components;
+package org.jivesoftware.smackx.jft.component;

@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jet;
 
 import java.io.File;
 
-import org.jivesoftware.smackx.jft.internal.JingleOutgoingFileOffer;
+import org.jivesoftware.smackx.jft.component.JingleOutgoingFileOffer;
 
 /**
  * Created by vanitas on 14.07.17.

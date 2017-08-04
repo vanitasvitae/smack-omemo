@@ -14,17 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jft.internal;
-
-import org.jivesoftware.smackx.jft.internal.file.AbstractJingleFileTransferFile;
 
 /**
- * Created by vanitas on 22.07.17.
+ * Smack's API for <a href="https://xmpp.org/extensions/xep-0234.html">XEP-0234: Jingle File Transfer</a>.
+ * Classes that may represent files.
  */
-public abstract class AbstractJingleFileRequest<D extends AbstractJingleFileTransferFile> extends JingleFileTransfer {
-
-    public AbstractJingleFileRequest(D fileTransferFile) {
-        super(fileTransferFile);
-    }
-
-}
+package org.jivesoftware.smackx.jft.component.file;

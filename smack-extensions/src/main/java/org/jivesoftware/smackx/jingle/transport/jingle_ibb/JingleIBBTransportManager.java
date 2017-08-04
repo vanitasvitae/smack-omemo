@@ -23,8 +23,8 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
-import org.jivesoftware.smackx.jingle.components.JingleContent;
-import org.jivesoftware.smackx.jingle.components.JingleTransport;
+import org.jivesoftware.smackx.jingle.component.JingleContent;
+import org.jivesoftware.smackx.jingle.component.JingleTransport;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.provider.JingleIBBTransportProvider;
 

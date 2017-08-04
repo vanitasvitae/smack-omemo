@@ -27,7 +27,7 @@ import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jft.element.Range;
-import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
+import org.jivesoftware.smackx.jft.component.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentDescriptionProvider;
 

@@ -19,7 +19,7 @@ package org.jivesoftware.smackx.jft.element;
 import java.util.Collections;
 import java.util.List;
 
-import org.jivesoftware.smackx.jft.internal.JingleFileTransfer;
+import org.jivesoftware.smackx.jft.component.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 

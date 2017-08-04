@@ -16,8 +16,8 @@
  */
 package org.jivesoftware.smackx.jingle;
 
-import org.jivesoftware.smackx.jingle.components.JingleContent;
-import org.jivesoftware.smackx.jingle.components.JingleTransport;
+import org.jivesoftware.smackx.jingle.component.JingleContent;
+import org.jivesoftware.smackx.jingle.component.JingleTransport;
 import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 
 /**

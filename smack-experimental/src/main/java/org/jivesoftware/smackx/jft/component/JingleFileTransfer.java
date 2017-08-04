@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jft.internal;
+package org.jivesoftware.smackx.jft.component;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,9 +22,9 @@ import java.util.List;
 
 import org.jivesoftware.smackx.jft.controller.JingleFileTransferController;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
-import org.jivesoftware.smackx.jft.internal.file.AbstractJingleFileTransferFile;
+import org.jivesoftware.smackx.jft.component.file.AbstractJingleFileTransferFile;
 import org.jivesoftware.smackx.jft.listener.ProgressListener;
-import org.jivesoftware.smackx.jingle.components.JingleDescription;
+import org.jivesoftware.smackx.jingle.component.JingleDescription;
 
 /**
  * Created by vanitas on 22.07.17.

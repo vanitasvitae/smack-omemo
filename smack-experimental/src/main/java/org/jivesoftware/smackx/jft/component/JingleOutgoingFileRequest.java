@@ -14,29 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.jft.internal;
+package org.jivesoftware.smackx.jft.component;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jft.controller.IncomingFileRequestController;
-import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
-import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
-import org.jivesoftware.smackx.jft.internal.file.RemoteFile;
+import org.jivesoftware.smackx.jft.controller.OutgoingFileRequestController;
+import org.jivesoftware.smackx.jft.component.file.RemoteFile;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
  * Created by vanitas on 27.07.17.
- * TODO: RemoteFile????
  */
-public class JingleIncomingFileRequest extends AbstractJingleFileRequest<RemoteFile> implements IncomingFileRequestController {
+public class JingleOutgoingFileRequest extends AbstractJingleFileRequest<RemoteFile> implements OutgoingFileRequestController {
 
-    public JingleIncomingFileRequest(JingleFileTransferChildElement request) {
-        super(new RemoteFile(request));
-    }
-
-    @Override
-    public JingleFileTransferElement getElement() {
-        return null;
+    public JingleOutgoingFileRequest(RemoteFile file) {
+        super(file);
     }
 
     @Override

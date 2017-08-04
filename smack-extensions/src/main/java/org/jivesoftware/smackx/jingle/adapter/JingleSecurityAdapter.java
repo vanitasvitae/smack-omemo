@@ -16,7 +16,7 @@
  */
 package org.jivesoftware.smackx.jingle.adapter;
 
-import org.jivesoftware.smackx.jingle.components.JingleSecurity;
+import org.jivesoftware.smackx.jingle.component.JingleSecurity;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
 
 /**

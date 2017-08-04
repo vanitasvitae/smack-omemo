@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.jet.element;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
-import org.jivesoftware.smackx.jet.internal.JetSecurity;
+import org.jivesoftware.smackx.jet.component.JetSecurity;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
 
 /**

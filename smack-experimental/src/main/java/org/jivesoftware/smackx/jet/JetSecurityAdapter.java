@@ -17,7 +17,7 @@
 package org.jivesoftware.smackx.jet;
 
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
-import org.jivesoftware.smackx.jet.internal.JetSecurity;
+import org.jivesoftware.smackx.jet.component.JetSecurity;
 import org.jivesoftware.smackx.jingle.adapter.JingleSecurityAdapter;
 import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
 
