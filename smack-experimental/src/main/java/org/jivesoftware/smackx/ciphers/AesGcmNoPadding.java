@@ -37,7 +37,7 @@ public abstract class AesGcmNoPadding {
     protected final Cipher cipher;
     protected final byte[] key, iv, keyAndIv;
 
-    public AesGcmNoPadding(int bits) throws NoSuchAlgorithmException, NoSuchProviderException,
+    protected AesGcmNoPadding(int bits) throws NoSuchAlgorithmException, NoSuchProviderException,
             NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException {
         this.length = bits;
         int bytes = bits / 8;
@@ -60,6 +60,19 @@ public abstract class AesGcmNoPadding {
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
     }
 
+    public static AesGcmNoPadding create(String cipherName)
+            throws NoSuchProviderException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
+            InvalidAlgorithmParameterException {
+
+        switch (cipherName) {
+            case Aes128GcmNoPadding.NAMESPACE:
+                return new Aes128GcmNoPadding();
+            case Aes256GcmNoPadding.NAMESPACE:
+                return new Aes256GcmNoPadding();
+            default: throw new NoSuchAlgorithmException("Invalid cipher.");
+        }
+    }
+
     public AesGcmNoPadding(byte[] key, byte[] iv) throws NoSuchPaddingException, NoSuchAlgorithmException,
             NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException {
         this.length = key.length * 8;
@@ -74,6 +87,19 @@ public abstract class AesGcmNoPadding {
         SecretKeySpec keySpec = new SecretKeySpec(key, keyType);
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
         cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+    }
+
+    public static AesGcmNoPadding parse(String namespace, byte[] serialized)
+            throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException,
+            InvalidKeyException, NoSuchPaddingException {
+
+        switch (namespace) {
+            case Aes128GcmNoPadding.NAMESPACE:
+                return new Aes128GcmNoPadding(serialized);
+            case Aes256GcmNoPadding.NAMESPACE:
+                return new Aes256GcmNoPadding(serialized);
+            default: throw new NoSuchAlgorithmException("Invalid cipher.");
+        }
     }
 
     public byte[] getKeyAndIv() {

@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
+import org.jivesoftware.smackx.ciphers.Aes256GcmNoPadding;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jet.internal.JetSecurity;
 import org.jivesoftware.smackx.jet.provider.JetSecurityProvider;
@@ -92,7 +93,7 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager();
         content.setTransport(transportManager.createTransport(content));
 
-        JetSecurity security = new JetSecurity(method, recipient, content.getName());
+        JetSecurity security = new JetSecurity(method, recipient, content.getName(), Aes256GcmNoPadding.NAMESPACE);
         content.setSecurity(security);
         session.initiate(connection());
 
