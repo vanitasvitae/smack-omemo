@@ -25,6 +25,9 @@ import static junit.framework.TestCase.assertTrue;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
+import org.jivesoftware.smackx.jingle.component.JingleContent;
+import org.jivesoftware.smackx.jingle.component.JingleTransportCandidate;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportInfoElement;
@@ -74,17 +77,17 @@ public class JingleS5BTransportTest extends SmackTestSuite {
                         "type='proxy'/>" +
 
                         "</transport>";
-        JingleS5BTransportElement transport = new JingleS5BTransportProvider().parse(TestUtils.getParser(xml));
-        assertEquals("972b7bf47291ca609517f67f86b5081086052dad", transport.getDestinationAddress());
-        assertEquals("vj3hs98y", transport.getSid());
-        assertEquals(Bytestream.Mode.tcp, transport.getMode());
-        assertEquals(3, transport.getCandidates().size());
+        JingleS5BTransportElement transportElement = new JingleS5BTransportProvider().parse(TestUtils.getParser(xml));
+        assertEquals("972b7bf47291ca609517f67f86b5081086052dad", transportElement.getDestinationAddress());
+        assertEquals("vj3hs98y", transportElement.getSid());
+        assertEquals(Bytestream.Mode.tcp, transportElement.getMode());
+        assertEquals(3, transportElement.getCandidates().size());
 
-        assertTrue(transport.hasCandidate("hft54dqy"));
-        assertFalse(transport.hasCandidate("invalidId"));
+        assertTrue(transportElement.hasCandidate("hft54dqy"));
+        assertFalse(transportElement.hasCandidate("invalidId"));
         JingleS5BTransportCandidateElement candidate1 =
-                (JingleS5BTransportCandidateElement) transport.getCandidates().get(0);
-        assertEquals(candidate1, transport.getCandidate("hft54dqy"));
+                (JingleS5BTransportCandidateElement) transportElement.getCandidates().get(0);
+        assertEquals(candidate1, transportElement.getCandidate("hft54dqy"));
         assertNotNull(candidate1.getStreamHost());
         assertEquals(JingleS5BTransportCandidateElement.Type.direct.getWeight(), candidate1.getType().getWeight());
         assertEquals("hft54dqy", candidate1.getCandidateId());
@@ -95,7 +98,7 @@ public class JingleS5BTransportTest extends SmackTestSuite {
         assertEquals(JingleS5BTransportCandidateElement.Type.direct, candidate1.getType());
 
         JingleS5BTransportCandidateElement candidate2 =
-                (JingleS5BTransportCandidateElement) transport.getCandidates().get(1);
+                (JingleS5BTransportCandidateElement) transportElement.getCandidates().get(1);
         assertEquals("hutr46fe", candidate2.getCandidateId());
         assertEquals("24.24.24.1", candidate2.getHost());
         assertEquals(JidCreate.from("romeo@montague.lit/orchard"), candidate2.getJid());
@@ -104,7 +107,7 @@ public class JingleS5BTransportTest extends SmackTestSuite {
         assertEquals(JingleS5BTransportCandidateElement.Type.direct, candidate2.getType());
 
         JingleS5BTransportCandidateElement candidate3 =
-                (JingleS5BTransportCandidateElement) transport.getCandidates().get(2);
+                (JingleS5BTransportCandidateElement) transportElement.getCandidates().get(2);
         assertEquals("xmdh4b7i", candidate3.getCandidateId());
         assertEquals("123.456.7.8", candidate3.getHost());
         assertEquals(JidCreate.domainBareFrom("streamer.shakespeare.lit"), candidate3.getJid());
@@ -112,7 +115,37 @@ public class JingleS5BTransportTest extends SmackTestSuite {
         assertEquals(7878787, candidate3.getPriority());
         assertEquals(JingleS5BTransportCandidateElement.Type.proxy, candidate3.getType());
 
-        assertEquals(xml, transport.toXML().toString());
+        assertEquals(xml, transportElement.toXML().toString());
+
+        JingleS5BTransport transport = new JingleS5BTransportAdapter().transportFromElement(transportElement);
+        assertNotNull(transport);
+        assertEquals(transportElement.getSid(), transport.getSid());
+        assertEquals(transportElement.getMode(), transport.getMode());
+        assertEquals(transportElement.getDestinationAddress(), transport.getTheirDstAddr());
+        assertNull(transport.getOurDstAddr());
+        assertNotNull(transport.getOurCandidates());
+        assertEquals(0, transport.getOurCandidates().size());
+        assertNotNull(transport.getTheirCandidates());
+        assertEquals(3, transport.getTheirCandidates().size());
+
+        for (int i = 0; i < transport.getTheirCandidates().size() - 1; i++) {
+            assertTrue(transport.getTheirCandidates().get(i).getPriority() >= transport.getTheirCandidates().get(i + 1).getPriority());
+        }
+
+        JingleTransportCandidate<?> c = transport.getTheirCandidates().get(1);
+        transport.addTheirCandidate(c);
+
+        assertEquals(3, transport.getTheirCandidates().size());
+        assertTrue(c.getParent() == transport);
+
+        assertNull(transport.getParent());
+
+        JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
+        assertNull(content.getTransport());
+
+        content.setTransport(transport);
+        assertEquals(transport, content.getTransport());
+        assertEquals(content, transport.getParent());
     }
 
     @Test

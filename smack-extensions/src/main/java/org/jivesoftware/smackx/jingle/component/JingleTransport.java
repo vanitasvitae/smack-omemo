@@ -43,60 +43,45 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     public abstract D getElement();
 
     public void addOurCandidate(JingleTransportCandidate<?> candidate) {
-
-        // Insert sorted by descending priority
-        // Empty list -> insert
-        if (ourCandidates.isEmpty()) {
-            ourCandidates.add(candidate);
-            candidate.setParent(this);
-            return;
-        }
-
+// Insert sorted by descending priority
+        int i;
         // Find appropriate index
-        for (int i = 0; i < ourCandidates.size(); i++) {
+        for (i = 0; i < ourCandidates.size(); i++) {
             JingleTransportCandidate<?> c = ourCandidates.get(i);
 
-            // list already contains element -> return
             if (c == candidate || c.equals(candidate)) {
-                c.setParent(this);
+                c.setParent(this); // Candidate might equal, but not be same, so set parent just in case
                 return;
             }
 
-            //Found the index
-            if (c.getPriority() <= candidate.getPriority()) {
-                ourCandidates.add(i, candidate);
-                candidate.setParent(this);
-                return;
+            if (c.getPriority() < candidate.getPriority()) {
+                break;
             }
         }
+
+        ourCandidates.add(i, candidate);
+        candidate.setParent(this);
     }
 
     public void addTheirCandidate(JingleTransportCandidate<?> candidate) {
         // Insert sorted by descending priority
-        // Empty list -> insert
-        if (theirCandidates.isEmpty()) {
-            theirCandidates.add(candidate);
-            candidate.setParent(this);
-            return;
-        }
-
+        int i;
         // Find appropriate index
-        for (int i = 0; i < theirCandidates.size(); i++) {
+        for (i = 0; i < theirCandidates.size(); i++) {
             JingleTransportCandidate<?> c = theirCandidates.get(i);
 
-            // list already contains element -> return
             if (c == candidate || c.equals(candidate)) {
-                c.setParent(this);
+                c.setParent(this); // Candidate might equal, but not be same, so set parent just in case
                 return;
             }
 
-            //Found the index
-            if (c.getPriority() <= candidate.getPriority()) {
-                theirCandidates.add(i, candidate);
-                candidate.setParent(this);
-                return;
+            if (c.getPriority() < candidate.getPriority()) {
+                break;
             }
         }
+
+        theirCandidates.add(i, candidate);
+        candidate.setParent(this);
     }
 
     public abstract void prepare(XMPPConnection connection);
@@ -120,17 +105,11 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     public abstract IQ handleTransportInfo(JingleContentTransportInfoElement info, JingleElement wrapping);
 
     public void setParent(JingleContent parent) {
-        if (this.parent != parent) {
-            this.parent = parent;
-        }
+        this.parent = parent;
     }
 
     public JingleContent getParent() {
         return parent;
-    }
-
-    public BytestreamSession getBytestreamSession() {
-        return bytestreamSession;
     }
 
     public abstract void handleSessionAccept(JingleContentTransportElement transportElement, XMPPConnection connection);
