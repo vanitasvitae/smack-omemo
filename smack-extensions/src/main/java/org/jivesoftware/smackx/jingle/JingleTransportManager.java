@@ -18,6 +18,7 @@ package org.jivesoftware.smackx.jingle;
 
 import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleTransport;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 
 /**
  * Manager for JingleTransport components.
@@ -29,6 +30,8 @@ public interface JingleTransportManager extends Comparable<JingleTransportManage
     JingleTransport<?> createTransport(JingleContent content);
 
     JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport);
+
+    JingleTransport<?> createTransport(JingleContent content, JingleContentTransportElement peersTransportElement);
 
     /**
      * Return a (usually) positive integer, which is used to define a strict order over the set of available transport

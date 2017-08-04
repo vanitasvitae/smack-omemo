@@ -62,7 +62,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     private JingleTransport<?> transport;
     private JingleSecurity<?> security;
 
-    private JingleTransport<?> replaceTransport = null;
+    private JingleTransport<?> pendingReplacingTransport = null;
 
     private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
@@ -165,6 +165,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         for (JingleContentElement c : request.getContents()) {
             if (c.getName().equals(getName())) {
                 contentElement = c;
+                break;
             }
         }
 
@@ -198,11 +199,12 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public IQ handleTransportAccept(JingleElement request, XMPPConnection connection) {
-        if (replaceTransport == null) {
+        if (pendingReplacingTransport == null) {
             LOGGER.log(Level.WARNING, "Received transport-accept, but apparently we did not try to replace the transport.");
             return JingleElement.createJingleErrorOutOfOrder(request);
         }
-        transport = replaceTransport;
+        transport = pendingReplacingTransport;
+        pendingReplacingTransport = null;
 
         onAccept(connection);
 
@@ -221,6 +223,54 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public IQ handleTransportReplace(JingleElement request, XMPPConnection connection) {
+        JingleContentElement contentElement = null;
+        for (JingleContentElement c : request.getContents()) {
+            if (c.getName().equals(getName())) {
+                contentElement = c;
+                break;
+            }
+        }
+
+        if (contentElement == null) {
+            throw new AssertionError("Unknown content");
+        }
+
+        final JingleSession session = getParent();
+        final JingleContentTransportElement transportElement = contentElement.getTransport();
+
+        JingleTransportManager tm = session.getJingleManager().getTransportManager(transportElement.getNamespace());
+
+        // Unsupported/Blacklisted transport -> reject.
+        if (tm == null || getTransportBlacklist().contains(transportElement.getNamespace())) {
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        getParent().getJingleManager().getConnection().createStanzaCollectorAndSend(JingleElement.createTransportReject(session.getOurJid(), session.getPeer(), session.getSessionId(), getCreator(), getName(), transportElement));
+                    } catch (SmackException.NotConnectedException | InterruptedException e) {
+                        LOGGER.log(Level.SEVERE, "Could not send transport-reject: " + e, e);
+                    }
+                }
+            });
+
+        } else {
+            //Blacklist current transport
+            this.getTransportBlacklist().add(this.transport.getNamespace());
+
+            this.transport = tm.createTransport(this, transportElement);
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        getParent().getJingleManager().getConnection().createStanzaCollectorAndSend(JingleElement.createTransportAccept(session.getOurJid(), session.getPeer(), session.getSessionId(), getCreator(), getName(), transport.getElement()));
+                    } catch (SmackException.NotConnectedException | InterruptedException e) {
+                        LOGGER.log(Level.SEVERE, "Could not send transport-accept: " + e, e);
+                    }
+                }
+            });
+            onAccept(connection);
+        }
+
         return IQ.createResultIQ(request);
     }
 
@@ -403,10 +453,10 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
             return;
         }
 
-        JingleTransport<?> rTransport = rManager.createTransport(this);
+        pendingReplacingTransport = rManager.createTransport(this);
 
         JingleElement transportReplace = JingleElement.createTransportReplace(session.getInitiator(), session.getPeer(),
-                session.getSessionId(), getCreator(), getName(), rTransport.getElement());
+                session.getSessionId(), getCreator(), getName(), pendingReplacingTransport.getElement());
 
         connection.createStanzaCollectorAndSend(transportReplace).nextResultOrThrow();
     }

@@ -43,6 +43,7 @@ import org.jivesoftware.smackx.jingle.components.JingleTransport;
 import org.jivesoftware.smackx.jingle.components.JingleTransportCandidate;
 import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportCandidateElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.element.JingleS5BTransportElement;
@@ -106,6 +107,12 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     public JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport) {
         JingleSession session = content.getParent();
         return new JingleS5BTransport(session.getInitiator(), session.getResponder(), collectCandidates(), (JingleS5BTransport) peersTransport);
+    }
+
+    @Override
+    public JingleTransport<?> createTransport(JingleContent content, JingleContentTransportElement peersTransportElement) {
+        JingleS5BTransport other = new JingleS5BTransportAdapter().transportFromElement(peersTransportElement);
+        return createTransport(content, other);
     }
 
     @Override

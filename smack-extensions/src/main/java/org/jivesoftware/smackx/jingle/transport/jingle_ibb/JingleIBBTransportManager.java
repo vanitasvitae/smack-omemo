@@ -25,6 +25,7 @@ import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.components.JingleContent;
 import org.jivesoftware.smackx.jingle.components.JingleTransport;
+import org.jivesoftware.smackx.jingle.element.JingleContentTransportElement;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.provider.JingleIBBTransportProvider;
 
 /**
@@ -73,6 +74,12 @@ public final class JingleIBBTransportManager extends Manager implements JingleTr
     public JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport) {
         JingleIBBTransport other = (JingleIBBTransport) peersTransport;
         return new JingleIBBTransport(other.getSid(), (short) Math.min(other.getBlockSize(), MAX_BLOCKSIZE));
+    }
+
+    @Override
+    public JingleTransport<?> createTransport(JingleContent content, JingleContentTransportElement peersTransportElement) {
+        JingleIBBTransport other = new JingleIBBTransportAdapter().transportFromElement(peersTransportElement);
+        return createTransport(content, other);
     }
 
     @Override

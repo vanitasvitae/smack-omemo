@@ -29,6 +29,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
@@ -59,7 +60,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:s5b:1";
     public static final String NAMESPACE = NAMESPACE_V1;
 
-    public static final int MAX_TIMEOUT = 10 * 1000;
+    private static final int MAX_TIMEOUT = 10 * 1000;
 
     private final String sid;
 
@@ -75,26 +76,15 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     private JingleTransportCallback callback;
 
-    @Override
-    public void handleSessionAccept(JingleContentTransportElement transportElement, XMPPConnection connection) {
-        JingleS5BTransportElement transport = (JingleS5BTransportElement) transportElement;
-        theirDstAddr = transport.getDestinationAddress();
-        theirMode = transport.getMode();
-        for (JingleContentTransportCandidateElement c : transport.getCandidates()) {
-            JingleS5BTransportCandidateElement candidate = (JingleS5BTransportCandidateElement) c;
-            addTheirCandidate(new JingleS5BTransportCandidate(candidate));
-        }
-    }
-
     /**
      * Create transport as initiator.
-     * @param initiator
-     * @param responder
-     * @param sid
-     * @param mode
-     * @param ourCandidates
+     * @param initiator initiator of the Jingle session.
+     * @param responder responder.
+     * @param sid sessionId of the Jingle session.
+     * @param mode TCP/UDP.
+     * @param ourCandidates our proxy candidates.
      */
-    public JingleS5BTransport(FullJid initiator, FullJid responder, String sid, Bytestream.Mode mode, List<JingleTransportCandidate<?>> ourCandidates) {
+    JingleS5BTransport(FullJid initiator, FullJid responder, String sid, Bytestream.Mode mode, List<JingleTransportCandidate<?>> ourCandidates) {
         this.sid = sid;
         this.ourMode = mode;
         this.ourDstAddr = Socks5Utils.createDigest(sid, initiator, responder);
@@ -107,12 +97,12 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     /**
      * Create simple transport as responder.
-     * @param initiator
-     * @param responder
-     * @param ourCandidates
-     * @param other
+     * @param initiator initiator of the Jingle session.
+     * @param responder responder.
+     * @param ourCandidates our proxy candidates.
+     * @param other transport of the other party.
      */
-    public JingleS5BTransport(FullJid initiator, FullJid responder, List<JingleTransportCandidate<?>> ourCandidates, JingleS5BTransport other) {
+    JingleS5BTransport(FullJid initiator, FullJid responder, List<JingleTransportCandidate<?>> ourCandidates, JingleS5BTransport other) {
         this.sid = other.sid;
         this.ourMode = other.theirMode;
         this.ourDstAddr = Socks5Utils.createDigest(other.sid, initiator, responder);
@@ -131,15 +121,15 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     /**
      * Create custom transport as responder.
-     * @param sid
-     * @param ourMode
-     * @param theirMode
-     * @param ourDstAddr
-     * @param theirDstAddr
-     * @param ourCandidates
-     * @param theirCandidates
+     * @param sid sessionId of the Jingle session.
+     * @param ourMode UPD/TCP.
+     * @param theirMode UPD/TCP.
+     * @param ourDstAddr SOCKS5 destination address (digest)
+     * @param theirDstAddr SOCKS5 destination address (digest)
+     * @param ourCandidates our proxy candidates.
+     * @param theirCandidates their proxy candidates.
      */
-    public JingleS5BTransport(String sid, Bytestream.Mode ourMode, Bytestream.Mode theirMode, String ourDstAddr, String theirDstAddr, List<JingleTransportCandidate<?>> ourCandidates, List<JingleTransportCandidate<?>> theirCandidates) {
+    JingleS5BTransport(String sid, Bytestream.Mode ourMode, Bytestream.Mode theirMode, String ourDstAddr, String theirDstAddr, List<JingleTransportCandidate<?>> ourCandidates, List<JingleTransportCandidate<?>> theirCandidates) {
         this.sid = sid;
         this.ourMode = ourMode;
         this.theirMode = theirMode;
@@ -160,7 +150,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     /**
      * Copy constructor.
-     * @param original
+     * @param original which will be copied.
      */
     public JingleS5BTransport(JingleS5BTransport original) {
         this.sid = original.sid;
@@ -287,8 +277,8 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     void connectIfReady() {
-        JingleS5BTransportManager jingleS5BTransportManager = JingleS5BTransportManager.getInstanceFor(getParent().getParent().getJingleManager().getConnection());
-        JingleSession session = getParent().getParent();
+        final JingleS5BTransportManager jingleS5BTransportManager = JingleS5BTransportManager.getInstanceFor(getParent().getParent().getJingleManager().getConnection());
+        final JingleSession session = getParent().getParent();
 
         if (ourSelectedCandidate == null || theirSelectedCandidate == null) {
             // Not yet ready if we or peer did not yet decide on a candidate.
@@ -322,6 +312,8 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             nominated = theirSelectedCandidate;
         }
 
+        boolean isProxy = nominated.getType() == JingleS5BTransportCandidateElement.Type.proxy;
+
         if (nominated == theirSelectedCandidate) {
 
             LOGGER.log(Level.INFO, "Their choice, so our proposed candidate is used.");
@@ -330,11 +322,21 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
                 nominated = nominated.connect(MAX_TIMEOUT, false);
             } catch (InterruptedException | IOException | XMPPException | SmackException | TimeoutException e) {
                 LOGGER.log(Level.INFO, "Could not connect to our candidate.", e);
+
+                Async.go(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            session.getJingleManager().getConnection().createStanzaCollectorAndSend(jingleS5BTransportManager.createProxyError(JingleS5BTransport.this));
+                        } catch (SmackException.NotConnectedException | InterruptedException e1) {
+                            LOGGER.log(Level.SEVERE, "Could not send proxy error: " + e, e);
+                        }
+                    }
+                });
+
                 callback.onTransportFailed(new S5BTransportException.CandidateError(e));
                 return;
             }
-
-            boolean isProxy = nominated.getType() == JingleS5BTransportCandidateElement.Type.proxy;
 
             if (isProxy) {
                 LOGGER.log(Level.INFO, "Send candidate-activate.");
@@ -358,7 +360,6 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         //Our choice
         else {
             LOGGER.log(Level.INFO, "Our choice, so their candidate was used.");
-            boolean isProxy = nominated.getType() == JingleS5BTransportCandidateElement.Type.proxy;
             if (!isProxy) {
                 LOGGER.log(Level.INFO, "Start transmission on " + nominated.getCandidateId());
                 this.bytestreamSession = new Socks5BytestreamSession(nominated.getSocket(), true);
@@ -370,7 +371,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     private void activateProxy(JingleS5BTransportCandidate candidate) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
-        LOGGER.log(Level.INFO, "Activate proxy: " + candidate.getCandidateId() + " " + candidate.getStreamHost().getAddress() + ":" + candidate.getStreamHost().getPort() + " " + candidate.getStreamHost().getJID());
+        LOGGER.log(Level.INFO, "Activate proxy: " + candidate.getCandidateId() + " " + candidate.getStreamHost().getAddress() + ":" + candidate.getStreamHost().getPort() + " " + candidate.getStreamHost().getJID() + " for " + getParent().getParent().getPeer());
         Bytestream activate = new Bytestream(getSid());
         activate.setMode(null);
         activate.setType(IQ.Type.set);
@@ -378,6 +379,17 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         activate.setToActivate(getParent().getParent().getPeer());
         activate.setFrom(getParent().getParent().getOurJid());
         getParent().getParent().getJingleManager().getConnection().createStanzaCollectorAndSend(activate).nextResultOrThrow();
+    }
+
+    @Override
+    public void handleSessionAccept(JingleContentTransportElement transportElement, XMPPConnection connection) {
+        JingleS5BTransportElement transport = (JingleS5BTransportElement) transportElement;
+        theirDstAddr = transport.getDestinationAddress();
+        theirMode = transport.getMode();
+        for (JingleContentTransportCandidateElement c : transport.getCandidates()) {
+            JingleS5BTransportCandidateElement candidate = (JingleS5BTransportCandidateElement) c;
+            addTheirCandidate(new JingleS5BTransportCandidate(candidate));
+        }
     }
 
     @Override
