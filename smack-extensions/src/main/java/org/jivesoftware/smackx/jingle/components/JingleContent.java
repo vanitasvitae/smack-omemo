@@ -67,14 +67,39 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
 
+    private short state;
+
     public enum STATE {
-        pending_accept,
-        pending_transmission_start,
-        pending_transport_replace,
-        transmission_in_progress,
-        transmission_successful,
-        transmission_failed,
-        transmission_cancelled
+        pending_accept((short) 1),
+        pending_transmission_start((short) 2),
+        pending_transport_replace((short) 4),
+        transmission_in_progress((short) 8),
+        transmission_successful((short) 16),
+        transmission_failed((short) 32),
+        transmission_cancelled((short) 64),
+        ;
+
+        final short value;
+
+        STATE(short value) {
+            this.value = value;
+        }
+
+        short getValue() {
+            return value;
+        }
+    }
+
+    public void addState(STATE state) {
+        this.state |= state.getValue();
+    }
+
+    public void removeState(STATE state) {
+        this.state ^= state.getValue();
+    }
+
+    public boolean hasState(STATE state) {
+        return (this.state & state.getValue()) == state.getValue();
     }
 
     public JingleContent(JingleContentElement.Creator creator, JingleContentElement.Senders senders) {

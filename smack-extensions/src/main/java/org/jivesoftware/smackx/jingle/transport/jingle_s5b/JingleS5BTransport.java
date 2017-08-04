@@ -276,6 +276,11 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         return CANDIDATE_FAILURE;
     }
 
+    @Override
+    public void cleanup() {
+        Socks5Proxy.getSocks5Proxy().removeTransfer(ourDstAddr);
+    }
+
     void connectIfReady() {
         final JingleS5BTransportManager jingleS5BTransportManager = JingleS5BTransportManager.getInstanceFor(getParent().getParent().getJingleManager().getConnection());
         final JingleSession session = getParent().getParent();

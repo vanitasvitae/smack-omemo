@@ -127,13 +127,18 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     @Override
+    public void cleanup() {
+        // Nothing to do.
+    }
+
+    @Override
     public void addOurCandidate(JingleTransportCandidate<?> candidate) {
         // Sorry, we don't want any candidates.
     }
 
     @Override
     public void prepare(XMPPConnection connection) {
-        // Nuffin taddooh.
+        // Nothing to do.
     }
 
     @Override

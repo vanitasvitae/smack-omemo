@@ -135,4 +135,6 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
     }
 
     public abstract void handleSessionAccept(JingleContentTransportElement transportElement, XMPPConnection connection);
+
+    public abstract void cleanup();
 }
