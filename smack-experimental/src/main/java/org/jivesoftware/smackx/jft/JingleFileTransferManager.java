@@ -105,7 +105,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         content.setDescription(offer);
 
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager();
-        content.setTransport(transportManager.createTransport(content));
+        content.setTransport(transportManager.createTransportForInitiator(content));
 
         session.initiate(connection());
 

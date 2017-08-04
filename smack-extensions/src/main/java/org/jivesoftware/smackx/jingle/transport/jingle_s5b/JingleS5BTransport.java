@@ -105,7 +105,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     JingleS5BTransport(FullJid initiator, FullJid responder, List<JingleTransportCandidate<?>> ourCandidates, JingleS5BTransport other) {
         this.sid = other.sid;
         this.ourMode = other.theirMode;
-        this.ourDstAddr = Socks5Utils.createDigest(other.sid, initiator, responder);
+        this.ourDstAddr = Socks5Utils.createDigest(other.sid, responder, initiator);
         Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
         this.theirMode = other.theirMode;
         this.theirDstAddr = other.theirDstAddr;
@@ -214,7 +214,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     public void prepare(XMPPConnection connection) {
         JingleSession session = getParent().getParent();
         if (getOurDstAddr() == null) {
-            ourDstAddr = Socks5Utils.createDigest(session.getSessionId(), session.getInitiator(), session.getResponder());
+            ourDstAddr = Socks5Utils.createDigest(session.getSessionId(), session.getOurJid(), session.getPeer());
             Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
         }
 

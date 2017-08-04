@@ -18,7 +18,6 @@ package org.jivesoftware.smackx.jingle.components;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackFuture;
@@ -34,8 +33,6 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
  * Class that represents a contents transport component.
  */
 public abstract class JingleTransport<D extends JingleContentTransportElement> extends SmackFuture<BytestreamSession> {
-
-    private static final Logger LOGGER = Logger.getLogger(JingleTransport.class.getName());
 
     private JingleContent parent;
     private final ArrayList<JingleTransportCandidate<?>> ourCandidates = new ArrayList<>();
@@ -61,6 +58,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
 
             // list already contains element -> return
             if (c == candidate || c.equals(candidate)) {
+                c.setParent(this);
                 return;
             }
 
@@ -88,6 +86,7 @@ public abstract class JingleTransport<D extends JingleContentTransportElement> e
 
             // list already contains element -> return
             if (c == candidate || c.equals(candidate)) {
+                c.setParent(this);
                 return;
             }
 

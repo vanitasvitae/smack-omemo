@@ -96,10 +96,12 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
         Socks5Client client;
         if (peersProposal) {
             LOGGER.log(Level.INFO, "Connect to foreign candidate " + getCandidateId() + " using " + transport.getTheirDstAddr());
+            LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());
             client = new Socks5Client(getStreamHost(), transport.getTheirDstAddr());
         }
         else {
             LOGGER.log(Level.INFO, "Connect to our candidate " + getCandidateId() + " using " + transport.getOurDstAddr());
+            LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());
             JingleContent content = transport.getParent();
             JingleSession session = content.getParent();
             client = new Socks5ClientForInitiator(getStreamHost(), transport.getOurDstAddr(), session.getJingleManager().getConnection(), transport.getSid(), session.getPeer());

@@ -91,7 +91,7 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         content.setDescription(offer);
 
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager();
-        content.setTransport(transportManager.createTransport(content));
+        content.setTransport(transportManager.createTransportForInitiator(content));
 
         JetSecurity security = new JetSecurity(method, recipient, content.getName(), Aes256GcmNoPadding.NAMESPACE);
         content.setSecurity(security);

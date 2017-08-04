@@ -66,20 +66,20 @@ public final class JingleIBBTransportManager extends Manager implements JingleTr
     }
 
     @Override
-    public JingleTransport<?> createTransport(JingleContent content) {
+    public JingleTransport<?> createTransportForInitiator(JingleContent content) {
         return new JingleIBBTransport();
     }
 
     @Override
-    public JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport) {
+    public JingleTransport<?> createTransportForResponder(JingleContent content, JingleTransport<?> peersTransport) {
         JingleIBBTransport other = (JingleIBBTransport) peersTransport;
         return new JingleIBBTransport(other.getSid(), (short) Math.min(other.getBlockSize(), MAX_BLOCKSIZE));
     }
 
     @Override
-    public JingleTransport<?> createTransport(JingleContent content, JingleContentTransportElement peersTransportElement) {
+    public JingleTransport<?> createTransportForResponder(JingleContent content, JingleContentTransportElement peersTransportElement) {
         JingleIBBTransport other = new JingleIBBTransportAdapter().transportFromElement(peersTransportElement);
-        return createTransport(content, other);
+        return createTransportForResponder(content, other);
     }
 
     @Override

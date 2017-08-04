@@ -79,7 +79,7 @@ public class JingleSession {
             throw new IllegalArgumentException("Jingle-Action MUST be 'session-initiate'.");
         }
 
-        JingleSession session = new JingleSession(manager, initiate.getInitiator(), initiate.getResponder(), Role.responder, initiate.getSid());
+        JingleSession session = new JingleSession(manager, initiate.getInitiator(), manager.getConnection().getUser().asFullJidOrThrow(), Role.responder, initiate.getSid());
         List<JingleContentElement> initiateContents = initiate.getContents();
 
         for (JingleContentElement content : initiateContents) {

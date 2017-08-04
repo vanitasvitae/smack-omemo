@@ -27,11 +27,11 @@ public interface JingleTransportManager extends Comparable<JingleTransportManage
 
     String getNamespace();
 
-    JingleTransport<?> createTransport(JingleContent content);
+    JingleTransport<?> createTransportForInitiator(JingleContent content);
 
-    JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport);
+    JingleTransport<?> createTransportForResponder(JingleContent content, JingleTransport<?> peersTransport);
 
-    JingleTransport<?> createTransport(JingleContent content, JingleContentTransportElement peersTransportElement);
+    JingleTransport<?> createTransportForResponder(JingleContent content, JingleContentTransportElement peersTransportElement);
 
     /**
      * Return a (usually) positive integer, which is used to define a strict order over the set of available transport

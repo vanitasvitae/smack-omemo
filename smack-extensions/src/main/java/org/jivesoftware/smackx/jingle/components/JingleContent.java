@@ -114,6 +114,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         this.disposition = disposition;
         this.creator = creator;
         this.senders = senders;
+        this.addState(STATE.pending_accept);
     }
 
     public static JingleContent fromElement(JingleContentElement content) {
@@ -224,12 +225,16 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public IQ handleTransportAccept(JingleElement request, XMPPConnection connection) {
-        if (pendingReplacingTransport == null) {
+
+        if (pendingReplacingTransport == null || !hasState(STATE.pending_transport_replace)) {
             LOGGER.log(Level.WARNING, "Received transport-accept, but apparently we did not try to replace the transport.");
             return JingleElement.createJingleErrorOutOfOrder(request);
         }
+
         transport = pendingReplacingTransport;
         pendingReplacingTransport = null;
+
+        removeState(STATE.pending_transport_replace);
 
         onAccept(connection);
 
@@ -244,10 +249,26 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public IQ handleTransportReject(JingleElement request, XMPPConnection connection) {
+        removeState(STATE.pending_transport_replace);
         return IQ.createResultIQ(request);
     }
 
-    public IQ handleTransportReplace(JingleElement request, XMPPConnection connection) {
+    public IQ handleTransportReplace(final JingleElement request, final XMPPConnection connection) {
+        //Tie Break?
+        if (hasState(STATE.pending_transport_replace)) {
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        connection.createStanzaCollectorAndSend(JingleElement.createJingleErrorTieBreak(request)).nextResultOrThrow();
+                    } catch (SmackException.NoResponseException | SmackException.NotConnectedException | InterruptedException | XMPPException.XMPPErrorException e) {
+                        LOGGER.log(Level.SEVERE, "Could not send tie-break: " + e, e);
+                    }
+                }
+            });
+            return IQ.createResultIQ(request);
+        }
+
         JingleContentElement contentElement = null;
         for (JingleContentElement c : request.getContents()) {
             if (c.getName().equals(getName())) {
@@ -282,7 +303,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
             //Blacklist current transport
             this.getTransportBlacklist().add(this.transport.getNamespace());
 
-            this.transport = tm.createTransport(this, transportElement);
+            this.transport = tm.createTransportForResponder(this, transportElement);
             Async.go(new Runnable() {
                 @Override
                 public void run() {
@@ -466,6 +487,9 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     private void replaceTransport(Set<String> blacklist, XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException,
             XMPPException.XMPPErrorException, SmackException.NoResponseException {
+        if (hasState(STATE.pending_transport_replace)) {
+            throw new AssertionError("Transport replace already pending.");
+        }
 
         JingleSession session = getParent();
         JingleManager jingleManager = session.getJingleManager();
@@ -478,12 +502,13 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
             return;
         }
 
-        pendingReplacingTransport = rManager.createTransport(this);
+        pendingReplacingTransport = rManager.createTransportForInitiator(this);
 
         JingleElement transportReplace = JingleElement.createTransportReplace(session.getInitiator(), session.getPeer(),
                 session.getSessionId(), getCreator(), getName(), pendingReplacingTransport.getElement());
 
         connection.createStanzaCollectorAndSend(transportReplace).nextResultOrThrow();
+        addState(STATE.pending_transport_replace);
     }
 
     public static String randomName() {

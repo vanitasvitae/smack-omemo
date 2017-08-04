@@ -97,27 +97,27 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     }
 
     @Override
-    public JingleTransport<?> createTransport(JingleContent content) {
+    public JingleTransport<?> createTransportForInitiator(JingleContent content) {
         JingleSession session = content.getParent();
         List<JingleTransportCandidate<?>> candidates = collectCandidates();
         return new JingleS5BTransport(session.getInitiator(), session.getResponder(), StringUtils.randomString(24), Bytestream.Mode.tcp, candidates);
     }
 
     @Override
-    public JingleTransport<?> createTransport(JingleContent content, JingleTransport<?> peersTransport) {
+    public JingleTransport<?> createTransportForResponder(JingleContent content, JingleTransport<?> peersTransport) {
         JingleSession session = content.getParent();
         return new JingleS5BTransport(session.getInitiator(), session.getResponder(), collectCandidates(), (JingleS5BTransport) peersTransport);
     }
 
     @Override
-    public JingleTransport<?> createTransport(JingleContent content, JingleContentTransportElement peersTransportElement) {
+    public JingleTransport<?> createTransportForResponder(JingleContent content, JingleContentTransportElement peersTransportElement) {
         JingleS5BTransport other = new JingleS5BTransportAdapter().transportFromElement(peersTransportElement);
-        return createTransport(content, other);
+        return createTransportForResponder(content, other);
     }
 
     @Override
     public int getPriority() {
-        return 10000;
+        return 10000; // SOCKS5 has a high priority
     }
 
     public List<JingleTransportCandidate<?>> collectCandidates() {
@@ -133,7 +133,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         List<Bytestream.StreamHost> remoteHosts = Collections.emptyList();
         if (JingleS5BTransportManager.isUseExternalCandidates()) {
             try {
-                remoteHosts = getAvailableStreamHosts();
+                remoteHosts = getServersStreamHosts();
             } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
                 LOGGER.log(Level.WARNING, "Could not determine available StreamHosts.", e);
             }
@@ -143,12 +143,10 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
             candidates.add(new JingleS5BTransportCandidate(StringUtils.randomString(16), host, 0, JingleS5BTransportCandidateElement.Type.proxy));
         }
 
-        LOGGER.log(Level.INFO, "Collected candidates.");
-
         return candidates;
     }
 
-    private List<Bytestream.StreamHost> queryAvailableStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+    private List<Bytestream.StreamHost> queryServersStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         List<Jid> proxies = socks5BytestreamManager.determineProxies();
         return determineStreamHostInfo(proxies);
     }
@@ -157,9 +155,9 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         return socks5BytestreamManager.getLocalStreamHost();
     }
 
-    public List<Bytestream.StreamHost> getAvailableStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+    public List<Bytestream.StreamHost> getServersStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         if (availableStreamHosts == null) {
-            availableStreamHosts = queryAvailableStreamHosts();
+            availableStreamHosts = queryServersStreamHosts();
         }
         return availableStreamHosts;
     }
@@ -275,7 +273,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
                         socks5Proxy.start();
                     }
                     localStreamHosts = queryLocalStreamHosts();
-                    availableStreamHosts = queryAvailableStreamHosts();
+                    availableStreamHosts = queryServersStreamHosts();
                 } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
                     LOGGER.log(Level.WARNING, "Could not query available StreamHosts: " + e, e);
                 }

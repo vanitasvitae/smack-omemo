@@ -89,8 +89,8 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
         JingleContent rContent = new JingleContent(null, null, null, "content", null, JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
         sSession.addContent(sContent);
         rSession.addContent(rContent);
-        JingleS5BTransport sTransport = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(sender).createTransport(sContent);
-        JingleS5BTransport rTransport = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(receiver).createTransport(rContent, sTransport);
+        JingleS5BTransport sTransport = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(sender).createTransportForInitiator(sContent);
+        JingleS5BTransport rTransport = (JingleS5BTransport) JingleS5BTransportManager.getInstanceFor(receiver).createTransportForResponder(rContent, sTransport);
         sContent.setTransport(sTransport);
         rContent.setTransport(rTransport);
         sTransport.handleSessionAccept(rTransport.getElement(), sender);
