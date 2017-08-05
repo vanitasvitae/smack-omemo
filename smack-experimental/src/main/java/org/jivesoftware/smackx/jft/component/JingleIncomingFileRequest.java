@@ -17,10 +17,10 @@
 package org.jivesoftware.smackx.jft.component;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.jft.component.file.RemoteFile;
 import org.jivesoftware.smackx.jft.controller.IncomingFileRequestController;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
-import org.jivesoftware.smackx.jft.component.file.RemoteFile;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 

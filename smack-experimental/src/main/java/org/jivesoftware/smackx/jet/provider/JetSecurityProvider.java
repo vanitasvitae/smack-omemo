@@ -23,8 +23,8 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smackx.jet.JetManager;
-import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jet.component.JetSecurity;
+import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jingle.provider.JingleContentSecurityProvider;
 
 import org.xmlpull.v1.XmlPullParser;

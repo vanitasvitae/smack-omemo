@@ -18,11 +18,11 @@ package org.jivesoftware.smackx.jft.adapter;
 
 import java.util.List;
 
-import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
-import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jft.component.JingleFileTransfer;
 import org.jivesoftware.smackx.jft.component.JingleIncomingFileOffer;
 import org.jivesoftware.smackx.jft.component.JingleIncomingFileRequest;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
+import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;

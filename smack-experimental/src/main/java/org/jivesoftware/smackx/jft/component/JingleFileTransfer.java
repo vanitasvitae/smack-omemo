@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jivesoftware.smackx.jft.component.file.AbstractJingleFileTransferFile;
 import org.jivesoftware.smackx.jft.controller.JingleFileTransferController;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
-import org.jivesoftware.smackx.jft.component.file.AbstractJingleFileTransferFile;
 import org.jivesoftware.smackx.jft.listener.ProgressListener;
 import org.jivesoftware.smackx.jingle.component.JingleDescription;
 

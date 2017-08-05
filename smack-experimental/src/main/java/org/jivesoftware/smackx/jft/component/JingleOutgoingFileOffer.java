@@ -25,8 +25,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jft.component.file.LocalFile;
+import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 
