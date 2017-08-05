@@ -59,7 +59,7 @@ public class LocalFile extends AbstractJingleFileTransferFile {
     @Override
     public String getName() {
         String path = file.getAbsolutePath();
-        return path.substring(path.lastIndexOf(File.pathSeparatorChar) + 1);
+        return path.substring(path.lastIndexOf(File.separator) + 1);
     }
 
     @Override
