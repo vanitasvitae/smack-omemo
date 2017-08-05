@@ -102,9 +102,9 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
      * @param other transport of the other party.
      */
     JingleS5BTransport(FullJid initiator, FullJid responder, List<JingleTransportCandidate<?>> ourCandidates, JingleS5BTransport other) {
-        this.sid = other.sid;
+        this.sid = other.getSid();
         this.mode = other.mode;
-        this.ourDstAddr = Socks5Utils.createDigest(other.sid, responder, initiator);
+        this.ourDstAddr = Socks5Utils.createDigest(sid, responder, initiator);
         Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
         this.theirDstAddr = other.theirDstAddr;
 
@@ -232,6 +232,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         establishBytestreamSession(connection);
     }
 
+    @SuppressWarnings("ReferenceEquality")
     void establishBytestreamSession(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException {
         Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
@@ -251,6 +252,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         connectIfReady();
     }
 
+    @SuppressWarnings("ReferenceEquality")
     public JingleS5BTransportCandidate connectToCandidates(int timeout) {
 
         if (getTheirCandidates().size() == 0) {
@@ -276,6 +278,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         Socks5Proxy.getSocks5Proxy().removeTransfer(ourDstAddr);
     }
 
+    @SuppressWarnings("ReferenceEquality")
     void connectIfReady() {
         final JingleS5BTransportManager jingleS5BTransportManager = JingleS5BTransportManager.getInstanceFor(getParent().getParent().getJingleManager().getConnection());
         final JingleSession session = getParent().getParent();

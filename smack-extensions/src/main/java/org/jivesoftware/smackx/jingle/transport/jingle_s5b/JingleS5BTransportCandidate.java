@@ -114,4 +114,26 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
     public Socket getSocket() {
         return socket;
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
+        if (!(other instanceof JingleS5BTransportCandidate)) {
+            return false;
+        }
+
+        JingleS5BTransportCandidate o = (JingleS5BTransportCandidate) other;
+
+        return o.getCandidateId().equals(this.getCandidateId()) &&
+                o.getType() == this.getType() &&
+                o.getStreamHost().equals(this.getStreamHost());
+    }
+
+    @Override
+    public int hashCode() {
+        return getCandidateId().hashCode() + 3 * getType().hashCode() + 5 * getStreamHost().hashCode();
+    }
 }

@@ -22,8 +22,12 @@ import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.component.JingleContent;
 import org.jivesoftware.smackx.jingle.component.JingleTransportCandidate;
@@ -247,6 +251,57 @@ public class JingleS5BTransportTest extends SmackTestSuite {
         assertEquals(port, candidate.getPort());
 
         assertEquals(streamHost.toXML().toString(), candidate.getStreamHost().toXML().toString());
+    }
+
+    @Test
+    public void constructorsTest() throws XmppStringprepException {
+        FullJid initiator = JidCreate.fullFrom("in@it.ia/tor");
+        FullJid responder = JidCreate.fullFrom("re@sp.on/der");
+
+        List<JingleTransportCandidate<?>> c1 = new ArrayList<>();
+        JingleS5BTransportCandidate c11 = new JingleS5BTransportCandidate("1234", new Bytestream.StreamHost(JidCreate.from("p.b.c"), "p.b.c", 9999), 100, JingleS5BTransportCandidateElement.Type.proxy);
+        c1.add(c11);
+
+        List<JingleTransportCandidate<?>> c2 = new ArrayList<>();
+        JingleS5BTransportCandidate c21 = new JingleS5BTransportCandidate("1337", new Bytestream.StreamHost(JidCreate.from("p.a.b"), "p.a.b", 1000), 101, JingleS5BTransportCandidateElement.Type.proxy);
+        JingleS5BTransportCandidate c22 = new JingleS5BTransportCandidate("1009", new Bytestream.StreamHost(JidCreate.from("p.a.b"), "p.a.b", 2000), 10, JingleS5BTransportCandidateElement.Type.proxy);
+        c2.add(c21);
+        c2.add(c22);
+
+
+        JingleS5BTransport t1 = new JingleS5BTransport(initiator, responder, "tSes", Bytestream.Mode.tcp, c1);
+
+        assertEquals("tSes", t1.getSid());
+        assertEquals(Bytestream.Mode.tcp, t1.getMode());
+
+        assertEquals(Socks5Utils.createDigest("tSes", initiator, responder), t1.getOurDstAddr());
+        assertNull(t1.getTheirDstAddr());
+
+        assertEquals(1, t1.getOurCandidates().size());
+        assertEquals(c11, t1.getOurCandidates().get(0));
+        assertEquals(0, t1.getTheirCandidates().size());
+
+
+        JingleS5BTransport t1parsed = new JingleS5BTransportAdapter().transportFromElement(t1.getElement());
+
+        assertEquals(t1.getOurDstAddr(), t1parsed.getTheirDstAddr());
+        assertNull(t1parsed.getOurDstAddr());
+        assertEquals(0, t1parsed.getOurCandidates().size());
+        assertEquals(t1.getSid(), t1parsed.getSid());
+        assertEquals(t1.getMode(), t1parsed.getMode());
+        assertEquals(t1.getOurCandidates().size(), t1parsed.getTheirCandidates().size());
+
+        JingleS5BTransport t2 = new JingleS5BTransport(initiator, responder, c2, t1parsed);
+
+        assertEquals("tSes", t2.getSid());
+        assertEquals(Bytestream.Mode.tcp, t2.getMode());
+
+        assertEquals(Socks5Utils.createDigest("tSes", responder, initiator), t2.getOurDstAddr());
+        assertEquals(t1.getOurDstAddr(), t2.getTheirDstAddr());
+
+        assertEquals(2, t2.getOurCandidates().size());
+        assertEquals(c2, t2.getOurCandidates());
+        assertEquals(t1.getOurCandidates().size(), t2.getTheirCandidates().size());
     }
 
     @Test(expected = IllegalArgumentException.class)
