@@ -65,7 +65,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     private List<Bytestream.StreamHost> localStreamHosts = null;
     private List<Bytestream.StreamHost> availableStreamHosts = null;
 
-    private static boolean useLocalCandidates = false;
+    private static boolean useLocalCandidates = true;
     private static boolean useExternalCandidates = true;
 
     static {
@@ -222,19 +222,19 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     }
 
     JingleElement createCandidateUsed(JingleS5BTransport transport, JingleS5BTransportCandidate candidate) {
-        return createTransportInfo(transport, JingleS5BTransportInfoElement.CandidateUsed(candidate.getCandidateId()));
+        return createTransportInfo(transport, new JingleS5BTransportInfoElement.CandidateUsed(candidate.getCandidateId()));
     }
 
     JingleElement createCandidateError(JingleS5BTransport transport) {
-        return createTransportInfo(transport, JingleS5BTransportInfoElement.CandidateError());
+        return createTransportInfo(transport, JingleS5BTransportInfoElement.CandidateError.INSTANCE);
     }
 
     JingleElement createProxyError(JingleS5BTransport transport) {
-        return createTransportInfo(transport, JingleS5BTransportInfoElement.ProxyError());
+        return createTransportInfo(transport, JingleS5BTransportInfoElement.ProxyError.INSTANCE);
     }
 
     JingleElement createCandidateActivated(JingleS5BTransport transport, JingleS5BTransportCandidate candidate) {
-        return createTransportInfo(transport, JingleS5BTransportInfoElement.CandidateActivated(candidate.getCandidateId()));
+        return createTransportInfo(transport, new JingleS5BTransportInfoElement.CandidateActivated(candidate.getCandidateId()));
     }
 
     public static void setUseLocalCandidates(boolean localCandidates) {

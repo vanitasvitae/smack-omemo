@@ -136,6 +136,18 @@ public final class JingleElement extends IQ {
         return contents;
     }
 
+    public JingleContentElement getSoleContentOrThrow() {
+        if (contents.isEmpty()) {
+            return null;
+        }
+
+        if (contents.size() == 1) {
+            return contents.get(0);
+        }
+
+        throw new IllegalStateException("More than one content is present.");
+    }
+
     @Override
     protected IQChildElementXmlStringBuilder getIQChildElementBuilder(IQChildElementXmlStringBuilder xml) {
         xml.optAttribute(INITIATOR_ATTRIBUTE_NAME, getInitiator());

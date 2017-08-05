@@ -135,5 +135,23 @@ public class JingleS5BTransportElement extends JingleContentTransportElement {
         public JingleS5BTransportElement build() {
             return new JingleS5BTransportElement(streamId, candidates, info, dstAddr, mode);
         }
+
+        public Builder setCandidateUsed(String candidateId) {
+            return setTransportInfo(new JingleS5BTransportInfoElement.CandidateUsed(candidateId));
+        }
+
+        public Builder setCandidateActivated(String candidateId) {
+            return setTransportInfo(new JingleS5BTransportInfoElement.CandidateActivated(candidateId));
+        }
+
+        public Builder setCandidateError() {
+            return setTransportInfo(JingleS5BTransportInfoElement.CandidateError.INSTANCE);
+        }
+
+        public Builder setProxyError() {
+            return setTransportInfo(JingleS5BTransportInfoElement.ProxyError.INSTANCE);
+        }
+
     }
 }
+

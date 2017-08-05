@@ -24,112 +24,76 @@ import org.jivesoftware.smackx.jingle.element.JingleContentTransportInfoElement;
  */
 public abstract class JingleS5BTransportInfoElement extends JingleContentTransportInfoElement {
 
-    private static CandidateError CEI;
-    private static ProxyError PEI;
-
-    public static CandidateUsed CandidateUsed(String candidateId) {
-        return new CandidateUsed(candidateId);
-    }
-
-    public static CandidateActivated CandidateActivated(String candidateId) {
-        return new CandidateActivated(candidateId);
-    }
-
-    public static CandidateError CandidateError() {
-        if (CEI == null) {
-            CEI = new CandidateError();
-        }
-        return CEI;
-    }
-
-    public static ProxyError ProxyError() {
-        if (PEI == null) {
-            PEI = new ProxyError();
-        }
-        return PEI;
-    }
-
-    public static final class CandidateActivated extends JingleS5BTransportInfoElement {
-        public static final String ELEMENT = "candidate-activated";
+    public static abstract class JingleS5BCandidateTransportInfoElement extends JingleS5BTransportInfoElement {
         public static final String ATTR_CID = "cid";
 
         private final String candidateId;
+
+        protected JingleS5BCandidateTransportInfoElement(String candidateId) {
+            this.candidateId = candidateId;
+        }
+
+        public final String getCandidateId() {
+            return candidateId;
+        }
+
+        @Override
+        public final XmlStringBuilder toXML() {
+            XmlStringBuilder xml = new XmlStringBuilder();
+            xml.halfOpenElement(this);
+            xml.attribute(ATTR_CID, getCandidateId());
+            xml.closeEmptyElement();
+            return xml;
+        }
+
+        @Override
+        public final boolean equals(Object other) {
+            if (!(other instanceof JingleS5BCandidateTransportInfoElement)) {
+                return false;
+            }
+
+            JingleS5BCandidateTransportInfoElement otherCandidateTransportInfo = (JingleS5BCandidateTransportInfoElement) other;
+            return toXML().equals(otherCandidateTransportInfo.toXML());
+        }
+
+        @Override
+        public final int hashCode() {
+            return getCandidateId().hashCode();
+        }
+    }
+
+    public static final class CandidateActivated extends JingleS5BCandidateTransportInfoElement {
+        public static final String ELEMENT = "candidate-activated";
 
         public CandidateActivated(String candidateId) {
-            this.candidateId = candidateId;
-        }
-
-        public String getCandidateId() {
-            return candidateId;
+            super(candidateId);
         }
 
         @Override
         public String getElementName() {
             return ELEMENT;
         }
-
-        @Override
-        public CharSequence toXML() {
-            XmlStringBuilder xml = new XmlStringBuilder();
-            xml.halfOpenElement(this);
-            xml.attribute(ATTR_CID, candidateId);
-            xml.closeEmptyElement();
-            return xml;
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof CandidateActivated &&
-                    ((CandidateActivated) other).getCandidateId().equals(candidateId);
-        }
-
-        @Override
-        public int hashCode() {
-            return toXML().toString().hashCode();
-        }
     }
 
-    public static final class CandidateUsed extends JingleS5BTransportInfoElement {
-        public static final String ELEMENT = "candidate-used";
-        public static final String ATTR_CID = "cid";
 
-        private final String candidateId;
+    public static final class CandidateUsed extends JingleS5BCandidateTransportInfoElement {
+        public static final String ELEMENT = "candidate-used";
 
         public CandidateUsed(String candidateId) {
-            this.candidateId = candidateId;
-        }
-
-        public String getCandidateId() {
-            return candidateId;
+            super(candidateId);
         }
 
         @Override
         public String getElementName() {
             return ELEMENT;
         }
-
-        @Override
-        public CharSequence toXML() {
-            XmlStringBuilder xml = new XmlStringBuilder();
-            xml.halfOpenElement(this);
-            xml.attribute(ATTR_CID, candidateId);
-            xml.closeEmptyElement();
-            return xml;
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof CandidateUsed &&
-                    ((CandidateUsed) other).getCandidateId().equals(candidateId);
-        }
-
-        @Override
-        public int hashCode() {
-            return toXML().toString().hashCode();
-        }
     }
 
+
     public static final class CandidateError extends JingleS5BTransportInfoElement {
+
+        public static final CandidateError INSTANCE = new CandidateError();
+
         public static final String ELEMENT = "candidate-error";
 
         private CandidateError() {
@@ -142,7 +106,7 @@ public abstract class JingleS5BTransportInfoElement extends JingleContentTranspo
         }
 
         @Override
-        public CharSequence toXML() {
+        public XmlStringBuilder toXML() {
             XmlStringBuilder xml = new XmlStringBuilder();
             xml.halfOpenElement(this);
             xml.closeEmptyElement();
@@ -151,7 +115,7 @@ public abstract class JingleS5BTransportInfoElement extends JingleContentTranspo
 
         @Override
         public boolean equals(Object other) {
-            return other instanceof CandidateError;
+            return other == INSTANCE;
         }
 
         @Override
@@ -160,7 +124,10 @@ public abstract class JingleS5BTransportInfoElement extends JingleContentTranspo
         }
     }
 
+
     public static final class ProxyError extends JingleS5BTransportInfoElement {
+        public static final ProxyError INSTANCE = new ProxyError();
+
         public static final String ELEMENT = "proxy-error";
 
         private ProxyError() {
@@ -173,7 +140,7 @@ public abstract class JingleS5BTransportInfoElement extends JingleContentTranspo
         }
 
         @Override
-        public CharSequence toXML() {
+        public XmlStringBuilder toXML() {
             XmlStringBuilder xml = new XmlStringBuilder();
             xml.halfOpenElement(this);
             xml.closeEmptyElement();
@@ -182,7 +149,7 @@ public abstract class JingleS5BTransportInfoElement extends JingleContentTranspo
 
         @Override
         public boolean equals(Object other) {
-            return other instanceof ProxyError;
+            return other == INSTANCE;
         }
 
         @Override

@@ -72,7 +72,7 @@ public abstract class JingleContentTransportElement implements ExtensionElement 
     }
 
     @Override
-    public final XmlStringBuilder toXML() {
+    public XmlStringBuilder toXML() {
         XmlStringBuilder xml = new XmlStringBuilder(this);
         addExtraAttributes(xml);
 

@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
+import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 
 /**
@@ -37,9 +38,9 @@ public abstract class JingleContentDescriptionElement implements ExtensionElemen
 
     public static final String ELEMENT = "description";
 
-    private final List<JingleContentDescriptionChildElement> payloads;
+    private final List<NamedElement> payloads;
 
-    protected JingleContentDescriptionElement(List<JingleContentDescriptionChildElement> payloads) {
+    protected JingleContentDescriptionElement(List<? extends NamedElement> payloads) {
         if (payloads != null) {
             this.payloads = Collections.unmodifiableList(payloads);
         }
@@ -53,7 +54,7 @@ public abstract class JingleContentDescriptionElement implements ExtensionElemen
         return ELEMENT;
     }
 
-    public List<JingleContentDescriptionChildElement> getJingleContentDescriptionChildren() {
+    public List<NamedElement> getJingleContentDescriptionChildren() {
         return payloads;
     }
 
@@ -66,7 +67,7 @@ public abstract class JingleContentDescriptionElement implements ExtensionElemen
     }
 
     @Override
-    public final XmlStringBuilder toXML() {
+    public XmlStringBuilder toXML() {
         XmlStringBuilder xml = new XmlStringBuilder(this);
         addExtraAttributes(xml);
         xml.rightAngleBracket();

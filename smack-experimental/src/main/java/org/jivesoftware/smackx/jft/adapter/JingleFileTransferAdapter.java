@@ -18,13 +18,13 @@ package org.jivesoftware.smackx.jft.adapter;
 
 import java.util.List;
 
+import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smackx.jft.component.JingleFileTransfer;
 import org.jivesoftware.smackx.jft.component.JingleIncomingFileOffer;
 import org.jivesoftware.smackx.jft.component.JingleIncomingFileRequest;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 
@@ -37,9 +37,9 @@ public class JingleFileTransferAdapter implements JingleDescriptionAdapter<Jingl
     public JingleFileTransfer descriptionFromElement(JingleContentElement.Creator creator, JingleContentElement.Senders senders,
                                                      String contentName, String contentDisposition, JingleContentDescriptionElement element) {
         JingleFileTransferElement description = (JingleFileTransferElement) element;
-        List<JingleContentDescriptionChildElement> childs = description.getJingleContentDescriptionChildren();
-        assert childs.size() == 1;
-        JingleFileTransferChildElement file = (JingleFileTransferChildElement) childs.get(0);
+        List<NamedElement> children = description.getJingleContentDescriptionChildren();
+        assert children.size() == 1;
+        JingleFileTransferChildElement file = (JingleFileTransferChildElement) children.get(0);
 
         if (senders == JingleContentElement.Senders.initiator) {
             return new JingleIncomingFileOffer(file);

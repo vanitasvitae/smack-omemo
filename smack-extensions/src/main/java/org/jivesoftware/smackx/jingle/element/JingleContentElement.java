@@ -115,9 +115,8 @@ public final class JingleContentElement implements NamedElement {
     }
 
     /**
-     * Returns an Iterator for the JingleTransports in the packet.
-     * 
-     * @return an Iterator for the JingleTransports in the packet.
+     * Return the transport of the content.
+     * @return transport.
      */
     public JingleContentTransportElement getTransport() {
         return transport;

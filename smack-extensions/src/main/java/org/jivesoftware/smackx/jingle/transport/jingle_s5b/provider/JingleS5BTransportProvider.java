@@ -85,23 +85,23 @@ public class JingleS5BTransportProvider extends JingleContentTransportProvider<J
                             break;
 
                         case JingleS5BTransportInfoElement.CandidateActivated.ELEMENT:
-                            builder.setTransportInfo(JingleS5BTransportInfoElement.CandidateActivated(
+                            builder.setTransportInfo(new JingleS5BTransportInfoElement.CandidateActivated(
                                     parser.getAttributeValue(null,
-                                            JingleS5BTransportInfoElement.CandidateActivated.ATTR_CID)));
+                                            JingleS5BTransportInfoElement.JingleS5BCandidateTransportInfoElement.ATTR_CID)));
                             break;
 
                         case JingleS5BTransportInfoElement.CandidateUsed.ELEMENT:
-                            builder.setTransportInfo(JingleS5BTransportInfoElement.CandidateUsed(
+                            builder.setTransportInfo(new JingleS5BTransportInfoElement.CandidateUsed(
                                     parser.getAttributeValue(null,
-                                            JingleS5BTransportInfoElement.CandidateUsed.ATTR_CID)));
+                                            JingleS5BTransportInfoElement.JingleS5BCandidateTransportInfoElement.ATTR_CID)));
                             break;
 
                         case JingleS5BTransportInfoElement.CandidateError.ELEMENT:
-                            builder.setTransportInfo(JingleS5BTransportInfoElement.CandidateError());
+                            builder.setTransportInfo(JingleS5BTransportInfoElement.CandidateError.INSTANCE);
                             break;
 
                         case JingleS5BTransportInfoElement.ProxyError.ELEMENT:
-                            builder.setTransportInfo(JingleS5BTransportInfoElement.ProxyError());
+                            builder.setTransportInfo(JingleS5BTransportInfoElement.ProxyError.INSTANCE);
                             break;
                     }
                 }
