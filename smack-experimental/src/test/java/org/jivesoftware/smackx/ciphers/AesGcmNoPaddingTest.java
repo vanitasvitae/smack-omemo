@@ -59,10 +59,35 @@ public class AesGcmNoPaddingTest extends SmackTestSuite {
         assertEquals(256, aes256.getLength());
     }
 
+    @Test(expected = NoSuchAlgorithmException.class)
+    public void invalidEncryptionCipher() throws NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException, InvalidKeyException, InvalidAlgorithmParameterException {
+        AesGcmNoPadding.createEncryptionKey("invalid");
+    }
+
+    @Test(expected = NoSuchAlgorithmException.class)
+    public void invalidDecryptionCipher() throws NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException, InvalidKeyException, InvalidAlgorithmParameterException {
+        AesGcmNoPadding.createDecryptionKey("invalid", null);
+    }
+
     @Test
-    public void encryptionTest() throws NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException, IllegalBlockSizeException {
+    public void encryption128Test() throws NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException, IllegalBlockSizeException {
         AesGcmNoPadding aes1 = AesGcmNoPadding.createEncryptionKey(Aes128GcmNoPadding.NAMESPACE);
         AesGcmNoPadding aes2 = AesGcmNoPadding.createDecryptionKey(Aes128GcmNoPadding.NAMESPACE, aes1.getKeyAndIv());
+
+        byte[] data = new byte[4096];
+        new Random().nextBytes(data);
+
+        byte[] enc = aes1.getCipher().doFinal(data);
+        assertFalse(Arrays.equals(data, enc));
+
+        byte[] dec = aes2.getCipher().doFinal(enc);
+        assertTrue(Arrays.equals(dec, data));
+    }
+
+    @Test
+    public void encryption256Test() throws NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException, IllegalBlockSizeException {
+        AesGcmNoPadding aes1 = AesGcmNoPadding.createEncryptionKey(Aes256GcmNoPadding.NAMESPACE);
+        AesGcmNoPadding aes2 = AesGcmNoPadding.createDecryptionKey(Aes256GcmNoPadding.NAMESPACE, aes1.getKeyAndIv());
 
         byte[] data = new byte[4096];
         new Random().nextBytes(data);
