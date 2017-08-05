@@ -37,7 +37,7 @@ public abstract class AesGcmNoPadding {
     protected final Cipher cipher;
     protected final byte[] key, iv, keyAndIv;
 
-    protected AesGcmNoPadding(int bits) throws NoSuchAlgorithmException, NoSuchProviderException,
+    protected AesGcmNoPadding(int bits, int MODE) throws NoSuchAlgorithmException, NoSuchProviderException,
             NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException {
         this.length = bits;
         int bytes = bits / 8;
@@ -57,23 +57,34 @@ public abstract class AesGcmNoPadding {
         cipher = Cipher.getInstance(cipherMode, "BC");
         SecretKey keySpec = new SecretKeySpec(key, keyType);
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+        cipher.init(MODE, keySpec, ivSpec);
     }
 
-    public static AesGcmNoPadding create(String cipherName)
+    public static AesGcmNoPadding createEncryptionKey(String cipherName)
             throws NoSuchProviderException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
             InvalidAlgorithmParameterException {
 
         switch (cipherName) {
             case Aes128GcmNoPadding.NAMESPACE:
-                return new Aes128GcmNoPadding();
+                return new Aes128GcmNoPadding(Cipher.ENCRYPT_MODE);
             case Aes256GcmNoPadding.NAMESPACE:
-                return new Aes256GcmNoPadding();
+                return new Aes256GcmNoPadding(Cipher.ENCRYPT_MODE);
             default: throw new NoSuchAlgorithmException("Invalid cipher.");
         }
     }
 
-    public AesGcmNoPadding(byte[] key, byte[] iv) throws NoSuchPaddingException, NoSuchAlgorithmException,
+    /**
+     * Create a new AES key.
+     * @param key key
+     * @param iv iv
+     * @param MODE cipher mode (Cipher.ENCRYPT_MODE / Cipher.DECRYPT_MODE)
+     * @throws NoSuchPaddingException
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchProviderException
+     * @throws InvalidAlgorithmParameterException
+     * @throws InvalidKeyException
+     */
+    public AesGcmNoPadding(byte[] key, byte[] iv, int MODE) throws NoSuchPaddingException, NoSuchAlgorithmException,
             NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException {
         this.length = key.length * 8;
         this.key = key;
@@ -86,18 +97,18 @@ public abstract class AesGcmNoPadding {
         cipher = Cipher.getInstance(cipherMode, "BC");
         SecretKeySpec keySpec = new SecretKeySpec(key, keyType);
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+        cipher.init(MODE, keySpec, ivSpec);
     }
 
-    public static AesGcmNoPadding parse(String namespace, byte[] serialized)
+    public static AesGcmNoPadding createDecryptionKey(String namespace, byte[] serialized)
             throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException,
             InvalidKeyException, NoSuchPaddingException {
 
         switch (namespace) {
             case Aes128GcmNoPadding.NAMESPACE:
-                return new Aes128GcmNoPadding(serialized);
+                return new Aes128GcmNoPadding(serialized, Cipher.DECRYPT_MODE);
             case Aes256GcmNoPadding.NAMESPACE:
-                return new Aes256GcmNoPadding(serialized);
+                return new Aes256GcmNoPadding(serialized, Cipher.DECRYPT_MODE);
             default: throw new NoSuchAlgorithmException("Invalid cipher.");
         }
     }

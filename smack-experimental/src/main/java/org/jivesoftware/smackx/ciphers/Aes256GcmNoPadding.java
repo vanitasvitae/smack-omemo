@@ -25,15 +25,15 @@ import javax.crypto.NoSuchPaddingException;
 public class Aes256GcmNoPadding extends AesGcmNoPadding {
     public static final String NAMESPACE = "urn:xmpp:ciphers:aes-256-gcm-nopadding:0";
 
-    public Aes256GcmNoPadding() throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException,
+    public Aes256GcmNoPadding(int MODE) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException,
             NoSuchProviderException, InvalidAlgorithmParameterException {
-        super(256);
+        super(256, MODE);
     }
 
-    public Aes256GcmNoPadding(byte[] keyAndIv) throws NoSuchProviderException, InvalidAlgorithmParameterException,
+    public Aes256GcmNoPadding(byte[] keyAndIv, int MODE) throws NoSuchProviderException, InvalidAlgorithmParameterException,
             NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
         super(AesGcmNoPadding.copyOfRange(keyAndIv, 0, keyAndIv.length / 2), //Key
-                AesGcmNoPadding.copyOfRange(keyAndIv, keyAndIv.length / 2, keyAndIv.length)); //IV
+                AesGcmNoPadding.copyOfRange(keyAndIv, keyAndIv.length / 2, keyAndIv.length), MODE); //IV
     }
 
     @Override

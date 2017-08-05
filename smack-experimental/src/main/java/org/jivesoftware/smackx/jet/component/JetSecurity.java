@@ -71,7 +71,7 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
             SmackException.NoResponseException {
 
         this.methodNamespace = method.getNamespace();
-        this.aesKey = AesGcmNoPadding.create(cipherName);
+        this.aesKey = AesGcmNoPadding.createEncryptionKey(cipherName);
         this.child = method.encryptJingleTransfer(recipient, aesKey.getKeyAndIv());
         this.name = name;
         this.cipherName = cipherName;
@@ -83,7 +83,7 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
             InvalidAlgorithmParameterException, NoSuchProviderException, InvalidKeyException, NoSuchPaddingException {
         byte[] keyAndIv = method.decryptJingleTransfer(sender, child);
         LOGGER.log(Level.INFO, "Transported JET Key has length: " + keyAndIv.length);
-        aesKey = AesGcmNoPadding.parse(cipherName, keyAndIv);
+        aesKey = AesGcmNoPadding.createDecryptionKey(cipherName, keyAndIv);
     }
 
     @Override
