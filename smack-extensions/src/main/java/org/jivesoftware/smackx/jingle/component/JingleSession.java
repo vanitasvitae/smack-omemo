@@ -489,6 +489,13 @@ public class JingleSession {
         return contents.get(name);
     }
 
+    /**
+     * Get the only jingle content if one exists, or <code>null</code>. This method will throw an
+     * {@link IllegalStateException} if there is more than one jingle content.
+     *
+     * @return a JingleContent instance or <code>null</code>.
+     * @throws IllegalStateException if there is more than one jingle content.
+     */
     public JingleContent getSoleContentOrThrow() {
         if (contents.isEmpty()) {
             return null;
