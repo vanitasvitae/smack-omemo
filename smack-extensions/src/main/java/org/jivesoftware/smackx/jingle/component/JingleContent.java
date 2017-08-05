@@ -67,41 +67,6 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
 
-    private short state;
-
-    public enum STATE {
-        pending_accept((short) 1),
-        pending_transmission_start((short) 2),
-        pending_transport_replace((short) 4),
-        transmission_in_progress((short) 8),
-        transmission_successful((short) 16),
-        transmission_failed((short) 32),
-        transmission_cancelled((short) 64),
-        ;
-
-        final short value;
-
-        STATE(short value) {
-            this.value = value;
-        }
-
-        short getValue() {
-            return value;
-        }
-    }
-
-    public void addState(STATE state) {
-        this.state |= state.getValue();
-    }
-
-    public void removeState(STATE state) {
-        this.state ^= state.getValue();
-    }
-
-    public boolean hasState(STATE state) {
-        return (this.state & state.getValue()) == state.getValue();
-    }
-
     public JingleContent(JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
         this(null, null, null, randomName(), null, creator, senders);
     }
@@ -114,7 +79,6 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         this.disposition = disposition;
         this.creator = creator;
         this.senders = senders;
-        this.addState(STATE.pending_accept);
     }
 
     public static JingleContent fromElement(JingleContentElement content) {
@@ -226,15 +190,13 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
 
     public IQ handleTransportAccept(JingleElement request, XMPPConnection connection) {
 
-        if (pendingReplacingTransport == null || !hasState(STATE.pending_transport_replace)) {
+        if (pendingReplacingTransport == null) {
             LOGGER.log(Level.WARNING, "Received transport-accept, but apparently we did not try to replace the transport.");
             return JingleElement.createJingleErrorOutOfOrder(request);
         }
 
         transport = pendingReplacingTransport;
         pendingReplacingTransport = null;
-
-        removeState(STATE.pending_transport_replace);
 
         onAccept(connection);
 
@@ -249,13 +211,12 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public IQ handleTransportReject(JingleElement request, XMPPConnection connection) {
-        removeState(STATE.pending_transport_replace);
         return IQ.createResultIQ(request);
     }
 
     public IQ handleTransportReplace(final JingleElement request, final XMPPConnection connection) {
         //Tie Break?
-        if (hasState(STATE.pending_transport_replace)) {
+        if (pendingReplacingTransport != null) {
             Async.go(new Runnable() {
                 @Override
                 public void run() {
@@ -487,7 +448,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     private void replaceTransport(Set<String> blacklist, XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException,
             XMPPException.XMPPErrorException, SmackException.NoResponseException {
-        if (hasState(STATE.pending_transport_replace)) {
+        if (pendingReplacingTransport != null) {
             throw new AssertionError("Transport replace already pending.");
         }
 
@@ -508,7 +469,6 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
                 session.getSessionId(), getCreator(), getName(), pendingReplacingTransport.getElement());
 
         connection.createStanzaCollectorAndSend(transportReplace).nextResultOrThrow();
-        addState(STATE.pending_transport_replace);
     }
 
     public static String randomName() {

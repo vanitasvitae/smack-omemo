@@ -65,8 +65,8 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     private List<Bytestream.StreamHost> localStreamHosts = null;
     private List<Bytestream.StreamHost> availableStreamHosts = null;
 
-    private static boolean useLocalCandidates = true;
-    private static boolean useExternalCandidates = true;
+    public static boolean useLocalCandidates = true;
+    public static boolean useExternalCandidates = true;
 
     static {
         JingleManager.addJingleTransportAdapter(new JingleS5BTransportAdapter());
