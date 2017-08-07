@@ -27,6 +27,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
@@ -289,6 +290,8 @@ public class JingleSession {
     }
 
     private IQ handleContentRemove(final JingleElement request) {
+        return IQ.createErrorResponse(request, XMPPError.Condition.feature_not_implemented);
+        /*
         for (JingleContentElement r : request.getContents()) {
             final JingleContent removed = contents.get(r.getName());
 
@@ -307,109 +310,8 @@ public class JingleSession {
         }
 
         return IQ.createResultIQ(request);
+        */
     }
-
-    /* ############## Processed further down ############## */
-
-    private IQ handleContentModify(final JingleElement request) {
-        final JingleContent content = getSoleAffectedContentOrThrow(request);
-
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                content.handleContentModify(request, jingleManager.getConnection());
-            }
-        });
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleDescriptionInfo(final JingleElement request) {
-        final JingleContent content = getSoleAffectedContentOrThrow(request);
-
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                content.handleDescriptionInfo(request, jingleManager.getConnection());
-            }
-        });
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleSecurityInfo(final JingleElement request) {
-        final JingleContent content = getSoleAffectedContentOrThrow(request);
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                content.handleSecurityInfo(request, jingleManager.getConnection());
-            }
-        });
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleSessionInfo(final JingleElement request) {
-        final JingleContent content = getSoleAffectedContentOrThrow(request);
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                content.handleSessionInfo(request, jingleManager.getConnection());
-            }
-        });
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleTransportAccept(final JingleElement request) {
-        final JingleContent content = getSoleAffectedContentOrThrow(request);
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                content.handleTransportAccept(request, jingleManager.getConnection());
-            }
-        });
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleTransportInfo(final JingleElement request) {
-        final JingleContent content = getSoleAffectedContentOrThrow(request);
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                content.handleTransportInfo(request, jingleManager.getConnection());
-            }
-        });
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleTransportReject(final JingleElement request) {
-        final JingleContent content = getSoleAffectedContentOrThrow(request);
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                content.handleTransportReject(request, jingleManager.getConnection());
-            }
-        });
-
-        return IQ.createResultIQ(request);
-    }
-
-    private IQ handleTransportReplace(final JingleElement request) {
-        final JingleContent content = getSoleAffectedContentOrThrow(request);
-        Async.go(new Runnable() {
-            @Override
-            public void run() {
-                content.handleTransportReplace(request, jingleManager.getConnection());
-            }
-        });
-
-        return IQ.createResultIQ(request);
-    }
-
-    /* ################ Other getters and setters ############### */
 
     public FullJid getInitiator() {
         return initiator;
