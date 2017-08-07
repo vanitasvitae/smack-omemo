@@ -90,10 +90,14 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
 
     public OutgoingFileOfferController sendFile(File file, FullJid to)
             throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException,
-            SmackException.NoResponseException {
+            SmackException.NoResponseException, SmackException.FeatureNotSupportedException {
 
         if (file == null || !file.exists()) {
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
+        }
+
+        if (!ServiceDiscoveryManager.getInstanceFor(connection()).supportsFeature(to, getNamespace())) {
+            throw new SmackException.FeatureNotSupportedException(getNamespace(), to);
         }
 
         JingleSession session = jingleManager.createSession(Role.initiator, to);
@@ -104,7 +108,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(file);
         content.setDescription(offer);
 
-        JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager();
+        JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(to);
         content.setTransport(transportManager.createTransportForInitiator(content));
 
         session.initiate(connection());

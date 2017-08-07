@@ -111,7 +111,7 @@ public class JingleSession {
         }
 
         for (JingleContent content : contents.values()) {
-            content.onAccept(connection);
+            content.start(connection);
         }
 
         connection.createStanzaCollectorAndSend(createSessionAccept()).nextResultOrThrow();

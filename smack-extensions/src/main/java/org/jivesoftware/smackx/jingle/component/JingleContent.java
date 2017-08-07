@@ -146,7 +146,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public void handleContentAccept(JingleElement request, XMPPConnection connection) {
-        onAccept(connection);
+        start(connection);
     }
 
 
@@ -165,7 +165,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         }
 
         getTransport().handleSessionAccept(contentElement.getTransport(), connection);
-        onAccept(connection);
+        start(connection);
         return IQ.createResultIQ(request);
     }
 
@@ -198,7 +198,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         transport = pendingReplacingTransport;
         pendingReplacingTransport = null;
 
-        onAccept(connection);
+        start(connection);
 
         return IQ.createResultIQ(request);
     }
@@ -285,7 +285,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
                     }
                 }
             });
-            onAccept(connection);
+            start(connection);
         }
 
         return IQ.createResultIQ(request);
@@ -384,8 +384,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
                 getSenders() == JingleContentElement.Senders.both;
     }
 
-    public void onAccept(final XMPPConnection connection) {
-        LOGGER.log(Level.INFO, "Accepted content " + getName());
+    public void start(final XMPPConnection connection) {
         transport.prepare(connection);
 
         if (security != null) {
@@ -416,7 +415,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
 
     @Override
     public void onTransportReady(BytestreamSession bytestreamSession) {
-        LOGGER.log(Level.INFO, "TransportReady: " + (isReceiving() ? "Send" : "Receive"));
+        LOGGER.log(Level.INFO, "TransportReady: " + (isReceiving() ? "Receive" : "Send"));
         if (bytestreamSession == null) {
             throw new AssertionError("bytestreamSession MUST NOT be null at this point.");
         }
@@ -469,7 +468,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         JingleSession session = getParent();
         JingleManager jingleManager = session.getJingleManager();
 
-        JingleTransportManager rManager = jingleManager.getBestAvailableTransportManager(blacklist);
+        JingleTransportManager rManager = jingleManager.getBestAvailableTransportManager(getParent().getPeer(), blacklist);
         if (rManager == null) {
             JingleElement failedTransport = JingleElement.createSessionTerminate(session.getPeer(),
                     session.getSessionId(), JingleReasonElement.Reason.failed_transport);

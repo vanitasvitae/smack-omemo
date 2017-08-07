@@ -22,6 +22,7 @@ import java.util.WeakHashMap;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smackx.ciphers.Aes256GcmNoPadding;
@@ -82,6 +83,11 @@ public final class JetManager extends Manager implements JingleDescriptionManage
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
         }
 
+        ServiceDiscoveryManager disco = ServiceDiscoveryManager.getInstanceFor(connection());
+        if (!disco.supportsFeature(recipient, getNamespace()) || !disco.supportsFeature(recipient, method.getNamespace())) {
+            throw new SmackException.FeatureNotSupportedException(getNamespace(), recipient);
+        }
+
         JingleSession session = jingleManager.createSession(Role.initiator, recipient);
 
         JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
@@ -90,7 +96,7 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(file);
         content.setDescription(offer);
 
-        JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager();
+        JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(recipient);
         content.setTransport(transportManager.createTransportForInitiator(content));
 
         JetSecurity security = new JetSecurity(method, recipient, content.getName(), Aes256GcmNoPadding.NAMESPACE);

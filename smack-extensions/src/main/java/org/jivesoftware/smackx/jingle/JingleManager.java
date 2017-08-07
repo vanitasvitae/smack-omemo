@@ -28,11 +28,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
 import org.jivesoftware.smack.iqrequest.IQRequestHandler;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleSecurityAdapter;
 import org.jivesoftware.smackx.jingle.adapter.JingleTransportAdapter;
@@ -50,6 +53,7 @@ import org.jivesoftware.smackx.jingle.util.FullJidAndSessionId;
 import org.jivesoftware.smackx.jingle.util.Role;
 
 import org.jxmpp.jid.FullJid;
+import org.jxmpp.jid.Jid;
 
 /**
  * Manager for Jingle (XEP-0166).
@@ -213,17 +217,19 @@ public final class JingleManager extends Manager {
         return securityManagers.get(namespace);
     }
 
-    public List<JingleTransportManager> getAvailableTransportManagers() {
-        return getAvailableTransportManagers(Collections.<String>emptySet());
+    public List<JingleTransportManager> getAvailableTransportManagers(Jid to) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        return getAvailableTransportManagers(to, Collections.<String>emptySet());
     }
 
-    public List<JingleTransportManager> getAvailableTransportManagers(Set<String> except) {
+    public List<JingleTransportManager> getAvailableTransportManagers(Jid to, Set<String> except) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         Set<String> available = new HashSet<>(transportManagers.keySet());
         available.removeAll(except);
         List<JingleTransportManager> remaining = new ArrayList<>();
 
         for (String namespace : available) {
-            remaining.add(transportManagers.get(namespace));
+            if (ServiceDiscoveryManager.getInstanceFor(connection()).supportsFeature(to, namespace)) {
+                remaining.add(transportManagers.get(namespace));
+            }
         }
 
         Collections.sort(remaining, new Comparator<JingleTransportManager>() {
@@ -236,12 +242,12 @@ public final class JingleManager extends Manager {
         return remaining;
     }
 
-    public JingleTransportManager getBestAvailableTransportManager() {
-        return getBestAvailableTransportManager(Collections.<String>emptySet());
+    public JingleTransportManager getBestAvailableTransportManager(Jid to) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        return getBestAvailableTransportManager(to, Collections.<String>emptySet());
     }
 
-    public JingleTransportManager getBestAvailableTransportManager(Set<String> except) {
-        List<JingleTransportManager> managers = getAvailableTransportManagers(except);
+    public JingleTransportManager getBestAvailableTransportManager(Jid to, Set<String> except) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        List<JingleTransportManager> managers = getAvailableTransportManagers(to, except);
 
         if (managers.size() > 0) {
             return managers.get(0);

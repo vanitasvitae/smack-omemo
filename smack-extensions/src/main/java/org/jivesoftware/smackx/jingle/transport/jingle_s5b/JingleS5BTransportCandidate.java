@@ -113,10 +113,10 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
 
             case direct:
                 if (peersProposal) {
-                    LOGGER.log(Level.INFO, "Connect to foreign direct candidate " + getCandidateId());
+                    LOGGER.log(Level.INFO, "Connect to foreign direct candidate " + getCandidateId() + " Address: " + getStreamHost().getAddress() + ":" + getStreamHost().getPort());
                     this.socket = new Socket(getStreamHost().getAddress(), getStreamHost().getPort());
                 } else {
-                    LOGGER.log(Level.INFO, "Connect to our direct candidate " + getCandidateId());
+                    LOGGER.log(Level.INFO, "Connect to our direct candidate " + getCandidateId() + " at port " + getStreamHost().getPort());
                     this.socket = new ServerSocket(getStreamHost().getPort()).accept();
                 }
                 break;
