@@ -125,7 +125,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
         this.target = target;
         JingleSession session = getParent().getParent();
         if (session.getSessionState() == JingleSession.SessionState.pending) {
-            session.accept(connection);
+            session.sendAccept(connection);
         }
 
         return null;

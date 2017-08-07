@@ -202,7 +202,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     public void prepare(XMPPConnection connection) {
         JingleSession session = getParent().getParent();
         if (getOurDstAddr() == null) {
-            ourDstAddr = Socks5Utils.createDigest(session.getSessionId(), session.getOurJid(), session.getPeer());
+            ourDstAddr = Socks5Utils.createDigest(getSid(), session.getOurJid(), session.getPeer());
             Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
         }
 

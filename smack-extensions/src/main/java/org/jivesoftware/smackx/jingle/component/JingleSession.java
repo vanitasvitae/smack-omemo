@@ -92,7 +92,7 @@ public class JingleSession {
         return session;
     }
 
-    public void initiate(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
+    public void sendInitiate(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
         if (this.sessionState != SessionState.fresh) {
             throw new IllegalStateException("Session is not in fresh state.");
         }
@@ -101,7 +101,7 @@ public class JingleSession {
         this.sessionState = SessionState.pending;
     }
 
-    public void accept(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
+    public void sendAccept(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
         LOGGER.log(Level.INFO, "Accepted session.");
         if (this.sessionState != SessionState.pending) {
             throw new IllegalStateException("Session is not in pending state.");
@@ -379,6 +379,9 @@ public class JingleSession {
     }
 
     public void addContent(JingleContent content) {
+        if (contents.get(content.getName()) != null) {
+            throw new IllegalArgumentException("Session already contains a content with the name " + content.getName());
+        }
         contents.put(content.getName(), content);
         content.setParent(this);
     }

@@ -101,7 +101,7 @@ public final class JetManager extends Manager implements JingleDescriptionManage
 
         JetSecurity security = new JetSecurity(method, recipient, content.getName(), Aes256GcmNoPadding.NAMESPACE);
         content.setSecurity(security);
-        session.initiate(connection());
+        session.sendInitiate(connection());
 
         return offer;
     }

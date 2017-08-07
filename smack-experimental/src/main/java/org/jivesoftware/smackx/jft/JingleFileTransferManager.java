@@ -46,6 +46,7 @@ import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.component.JingleContent;
 import org.jivesoftware.smackx.jingle.component.JingleSession;
+import org.jivesoftware.smackx.jingle.component.JingleTransport;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.util.Role;
 
@@ -109,9 +110,10 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         content.setDescription(offer);
 
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(to);
-        content.setTransport(transportManager.createTransportForInitiator(content));
+        JingleTransport<?> transport = transportManager.createTransportForInitiator(content);
+        content.setTransport(transport);
 
-        session.initiate(connection());
+        session.sendInitiate(connection());
 
         return offer;
     }
