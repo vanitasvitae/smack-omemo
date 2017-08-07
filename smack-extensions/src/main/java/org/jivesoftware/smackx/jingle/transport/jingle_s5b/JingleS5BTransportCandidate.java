@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.jingle.transport.jingle_s5b;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -93,21 +94,38 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
     public JingleS5BTransportCandidate connect(int timeout, boolean peersProposal) throws InterruptedException, TimeoutException, SmackException, XMPPException, IOException {
         JingleS5BTransport transport = (JingleS5BTransport) getParent();
 
-        Socks5Client client;
-        if (peersProposal) {
-            LOGGER.log(Level.INFO, "Connect to foreign candidate " + getCandidateId() + " using " + transport.getTheirDstAddr());
-            LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());
-            client = new Socks5Client(getStreamHost(), transport.getTheirDstAddr());
-        }
-        else {
-            LOGGER.log(Level.INFO, "Connect to our candidate " + getCandidateId() + " using " + transport.getOurDstAddr());
-            LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());
-            JingleContent content = transport.getParent();
-            JingleSession session = content.getParent();
-            client = new Socks5ClientForInitiator(getStreamHost(), transport.getOurDstAddr(), session.getJingleManager().getConnection(), transport.getSid(), session.getPeer());
+        switch (getType()) {
+            case proxy:
+                Socks5Client client;
+                if (peersProposal) {
+                    LOGGER.log(Level.INFO, "Connect to foreign candidate " + getCandidateId() + " using " + transport.getTheirDstAddr());
+                    LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());
+                    client = new Socks5Client(getStreamHost(), transport.getTheirDstAddr());
+                } else {
+                    LOGGER.log(Level.INFO, "Connect to our candidate " + getCandidateId() + " using " + transport.getOurDstAddr());
+                    LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());
+                    JingleContent content = transport.getParent();
+                    JingleSession session = content.getParent();
+                    client = new Socks5ClientForInitiator(getStreamHost(), transport.getOurDstAddr(), session.getJingleManager().getConnection(), transport.getSid(), session.getPeer());
+                }
+                this.socket = client.getSocket(timeout);
+                break;
+
+            case direct:
+                if (peersProposal) {
+                    LOGGER.log(Level.INFO, "Connect to foreign direct candidate " + getCandidateId());
+                    this.socket = new Socket(getStreamHost().getAddress(), getStreamHost().getPort());
+                } else {
+                    LOGGER.log(Level.INFO, "Connect to our direct candidate " + getCandidateId());
+                    this.socket = new ServerSocket(getStreamHost().getPort()).accept();
+                }
+                break;
+
+            default:
+                LOGGER.log(Level.INFO, "Unsupported candidate type: " + getType());
+                break;
         }
 
-        this.socket = client.getSocket(timeout);
         return this;
     }
 

@@ -17,6 +17,8 @@
 package org.jivesoftware.smackx.jft.adapter;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smackx.jft.component.JingleFileTransfer;
@@ -32,6 +34,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentElement;
  * Created by vanitas on 28.07.17.
  */
 public class JingleFileTransferAdapter implements JingleDescriptionAdapter<JingleFileTransfer> {
+    private static final Logger LOGGER = Logger.getLogger(JingleFileTransferAdapter.class.getName());
 
     @Override
     public JingleFileTransfer descriptionFromElement(JingleContentElement.Creator creator, JingleContentElement.Senders senders,
@@ -46,6 +49,10 @@ public class JingleFileTransferAdapter implements JingleDescriptionAdapter<Jingl
         } else if (senders == JingleContentElement.Senders.responder) {
             return new JingleIncomingFileRequest(file);
         } else {
+            if (senders == null) {
+                LOGGER.log(Level.INFO, "Senders is null. Gajim workaround: assume 'initiator'.");
+                return new JingleIncomingFileOffer(file);
+            }
             throw new AssertionError("Senders attribute MUST be either initiator or responder. Is: " + senders);
         }
     }

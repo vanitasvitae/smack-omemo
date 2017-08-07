@@ -28,6 +28,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
@@ -169,19 +170,18 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public IQ handleContentModify(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
+        return IQ.createErrorResponse(request, XMPPError.Condition.feature_not_implemented);
     }
 
     public IQ handleDescriptionInfo(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
+        return IQ.createErrorResponse(request, XMPPError.Condition.feature_not_implemented);
     }
 
     public void handleContentRemove(JingleSession session, XMPPConnection connection) {
-
     }
 
     public IQ handleSecurityInfo(JingleElement request, XMPPConnection connection) {
-        return IQ.createResultIQ(request);
+        return IQ.createErrorResponse(request, XMPPError.Condition.feature_not_implemented);
     }
 
     public IQ handleSessionInfo(JingleElement request, XMPPConnection connection) {
@@ -211,6 +211,16 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public IQ handleTransportReject(JingleElement request, XMPPConnection connection) {
+        if (pendingReplacingTransport == null) {
+            throw new AssertionError("We didn't try to replace the transport.");
+        }
+        transportBlacklist.add(pendingReplacingTransport.getNamespace());
+        pendingReplacingTransport = null;
+        try {
+            replaceTransport(transportBlacklist, connection);
+        } catch (SmackException.NotConnectedException | SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException e) {
+            LOGGER.log(Level.SEVERE, "Could not replace transport: " + e, e);
+        }
         return IQ.createResultIQ(request);
     }
 
@@ -375,6 +385,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     public void onAccept(final XMPPConnection connection) {
+        LOGGER.log(Level.INFO, "Accepted content " + getName());
         transport.prepare(connection);
 
         if (security != null) {
@@ -392,6 +403,9 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
                     } else if (isSending()) {
                         LOGGER.log(Level.INFO, "Establish outgoing bytestream.");
                         getTransport().establishOutgoingBytestreamSession(connection, JingleContent.this, getParent());
+                    } else {
+                        LOGGER.log(Level.INFO, "Neither receiving, nor sending. For the sake of Gajim assume receiving.");
+                        getTransport().establishIncomingBytestreamSession(connection, JingleContent.this, getParent());
                     }
                 } catch (SmackException.NotConnectedException | InterruptedException e) {
                     LOGGER.log(Level.SEVERE, "Error establishing connection: " + e, e);

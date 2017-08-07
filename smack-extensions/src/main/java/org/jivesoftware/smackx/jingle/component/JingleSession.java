@@ -101,8 +101,13 @@ public class JingleSession {
     }
 
     public void accept(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
+        LOGGER.log(Level.INFO, "Accepted session.");
         if (this.sessionState != SessionState.pending) {
             throw new IllegalStateException("Session is not in pending state.");
+        }
+
+        if (contents.values().size() == 0) {
+            LOGGER.log(Level.WARNING, "0 contents!");
         }
 
         for (JingleContent content : contents.values()) {

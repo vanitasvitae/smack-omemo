@@ -199,13 +199,6 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @Override
-    public void establishIncomingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
-            throws SmackException.NotConnectedException, InterruptedException {
-        this.callback = callback;
-        establishBytestreamSession(connection);
-    }
-
-    @Override
     public void prepare(XMPPConnection connection) {
         JingleSession session = getParent().getParent();
         if (getOurDstAddr() == null) {
@@ -226,8 +219,17 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @Override
+    public void establishIncomingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
+            throws SmackException.NotConnectedException, InterruptedException {
+        LOGGER.log(Level.INFO, "Establishing incoming bytestream.");
+        this.callback = callback;
+        establishBytestreamSession(connection);
+    }
+
+    @Override
     public void establishOutgoingBytestreamSession(XMPPConnection connection, JingleTransportCallback callback, JingleSession session)
             throws SmackException.NotConnectedException, InterruptedException {
+        LOGGER.log(Level.INFO, "Establishing outgoing bytestream.");
         this.callback = callback;
         establishBytestreamSession(connection);
     }
@@ -256,6 +258,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     public JingleS5BTransportCandidate connectToCandidates(int timeout) {
 
         if (getTheirCandidates().size() == 0) {
+            LOGGER.log(Level.INFO, "They provided 0 candidates.");
             return CANDIDATE_FAILURE;
         }
 
