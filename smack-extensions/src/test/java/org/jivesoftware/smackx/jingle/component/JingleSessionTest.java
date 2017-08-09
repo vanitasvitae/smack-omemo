@@ -162,6 +162,8 @@ public class JingleSessionTest extends SmackTestSuite {
         assertEquals(description.getElement().toXML().toString(), descriptionElement.toXML().toString());
 
         assertNull(contentElement.getSecurity());
+        assertTrue(content.isSending());
+        assertFalse(content.isReceiving());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -236,6 +238,8 @@ public class JingleSessionTest extends SmackTestSuite {
         assertEquals(session.getResponder(), accept.getResponder());
         assertEquals(1, accept.getContents().size());
         assertEquals(content.getName(), accept.getSoleContentOrThrow().getName());
+        assertFalse(content.isSending());
+        assertTrue(content.isReceiving());
     }
 
     @Test(expected = IllegalStateException.class)

@@ -372,13 +372,13 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         }
     }
 
-    private boolean isSending() {
+    public boolean isSending() {
         return (getSenders() == JingleContentElement.Senders.initiator && getParent().isInitiator()) ||
                 (getSenders() == JingleContentElement.Senders.responder && getParent().isResponder()) ||
                 getSenders() == JingleContentElement.Senders.both;
     }
 
-    private boolean isReceiving() {
+    public boolean isReceiving() {
         return (getSenders() == JingleContentElement.Senders.initiator && getParent().isResponder()) ||
                 (getSenders() == JingleContentElement.Senders.responder && getParent().isInitiator()) ||
                 getSenders() == JingleContentElement.Senders.both;

@@ -38,4 +38,6 @@ public class JingleContentTest extends SmackTestSuite {
         assertNotNull(content.getName()); //MUST NOT BE NULL!
         assertEquals(0, content.getTransportBlacklist().size());
     }
+
+
 }
