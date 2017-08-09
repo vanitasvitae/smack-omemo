@@ -46,7 +46,7 @@ import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.TestNotPossibleException;
 import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 
-public class JetIntegrationTestTest extends AbstractOmemoIntegrationTest {
+public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
 
     private OmemoManager oa, ob;
     private JetManager ja, jb;
@@ -65,7 +65,7 @@ public class JetIntegrationTestTest extends AbstractOmemoIntegrationTest {
         }
     }
 
-    public JetIntegrationTestTest(SmackIntegrationTestEnvironment environment)
+    public JetIntegrationTest(SmackIntegrationTestEnvironment environment)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException, TestNotPossibleException {
         super(environment);
