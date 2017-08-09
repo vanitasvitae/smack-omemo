@@ -469,6 +469,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     private void handleProxyError(JingleS5BTransportInfoElement info) {
         callback.onTransportFailed(new S5BTransportException.ProxyError(null));
     }
+
     /**
      * Internal dummy candidate used to represent failure.
      * Kinda depressing, isn't it?

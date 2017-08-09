@@ -47,12 +47,12 @@ public abstract class AesGcmNoPadding {
         key = keyGenerator.generateKey().getEncoded();
 
         SecureRandom secureRandom = new SecureRandom();
-        iv = new byte[bytes];
+        iv = new byte[12];
         secureRandom.nextBytes(iv);
 
-        keyAndIv = new byte[2 * bytes];
+        keyAndIv = new byte[bytes + 12];
         System.arraycopy(key, 0, keyAndIv, 0, bytes);
-        System.arraycopy(iv, 0, keyAndIv, bytes, bytes);
+        System.arraycopy(iv, 0, keyAndIv, bytes, 12);
 
         cipher = Cipher.getInstance(cipherMode, "BC");
         SecretKey keySpec = new SecretKeySpec(key, keyType);
@@ -86,6 +86,7 @@ public abstract class AesGcmNoPadding {
      */
     public AesGcmNoPadding(byte[] key, byte[] iv, int MODE) throws NoSuchPaddingException, NoSuchAlgorithmException,
             NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException {
+        assert iv.length == 12;
         this.length = key.length * 8;
         this.key = key;
         this.iv = iv;

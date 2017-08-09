@@ -65,7 +65,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
     private List<Bytestream.StreamHost> localStreamHosts = null;
     private List<Bytestream.StreamHost> availableStreamHosts = null;
 
-    public static boolean useLocalCandidates = false;
+    public static boolean useLocalCandidates = true;
     public static boolean useExternalCandidates = true;
 
     static {

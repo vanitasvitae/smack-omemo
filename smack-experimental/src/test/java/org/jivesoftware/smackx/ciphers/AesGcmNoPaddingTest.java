@@ -42,8 +42,8 @@ public class AesGcmNoPaddingTest extends SmackTestSuite {
         AesGcmNoPadding aes128 = AesGcmNoPadding.createEncryptionKey(Aes128GcmNoPadding.NAMESPACE);
         assertNotNull(aes128);
         assertEquals(16, aes128.getKey().length);
-        assertEquals(16, aes128.getIv().length);
-        assertEquals(32, aes128.getKeyAndIv().length);
+        assertEquals(12, aes128.getIv().length);
+        assertEquals(28, aes128.getKeyAndIv().length);
         assertNotNull(aes128.getCipher());
         assertEquals(128, aes128.getLength());
     }
@@ -53,8 +53,8 @@ public class AesGcmNoPaddingTest extends SmackTestSuite {
         AesGcmNoPadding aes256 = AesGcmNoPadding.createEncryptionKey(Aes256GcmNoPadding.NAMESPACE);
         assertNotNull(aes256);
         assertEquals(32, aes256.getKey().length);
-        assertEquals(32, aes256.getIv().length);
-        assertEquals(64, aes256.getKeyAndIv().length);
+        assertEquals(12, aes256.getIv().length);
+        assertEquals(44, aes256.getKeyAndIv().length);
         assertNotNull(aes256.getCipher());
         assertEquals(256, aes256.getLength());
     }

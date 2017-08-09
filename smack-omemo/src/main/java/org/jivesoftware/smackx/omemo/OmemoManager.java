@@ -68,6 +68,7 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 import org.jivesoftware.smackx.omemo.listener.OmemoMucMessageListener;
+import org.jivesoftware.smackx.omemo.util.OmemoConstants;
 import org.jivesoftware.smackx.pep.PEPListener;
 import org.jivesoftware.smackx.pep.PEPManager;
 import org.jivesoftware.smackx.pubsub.EventElement;
@@ -115,6 +116,7 @@ public final class OmemoManager extends Manager implements JingleEncryptionMetho
         setConnectionListener();
         this.deviceId = deviceId;
         service = OmemoService.getInstance();
+        ServiceDiscoveryManager.getInstanceFor(connection).addFeature(OmemoConstants.OMEMO_NAMESPACE_V_AXOLOTL);
     }
 
     /**

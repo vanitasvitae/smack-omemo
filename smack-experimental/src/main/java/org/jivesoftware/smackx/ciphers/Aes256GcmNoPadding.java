@@ -32,8 +32,8 @@ public class Aes256GcmNoPadding extends AesGcmNoPadding {
 
     public Aes256GcmNoPadding(byte[] keyAndIv, int MODE) throws NoSuchProviderException, InvalidAlgorithmParameterException,
             NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
-        super(AesGcmNoPadding.copyOfRange(keyAndIv, 0, keyAndIv.length / 2), //Key
-                AesGcmNoPadding.copyOfRange(keyAndIv, keyAndIv.length / 2, keyAndIv.length), MODE); //IV
+        super(AesGcmNoPadding.copyOfRange(keyAndIv, 0, 32), // 32 byte key
+                AesGcmNoPadding.copyOfRange(keyAndIv, 32, keyAndIv.length), MODE); // rest (12 byte) IV
     }
 
     @Override

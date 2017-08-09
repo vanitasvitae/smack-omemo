@@ -33,6 +33,14 @@ public abstract class JingleContentSecurityElement implements ExtensionElement {
     public static final String ELEMENT = "security";
     private JingleContentSecurityInfoElement securityInfo;
 
+    public JingleContentSecurityElement() {
+
+    }
+
+    public JingleContentSecurityElement(JingleContentSecurityInfoElement info) {
+        this.securityInfo = info;
+    }
+
     @Override
     public String getElementName() {
         return ELEMENT;
