@@ -106,7 +106,7 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
                     LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());
                     JingleContent content = transport.getParent();
                     JingleSession session = content.getParent();
-                    client = new Socks5ClientForInitiator(getStreamHost(), transport.getOurDstAddr(), session.getJingleManager().getConnection(), transport.getSid(), session.getPeer());
+                    client = new Socks5ClientForInitiator(getStreamHost(), transport.getOurDstAddr(), session.getJingleManager().getConnection(), transport.getStreamId(), session.getPeer());
                 }
                 this.socket = client.getSocket(timeout);
                 break;

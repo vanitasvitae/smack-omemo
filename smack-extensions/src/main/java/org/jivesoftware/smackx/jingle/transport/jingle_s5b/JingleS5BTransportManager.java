@@ -213,7 +213,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
 
         JingleS5BTransportElement.Builder tb = JingleS5BTransportElement.getBuilder()
                 .setTransportInfo(info)
-                .setStreamId(transport.getSid());
+                .setStreamId(transport.getStreamId());
 
         JingleElement jingle = jb.addJingleContent(cb.setTransport(tb.build()).build()).build();
         jingle.setFrom(session.getOurJid());

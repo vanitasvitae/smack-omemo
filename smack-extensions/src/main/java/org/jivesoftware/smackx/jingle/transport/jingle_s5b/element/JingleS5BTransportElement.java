@@ -47,7 +47,7 @@ public class JingleS5BTransportElement extends JingleContentTransportElement {
         this.mode = mode;
     }
 
-    public String getSid() {
+    public String getStreamId() {
         return sid;
     }
 

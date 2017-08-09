@@ -102,7 +102,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
      * @param other transport of the other party.
      */
     JingleS5BTransport(FullJid initiator, FullJid responder, List<JingleTransportCandidate<?>> ourCandidates, JingleS5BTransport other) {
-        this.sid = other.getSid();
+        this.sid = other.getStreamId();
         this.mode = other.mode;
         this.ourDstAddr = Socks5Utils.createDigest(sid, responder, initiator);
         Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
@@ -177,7 +177,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         return builder.build();
     }
 
-    public String getSid() {
+    public String getStreamId() {
         return sid;
     }
 
@@ -202,7 +202,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     public void prepare(XMPPConnection connection) {
         JingleSession session = getParent().getParent();
         if (getOurDstAddr() == null) {
-            ourDstAddr = Socks5Utils.createDigest(getSid(), session.getOurJid(), session.getPeer());
+            ourDstAddr = Socks5Utils.createDigest(getStreamId(), session.getOurJid(), session.getPeer());
             Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
         }
 
@@ -378,7 +378,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     private void activateProxy(JingleS5BTransportCandidate candidate) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
         LOGGER.log(Level.INFO, "Activate proxy: " + candidate.getCandidateId() + " " + candidate.getStreamHost().getAddress() + ":" + candidate.getStreamHost().getPort() + " " + candidate.getStreamHost().getJID() + " for " + getParent().getParent().getPeer());
-        Bytestream activate = new Bytestream(getSid());
+        Bytestream activate = new Bytestream(getStreamId());
         activate.setMode(null);
         activate.setType(IQ.Type.set);
         activate.setTo(candidate.getStreamHost().getJID());

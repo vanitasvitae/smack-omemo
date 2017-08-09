@@ -63,6 +63,10 @@ public class JingleIBBTransportTest extends SmackTestSuite {
 
         transport1.handleSessionAccept(transport2.getElement(), null);
         assertEquals(transport2.getBlockSize(), transport1.getBlockSize());
+
+        JingleIBBTransport transport3 = new JingleIBBTransportAdapter().transportFromElement(transport2.getElement());
+        assertEquals(transport2.getBlockSize(), transport3.getBlockSize());
+        assertEquals(transport2.getStreamId(), transport3.getStreamId());
     }
 
     @Test
