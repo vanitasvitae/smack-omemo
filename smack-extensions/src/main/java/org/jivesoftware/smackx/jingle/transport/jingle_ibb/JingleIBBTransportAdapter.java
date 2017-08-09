@@ -27,7 +27,7 @@ public class JingleIBBTransportAdapter implements JingleTransportAdapter<JingleI
     @Override
     public JingleIBBTransport transportFromElement(JingleContentTransportElement element) {
         JingleIBBTransportElement transport = (JingleIBBTransportElement) element;
-        return new JingleIBBTransport(transport.getSid(), transport.getBlockSize());
+        return new JingleIBBTransport(transport.getStreamId(), transport.getBlockSize());
     }
 
     @Override

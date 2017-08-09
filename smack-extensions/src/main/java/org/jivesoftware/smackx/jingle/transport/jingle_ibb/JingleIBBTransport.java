@@ -63,7 +63,7 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
         return blockSize;
     }
 
-    public String getSid() {
+    public String getStreamId() {
         return streamId;
     }
 
@@ -86,13 +86,13 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     @Override
     public void establishIncomingBytestreamSession(final XMPPConnection connection, final JingleTransportCallback callback, final JingleSession session) {
         final InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
-        LOGGER.log(Level.INFO, "Listen for incoming IBB transports from " + session.getPeer() + ":" + getSid());
+        LOGGER.log(Level.INFO, "Listen for incoming IBB transports from " + session.getPeer() + ":" + getStreamId());
         InBandBytestreamListener bytestreamListener = new InBandBytestreamListener() {
             @Override
             public void incomingBytestreamRequest(InBandBytestreamRequest request) {
                 LOGGER.log(Level.INFO, "Incoming IBB stream: " + request.getFrom().asFullJidIfPossible() + ":" + request.getSessionID());
                 if (request.getFrom().asFullJidIfPossible().equals(session.getPeer())
-                        && request.getSessionID().equals(getSid())) {
+                        && request.getSessionID().equals(getStreamId())) {
 
                     inBandBytestreamManager.removeIncomingBytestreamListener(this);
 
@@ -119,7 +119,7 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
         InBandBytestreamManager inBandBytestreamManager = InBandBytestreamManager.getByteStreamManager(connection);
         inBandBytestreamManager.setDefaultBlockSize(blockSize);
         try {
-            JingleIBBTransport.this.bytestreamSession = inBandBytestreamManager.establishSession(session.getPeer(), getSid());
+            JingleIBBTransport.this.bytestreamSession = inBandBytestreamManager.establishSession(session.getPeer(), getStreamId());
             callback.onTransportReady(this.bytestreamSession);
         } catch (SmackException.NoResponseException | XMPPException.XMPPErrorException | InterruptedException | SmackException.NotConnectedException e) {
             callback.onTransportFailed(e);

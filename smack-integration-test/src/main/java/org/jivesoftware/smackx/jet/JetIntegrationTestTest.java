@@ -16,7 +16,7 @@
  */
 package org.jivesoftware.smackx.jet;
 
-import static org.jivesoftware.smackx.jft.JingleFileTransferTest.prepareNewTestFile;
+import static org.jivesoftware.smackx.jft.JingleFileTransferIntegrationTest.prepareNewTestFile;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.cleanServerSideTraces;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.setUpOmemoManager;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.subscribe;
@@ -46,7 +46,7 @@ import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.TestNotPossibleException;
 import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 
-public class JetTest extends AbstractOmemoIntegrationTest {
+public class JetIntegrationTestTest extends AbstractOmemoIntegrationTest {
 
     private OmemoManager oa, ob;
     private JetManager ja, jb;
@@ -65,7 +65,7 @@ public class JetTest extends AbstractOmemoIntegrationTest {
         }
     }
 
-    public JetTest(SmackIntegrationTestEnvironment environment)
+    public JetIntegrationTestTest(SmackIntegrationTestEnvironment environment)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException, TestNotPossibleException {
         super(environment);

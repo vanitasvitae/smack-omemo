@@ -49,9 +49,9 @@ import org.junit.Assert;
 /**
  * Test the JingleIBBTransport in a very basic case.
  */
-public class JingleTransportTest extends AbstractSmackIntegrationTest {
+public class JingleTransportIntegrationTest extends AbstractSmackIntegrationTest {
 
-    public JingleTransportTest(SmackIntegrationTestEnvironment environment) {
+    public JingleTransportIntegrationTest(SmackIntegrationTestEnvironment environment) {
         super(environment);
     }
 
@@ -61,7 +61,7 @@ public class JingleTransportTest extends AbstractSmackIntegrationTest {
         XMPPConnection receiver = conTwo;
 
         JingleIBBTransport sTransport = new JingleIBBTransport();
-        JingleIBBTransport rTransport = new JingleIBBTransport(sTransport.getSid(), sTransport.getBlockSize());
+        JingleIBBTransport rTransport = new JingleIBBTransport(sTransport.getStreamId(), sTransport.getBlockSize());
 
         JingleSession sSession = new JingleSession(JingleManager.getInstanceFor(sender), sender.getUser().asFullJidOrThrow(), receiver.getUser().asFullJidOrThrow(), Role.initiator, "session");
         JingleSession rSession = new JingleSession(JingleManager.getInstanceFor(receiver), sender.getUser().asFullJidOrThrow(), receiver.getUser().asFullJidOrThrow(), Role.responder, "session");

@@ -42,7 +42,7 @@ public class JingleIBBTransportTest extends SmackTestSuite {
         JingleIBBTransport transport = new JingleIBBTransport(sid, size);
         assertEquals(xml, transport.getElement().toXML().toString());
         assertEquals(size, (short) transport.getBlockSize());
-        assertEquals(sid, transport.getSid());
+        assertEquals(sid, transport.getStreamId());
 
         JingleIBBTransportElement parsed = new JingleIBBTransportProvider()
                 .parse(TestUtils.getParser(xml));

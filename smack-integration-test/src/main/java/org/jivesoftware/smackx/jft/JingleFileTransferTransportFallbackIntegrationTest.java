@@ -35,18 +35,18 @@ import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jft.listener.IncomingFileOfferListener;
 import org.jivesoftware.smackx.jft.listener.ProgressListener;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.JingleIBBTransportManager;
+import org.jivesoftware.smackx.jingle.transport.jingle_s5b.JingleS5BTransportManager;
 
 import org.igniterealtime.smack.inttest.AbstractSmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.jxmpp.jid.FullJid;
 
-/**
- * Created by vanitas on 29.06.17.
- */
-public class JingleFileTransferTest extends AbstractSmackIntegrationTest {
+public class JingleFileTransferTransportFallbackIntegrationTest extends AbstractSmackIntegrationTest {
 
     private static final File tempDir;
 
@@ -60,12 +60,25 @@ public class JingleFileTransferTest extends AbstractSmackIntegrationTest {
         }
     }
 
-    public JingleFileTransferTest(SmackIntegrationTestEnvironment environment) {
+    public JingleFileTransferTransportFallbackIntegrationTest(SmackIntegrationTestEnvironment environment) {
         super(environment);
     }
 
+    @Before
+    public void crippleS5B() {
+        // Manipulate the Manager so that it'll fail.
+        JingleS5BTransportManager.useExternalCandidates = false;
+        JingleS5BTransportManager.useLocalCandidates = false;
+        // *evil super villain laughter*
+    }
+
     @SmackIntegrationTest
-    public void basicFileTransferTest() throws Exception {
+    public void S5BtoIBBfallbackTest() throws Exception {
+
+        JingleS5BTransportManager.getInstanceFor(conOne);
+        JingleS5BTransportManager.getInstanceFor(conTwo);
+
+        // Use Jingle IBB Transport as fallback.
         JingleIBBTransportManager.getInstanceFor(conOne);
         JingleIBBTransportManager.getInstanceFor(conTwo);
 
@@ -151,7 +164,12 @@ public class JingleFileTransferTest extends AbstractSmackIntegrationTest {
 
         assertArrayEquals(sBytes, tBytes);
         LOGGER.log(Level.INFO, "SUCCESSFULLY SENT AND RECEIVED");
+    }
 
+    @After
+    public void cureS5B() {
+        JingleS5BTransportManager.useExternalCandidates = true;
+        JingleS5BTransportManager.useLocalCandidates = true;
     }
 
     public static File prepareNewTestFile(String name) {
