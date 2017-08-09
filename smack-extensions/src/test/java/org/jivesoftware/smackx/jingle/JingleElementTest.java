@@ -32,6 +32,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle.provider.JingleProvider;
+import org.jivesoftware.smackx.jingle.transport.jingle_ibb.JingleIBBTransport;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.element.JingleIBBTransportElement;
 
 import org.junit.Before;
@@ -290,7 +291,7 @@ public class JingleElementTest extends SmackTestSuite {
 
     @Test
     public void createTransportAcceptTest() throws IOException, SAXException {
-        JingleElement transportAccept = JingleElement.createTransportAccept(juliet, romeo, "transAcc", JingleContentElement.Creator.initiator, "cname", new JingleIBBTransportElement("transid", JingleIBBTransportElement.DEFAULT_BLOCK_SIZE));
+        JingleElement transportAccept = JingleElement.createTransportAccept(juliet, romeo, "transAcc", JingleContentElement.Creator.initiator, "cname", new JingleIBBTransportElement("transid", JingleIBBTransport.DEFAULT_BLOCK_SIZE));
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='transport-accept' " +
@@ -298,7 +299,7 @@ public class JingleElementTest extends SmackTestSuite {
                         "sid='transAcc'>" +
                         "<content creator='initiator' name='cname'>" +
                         "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
-                        "block-size='" + JingleIBBTransportElement.DEFAULT_BLOCK_SIZE + "' " +
+                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE + "' " +
                         "sid='transid'/>" +
                         "</content>" +
                         "</jingle>";
@@ -315,7 +316,7 @@ public class JingleElementTest extends SmackTestSuite {
 
     @Test
     public void createTransportReplaceTest() throws IOException, SAXException {
-        JingleElement transportReplace = JingleElement.createTransportReplace(juliet, romeo, "transAcc", JingleContentElement.Creator.initiator, "cname", new JingleIBBTransportElement("transid", JingleIBBTransportElement.DEFAULT_BLOCK_SIZE));
+        JingleElement transportReplace = JingleElement.createTransportReplace(juliet, romeo, "transAcc", JingleContentElement.Creator.initiator, "cname", new JingleIBBTransportElement("transid", JingleIBBTransport.DEFAULT_BLOCK_SIZE));
         String jingleXML =
                 "<jingle xmlns='urn:xmpp:jingle:1' " +
                         "action='transport-replace' " +
@@ -323,7 +324,7 @@ public class JingleElementTest extends SmackTestSuite {
                         "sid='transAcc'>" +
                         "<content creator='initiator' name='cname'>" +
                         "<transport xmlns='urn:xmpp:jingle:transports:ibb:1' " +
-                        "block-size='" + JingleIBBTransportElement.DEFAULT_BLOCK_SIZE + "' " +
+                        "block-size='" + JingleIBBTransport.DEFAULT_BLOCK_SIZE + "' " +
                         "sid='transid'/>" +
                         "</content>" +
                         "</jingle>";

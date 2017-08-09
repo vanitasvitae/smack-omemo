@@ -27,15 +27,13 @@ public class JingleIBBTransportElement extends JingleContentTransportElement {
     public static final String ATTR_BLOCK_SIZE = "block-size";
     public static final String ATTR_SID = "sid";
 
-    public static final Short DEFAULT_BLOCK_SIZE = 4096;
-
     private final String sid;
     private final Short blockSize;
 
     public JingleIBBTransportElement(String streamId, Short blockSize) {
         super(null);
         this.sid = streamId;
-        this.blockSize = blockSize != null ? blockSize : DEFAULT_BLOCK_SIZE;
+        this.blockSize = blockSize != null ? blockSize : JingleIBBTransport.DEFAULT_BLOCK_SIZE;
     }
 
     public Short getBlockSize() {

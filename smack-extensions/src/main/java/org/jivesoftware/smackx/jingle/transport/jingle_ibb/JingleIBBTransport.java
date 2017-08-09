@@ -47,6 +47,9 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     public static final String NAMESPACE_V1 = "urn:xmpp:jingle:transports:ibb:1";
     public static final String NAMESPACE = NAMESPACE_V1;
 
+    public static final Short DEFAULT_BLOCK_SIZE = 4096;
+    public static final Short MAX_BLOCKSIZE = 8192;
+
     private final String streamId;
     private Short blockSize;
 
@@ -56,7 +59,7 @@ public class JingleIBBTransport extends JingleTransport<JingleIBBTransportElemen
     }
 
     public JingleIBBTransport() {
-        this(StringUtils.randomString(10), JingleIBBTransportElement.DEFAULT_BLOCK_SIZE);
+        this(StringUtils.randomString(10), DEFAULT_BLOCK_SIZE);
     }
 
     public Short getBlockSize() {

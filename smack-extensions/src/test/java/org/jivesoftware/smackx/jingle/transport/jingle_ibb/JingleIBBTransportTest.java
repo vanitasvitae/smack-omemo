@@ -20,6 +20,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import org.jivesoftware.smack.DummyConnection;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smack.util.StringUtils;
@@ -52,7 +53,7 @@ public class JingleIBBTransportTest extends SmackTestSuite {
         assertEquals(xml, parsed.toXML().toString());
 
         JingleIBBTransport transport1 = new JingleIBBTransport();
-        assertEquals(JingleIBBTransportElement.DEFAULT_BLOCK_SIZE, transport1.getBlockSize());
+        assertEquals(JingleIBBTransport.DEFAULT_BLOCK_SIZE, transport1.getBlockSize());
 
         assertFalse(transport.equals(null));
 
@@ -62,5 +63,24 @@ public class JingleIBBTransportTest extends SmackTestSuite {
 
         transport1.handleSessionAccept(transport2.getElement(), null);
         assertEquals(transport2.getBlockSize(), transport1.getBlockSize());
+    }
+
+    @Test
+    public void jingleIBBTransportManagerTest() {
+        JingleIBBTransportManager manager = JingleIBBTransportManager.getInstanceFor(new DummyConnection());
+
+        JingleIBBTransport transport1 = (JingleIBBTransport) manager.createTransportForInitiator(null);
+        assertEquals(JingleIBBTransport.DEFAULT_BLOCK_SIZE, transport1.getBlockSize());
+
+        JingleIBBTransport transport2 = new JingleIBBTransport("sid", (short) 256);
+
+        JingleIBBTransport transport3 = (JingleIBBTransport) manager.createTransportForResponder(null, transport2);
+        assertEquals((Short) (short) 256, transport3.getBlockSize());
+
+        JingleIBBTransport transport4 = new JingleIBBTransport("sod", Short.MAX_VALUE);
+        assertEquals((Short) Short.MAX_VALUE, transport4.getBlockSize());
+
+        JingleIBBTransport transport5 = (JingleIBBTransport) manager.createTransportForResponder(null, transport4);
+        assertEquals(JingleIBBTransport.MAX_BLOCKSIZE, transport5.getBlockSize());
     }
 }

@@ -33,8 +33,6 @@ import org.jivesoftware.smackx.jingle.transport.jingle_ibb.provider.JingleIBBTra
  */
 public final class JingleIBBTransportManager extends Manager implements JingleTransportManager {
 
-    public static final short MAX_BLOCKSIZE = 8192;
-
     private static final WeakHashMap<XMPPConnection, JingleIBBTransportManager> INSTANCES = new WeakHashMap<>();
 
     static {
@@ -73,7 +71,7 @@ public final class JingleIBBTransportManager extends Manager implements JingleTr
     @Override
     public JingleTransport<?> createTransportForResponder(JingleContent content, JingleTransport<?> peersTransport) {
         JingleIBBTransport other = (JingleIBBTransport) peersTransport;
-        return new JingleIBBTransport(other.getStreamId(), (short) Math.min(other.getBlockSize(), MAX_BLOCKSIZE));
+        return new JingleIBBTransport(other.getStreamId(), (short) Math.min(other.getBlockSize(), JingleIBBTransport.MAX_BLOCKSIZE));
     }
 
     @Override
