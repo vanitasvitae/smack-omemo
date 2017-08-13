@@ -73,18 +73,6 @@ import org.jxmpp.jid.EntityFullJid;
 public interface XMPPConnection {
 
     /**
-     * Returns the name of the service provided by the XMPP server for this connection.
-     * This is also called XMPP domain of the connected server. After
-     * authenticating with the server the returned value may be different.
-     * 
-     * @return the name of the service provided by the XMPP server.
-     // TODO remove this once the java bugs are fixed, causing a warning
-//     * @deprecated use {@link #getXMPPServiceDomain()} instead.
-     */
-//    @Deprecated
-    public DomainBareJid getServiceName();
-
-    /**
      * Returns the XMPP Domain of the service provided by the XMPP server and used for this connection. After
      * authenticating with the server the returned value may be different.
      * 
@@ -164,18 +152,6 @@ public interface XMPPConnection {
      * @return true if network traffic is being compressed.
      */
     public boolean isUsingCompression();
-
-    /**
-     * Sends the specified stanza(/packet) to the server.
-     * 
-     * @param packet the stanza(/packet) to send.
-     * @throws NotConnectedException 
-     * @throws InterruptedException 
-     * @deprecated use {@link #sendStanza(Stanza)} instead.
-     */
-    // TODO Remove in 4.3.
-    @Deprecated
-    public void sendPacket(Stanza packet) throws NotConnectedException, InterruptedException;
 
     /**
      * Sends the specified stanza to the server.
@@ -282,35 +258,6 @@ public interface XMPPConnection {
     public void removeStanzaCollector(StanzaCollector collector);
 
     /**
-     * Registers a stanza(/packet) listener with this connection.
-     * <p>
-     * This method has been deprecated. It is important to differentiate between using an asynchronous stanza(/packet) listener
-     * (preferred where possible) and a synchronous stanza(/packet) lister. Refer
-     * {@link #addAsyncStanzaListener(StanzaListener, StanzaFilter)} and
-     * {@link #addSyncStanzaListener(StanzaListener, StanzaFilter)} for more information.
-     * </p>
-     *
-     * @param packetListener the stanza(/packet) listener to notify of new received packets.
-     * @param packetFilter the stanza(/packet) filter to use.
-     * @deprecated use {@link #addAsyncStanzaListener(StanzaListener, StanzaFilter)} or
-     *             {@link #addSyncStanzaListener(StanzaListener, StanzaFilter)}.
-     */
-    // TODO Remove in 4.3.
-    @Deprecated
-    public void addPacketListener(StanzaListener packetListener, StanzaFilter packetFilter);
-
-    /**
-     * Removes a stanza(/packet) listener for received packets from this connection.
-     * 
-     * @param packetListener the stanza(/packet) listener to remove.
-     * @return true if the stanza(/packet) listener was removed
-     * @deprecated use {@link #removeAsyncStanzaListener(StanzaListener)} or {@link #removeSyncStanzaListener(StanzaListener)}.
-     */
-    // TODO Remove in 4.3.
-    @Deprecated
-    public boolean removePacketListener(StanzaListener packetListener);
-
-    /**
      * Registers a <b>synchronous</b> stanza(/packet) listener with this connection. A stanza(/packet) listener will be invoked only when
      * an incoming stanza(/packet) is received. A stanza(/packet) filter determines which packets will be delivered to the listener. If
      * the same stanza(/packet) listener is added again with a different filter, only the new filter will be used.
@@ -409,28 +356,6 @@ public interface XMPPConnection {
      * Returns the current value of the reply timeout in milliseconds for request for this
      * XMPPConnection instance.
      *
-     * @return the stanza(/packet) reply timeout in milliseconds
-     * @deprecated use {@link #getReplyTimeout()} instead.
-     */
-    @Deprecated
-    // TODO Remove in Smack 4.3
-    public long getPacketReplyTimeout();
-
-    /**
-     * Set the stanza(/packet) reply timeout in milliseconds. In most cases, Smack will throw a
-     * {@link NoResponseException} if no reply to a request was received within the timeout period.
-     *
-     * @param timeout the stanza(/packet) reply timeout in milliseconds
-     * @deprecated use {@link #setReplyTimeout(long)} instead.
-     */
-    @Deprecated
-    // TODO Remove in Smack 4.3
-    public void setPacketReplyTimeout(long timeout);
-
-    /**
-     * Returns the current value of the reply timeout in milliseconds for request for this
-     * XMPPConnection instance.
-     *
      * @return the reply timeout in milliseconds
      */
     public long getReplyTimeout();
@@ -503,6 +428,43 @@ public interface XMPPConnection {
      */
     public boolean hasFeature(String element, String namespace);
 
+
+    /**
+     * Send an IQ request asynchronously. The connection's default reply timeout will be used.
+     *
+     * @param request the IQ request to send.
+     * @return a SmackFuture for the response.
+     */
+    public SmackFuture<IQ, Exception> sendIqRequestAsync(IQ request);
+
+    /**
+     * Send an IQ request asynchronously.
+     *
+     * @param request the IQ request to send.
+     * @param timeout the reply timeout in milliseconds.
+     * @return a SmackFuture for the response.
+     */
+    public SmackFuture<IQ, Exception> sendIqRequestAsync(IQ request, long timeout);
+
+    /**
+     * Send a stanza asynchronously, waiting for exactly one response stanza using the given reply filter. The connection's default reply timeout will be used.
+     *
+     * @param stanza the stanza to send.
+     * @param replyFilter the filter used for the response stanza.
+     * @return a SmackFuture for the response.
+     */
+    public <S extends Stanza> SmackFuture<S, Exception> sendAsync(S stanza, StanzaFilter replyFilter);
+
+    /**
+     * Send a stanza asynchronously, waiting for exactly one response stanza using the given reply filter.
+     *
+     * @param stanza the stanza to send.
+     * @param replyFilter the filter used for the response stanza.
+     * @param timeout the reply timeout in milliseconds.
+     * @return a SmackFuture for the response.
+     */
+    public <S extends Stanza> SmackFuture<S, Exception> sendAsync(S stanza, StanzaFilter replyFilter, long timeout);
+
     /**
      * Send a stanza and wait asynchronously for a response by using <code>replyFilter</code>.
      * <p>
@@ -517,6 +479,7 @@ public interface XMPPConnection {
      * @throws NotConnectedException
      * @throws InterruptedException 
      */
+    // TODO: Mark deprecated in favor of the new SmackFuture based async API.
     public void sendStanzaWithResponseCallback(Stanza stanza, StanzaFilter replyFilter,
                     StanzaListener callback) throws NotConnectedException, InterruptedException;
 
@@ -535,6 +498,7 @@ public interface XMPPConnection {
      * @throws NotConnectedException
      * @throws InterruptedException 
      */
+    // TODO: Mark deprecated in favor of the new SmackFuture based async API. And do not forget to mark smack.ExceptionCallback deprecated too.
     public void sendStanzaWithResponseCallback(Stanza stanza, StanzaFilter replyFilter, StanzaListener callback,
                     ExceptionCallback exceptionCallback) throws NotConnectedException, InterruptedException;
 
@@ -554,6 +518,7 @@ public interface XMPPConnection {
      * @throws NotConnectedException
      * @throws InterruptedException 
      */
+    // TODO: Mark deprecated in favor of the new SmackFuture based async API.
     public void sendStanzaWithResponseCallback(Stanza stanza, StanzaFilter replyFilter,
                     final StanzaListener callback, final ExceptionCallback exceptionCallback,
                     long timeout) throws NotConnectedException, InterruptedException;
@@ -568,6 +533,7 @@ public interface XMPPConnection {
      * @throws NotConnectedException
      * @throws InterruptedException 
      */
+    // TODO: Mark deprecated in favor of the new SmackFuture based async API.
     public void sendIqWithResponseCallback(IQ iqRequest, StanzaListener callback) throws NotConnectedException, InterruptedException;
 
     /**
@@ -584,6 +550,7 @@ public interface XMPPConnection {
      * @throws NotConnectedException
      * @throws InterruptedException 
      */
+    // TODO: Mark deprecated in favor of the new SmackFuture based async API.
     public void sendIqWithResponseCallback(IQ iqRequest, StanzaListener callback,
                     ExceptionCallback exceptionCallback) throws NotConnectedException, InterruptedException;
 
@@ -602,6 +569,7 @@ public interface XMPPConnection {
      * @throws NotConnectedException
      * @throws InterruptedException 
      */
+    // TODO: Mark deprecated in favor of the new SmackFuture based async API.
     public void sendIqWithResponseCallback(IQ iqRequest, final StanzaListener callback,
                     final ExceptionCallback exceptionCallback, long timeout)
                     throws NotConnectedException, InterruptedException;
