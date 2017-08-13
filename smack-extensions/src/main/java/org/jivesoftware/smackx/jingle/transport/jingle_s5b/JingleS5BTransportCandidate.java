@@ -27,6 +27,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Client;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5ClientForInitiator;
+import org.jivesoftware.smackx.bytestreams.socks5.Socks5Utils;
 import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;
 import org.jivesoftware.smackx.jingle.component.JingleContent;
 import org.jivesoftware.smackx.jingle.component.JingleSession;
@@ -98,9 +99,13 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
             case proxy:
                 Socks5Client client;
                 if (peersProposal) {
-                    LOGGER.log(Level.INFO, "Connect to foreign candidate " + getCandidateId() + " using " + transport.getTheirDstAddr());
+                    String dstAddr = transport.getTheirDstAddr();
+                    if (dstAddr == null) {
+                        dstAddr = Socks5Utils.createDigest(transport.getStreamId(), transport.getParent().getParent().getPeer(), transport.getParent().getParent().getOurJid());
+                    }
+                    LOGGER.log(Level.INFO, "Connect to foreign candidate " + getCandidateId() + " using " + dstAddr);
                     LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());
-                    client = new Socks5Client(getStreamHost(), transport.getTheirDstAddr());
+                    client = new Socks5Client(getStreamHost(), dstAddr);
                 } else {
                     LOGGER.log(Level.INFO, "Connect to our candidate " + getCandidateId() + " using " + transport.getOurDstAddr());
                     LOGGER.log(Level.INFO, getStreamHost().getAddress() + ":" + getStreamHost().getPort() + " " + getStreamHost().getJID().toString() + " " + getType());

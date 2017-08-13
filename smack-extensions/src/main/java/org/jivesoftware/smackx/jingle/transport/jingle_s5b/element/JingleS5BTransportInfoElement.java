@@ -63,7 +63,7 @@ public abstract class JingleS5BTransportInfoElement extends JingleContentTranspo
     }
 
     public static final class CandidateActivated extends JingleS5BCandidateTransportInfoElement {
-        public static final String ELEMENT = "candidate-activated";
+        public static final String ELEMENT = "activated";
 
         public CandidateActivated(String candidateId) {
             super(candidateId);
