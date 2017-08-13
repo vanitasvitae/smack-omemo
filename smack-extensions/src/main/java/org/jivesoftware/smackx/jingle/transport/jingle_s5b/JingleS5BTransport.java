@@ -376,17 +376,6 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
         }
     }
 
-    private void activateProxy(JingleS5BTransportCandidate candidate) throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException {
-        LOGGER.log(Level.INFO, "Activate proxy: " + candidate.getCandidateId() + " " + candidate.getStreamHost().getAddress() + ":" + candidate.getStreamHost().getPort() + " " + candidate.getStreamHost().getJID() + " for " + getParent().getParent().getPeer());
-        Bytestream activate = new Bytestream(getStreamId());
-        activate.setMode(null);
-        activate.setType(IQ.Type.set);
-        activate.setTo(candidate.getStreamHost().getJID());
-        activate.setToActivate(getParent().getParent().getPeer());
-        activate.setFrom(getParent().getParent().getOurJid());
-        getParent().getParent().getJingleManager().getConnection().createStanzaCollectorAndSend(activate).nextResultOrThrow();
-    }
-
     @Override
     public void handleSessionAccept(JingleContentTransportElement transportElement, XMPPConnection connection) {
         JingleS5BTransportElement transport = (JingleS5BTransportElement) transportElement;

@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.jingle.transport.jingle_s5b;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -97,6 +96,7 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
 
         switch (getType()) {
             case proxy:
+            case direct:
                 Socks5Client client;
                 if (peersProposal) {
                     String dstAddr = transport.getTheirDstAddr();
@@ -114,16 +114,6 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
                     client = new Socks5ClientForInitiator(getStreamHost(), transport.getOurDstAddr(), session.getJingleManager().getConnection(), transport.getStreamId(), session.getPeer());
                 }
                 this.socket = client.getSocket(timeout);
-                break;
-
-            case direct:
-                if (peersProposal) {
-                    LOGGER.log(Level.INFO, "Connect to foreign direct candidate " + getCandidateId() + " Address: " + getStreamHost().getAddress() + ":" + getStreamHost().getPort());
-                    this.socket = new Socket(getStreamHost().getAddress(), getStreamHost().getPort());
-                } else {
-                    LOGGER.log(Level.INFO, "Connect to our direct candidate " + getCandidateId() + " at port " + getStreamHost().getPort());
-                    this.socket = new ServerSocket(getStreamHost().getPort()).accept();
-                }
                 break;
 
             default:

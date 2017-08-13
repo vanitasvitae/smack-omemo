@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.jft;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -126,7 +127,12 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         return offer;
     }
 
-    public OutgoingFileRequestController requestFile(RemoteFile file) {
+    public OutgoingFileOfferController sendStream(InputStream stream, String filename, FullJid to) {
+        //TODO: Implement
+        return null;
+    }
+
+    public OutgoingFileRequestController requestFile(RemoteFile file, FullJid from) {
         JingleOutgoingFileRequest request = new JingleOutgoingFileRequest(file);
 
         //TODO at some point.
