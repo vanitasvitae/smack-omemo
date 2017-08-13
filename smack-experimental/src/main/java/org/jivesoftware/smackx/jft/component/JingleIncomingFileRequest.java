@@ -58,4 +58,9 @@ public class JingleIncomingFileRequest extends AbstractJingleFileRequest<RemoteF
     public void onBytestreamReady(BytestreamSession bytestreamSession) {
 
     }
+
+    @Override
+    public RemoteFile getFile() {
+        return (RemoteFile) file;
+    }
 }

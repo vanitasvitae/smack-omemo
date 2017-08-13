@@ -37,6 +37,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElemen
 import org.jivesoftware.smackx.jingle.element.JingleElement;
 
 /**
+ * Behind the scenes logic of an incoming Jingle file offer.
  * Created by vanitas on 26.07.17.
  */
 public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile> implements IncomingFileOfferController {
@@ -129,5 +130,10 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
         }
 
         return null;
+    }
+
+    @Override
+    public RemoteFile getFile() {
+        return (RemoteFile) this.file;
     }
 }

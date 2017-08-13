@@ -87,4 +87,9 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
     public boolean isRequest() {
         return false;
     }
+
+    @Override
+    public LocalFile getFile() {
+        return (LocalFile) file;
+    }
 }

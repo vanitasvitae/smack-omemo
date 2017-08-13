@@ -27,6 +27,7 @@ import org.jivesoftware.smackx.hashes.element.HashElement;
 public class LocalFile extends AbstractJingleFileTransferFile {
 
     private File file;
+    private String name;
     private String description;
     private String mediaType;
     private HashElement hashElement;
@@ -42,6 +43,8 @@ public class LocalFile extends AbstractJingleFileTransferFile {
     public LocalFile(File file, String description, String mediaType) {
         super();
         this.file = file;
+        String path = file.getAbsolutePath();
+        name = path.substring(path.lastIndexOf(File.separator) + 1);
         this.description = description;
         this.mediaType = mediaType;
     }
@@ -51,6 +54,9 @@ public class LocalFile extends AbstractJingleFileTransferFile {
         return new Date(file.lastModified());
     }
 
+    public void setDate(Date date) {
+    }
+
     @Override
     public long getSize() {
         return file.length();
@@ -58,8 +64,11 @@ public class LocalFile extends AbstractJingleFileTransferFile {
 
     @Override
     public String getName() {
-        String path = file.getAbsolutePath();
-        return path.substring(path.lastIndexOf(File.separator) + 1);
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override

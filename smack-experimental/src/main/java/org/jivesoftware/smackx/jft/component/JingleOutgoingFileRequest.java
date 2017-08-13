@@ -32,6 +32,11 @@ public class JingleOutgoingFileRequest extends AbstractJingleFileRequest<RemoteF
     }
 
     @Override
+    public RemoteFile getFile() {
+        return (RemoteFile) file;
+    }
+
+    @Override
     public JingleElement handleDescriptionInfo(JingleContentDescriptionInfoElement info) {
         return null;
     }

@@ -27,4 +27,6 @@ public abstract class AbstractJingleFileRequest<D extends AbstractJingleFileTran
         super(fileTransferFile);
     }
 
+    @Override
+    public abstract D getFile();
 }

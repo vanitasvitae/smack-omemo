@@ -24,7 +24,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
 /**
- * Created by vanitas on 27.07.17.
+ * User interface for an incoming Jingle file offer.
  */
 public interface IncomingFileOfferController extends JingleFileTransferController {
     Future<Void> accept(XMPPConnection connection, File target) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException;
