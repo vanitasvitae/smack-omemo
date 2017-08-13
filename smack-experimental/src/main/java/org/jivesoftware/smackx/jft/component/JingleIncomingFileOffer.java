@@ -29,7 +29,6 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jft.component.file.RemoteFile;
 import org.jivesoftware.smackx.jft.controller.IncomingFileOfferController;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jingle.component.JingleSession;
@@ -40,14 +39,14 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
  * Behind the scenes logic of an incoming Jingle file offer.
  * Created by vanitas on 26.07.17.
  */
-public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile> implements IncomingFileOfferController {
+public class JingleIncomingFileOffer extends AbstractJingleFileOffer<JingleFileTransferFile.RemoteFile> implements IncomingFileOfferController {
 
     private static final Logger LOGGER = Logger.getLogger(JingleIncomingFileOffer.class.getName());
 
     private File target;
 
     public JingleIncomingFileOffer(JingleFileTransferChildElement offer) {
-        super(new RemoteFile(offer));
+        super(new JingleFileTransferFile.RemoteFile(offer));
     }
 
     @Override
@@ -133,7 +132,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<RemoteFile>
     }
 
     @Override
-    public RemoteFile getFile() {
-        return (RemoteFile) this.file;
+    public JingleFileTransferFile.RemoteFile getFile() {
+        return (JingleFileTransferFile.RemoteFile) this.file;
     }
 }

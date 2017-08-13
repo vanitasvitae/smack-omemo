@@ -28,7 +28,6 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamSession;
 import org.jivesoftware.smackx.bytestreams.socks5.Socks5Proxy;
@@ -464,14 +463,4 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
      * Kinda depressing, isn't it?
      */
     private final static JingleS5BTransportCandidate CANDIDATE_FAILURE = new JingleS5BTransportCandidate(null, null, -1, null);
-
-    @Override
-    protected boolean isNonFatalException(Exception exception) {
-        return false;
-    }
-
-    @Override
-    protected void handleStanza(Stanza stanza) throws SmackException.NotConnectedException, InterruptedException {
-
-    }
 }

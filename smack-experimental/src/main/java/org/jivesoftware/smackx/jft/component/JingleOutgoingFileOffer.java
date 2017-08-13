@@ -25,7 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jft.component.file.LocalFile;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
@@ -33,11 +32,11 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
 /**
  * Created by vanitas on 26.07.17.
  */
-public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> implements OutgoingFileOfferController {
+public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<JingleFileTransferFile.LocalFile> implements OutgoingFileOfferController {
     private static final Logger LOGGER = Logger.getLogger(JingleOutgoingFileOffer.class.getName());
 
     public JingleOutgoingFileOffer(File file) {
-        super(new LocalFile(file));
+        super(new JingleFileTransferFile.LocalFile(file));
     }
 
     @Override
@@ -47,7 +46,7 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
 
     @Override
     public void onBytestreamReady(BytestreamSession bytestreamSession) {
-        File mFile = ((LocalFile) file).getFile();
+        File mFile = ((JingleFileTransferFile.LocalFile) file).getFile();
         OutputStream outputStream = null;
         InputStream inputStream = null;
 
@@ -89,7 +88,7 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<LocalFile> 
     }
 
     @Override
-    public LocalFile getFile() {
-        return (LocalFile) file;
+    public JingleFileTransferFile.LocalFile getFile() {
+        return (JingleFileTransferFile.LocalFile) file;
     }
 }

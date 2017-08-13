@@ -16,12 +16,12 @@
  */
 package org.jivesoftware.smackx.jft.controller;
 
-import org.jivesoftware.smackx.jft.component.file.AbstractJingleFileTransferFile;
+import org.jivesoftware.smackx.jft.component.JingleFileTransferFile;
 import org.jivesoftware.smackx.jft.listener.ProgressListener;
 import org.jivesoftware.smackx.jingle.JingleDescriptionController;
 
 /**
- * Created by vanitas on 27.07.17.
+ * User interface for Jingle file transfers.
  */
 public interface JingleFileTransferController extends JingleDescriptionController {
 
@@ -29,5 +29,5 @@ public interface JingleFileTransferController extends JingleDescriptionControlle
 
     void removeProgressListener(ProgressListener listener);
 
-    AbstractJingleFileTransferFile getFile();
+    JingleFileTransferFile getFile();
 }

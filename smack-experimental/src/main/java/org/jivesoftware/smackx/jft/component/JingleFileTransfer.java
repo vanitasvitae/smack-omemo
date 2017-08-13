@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.jivesoftware.smackx.jft.component.file.AbstractJingleFileTransferFile;
 import org.jivesoftware.smackx.jft.controller.JingleFileTransferController;
 import org.jivesoftware.smackx.jft.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jft.listener.ProgressListener;
@@ -38,11 +37,11 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
     public abstract boolean isRequest();
 
     protected State state;
-    protected AbstractJingleFileTransferFile file;
+    protected JingleFileTransferFile file;
 
     protected final List<ProgressListener> progressListeners = Collections.synchronizedList(new ArrayList<ProgressListener>());
 
-    public JingleFileTransfer(AbstractJingleFileTransferFile file) {
+    public JingleFileTransfer(JingleFileTransferFile file) {
         this.file = file;
     }
 

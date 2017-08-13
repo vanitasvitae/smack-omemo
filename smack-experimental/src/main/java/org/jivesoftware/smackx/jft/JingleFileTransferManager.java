@@ -32,11 +32,11 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jft.adapter.JingleFileTransferAdapter;
 import org.jivesoftware.smackx.jft.component.JingleFileTransfer;
+import org.jivesoftware.smackx.jft.component.JingleFileTransferFile;
 import org.jivesoftware.smackx.jft.component.JingleIncomingFileOffer;
 import org.jivesoftware.smackx.jft.component.JingleIncomingFileRequest;
 import org.jivesoftware.smackx.jft.component.JingleOutgoingFileOffer;
 import org.jivesoftware.smackx.jft.component.JingleOutgoingFileRequest;
-import org.jivesoftware.smackx.jft.component.file.RemoteFile;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileRequestController;
 import org.jivesoftware.smackx.jft.listener.IncomingFileOfferListener;
@@ -132,7 +132,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         return null;
     }
 
-    public OutgoingFileRequestController requestFile(RemoteFile file, FullJid from) {
+    public OutgoingFileRequestController requestFile(JingleFileTransferFile.RemoteFile file, FullJid from) {
         JingleOutgoingFileRequest request = new JingleOutgoingFileRequest(file);
 
         //TODO at some point.

@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.jft.component;
 
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jft.component.file.RemoteFile;
 import org.jivesoftware.smackx.jft.controller.OutgoingFileRequestController;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
@@ -25,15 +24,15 @@ import org.jivesoftware.smackx.jingle.element.JingleElement;
 /**
  * Created by vanitas on 27.07.17.
  */
-public class JingleOutgoingFileRequest extends AbstractJingleFileRequest<RemoteFile> implements OutgoingFileRequestController {
+public class JingleOutgoingFileRequest extends AbstractJingleFileRequest<JingleFileTransferFile.RemoteFile> implements OutgoingFileRequestController {
 
-    public JingleOutgoingFileRequest(RemoteFile file) {
+    public JingleOutgoingFileRequest(JingleFileTransferFile.RemoteFile file) {
         super(file);
     }
 
     @Override
-    public RemoteFile getFile() {
-        return (RemoteFile) file;
+    public JingleFileTransferFile.RemoteFile getFile() {
+        return (JingleFileTransferFile.RemoteFile) file;
     }
 
     @Override
