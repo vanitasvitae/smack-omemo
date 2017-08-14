@@ -16,7 +16,7 @@
  */
 package org.jivesoftware.smackx.jet;
 
-import static org.jivesoftware.smackx.jft.JingleFileTransferIntegrationTest.prepareNewTestFile;
+import static org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferIntegrationTest.prepareNewTestFile;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.cleanServerSideTraces;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.setUpOmemoManager;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.subscribe;
@@ -29,11 +29,11 @@ import java.util.concurrent.Future;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.jft.JingleFileTransferManager;
-import org.jivesoftware.smackx.jft.controller.IncomingFileOfferController;
-import org.jivesoftware.smackx.jft.listener.IncomingFileOfferListener;
-import org.jivesoftware.smackx.jft.listener.ProgressListener;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.JingleIBBTransportManager;
+import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
+import org.jivesoftware.smackx.jingle_filetransfer.controller.IncomingFileOfferController;
+import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingFileOfferListener;
+import org.jivesoftware.smackx.jingle_filetransfer.listener.ProgressListener;
 import org.jivesoftware.smackx.omemo.AbstractOmemoIntegrationTest;
 import org.jivesoftware.smackx.omemo.OmemoManager;
 import org.jivesoftware.smackx.omemo.OmemoService;
