@@ -20,11 +20,34 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNotSame;
 import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
+import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
+import java.util.Date;
+
+import org.jivesoftware.smack.DummyConnection;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.packet.TestIQ;
+import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smackx.jingle.component.JingleContent;
+import org.jivesoftware.smackx.jingle.component.JingleSession;
+import org.jivesoftware.smackx.jingle.component.JingleTransport;
+import org.jivesoftware.smackx.jingle.element.JingleAction;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.util.Role;
 
 import org.junit.Test;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 /**
  * Test the JingleContent class.
@@ -72,5 +95,66 @@ public class JingleContentElementTest extends SmackTestSuite {
                 "<content creator='initiator' disposition='session' name='A name' senders='both'>" +
                 "</content>";
         assertEquals(xml, content1.toXML().toString());
+
+        JingleContent fromElement = JingleContent.fromElement(content1);
+        assertEquals("A name", fromElement.getName());
+        assertEquals(content1.getCreator(), fromElement.getCreator());
+        assertEquals(content1.getSenders(), fromElement.getSenders());
+        assertNull(fromElement.getTransport());
+        assertNull(fromElement.getDescription());
+        assertNull(fromElement.getSecurity());
+        assertXMLEqual(xml, fromElement.getElement().toXML().toString());
+    }
+
+    @Test
+    public void handleJingleRequestTest() {
+        XMPPConnection connection = mock(XMPPConnection.class);
+        JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
+
+        IQ descriptionInfoResult = new TestIQ("description_info", "test");
+        IQ securityInfoResult = new TestIQ("description_info", "test");
+        IQ sessionInfoResult = new TestIQ("session_info", "test");
+        IQ transportAcceptResult = new TestIQ("transport_accept", "test");
+        IQ transportInfoResult = new TestIQ("transport_info", "test");
+        IQ transportRejectResult = new TestIQ("transport_reject", "test");
+        IQ transportReplaceResult = new TestIQ("transport_replace", "test");
+
+        JingleElement contentModify = JingleElement.getBuilder().setAction(JingleAction.content_modify).setSessionId("session").build();
+        assertTrue(content.handleJingleRequest(contentModify, connection).getError().getCondition() == XMPPError.Condition.feature_not_implemented);
+
+        JingleElement descriptionInfo = JingleElement.getBuilder().setAction(JingleAction.description_info).setSessionId("session").build();
+        assertTrue(content.handleJingleRequest(descriptionInfo, connection).getError().getCondition() == XMPPError.Condition.feature_not_implemented);
+    }
+
+    @Test
+    public void startTest() throws XmppStringprepException, SmackException.NotConnectedException, InterruptedException {
+        XMPPConnection connection = new DummyConnection();
+        JingleSession session = new JingleSession(JingleManager.getInstanceFor(connection), connection.getUser().asFullJidOrThrow(), JidCreate.fullFrom("bob@baumeister.de/buddl"), Role.initiator, "session");
+        JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
+        JingleTransport<?> transport = mock(JingleTransport.class);
+        content.setTransport(transport);
+        session.addContent(content);
+
+        final boolean[] sync = new boolean[1];
+
+        content.start(connection);
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                sync[0] = true;
+                return null;
+            }
+        }).when(transport).establishOutgoingBytestreamSession(connection, content, session);
+
+        Date start = new Date();
+        while (!sync[0]) {
+            Date now = new Date();
+            if (now.getTime() - start.getTime() > 2000) {
+                break;
+            }
+            //Unfortunately there are no ResultSyncPoints available, so we have to cheat a little bit.
+        }
+
+        verify(transport).establishOutgoingBytestreamSession(connection, content, session);
     }
 }

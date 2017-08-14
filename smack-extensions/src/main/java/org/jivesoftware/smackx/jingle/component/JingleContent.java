@@ -302,9 +302,15 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
                 .setName(name)
                 .setCreator(creator)
                 .setSenders(senders)
-                .setDescription(description.getElement())
-                .setTransport(transport.getElement())
-                .setDisposition(disposition);
+                .setDisposition(disposition);;
+
+        if (description != null) {
+            builder.setDescription(description.getElement());
+        }
+
+        if (transport != null) {
+            builder.setTransport(transport.getElement());
+        }
 
         if (security != null) {
             builder.setSecurity(security.getElement());
@@ -403,7 +409,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
                         LOGGER.log(Level.INFO, "Establish outgoing bytestream.");
                         getTransport().establishOutgoingBytestreamSession(connection, JingleContent.this, getParent());
                     } else {
-                        LOGGER.log(Level.INFO, "Neither receiving, nor sending. For the sake of Gajim assume receiving.");
+                        LOGGER.log(Level.INFO, "Neither receiving, nor sending. Assume receiving.");
                         getTransport().establishIncomingBytestreamSession(connection, JingleContent.this, getParent());
                     }
                 } catch (SmackException.NotConnectedException | InterruptedException e) {
