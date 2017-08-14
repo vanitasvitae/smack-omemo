@@ -21,14 +21,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.packet.NamedElement;
+import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
+import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleIncomingFileOffer;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleIncomingFileRequest;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferElement;
-import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
-import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 
 /**
  * Created by vanitas on 28.07.17.

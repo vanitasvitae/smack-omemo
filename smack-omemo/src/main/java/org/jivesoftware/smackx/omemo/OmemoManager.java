@@ -19,7 +19,6 @@ package org.jivesoftware.smackx.omemo;
 import static org.jivesoftware.smackx.omemo.util.OmemoConstants.BODY_OMEMO_HINT;
 import static org.jivesoftware.smackx.omemo.util.OmemoConstants.OMEMO;
 import static org.jivesoftware.smackx.omemo.util.OmemoConstants.OMEMO_NAMESPACE_V_AXOLOTL;
-import static org.jivesoftware.smackx.omemo.util.OmemoConstants.PEP_NODE_DEVICE_LIST_NOTIFY;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -32,8 +31,8 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jivesoftware.smack.AbstractConnectionListener;
 import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
@@ -41,7 +40,7 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Stanza;
-
+import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.carbons.CarbonManager;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
@@ -113,8 +112,29 @@ public final class OmemoManager extends Manager implements JingleEncryptionMetho
      */
     private OmemoManager(XMPPConnection connection, int deviceId) {
         super(connection);
-        setConnectionListener();
+
         this.deviceId = deviceId;
+
+        connection.addConnectionListener(new AbstractConnectionListener() {
+            @Override
+            public void authenticated(XMPPConnection connection, boolean resumed) {
+                if (resumed) {
+                    return;
+                }
+                Async.go(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            initialize();
+                        } catch (InterruptedException | CorruptedOmemoKeyException | PubSubException.NotALeafNodeException | SmackException.NotLoggedInException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+                            LOGGER.log(Level.SEVERE, "connectionListener.authenticated() failed to initialize OmemoManager: "
+                                    + e.getMessage());
+                        }
+                    }
+                });
+            }
+        });
+
         service = OmemoService.getInstance();
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(OmemoConstants.OMEMO_NAMESPACE_V_AXOLOTL);
     }
@@ -167,13 +187,13 @@ public final class OmemoManager extends Manager implements JingleEncryptionMetho
             }
         }
 
-        int defaulDeviceId = OmemoService.getInstance().getOmemoStoreBackend().getDefaultDeviceId(user);
-        if (defaulDeviceId < 1) {
-            defaulDeviceId = randomDeviceId();
-            OmemoService.getInstance().getOmemoStoreBackend().setDefaultDeviceId(user, defaulDeviceId);
+        int defaultDeviceId = OmemoService.getInstance().getOmemoStoreBackend().getDefaultDeviceId(user);
+        if (defaultDeviceId < 1) {
+            defaultDeviceId = randomDeviceId();
+            OmemoService.getInstance().getOmemoStoreBackend().setDefaultDeviceId(user, defaultDeviceId);
         }
 
-        return getInstanceFor(connection, defaulDeviceId);
+        return getInstanceFor(connection, defaultDeviceId);
     }
 
     /**
@@ -476,24 +496,6 @@ public final class OmemoManager extends Manager implements JingleEncryptionMetho
     }
 
     /**
-     * Returns true, if the device resource has announced OMEMO support.
-     * Throws an IllegalArgumentException if the provided FullJid does not have a resource part.
-     *
-     * @param fullJid jid of a resource
-     * @return true if resource supports OMEMO
-     * @throws XMPPException.XMPPErrorException     if
-     * @throws SmackException.NotConnectedException something
-     * @throws InterruptedException                 goes
-     * @throws SmackException.NoResponseException   wrong
-     */
-    public boolean resourceSupportsOmemo(FullJid fullJid) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
-        if (fullJid.hasNoResource()) {
-            throw new IllegalArgumentException("Jid " + fullJid + " has no resource part.");
-        }
-        return ServiceDiscoveryManager.getInstanceFor(connection()).discoverInfo(fullJid).containsFeature(PEP_NODE_DEVICE_LIST_NOTIFY);
-    }
-
-    /**
      * Returns true, if the MUC with the EntityBareJid multiUserChat is non-anonymous and members only (prerequisite
      * for OMEMO encryption in MUC).
      *
@@ -643,54 +645,6 @@ public final class OmemoManager extends Manager implements JingleEncryptionMetho
         if (service == null) {
             throw new IllegalStateException("No OmemoService set in OmemoManager.");
         }
-    }
-
-    private void setConnectionListener() {
-        connection().addConnectionListener(new ConnectionListener() {
-            @Override
-            public void connected(XMPPConnection connection) {
-                LOGGER.log(Level.INFO, "connected");
-            }
-
-            @Override
-            public void authenticated(XMPPConnection connection, boolean resumed) {
-                LOGGER.log(Level.INFO, "authenticated. Resumed: " + resumed);
-                if (resumed) {
-                    return;
-                }
-                try {
-                    initialize();
-                } catch (InterruptedException | CorruptedOmemoKeyException | PubSubException.NotALeafNodeException | SmackException.NotLoggedInException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
-                    LOGGER.log(Level.SEVERE, "connectionListener.authenticated() failed to initialize OmemoManager: "
-                            + e.getMessage());
-                }
-            }
-
-            @Override
-            public void connectionClosed() {
-
-            }
-
-            @Override
-            public void connectionClosedOnError(Exception e) {
-                connectionClosed();
-            }
-
-            @Override
-            public void reconnectionSuccessful() {
-
-            }
-
-            @Override
-            public void reconnectingIn(int seconds) {
-
-            }
-
-            @Override
-            public void reconnectionFailed(Exception e) {
-
-            }
-        });
     }
 
     public static int randomDeviceId() {

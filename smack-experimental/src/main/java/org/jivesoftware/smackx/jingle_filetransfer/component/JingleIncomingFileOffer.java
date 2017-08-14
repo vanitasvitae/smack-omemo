@@ -29,11 +29,11 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jingle_filetransfer.controller.IncomingFileOfferController;
-import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
 import org.jivesoftware.smackx.jingle.component.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle_filetransfer.controller.IncomingFileOfferController;
+import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
 
 /**
  * Behind the scenes logic of an incoming Jingle file offer.

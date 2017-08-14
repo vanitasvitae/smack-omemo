@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.jingle.provider;
 
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
-
 import org.jivesoftware.smackx.jingle.element.JingleErrorElement;
 
 import org.xmlpull.v1.XmlPullParser;

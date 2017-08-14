@@ -16,9 +16,9 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.controller;
 
+import org.jivesoftware.smackx.jingle.JingleDescriptionController;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransferFile;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.ProgressListener;
-import org.jivesoftware.smackx.jingle.JingleDescriptionController;
 
 /**
  * User interface for Jingle file transfers.

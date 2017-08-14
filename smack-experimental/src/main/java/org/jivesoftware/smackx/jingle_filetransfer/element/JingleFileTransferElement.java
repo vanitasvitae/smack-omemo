@@ -19,9 +19,9 @@ package org.jivesoftware.smackx.jingle_filetransfer.element;
 import java.util.Collections;
 import java.util.List;
 
-import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildElement;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionElement;
+import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransfer;
 
 /**
  * File element.

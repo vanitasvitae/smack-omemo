@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jivesoftware.smackx.jingle.component.JingleDescription;
 import org.jivesoftware.smackx.jingle_filetransfer.controller.JingleFileTransferController;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.ProgressListener;
-import org.jivesoftware.smackx.jingle.component.JingleDescription;
 
 /**
  * Created by vanitas on 22.07.17.

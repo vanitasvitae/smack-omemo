@@ -29,9 +29,6 @@ import org.jivesoftware.smackx.ciphers.Aes256GcmNoPadding;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jet.component.JetSecurity;
 import org.jivesoftware.smackx.jet.provider.JetSecurityProvider;
-import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
-import org.jivesoftware.smackx.jingle_filetransfer.component.JingleOutgoingFileOffer;
-import org.jivesoftware.smackx.jingle_filetransfer.controller.OutgoingFileOfferController;
 import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
@@ -39,6 +36,9 @@ import org.jivesoftware.smackx.jingle.component.JingleContent;
 import org.jivesoftware.smackx.jingle.component.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.util.Role;
+import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
+import org.jivesoftware.smackx.jingle_filetransfer.component.JingleOutgoingFileOffer;
+import org.jivesoftware.smackx.jingle_filetransfer.controller.OutgoingFileOfferController;
 
 import org.jxmpp.jid.FullJid;
 

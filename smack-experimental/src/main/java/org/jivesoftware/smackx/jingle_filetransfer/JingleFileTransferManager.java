@@ -30,6 +30,14 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
+import org.jivesoftware.smackx.jingle.JingleManager;
+import org.jivesoftware.smackx.jingle.JingleTransportManager;
+import org.jivesoftware.smackx.jingle.component.JingleContent;
+import org.jivesoftware.smackx.jingle.component.JingleSession;
+import org.jivesoftware.smackx.jingle.component.JingleTransport;
+import org.jivesoftware.smackx.jingle.element.JingleContentElement;
+import org.jivesoftware.smackx.jingle.util.Role;
 import org.jivesoftware.smackx.jingle_filetransfer.adapter.JingleFileTransferAdapter;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransfer;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransferFile;
@@ -42,14 +50,6 @@ import org.jivesoftware.smackx.jingle_filetransfer.controller.OutgoingFileReques
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingFileOfferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingFileRequestListener;
 import org.jivesoftware.smackx.jingle_filetransfer.provider.JingleFileTransferProvider;
-import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
-import org.jivesoftware.smackx.jingle.JingleManager;
-import org.jivesoftware.smackx.jingle.JingleTransportManager;
-import org.jivesoftware.smackx.jingle.component.JingleContent;
-import org.jivesoftware.smackx.jingle.component.JingleSession;
-import org.jivesoftware.smackx.jingle.component.JingleTransport;
-import org.jivesoftware.smackx.jingle.element.JingleContentElement;
-import org.jivesoftware.smackx.jingle.util.Role;
 
 import org.jxmpp.jid.FullJid;
 
