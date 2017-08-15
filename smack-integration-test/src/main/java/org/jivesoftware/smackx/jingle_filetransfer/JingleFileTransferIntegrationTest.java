@@ -107,8 +107,8 @@ public class JingleFileTransferIntegrationTest extends AbstractSmackIntegrationT
                 });
 
                 try {
-                    receiveFuture.add(offer.accept(conTwo, target));
-                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                    offer.accept(conTwo, target);
+                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException | IOException e) {
                     fail(e.toString());
                 }
             }

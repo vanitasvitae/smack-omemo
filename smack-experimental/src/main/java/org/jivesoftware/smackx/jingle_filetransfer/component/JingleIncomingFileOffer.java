@@ -21,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,8 +41,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChi
 public class JingleIncomingFileOffer extends AbstractJingleFileOffer<JingleFileTransferFile.RemoteFile> implements IncomingFileOfferController {
 
     private static final Logger LOGGER = Logger.getLogger(JingleIncomingFileOffer.class.getName());
-
-    private File target;
+    private OutputStream target;
 
     public JingleIncomingFileOffer(JingleFileTransferChildElement offer) {
         super(new JingleFileTransferFile.RemoteFile(offer));
@@ -56,27 +54,21 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<JingleFileT
 
     @Override
     public void onBytestreamReady(BytestreamSession bytestreamSession) {
-        LOGGER.log(Level.INFO, "Receive file to " + target.getAbsolutePath());
-        File mFile = target;
-        if (!mFile.exists()) {
-            try {
-                mFile.createNewFile();
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Could not create new File!");
-            }
+        if (target == null) {
+            throw new IllegalStateException("Target OutputStream is null");
         }
 
+        LOGGER.log(Level.INFO, "Receive file");
+
         InputStream inputStream = null;
-        OutputStream outputStream = null;
         try {
             inputStream = bytestreamSession.getInputStream();
-            outputStream = new FileOutputStream(mFile);
 
             int length = 0;
             int read = 0;
             byte[] bufbuf = new byte[4096];
             while ((length = inputStream.read(bufbuf)) >= 0) {
-                outputStream.write(bufbuf, 0, length);
+                target.write(bufbuf, 0, length);
                 read += length;
                 LOGGER.log(Level.INFO, "Read " + read + " (" + length + ") of " + file.getSize() + " bytes.");
                 if (read == (int) file.getSize()) {
@@ -96,9 +88,9 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<JingleFileT
                 }
             }
 
-            if (outputStream != null) {
+            if (target != null) {
                 try {
-                    outputStream.close();
+                    target.close();
                     LOGGER.log(Level.INFO, "FileOutputStream closed.");
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Could not close OutputStream: " + e, e);
@@ -119,16 +111,32 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer<JingleFileT
     }
 
     @Override
-    public Future<Void> accept(XMPPConnection connection, File target)
+    public void accept(XMPPConnection connection, File target)
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
-            SmackException.NoResponseException {
-        this.target = target;
+            SmackException.NoResponseException, IOException {
+
+        if (!target.exists()) {
+            target.createNewFile();
+        }
+
+        this.target = new FileOutputStream(target);
+
         JingleSession session = getParent().getParent();
         if (session.getSessionState() == JingleSession.SessionState.pending) {
             session.sendAccept(connection);
         }
+    }
 
-        return null;
+    @Override
+    public void accept(XMPPConnection connection, OutputStream stream)
+            throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
+            SmackException.NoResponseException {
+        target = stream;
+
+        JingleSession session = getParent().getParent();
+        if (session.getSessionState() == JingleSession.SessionState.pending) {
+            session.sendAccept(connection);
+        }
     }
 
     @Override

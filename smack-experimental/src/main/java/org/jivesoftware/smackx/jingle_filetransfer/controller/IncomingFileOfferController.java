@@ -17,7 +17,8 @@
 package org.jivesoftware.smackx.jingle_filetransfer.controller;
 
 import java.io.File;
-import java.util.concurrent.Future;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
@@ -27,5 +28,6 @@ import org.jivesoftware.smack.XMPPException;
  * User interface for an incoming Jingle file offer.
  */
 public interface IncomingFileOfferController extends JingleFileTransferController {
-    Future<Void> accept(XMPPConnection connection, File target) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException;
+    void accept(XMPPConnection connection, File target) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException, IOException;
+    void accept(XMPPConnection connection, OutputStream outputStream) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException, IOException;
 }

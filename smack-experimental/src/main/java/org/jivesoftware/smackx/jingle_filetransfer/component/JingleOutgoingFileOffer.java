@@ -36,7 +36,11 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<JingleFileT
     private static final Logger LOGGER = Logger.getLogger(JingleOutgoingFileOffer.class.getName());
 
     public JingleOutgoingFileOffer(File file) {
-        super(new JingleFileTransferFile.LocalFile(file));
+        this(new JingleFileTransferFile.LocalFile(file));
+    }
+
+    public JingleOutgoingFileOffer(JingleFileTransferFile.LocalFile localFile) {
+        super(localFile);
     }
 
     @Override

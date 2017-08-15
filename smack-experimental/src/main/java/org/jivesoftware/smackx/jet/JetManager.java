@@ -78,7 +78,11 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         return manager;
     }
 
-    public OutgoingFileOfferController sendEncryptedFile(FullJid recipient, File file, JingleEncryptionMethod method) throws Exception {
+    public OutgoingFileOfferController sendEncryptedFile(File file, FullJid recipient, JingleEncryptionMethod method) throws Exception {
+        return sendEncryptedFile(file, null, recipient, method);
+    }
+
+    public OutgoingFileOfferController sendEncryptedFile(File file, String filename, FullJid recipient, JingleEncryptionMethod method) throws Exception {
         if (file == null || !file.exists()) {
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
         }
@@ -94,6 +98,9 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         session.addContent(content);
 
         JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(file);
+        if (filename != null) {
+            offer.getFile().setName(filename);
+        }
         content.setDescription(offer);
 
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(recipient);

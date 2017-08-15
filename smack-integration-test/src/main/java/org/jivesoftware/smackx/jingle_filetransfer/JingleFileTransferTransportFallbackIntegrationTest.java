@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import org.jivesoftware.smack.SmackException;
@@ -95,8 +93,6 @@ public class JingleFileTransferTransportFallbackIntegrationTest extends Abstract
         JingleFileTransferManager aftm = JingleFileTransferManager.getInstanceFor(conOne);
         JingleFileTransferManager bftm = JingleFileTransferManager.getInstanceFor(conTwo);
 
-        final ArrayList<Future<Void>> receiveFuture = new ArrayList<>(); //Uglaay
-
         bftm.addIncomingFileOfferListener(new IncomingFileOfferListener() {
             @Override
             public void onIncomingFileOffer(IncomingFileOfferController offer) {
@@ -120,8 +116,8 @@ public class JingleFileTransferTransportFallbackIntegrationTest extends Abstract
                 });
 
                 try {
-                    receiveFuture.add(offer.accept(conTwo, target));
-                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                    offer.accept(conTwo, target);
+                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException | IOException e) {
                     fail(e.toString());
                 }
             }

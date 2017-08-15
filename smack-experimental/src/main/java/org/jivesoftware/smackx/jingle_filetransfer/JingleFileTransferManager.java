@@ -17,7 +17,9 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +31,7 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
@@ -64,6 +67,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
 
     private final List<IncomingFileOfferListener> offerListeners =
             Collections.synchronizedList(new ArrayList<IncomingFileOfferListener>());
+
     private final List<IncomingFileRequestListener> requestListeners =
             Collections.synchronizedList(new ArrayList<IncomingFileRequestListener>());
 
@@ -93,7 +97,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
     public OutgoingFileOfferController sendFile(File file, FullJid to)
             throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NoResponseException, SmackException.FeatureNotSupportedException {
-            return sendFile(file, null, to);
+        return sendFile(file, null, to);
     }
 
     public OutgoingFileOfferController sendFile(File file, String alternativeFilename, FullJid to)
@@ -127,9 +131,60 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         return offer;
     }
 
-    public OutgoingFileOfferController sendStream(InputStream stream, String filename, FullJid to) {
-        //TODO: Implement
-        return null;
+    public OutgoingFileOfferController sendStream(final InputStream stream, JingleFileTransferFile.LocalFile file, FullJid recipient) throws SmackException.FeatureNotSupportedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        if (!ServiceDiscoveryManager.getInstanceFor(connection()).supportsFeature(recipient, getNamespace())) {
+            throw new SmackException.FeatureNotSupportedException(getNamespace(), recipient);
+        }
+
+        JingleSession session = jingleManager.createSession(Role.initiator, recipient);
+
+        JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
+        session.addContent(content);
+
+        JingleOutgoingFileOffer outgoingFileOffer = new JingleOutgoingFileOffer(file) {
+
+            @Override
+            public void onBytestreamReady(BytestreamSession bytestreamSession) {
+                OutputStream outputStream;
+                try {
+                    outputStream = bytestreamSession.getOutputStream();
+
+                    byte[] buf = new byte[4096];
+                    while (true) {
+                        int r = stream.read(buf);
+                        if (r < 0) {
+                            break;
+                        }
+                        outputStream.write(buf, 0, r);
+                    }
+                    outputStream.flush();
+                    outputStream.close();
+
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, "Exception while sending file: " + e, e);
+                } finally {
+                    if (stream != null) {
+                        try {
+                            stream.close();
+                        } catch (IOException e) {
+                            LOGGER.log(Level.SEVERE, "Could not close FileInputStream: " + e, e);
+                        }
+                    }
+                }
+
+                notifyProgressListenersFinished();
+            }
+        };
+
+        content.setDescription(outgoingFileOffer);
+
+        JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(recipient);
+        JingleTransport<?> transport = transportManager.createTransportForInitiator(content);
+        content.setTransport(transport);
+
+        session.sendInitiate(connection());
+
+        return outgoingFileOffer;
     }
 
     public OutgoingFileRequestController requestFile(JingleFileTransferFile.RemoteFile file, FullJid from) {

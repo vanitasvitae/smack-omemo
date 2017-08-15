@@ -25,7 +25,7 @@ import static org.junit.Assert.assertArrayEquals;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.concurrent.Future;
+import java.io.IOException;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
@@ -123,14 +123,14 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
                             received.signal();
                         }
                     });
-                    Future<Void> f = offer.accept(conTwo, target);
-                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                    offer.accept(conTwo, target);
+                } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException | IOException e) {
                     received.signal(e);
                 }
             }
         });
 
-        ja.sendEncryptedFile(conTwo.getUser().asFullJidOrThrow(), source, oa);
+        ja.sendEncryptedFile(source, conTwo.getUser().asFullJidOrThrow(), oa);
 
         received.waitForResult(60 * 1000);
 
