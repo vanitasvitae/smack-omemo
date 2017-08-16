@@ -35,6 +35,7 @@ import org.xmlpull.v1.XmlPullParser;
  * Provider for the Checksum element.
  */
 public class ChecksumProvider extends ExtensionElementProvider<ChecksumElement> {
+
     @Override
     public ChecksumElement parse(XmlPullParser parser, int initialDepth) throws Exception {
         JingleContentElement.Creator creator = null;

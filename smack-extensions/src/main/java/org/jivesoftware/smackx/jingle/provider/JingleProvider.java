@@ -99,7 +99,7 @@ public class JingleProvider extends IQProvider<JingleElement> {
         return builder.build();
     }
 
-    public static JingleContentElement parseJingleContent(XmlPullParser parser, final int initialDepth)
+    private static JingleContentElement parseJingleContent(XmlPullParser parser, final int initialDepth)
             throws Exception {
         JingleContentElement.Builder builder = JingleContentElement.getBuilder();
 

@@ -26,13 +26,13 @@ public final class JingleErrorElement implements ExtensionElement {
 
     public static String NAMESPACE = "urn:xmpp:jingle:errors:1";
 
-    public static final JingleErrorElement OUT_OF_ORDER = new JingleErrorElement("out-of-order");
+    static final JingleErrorElement OUT_OF_ORDER = new JingleErrorElement("out-of-order");
 
-    public static final JingleErrorElement TIE_BREAK = new JingleErrorElement("tie-break");
+    static final JingleErrorElement TIE_BREAK = new JingleErrorElement("tie-break");
 
-    public static final JingleErrorElement UNKNOWN_SESSION = new JingleErrorElement("unknown-session");
+    static final JingleErrorElement UNKNOWN_SESSION = new JingleErrorElement("unknown-session");
 
-    public static final JingleErrorElement UNSUPPORTED_INFO = new JingleErrorElement("unsupported-info");
+    static final JingleErrorElement UNSUPPORTED_INFO = new JingleErrorElement("unsupported-info");
 
     private final String errorName;
 

@@ -28,6 +28,8 @@ import org.jivesoftware.smack.XMPPException;
  * User interface for an incoming Jingle file offer.
  */
 public interface IncomingFileOfferController extends JingleFileTransferController {
+
     void accept(XMPPConnection connection, File target) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException, IOException;
+
     void accept(XMPPConnection connection, OutputStream outputStream) throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException, IOException;
 }

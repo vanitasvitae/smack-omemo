@@ -39,9 +39,9 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
     protected State state;
     protected JingleFileTransferFile file;
 
-    protected final List<ProgressListener> progressListeners = Collections.synchronizedList(new ArrayList<ProgressListener>());
+    private final List<ProgressListener> progressListeners = Collections.synchronizedList(new ArrayList<ProgressListener>());
 
-    public JingleFileTransfer(JingleFileTransferFile file) {
+    JingleFileTransfer(JingleFileTransferFile file) {
         this.file = file;
     }
 
@@ -54,6 +54,11 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
     @Override
     public void removeProgressListener(ProgressListener listener) {
         progressListeners.remove(listener);
+    }
+
+    @Override
+    public void cancel() {
+        //TODO
     }
 
     public void notifyProgressListeners(float progress) {

@@ -26,6 +26,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransfer;
  * Checksum element.
  */
 public class ChecksumElement implements ExtensionElement {
+
     public static final String ELEMENT = "checksum";
     public static final String ATTR_CREATOR = "creator";
     public static final String ATTR_NAME = "name";

@@ -45,14 +45,14 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
 
     private Socket socket;
 
-    public JingleS5BTransportCandidate(JingleS5BTransportCandidateElement element) {
+    JingleS5BTransportCandidate(JingleS5BTransportCandidateElement element) {
         this(element.getCandidateId(), new Bytestream.StreamHost(element.getJid(), element.getHost(), element.getPort()), element.getPriority(), element.getType());
     }
 
-    public JingleS5BTransportCandidate(String candidateId,
-                                       Bytestream.StreamHost streamHost,
-                                       int priority,
-                                       JingleS5BTransportCandidateElement.Type type) {
+    JingleS5BTransportCandidate(String candidateId,
+                                Bytestream.StreamHost streamHost,
+                                int priority,
+                                JingleS5BTransportCandidateElement.Type type) {
         this.candidateId = candidateId;
         this.streamHost = streamHost;
         this.type = type;
@@ -60,18 +60,18 @@ public class JingleS5BTransportCandidate extends JingleTransportCandidate<Jingle
         setPriority(priority);
     }
 
-    public JingleS5BTransportCandidate(JingleS5BTransportCandidate other) {
+    JingleS5BTransportCandidate(JingleS5BTransportCandidate other) {
         this(other.candidateId,
                 other.getStreamHost(),
                 other.getPriority(),
                 other.type);
     }
 
-    public static JingleS5BTransportCandidate fromElement(JingleS5BTransportCandidateElement element) {
+    static JingleS5BTransportCandidate fromElement(JingleS5BTransportCandidateElement element) {
         return new JingleS5BTransportCandidate(element.getCandidateId(), element.getStreamHost(), element.getPriority(), element.getType());
     }
 
-    public String getCandidateId() {
+    String getCandidateId() {
         return candidateId;
     }
 

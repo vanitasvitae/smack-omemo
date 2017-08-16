@@ -45,7 +45,7 @@ public class JetElementTest extends SmackTestSuite {
         assertEquals(SecurityStub.NAMESPACE, security.getMethodNamespace());
         assertEquals(Aes128GcmNoPadding.NAMESPACE, element.getCipherName());
         assertEquals(SecurityStub.NAMESPACE, element.getMethodNamespace());
-        assertEquals("content1", element.getName());
+        assertEquals("content1", element.getContentName());
 
         String xml = "<security xmlns='" + JetSecurity.NAMESPACE + "' " +
                 "name='content1' " +

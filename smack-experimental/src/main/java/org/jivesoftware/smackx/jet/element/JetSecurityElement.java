@@ -71,7 +71,7 @@ public class JetSecurityElement extends JingleContentSecurityElement {
         return child;
     }
 
-    public String getName() {
+    public String getContentName() {
         return name;
     }
 

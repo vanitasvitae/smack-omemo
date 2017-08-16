@@ -370,7 +370,7 @@ public class JingleSession {
         return content;
     }
 
-    private JingleContent getSoleProposedContentOrThrow(JingleElement request) {
+    private static JingleContent getSoleProposedContentOrThrow(JingleElement request) {
         if (request.getContents().size() != 1) {
             throw new AssertionError("More/less than 1 content in request!");
         }

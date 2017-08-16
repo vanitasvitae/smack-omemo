@@ -18,7 +18,6 @@ package org.jivesoftware.smackx.jingle.transport.jingle_s5b;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -234,7 +233,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @SuppressWarnings("ReferenceEquality")
-    void establishBytestreamSession(XMPPConnection connection)
+    private void establishBytestreamSession(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException {
         Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
         JingleS5BTransportManager transportManager = JingleS5BTransportManager.getInstanceFor(connection);
@@ -254,7 +253,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @SuppressWarnings("ReferenceEquality")
-    public JingleS5BTransportCandidate connectToCandidates(int timeout) {
+    private JingleS5BTransportCandidate connectToCandidates(int timeout) {
 
         if (getTheirCandidates().size() == 0) {
             LOGGER.log(Level.INFO, "They provided 0 candidates.");
@@ -281,7 +280,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     }
 
     @SuppressWarnings("ReferenceEquality")
-    void connectIfReady() {
+    private void connectIfReady() {
         final JingleS5BTransportManager jingleS5BTransportManager = JingleS5BTransportManager.getInstanceFor(getParent().getParent().getJingleManager().getConnection());
         final JingleSession session = getParent().getParent();
 
@@ -427,9 +426,8 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             return;
         }
 
-        Iterator<JingleTransportCandidate<?>> ourCandidates = getOurCandidates().iterator();
-        while (ourCandidates.hasNext()) {
-            JingleS5BTransportCandidate candidate = (JingleS5BTransportCandidate) ourCandidates.next();
+        for (JingleTransportCandidate<?> jingleTransportCandidate : getOurCandidates()) {
+            JingleS5BTransportCandidate candidate = (JingleS5BTransportCandidate) jingleTransportCandidate;
             if (candidate.getCandidateId().equals(candidateId)) {
                 theirSelectedCandidate = candidate;
             }

@@ -131,7 +131,7 @@ public class JingleReasonElement implements NamedElement {
 
     public static class AlternativeSession extends JingleReasonElement {
 
-        public static final String SID = "sid";
+        public static final String ATTR_SID = "sid";
         private final String sessionId;
 
         public AlternativeSession(String sessionId) {
@@ -148,9 +148,9 @@ public class JingleReasonElement implements NamedElement {
             xml.rightAngleBracket();
 
             xml.openElement(reason.asString);
-            xml.openElement(SID);
+            xml.openElement(ATTR_SID);
             xml.append(sessionId);
-            xml.closeElement(SID);
+            xml.closeElement(ATTR_SID);
             xml.closeElement(reason.asString);
 
             xml.closeElement(this);

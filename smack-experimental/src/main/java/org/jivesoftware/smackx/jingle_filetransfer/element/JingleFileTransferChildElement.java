@@ -27,6 +27,7 @@ import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionChildEleme
  * Content of type File.
  */
 public class JingleFileTransferChildElement extends JingleContentDescriptionChildElement {
+
     public static final String ELEMENT = "file";
     public static final String ELEM_DATE = "date";
     public static final String ELEM_DESC = "desc";
@@ -139,8 +140,8 @@ public class JingleFileTransferChildElement extends JingleContentDescriptionChil
          * This is a MIME type from this list:
          * https://www.iana.org/assignments/media-types/media-types.xhtml
          * Default should be application/octet-stream.
-         * @param mediaType
-         * @return
+         * @param mediaType new media type.
+         * @return builder.
          */
         public Builder setMediaType(String mediaType) {
             this.mediaType = mediaType;

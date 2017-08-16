@@ -56,8 +56,8 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
 
     private JingleSession parent;
     private JingleContentElement.Creator creator;
-    private String name;
-    private String disposition;
+    private final String name;
+    private final String disposition;
     private JingleContentElement.Senders senders;
     private JingleDescription<?> description;
     private JingleTransport<?> transport;
@@ -120,6 +120,10 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         return new JingleContent(description, transport, security, content.getName(), content.getDisposition(), content.getCreator(), content.getSenders());
     }
 
+    public void setSenders(JingleContentElement.Senders senders) {
+        this.senders = senders;
+    }
+
     /* HANDLE_XYZ */
 
     public IQ handleJingleRequest(JingleElement request, XMPPConnection connection) {
@@ -145,12 +149,12 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         }
     }
 
-    public void handleContentAccept(JingleElement request, XMPPConnection connection) {
+    void handleContentAccept(JingleElement request, XMPPConnection connection) {
         start(connection);
     }
 
 
-    public IQ handleSessionAccept(JingleElement request, XMPPConnection connection) {
+    IQ handleSessionAccept(JingleElement request, XMPPConnection connection) {
         LOGGER.log(Level.INFO, "RECEIVED SESSION ACCEPT!");
         JingleContentElement contentElement = null;
         for (JingleContentElement c : request.getContents()) {
@@ -169,26 +173,26 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         return IQ.createResultIQ(request);
     }
 
-    public IQ handleContentModify(JingleElement request, XMPPConnection connection) {
+    private IQ handleContentModify(JingleElement request, XMPPConnection connection) {
         return IQ.createErrorResponse(request, XMPPError.Condition.feature_not_implemented);
     }
 
-    public IQ handleDescriptionInfo(JingleElement request, XMPPConnection connection) {
+    private IQ handleDescriptionInfo(JingleElement request, XMPPConnection connection) {
         return IQ.createErrorResponse(request, XMPPError.Condition.feature_not_implemented);
     }
 
     public void handleContentRemove(JingleSession session, XMPPConnection connection) {
     }
 
-    public IQ handleSecurityInfo(JingleElement request, XMPPConnection connection) {
+    private IQ handleSecurityInfo(JingleElement request, XMPPConnection connection) {
         return IQ.createErrorResponse(request, XMPPError.Condition.feature_not_implemented);
     }
 
-    public IQ handleSessionInfo(JingleElement request, XMPPConnection connection) {
+    private IQ handleSessionInfo(JingleElement request, XMPPConnection connection) {
         return IQ.createResultIQ(request);
     }
 
-    public IQ handleTransportAccept(JingleElement request, XMPPConnection connection) {
+    private IQ handleTransportAccept(JingleElement request, XMPPConnection connection) {
 
         if (pendingReplacingTransport == null) {
             LOGGER.log(Level.WARNING, "Received transport-accept, but apparently we did not try to replace the transport.");
@@ -203,14 +207,14 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         return IQ.createResultIQ(request);
     }
 
-    public IQ handleTransportInfo(JingleElement request, XMPPConnection connection) {
+    private IQ handleTransportInfo(JingleElement request, XMPPConnection connection) {
         assert request.getContents().size() == 1;
         JingleContentElement content = request.getContents().get(0);
 
         return transport.handleTransportInfo(content.getTransport().getInfo(), request);
     }
 
-    public IQ handleTransportReject(JingleElement request, XMPPConnection connection) {
+    private IQ handleTransportReject(JingleElement request, XMPPConnection connection) {
         if (pendingReplacingTransport == null) {
             throw new AssertionError("We didn't try to replace the transport.");
         }
@@ -224,7 +228,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         return IQ.createResultIQ(request);
     }
 
-    public IQ handleTransportReplace(final JingleElement request, final XMPPConnection connection) {
+    private IQ handleTransportReplace(final JingleElement request, final XMPPConnection connection) {
         //Tie Break?
         if (pendingReplacingTransport != null) {
             Async.go(new Runnable() {
@@ -490,7 +494,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
         connection.createStanzaCollectorAndSend(transportReplace).nextResultOrThrow();
     }
 
-    public static String randomName() {
+    private static String randomName() {
         return "cont-" + StringUtils.randomString(16);
     }
 }

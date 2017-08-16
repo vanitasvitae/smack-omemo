@@ -60,6 +60,7 @@ import org.jxmpp.jid.FullJid;
  * Created by vanitas on 22.07.17.
  */
 public final class JingleFileTransferManager extends Manager implements JingleDescriptionManager {
+
     private static final Logger LOGGER = Logger.getLogger(JingleFileTransferManager.class.getName());
 
     private static final WeakHashMap<XMPPConnection, JingleFileTransferManager> INSTANCES = new WeakHashMap<>();

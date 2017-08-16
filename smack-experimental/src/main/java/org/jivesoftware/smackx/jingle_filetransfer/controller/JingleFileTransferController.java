@@ -30,4 +30,6 @@ public interface JingleFileTransferController extends JingleDescriptionControlle
     void removeProgressListener(ProgressListener listener);
 
     JingleFileTransferFile getFile();
+
+    void cancel();
 }

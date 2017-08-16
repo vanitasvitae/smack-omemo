@@ -32,7 +32,7 @@ public class S5BTransportException extends FailedTransportException {
     public static class CandidateError extends S5BTransportException {
         protected static final long serialVersionUID = 1L;
 
-        public CandidateError(Throwable throwable) {
+        CandidateError(Throwable throwable) {
             super(throwable);
         }
     }
@@ -40,7 +40,7 @@ public class S5BTransportException extends FailedTransportException {
     public static class ProxyError extends S5BTransportException {
         protected static final long serialVersionUID = 1L;
 
-        public ProxyError(Throwable throwable) {
+        ProxyError(Throwable throwable) {
             super(throwable);
         }
     }

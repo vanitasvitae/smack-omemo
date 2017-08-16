@@ -172,7 +172,7 @@ public class JingleFileTransferIntegrationTest extends AbstractSmackIntegrationT
     }
 
     @AfterClass
-    public void cleanup() {
+    public static void cleanup() {
         Socks5Proxy.getSocks5Proxy().stop();
     }
 }

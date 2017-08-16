@@ -35,9 +35,9 @@ public abstract class AesGcmNoPadding {
 
     private final int length;
     protected final Cipher cipher;
-    protected final byte[] key, iv, keyAndIv;
+    private final byte[] key, iv, keyAndIv;
 
-    protected AesGcmNoPadding(int bits, int MODE) throws NoSuchAlgorithmException, NoSuchProviderException,
+    AesGcmNoPadding(int bits, int MODE) throws NoSuchAlgorithmException, NoSuchProviderException,
             NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException {
         this.length = bits;
         int bytes = bits / 8;
@@ -136,7 +136,7 @@ public abstract class AesGcmNoPadding {
 
     public abstract String getNamespace();
 
-    public static byte[] copyOfRange(byte[] source, int start, int end) {
+    static byte[] copyOfRange(byte[] source, int start, int end) {
         byte[] copy = new byte[end - start];
         System.arraycopy(source, start, copy, 0, end - start);
         return copy;

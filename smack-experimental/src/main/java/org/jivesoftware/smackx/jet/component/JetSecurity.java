@@ -52,19 +52,19 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
     private final String methodNamespace;
 
     private AesGcmNoPadding aesKey;
-    private ExtensionElement child;
-    private String cipherName;
-    private String name;
+    private final ExtensionElement child;
+    private final String cipherName;
+    private final String contentName;
 
     public JetSecurity(JetSecurityElement element) {
         super();
         this.child = element.getChild();
         this.methodNamespace = element.getMethodNamespace();
-        this.name = element.getName();
+        this.contentName = element.getContentName();
         this.cipherName = element.getCipherName();
     }
 
-    public JetSecurity(JingleEncryptionMethod method, FullJid recipient, String name, String cipherName)
+    public JetSecurity(JingleEncryptionMethod method, FullJid recipient, String contentName, String cipherName)
             throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException,
             InvalidAlgorithmParameterException, InvalidKeyException, InterruptedException,
             JingleEncryptionMethod.JingleEncryptionException, SmackException.NotConnectedException,
@@ -73,11 +73,11 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
         this.methodNamespace = method.getNamespace();
         this.aesKey = AesGcmNoPadding.createEncryptionKey(cipherName);
         this.child = method.encryptJingleTransfer(recipient, aesKey.getKeyAndIv());
-        this.name = name;
+        this.contentName = contentName;
         this.cipherName = cipherName;
     }
 
-    public void decryptEncryptionKey(JingleEncryptionMethod method, FullJid sender)
+    private void decryptEncryptionKey(JingleEncryptionMethod method, FullJid sender)
             throws InterruptedException, JingleEncryptionMethod.JingleEncryptionException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException, NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, NoSuchProviderException, InvalidKeyException, NoSuchPaddingException {
@@ -87,7 +87,7 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
 
     @Override
     public JetSecurityElement getElement() {
-        return new JetSecurityElement(name, cipherName, child);
+        return new JetSecurityElement(contentName, cipherName, child);
     }
 
     @Override

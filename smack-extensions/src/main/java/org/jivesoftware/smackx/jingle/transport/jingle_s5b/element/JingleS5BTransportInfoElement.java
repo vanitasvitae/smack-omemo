@@ -29,7 +29,7 @@ public abstract class JingleS5BTransportInfoElement extends JingleContentTranspo
 
         private final String candidateId;
 
-        protected JingleS5BCandidateTransportInfoElement(String candidateId) {
+        JingleS5BCandidateTransportInfoElement(String candidateId) {
             this.candidateId = candidateId;
         }
 

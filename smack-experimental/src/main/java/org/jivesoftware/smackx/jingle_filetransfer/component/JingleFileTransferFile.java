@@ -58,7 +58,7 @@ public abstract class JingleFileTransferFile {
 
     public static class LocalFile extends JingleFileTransferFile {
 
-        private File file;
+        private final File file;
         private String name;
         private String description;
         private String mediaType;
@@ -137,7 +137,7 @@ public abstract class JingleFileTransferFile {
 
     public static class RemoteFile extends JingleFileTransferFile {
 
-        private JingleFileTransferChildElement file;
+        private final JingleFileTransferChildElement file;
 
         public RemoteFile(JingleFileTransferChildElement file) {
             super();

@@ -121,7 +121,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         return 10000; // SOCKS5 has a high priority
     }
 
-    public List<JingleTransportCandidate<?>> collectCandidates() {
+    List<JingleTransportCandidate<?>> collectCandidates() {
         List<JingleTransportCandidate<?>> candidates = new ArrayList<>();
 
         //Local host
@@ -156,21 +156,21 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         return socks5BytestreamManager.getLocalStreamHost();
     }
 
-    public List<Bytestream.StreamHost> getServersStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+    private List<Bytestream.StreamHost> getServersStreamHosts() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         if (availableStreamHosts == null) {
             availableStreamHosts = queryServersStreamHosts();
         }
         return availableStreamHosts;
     }
 
-    public List<Bytestream.StreamHost> getLocalStreamHosts() {
+    private List<Bytestream.StreamHost> getLocalStreamHosts() {
         if (localStreamHosts == null) {
             localStreamHosts = queryLocalStreamHosts();
         }
         return localStreamHosts;
     }
 
-    public List<Bytestream.StreamHost> determineStreamHostInfo(List<Jid> proxies) {
+    private List<Bytestream.StreamHost> determineStreamHostInfo(List<Jid> proxies) {
         List<Bytestream.StreamHost> streamHosts = new ArrayList<>();
 
         Iterator<Jid> iterator = proxies.iterator();
@@ -192,7 +192,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         return streamHosts;
     }
 
-    private JingleElement createTransportInfo(JingleS5BTransport transport, JingleS5BTransportInfoElement info) {
+    private static JingleElement createTransportInfo(JingleS5BTransport transport, JingleS5BTransportInfoElement info) {
         JingleContent content = transport.getParent();
         JingleSession session = content.getParent();
 
@@ -222,19 +222,19 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         return jingle;
     }
 
-    JingleElement createCandidateUsed(JingleS5BTransport transport, JingleS5BTransportCandidate candidate) {
+    static JingleElement createCandidateUsed(JingleS5BTransport transport, JingleS5BTransportCandidate candidate) {
         return createTransportInfo(transport, new JingleS5BTransportInfoElement.CandidateUsed(candidate.getCandidateId()));
     }
 
-    JingleElement createCandidateError(JingleS5BTransport transport) {
+    static JingleElement createCandidateError(JingleS5BTransport transport) {
         return createTransportInfo(transport, JingleS5BTransportInfoElement.CandidateError.INSTANCE);
     }
 
-    JingleElement createProxyError(JingleS5BTransport transport) {
+    static JingleElement createProxyError(JingleS5BTransport transport) {
         return createTransportInfo(transport, JingleS5BTransportInfoElement.ProxyError.INSTANCE);
     }
 
-    JingleElement createCandidateActivated(JingleS5BTransport transport, JingleS5BTransportCandidate candidate) {
+    static JingleElement createCandidateActivated(JingleS5BTransport transport, JingleS5BTransportCandidate candidate) {
         return createTransportInfo(transport, new JingleS5BTransportInfoElement.CandidateActivated(candidate.getCandidateId()));
     }
 
@@ -259,7 +259,7 @@ public final class JingleS5BTransportManager extends Manager implements JingleTr
         return getPriority() > other.getPriority() ? 1 : -1;
     }
 
-    private ConnectionListener connectionListener = new ConnectionListener() {
+    private final ConnectionListener connectionListener = new ConnectionListener() {
 
         @Override
         public void connected(XMPPConnection connection) {
