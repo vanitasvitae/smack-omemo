@@ -33,17 +33,18 @@ import org.jivesoftware.smackx.jingle_filetransfer.controller.OutgoingFileOfferC
 /**
  * Created by vanitas on 26.07.17.
  */
-public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<JingleFileTransferFile.LocalFile> implements OutgoingFileOfferController {
+public class JingleOutgoingFileOffer extends AbstractJingleFileOffer implements OutgoingFileOfferController {
     private static final Logger LOGGER = Logger.getLogger(JingleOutgoingFileOffer.class.getName());
 
     private final InputStream source;
 
     public JingleOutgoingFileOffer(File file) throws FileNotFoundException {
-        this(new JingleFileTransferFile.LocalFile(file), new FileInputStream(file));
+        super(new JingleFileTransferFile.LocalFile(file));
+        this.source = new FileInputStream(file);
     }
 
-    public JingleOutgoingFileOffer(JingleFileTransferFile.LocalFile localFile, InputStream inputStream) {
-        super(localFile);
+    public JingleOutgoingFileOffer(JingleFileTransferFile.StreamFile streamFile, InputStream inputStream) {
+        super(streamFile);
         this.source = inputStream;
     }
 
@@ -79,12 +80,11 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<JingleFileT
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception while sending file: " + e, e);
         } finally {
-            if (source != null) {
-                try {
-                    source.close();
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "Could not close FileInputStream: " + e, e);
-                }
+
+            try {
+                source.close();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Could not close FileInputStream: " + e, e);
             }
         }
 

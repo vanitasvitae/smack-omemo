@@ -17,13 +17,21 @@
 package org.jivesoftware.smackx.jet;
 
 import java.io.File;
+import java.io.InputStream;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.HashMap;
 import java.util.WeakHashMap;
 import java.util.logging.Logger;
 
+import javax.crypto.NoSuchPaddingException;
+
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smackx.ciphers.Aes256GcmNoPadding;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
@@ -37,6 +45,7 @@ import org.jivesoftware.smackx.jingle.component.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.util.Role;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
+import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransferFile;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleOutgoingFileOffer;
 import org.jivesoftware.smackx.jingle_filetransfer.controller.OutgoingFileOfferController;
 
@@ -87,10 +96,7 @@ public final class JetManager extends Manager implements JingleDescriptionManage
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
         }
 
-        ServiceDiscoveryManager disco = ServiceDiscoveryManager.getInstanceFor(connection());
-        if (!disco.supportsFeature(recipient, getNamespace()) || !disco.supportsFeature(recipient, envelopeManager.getJingleEnvelopeNamespace())) {
-            throw new SmackException.FeatureNotSupportedException(getNamespace(), recipient);
-        }
+        throwIfRecipientLacksSupport(recipient);
 
         JingleSession session = jingleManager.createSession(Role.initiator, recipient);
 
@@ -101,6 +107,30 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         if (filename != null) {
             offer.getFile().setName(filename);
         }
+        content.setDescription(offer);
+
+        JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(recipient);
+        content.setTransport(transportManager.createTransportForInitiator(content));
+
+        JetSecurity security = new JetSecurity(envelopeManager, recipient, content.getName(), Aes256GcmNoPadding.NAMESPACE);
+        content.setSecurity(security);
+        session.sendInitiate(connection());
+
+        return offer;
+    }
+
+    public OutgoingFileOfferController sendEncryptedStream(InputStream inputStream, JingleFileTransferFile.StreamFile file, FullJid recipient, JingleEnvelopeManager envelopeManager)
+            throws XMPPException.XMPPErrorException, SmackException.FeatureNotSupportedException, SmackException.NotConnectedException,
+            InterruptedException, SmackException.NoResponseException, NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException,
+            JingleEnvelopeManager.JingleEncryptionException, NoSuchProviderException, InvalidAlgorithmParameterException {
+
+        throwIfRecipientLacksSupport(recipient);
+        JingleSession session = jingleManager.createSession(Role.initiator, recipient);
+
+        JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
+        session.addContent(content);
+
+        JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(file, inputStream);
         content.setDescription(offer);
 
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(recipient);
@@ -150,5 +180,11 @@ public final class JetManager extends Manager implements JingleDescriptionManage
     @Override
     public void notifyContentAdd(JingleSession session, JingleContent content) {
         JingleFileTransferManager.getInstanceFor(connection()).notifyContentAdd(session, content);
+    }
+
+    private void throwIfRecipientLacksSupport(FullJid recipient) throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException, SmackException.FeatureNotSupportedException {
+        if (!ServiceDiscoveryManager.getInstanceFor(connection()).supportsFeature(recipient, getNamespace())) {
+            throw new SmackException.FeatureNotSupportedException(getNamespace(), recipient);
+        }
     }
 }

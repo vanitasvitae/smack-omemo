@@ -38,7 +38,7 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChi
  * Behind the scenes logic of an incoming Jingle file offer.
  * Created by vanitas on 26.07.17.
  */
-public class JingleIncomingFileOffer extends AbstractJingleFileOffer<JingleFileTransferFile.RemoteFile> implements IncomingFileOfferController {
+public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements IncomingFileOfferController {
 
     private static final Logger LOGGER = Logger.getLogger(JingleIncomingFileOffer.class.getName());
     private OutputStream target;

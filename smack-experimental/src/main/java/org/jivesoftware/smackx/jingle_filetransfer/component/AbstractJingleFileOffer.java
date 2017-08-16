@@ -19,12 +19,9 @@ package org.jivesoftware.smackx.jingle_filetransfer.component;
 /**
  * Created by vanitas on 22.07.17.
  */
-public abstract class AbstractJingleFileOffer<D extends JingleFileTransferFile> extends JingleFileTransfer {
+public abstract class AbstractJingleFileOffer extends JingleFileTransfer {
 
-    AbstractJingleFileOffer(D fileTransferFile) {
+    AbstractJingleFileOffer(JingleFileTransferFile fileTransferFile) {
         super(fileTransferFile);
     }
-
-    @Override
-    public abstract D getFile();
 }

@@ -175,4 +175,51 @@ public abstract class JingleFileTransferFile {
         }
     }
 
+    public static class StreamFile extends JingleFileTransferFile {
+
+        private String name, description, mediaType;
+        private long size;
+        private Date date;
+        private HashElement hashElement;
+
+        public StreamFile(String name, long size, String description, String mediaType, Date date, HashElement hashElement) {
+            this.name = name;
+            this.size = size;
+            this.description = description;
+            this.mediaType = mediaType;
+            this.date = date;
+            this.hashElement = hashElement;
+        }
+
+        @Override
+        public Date getDate() {
+            return date;
+        }
+
+        @Override
+        public long getSize() {
+            return size;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String getDescription() {
+            return description;
+        }
+
+        @Override
+        public String getMediaType() {
+            return mediaType;
+        }
+
+        @Override
+        public HashElement getHashElement() {
+            return hashElement;
+        }
+    }
+
 }

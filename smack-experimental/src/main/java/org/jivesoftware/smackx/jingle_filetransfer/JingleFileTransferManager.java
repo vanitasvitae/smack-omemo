@@ -130,7 +130,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         return offer;
     }
 
-    public OutgoingFileOfferController sendStream(final InputStream stream, JingleFileTransferFile.LocalFile file, FullJid recipient) throws SmackException.FeatureNotSupportedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+    public OutgoingFileOfferController sendStream(final InputStream stream, JingleFileTransferFile.StreamFile file, FullJid recipient) throws SmackException.FeatureNotSupportedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         if (!ServiceDiscoveryManager.getInstanceFor(connection()).supportsFeature(recipient, getNamespace())) {
             throw new SmackException.FeatureNotSupportedException(getNamespace(), recipient);
         }

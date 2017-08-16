@@ -16,21 +16,24 @@
  */
 package org.jivesoftware.smackx.jet;
 
-import static org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferIntegrationTest.prepareNewTestFile;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.cleanServerSideTraces;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.setUpOmemoManager;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.subscribe;
 import static org.jivesoftware.smackx.omemo.OmemoIntegrationTestHelper.unidirectionalTrust;
 import static org.junit.Assert.assertArrayEquals;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Random;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.JingleIBBTransportManager;
+import org.jivesoftware.smackx.jingle.transport.jingle_s5b.JingleS5BTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
+import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransferFile;
 import org.jivesoftware.smackx.jingle_filetransfer.controller.IncomingFileOfferController;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingFileOfferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.ProgressListener;
@@ -51,19 +54,8 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
     private OmemoManager oa, ob;
     private JetManager ja, jb;
     private JingleIBBTransportManager ia, ib;
+    private JingleS5BTransportManager sa, sb;
     private OmemoStore<?,?,?,?,?,?,?,?,?> store;
-
-    private static final File tempDir;
-
-    static {
-        String userHome = System.getProperty("user.home");
-        if (userHome != null) {
-            File f = new File(userHome);
-            tempDir = new File(f, ".config/smack-integration-test/");
-        } else {
-            tempDir = new File("int_test_jingle");
-        }
-    }
 
     public JetIntegrationTest(SmackIntegrationTestEnvironment environment)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
@@ -80,6 +72,8 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
         jb = JetManager.getInstanceFor(conTwo);
         ia = JingleIBBTransportManager.getInstanceFor(conOne);
         ib = JingleIBBTransportManager.getInstanceFor(conTwo);
+        sa = JingleS5BTransportManager.getInstanceFor(conOne);
+        sb = JingleS5BTransportManager.getInstanceFor(conTwo);
         JetManager.registerEnvelopeProvider(OmemoConstants.OMEMO_NAMESPACE_V_AXOLOTL, new OmemoVAxolotlProvider());
     }
 
@@ -88,6 +82,8 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
             throws Exception {
 
         final SimpleResultSyncPoint received = new SimpleResultSyncPoint();
+
+        Random weakRandom = new Random();
 
         //Setup OMEMO
         subscribe(oa, ob, "Bob");
@@ -100,8 +96,10 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
         ja.registerEnvelopeManager(oa);
         jb.registerEnvelopeManager(ob);
 
-        File source = prepareNewTestFile("source");
-        final File target = new File(tempDir, "target");
+        byte[] sourceBytes = new byte[16000];
+        weakRandom.nextBytes(sourceBytes);
+        InputStream sourceStream = new ByteArrayInputStream(sourceBytes);
+        final ByteArrayOutputStream targetStream = new ByteArrayOutputStream(16000);
 
         JingleFileTransferManager.getInstanceFor(conTwo).addIncomingFileOfferListener(new IncomingFileOfferListener() {
             @Override
@@ -123,27 +121,18 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
                             received.signal();
                         }
                     });
-                    offer.accept(conTwo, target);
+                    offer.accept(conTwo, targetStream);
                 } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException | IOException e) {
                     received.signal(e);
                 }
             }
         });
 
-        ja.sendEncryptedFile(source, conTwo.getUser().asFullJidOrThrow(), oa);
+        ja.sendEncryptedStream(sourceStream, new JingleFileTransferFile.StreamFile("test", sourceBytes.length, "desc", null, null, null), conTwo.getUser().asFullJidOrThrow(), oa);
 
         received.waitForResult(60 * 1000);
 
-        FileInputStream sIn = new FileInputStream(source);
-        FileInputStream tIn = new FileInputStream(target);
-
-        byte[] sB = new byte[(int) source.length()];
-        byte[] tB = new byte[(int) target.length()];
-
-        sIn.read(sB);
-        tIn.read(tB);
-
-        assertArrayEquals(sB, tB);
+        assertArrayEquals(sourceBytes, targetStream.toByteArray());
     }
 
     @Override
