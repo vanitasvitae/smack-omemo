@@ -31,7 +31,7 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.ciphers.AesGcmNoPadding;
 import org.jivesoftware.smackx.jet.JetManager;
-import org.jivesoftware.smackx.jet.JingleEncryptionMethod;
+import org.jivesoftware.smackx.jet.JingleEnvelopeManager;
 import org.jivesoftware.smackx.jet.element.JetSecurityElement;
 import org.jivesoftware.smackx.jingle.callbacks.JingleSecurityCallback;
 import org.jivesoftware.smackx.jingle.component.JingleSecurity;
@@ -49,7 +49,7 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
     public static final String NAMESPACE_V0 = "urn:xmpp:jingle:jet:0";
     public static final String NAMESPACE = NAMESPACE_V0;
 
-    private final String methodNamespace;
+    private final String envelopeNamespace;
 
     private AesGcmNoPadding aesKey;
     private final ExtensionElement child;
@@ -59,26 +59,26 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
     public JetSecurity(JetSecurityElement element) {
         super();
         this.child = element.getChild();
-        this.methodNamespace = element.getMethodNamespace();
+        this.envelopeNamespace = element.getEnvelopeNamespace();
         this.contentName = element.getContentName();
         this.cipherName = element.getCipherName();
     }
 
-    public JetSecurity(JingleEncryptionMethod method, FullJid recipient, String contentName, String cipherName)
+    public JetSecurity(JingleEnvelopeManager envelopeManager, FullJid recipient, String contentName, String cipherName)
             throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException,
             InvalidAlgorithmParameterException, InvalidKeyException, InterruptedException,
-            JingleEncryptionMethod.JingleEncryptionException, SmackException.NotConnectedException,
+            JingleEnvelopeManager.JingleEncryptionException, SmackException.NotConnectedException,
             SmackException.NoResponseException {
 
-        this.methodNamespace = method.getNamespace();
+        this.envelopeNamespace = envelopeManager.getJingleEnvelopeNamespace();
         this.aesKey = AesGcmNoPadding.createEncryptionKey(cipherName);
-        this.child = method.encryptJingleTransfer(recipient, aesKey.getKeyAndIv());
+        this.child = envelopeManager.encryptJingleTransfer(recipient, aesKey.getKeyAndIv());
         this.contentName = contentName;
         this.cipherName = cipherName;
     }
 
-    private void decryptEncryptionKey(JingleEncryptionMethod method, FullJid sender)
-            throws InterruptedException, JingleEncryptionMethod.JingleEncryptionException, XMPPException.XMPPErrorException,
+    private void decryptEncryptionKey(JingleEnvelopeManager method, FullJid sender)
+            throws InterruptedException, JingleEnvelopeManager.JingleEncryptionException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException, NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, NoSuchProviderException, InvalidKeyException, NoSuchPaddingException {
         byte[] keyAndIv = method.decryptJingleTransfer(sender, child);
@@ -125,18 +125,18 @@ public class JetSecurity extends JingleSecurity<JetSecurityElement> {
             return;
         }
 
-        JingleEncryptionMethod method = JetManager.getInstanceFor(connection).getEncryptionMethod(getMethodNamespace());
+        JingleEnvelopeManager method = JetManager.getInstanceFor(connection).getEnvelopeManager(getEnvelopeNamespace());
         if (method == null) {
-            throw new AssertionError("No JingleEncryptionMethodManager found for " + getMethodNamespace());
+            throw new AssertionError("No JingleEncryptionMethodManager found for " + getEnvelopeNamespace());
         }
         try {
             decryptEncryptionKey(method, sender);
-        } catch (InterruptedException | NoSuchPaddingException | InvalidKeyException | NoSuchProviderException | InvalidAlgorithmParameterException | NoSuchAlgorithmException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException | JingleEncryptionMethod.JingleEncryptionException e) {
+        } catch (InterruptedException | NoSuchPaddingException | InvalidKeyException | NoSuchProviderException | InvalidAlgorithmParameterException | NoSuchAlgorithmException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException | JingleEnvelopeManager.JingleEncryptionException e) {
             LOGGER.log(Level.SEVERE, "Could not decrypt security key: " + e, e);
         }
     }
 
-    public String getMethodNamespace() {
-        return methodNamespace;
+    public String getEnvelopeNamespace() {
+        return envelopeNamespace;
     }
 }

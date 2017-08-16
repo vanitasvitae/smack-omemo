@@ -298,7 +298,7 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
                 .setName(name)
                 .setCreator(creator)
                 .setSenders(senders)
-                .setDisposition(disposition);;
+                .setDisposition(disposition);
 
         if (description != null) {
             builder.setDescription(description.getElement());

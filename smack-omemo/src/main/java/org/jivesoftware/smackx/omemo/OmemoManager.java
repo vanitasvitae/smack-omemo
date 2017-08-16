@@ -46,7 +46,7 @@ import org.jivesoftware.smackx.carbons.CarbonManager;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
 import org.jivesoftware.smackx.hints.element.StoreHint;
-import org.jivesoftware.smackx.jet.JingleEncryptionMethod;
+import org.jivesoftware.smackx.jet.JingleEnvelopeManager;
 import org.jivesoftware.smackx.mam.MamManager;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
@@ -91,7 +91,7 @@ import org.jxmpp.stringprep.XmppStringprepException;
  * @author Paul Schaub
  */
 
-public final class OmemoManager extends Manager implements JingleEncryptionMethod {
+public final class OmemoManager extends Manager implements JingleEnvelopeManager {
     private static final Logger LOGGER = Logger.getLogger(OmemoManager.class.getName());
 
     private static final WeakHashMap<XMPPConnection, WeakHashMap<Integer,OmemoManager>> INSTANCES = new WeakHashMap<>();
@@ -760,9 +760,13 @@ public final class OmemoManager extends Manager implements JingleEncryptionMetho
         return connection();
     }
 
-    @Override
-    public String getNamespace() {
+    public static String getNamespace() {
         return OMEMO_NAMESPACE_V_AXOLOTL;
+    }
+
+    @Override
+    public String getJingleEnvelopeNamespace() {
+        return getNamespace();
     }
 
     /**
@@ -870,13 +874,13 @@ public final class OmemoManager extends Manager implements JingleEncryptionMetho
     }
 
     @Override
-    public byte[] decryptJingleTransfer(FullJid sender, ExtensionElement encryptionElement) throws JingleEncryptionException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
-        if (!encryptionElement.getNamespace().equals(OMEMO_NAMESPACE_V_AXOLOTL)
-                || !encryptionElement.getElementName().equals(OmemoElement.ENCRYPTED)) {
+    public byte[] decryptJingleTransfer(FullJid sender, ExtensionElement envelope) throws JingleEncryptionException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+        if (!envelope.getNamespace().equals(OMEMO_NAMESPACE_V_AXOLOTL)
+                || !envelope.getElementName().equals(OmemoElement.ENCRYPTED)) {
             throw new IllegalArgumentException("Passed ExtensionElement MUST be an OmemoElement!");
         }
 
-        OmemoElement omemoElement = (OmemoElement) encryptionElement;
+        OmemoElement omemoElement = (OmemoElement) envelope;
         Message pseudoMessage = new Message();
         pseudoMessage.setFrom(sender.asBareJid());
         pseudoMessage.addExtension(omemoElement);

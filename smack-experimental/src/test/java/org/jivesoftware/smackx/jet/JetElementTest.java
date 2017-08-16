@@ -38,13 +38,13 @@ import org.xml.sax.SAXException;
 public class JetElementTest extends SmackTestSuite {
 
     @Test
-    public void jetTest() throws InterruptedException, JingleEncryptionMethod.JingleEncryptionException, NoSuchAlgorithmException, SmackException.NotConnectedException, SmackException.NoResponseException, IOException, SAXException {
+    public void jetTest() throws InterruptedException, JingleEnvelopeManager.JingleEncryptionException, NoSuchAlgorithmException, SmackException.NotConnectedException, SmackException.NoResponseException, IOException, SAXException {
         ExtensionElement child = new SecurityStub().encryptJingleTransfer(null, null);
         JetSecurityElement element = new JetSecurityElement("content1", Aes128GcmNoPadding.NAMESPACE, child);
         JetSecurity security = new JetSecurity(element);
-        assertEquals(SecurityStub.NAMESPACE, security.getMethodNamespace());
+        assertEquals(SecurityStub.NAMESPACE, security.getEnvelopeNamespace());
         assertEquals(Aes128GcmNoPadding.NAMESPACE, element.getCipherName());
-        assertEquals(SecurityStub.NAMESPACE, element.getMethodNamespace());
+        assertEquals(SecurityStub.NAMESPACE, element.getEnvelopeNamespace());
         assertEquals("content1", element.getContentName());
 
         String xml = "<security xmlns='" + JetSecurity.NAMESPACE + "' " +
@@ -56,7 +56,7 @@ public class JetElementTest extends SmackTestSuite {
         assertXMLEqual(xml, security.getElement().toXML().toString());
     }
 
-    private static class SecurityStub implements JingleEncryptionMethod {
+    private static class SecurityStub implements JingleEnvelopeManager {
         public static final String NAMESPACE = "urn:xmpp:security-stub";
 
         @Override
@@ -80,7 +80,7 @@ public class JetElementTest extends SmackTestSuite {
         }
 
         @Override
-        public byte[] decryptJingleTransfer(FullJid sender, ExtensionElement encryptionElement) throws JingleEncryptionException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
+        public byte[] decryptJingleTransfer(FullJid sender, ExtensionElement envelope) throws JingleEncryptionException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
             return new byte[0];
         }
 
@@ -90,7 +90,7 @@ public class JetElementTest extends SmackTestSuite {
         }
 
         @Override
-        public String getNamespace() {
+        public String getJingleEnvelopeNamespace() {
             return NAMESPACE;
         }
     }

@@ -32,16 +32,16 @@ import org.jivesoftware.smackx.jingle.element.JingleContentSecurityElement;
  * </jingle>
  */
 public class JetSecurityElement extends JingleContentSecurityElement {
-    public static final String ATTR_NAME = "name";
-    public static final String ATTR_TYPE = "type";
-    public static final String ATTR_CIPHER = "cipher";
+    public static final String ATTR_CONTENT_NAME = "name";
+    public static final String ATTR_ENVELOPE_TYPE = "type";
+    public static final String ATTR_CIPHER_TYPE = "cipher";
 
     private final ExtensionElement child;
-    private final String name;
+    private final String contentName;
     private final String cipherName;
 
-    public JetSecurityElement(String name, String cipherName, ExtensionElement child) {
-        this.name = name;
+    public JetSecurityElement(String contentName, String cipherName, ExtensionElement child) {
+        this.contentName = contentName;
         this.child = child;
         this.cipherName = cipherName;
     }
@@ -49,9 +49,9 @@ public class JetSecurityElement extends JingleContentSecurityElement {
     @Override
     public CharSequence toXML() {
         XmlStringBuilder xml = new XmlStringBuilder(this);
-        xml.attribute(ATTR_NAME, name)
-                .attribute(ATTR_CIPHER, cipherName)
-                .attribute(ATTR_TYPE, child.getNamespace());
+        xml.attribute(ATTR_CONTENT_NAME, contentName)
+                .attribute(ATTR_CIPHER_TYPE, cipherName)
+                .attribute(ATTR_ENVELOPE_TYPE, child.getNamespace());
         xml.rightAngleBracket();
         xml.element(child);
         xml.closeElement(this);
@@ -63,7 +63,7 @@ public class JetSecurityElement extends JingleContentSecurityElement {
         return JetSecurity.NAMESPACE;
     }
 
-    public String getMethodNamespace() {
+    public String getEnvelopeNamespace() {
         return child.getNamespace();
     }
 
@@ -72,7 +72,7 @@ public class JetSecurityElement extends JingleContentSecurityElement {
     }
 
     public String getContentName() {
-        return name;
+        return contentName;
     }
 
     public String getCipherName() {

@@ -28,11 +28,15 @@ import org.jxmpp.jid.FullJid;
 /**
  * Classes that implement this interface can be used to encrypt Jingle File Transfers.
  */
-public interface JingleEncryptionMethod {
+public interface JingleEnvelopeManager {
 
-    ExtensionElement encryptJingleTransfer(FullJid recipient, byte[] keyData) throws JingleEncryptionException, InterruptedException, NoSuchAlgorithmException, SmackException.NotConnectedException, SmackException.NoResponseException;
+    ExtensionElement encryptJingleTransfer(FullJid recipient, byte[] keyData)
+            throws JingleEncryptionException, InterruptedException, NoSuchAlgorithmException,
+            SmackException.NotConnectedException, SmackException.NoResponseException;
 
-    byte[] decryptJingleTransfer(FullJid sender, ExtensionElement encryptionElement) throws JingleEncryptionException, InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException;
+    byte[] decryptJingleTransfer(FullJid sender, ExtensionElement envelope)
+            throws JingleEncryptionException, InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException;
 
     class JingleEncryptionException extends Exception {
         private static final long serialVersionUID = 1L;
@@ -44,5 +48,5 @@ public interface JingleEncryptionMethod {
 
     XMPPConnection getConnection();
 
-    String getNamespace();
+    String getJingleEnvelopeNamespace();
 }

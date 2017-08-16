@@ -37,16 +37,16 @@ public class JetSecurityProvider extends JingleContentSecurityProvider<JetSecuri
 
     @Override
     public JetSecurityElement parse(XmlPullParser parser, int initialDepth) throws Exception {
-        String name = parser.getAttributeValue("", JetSecurityElement.ATTR_NAME);
-        String cipher = parser.getAttributeValue("", JetSecurityElement.ATTR_CIPHER);
-        String type = parser.getAttributeValue("", JetSecurityElement.ATTR_TYPE);
+        String name = parser.getAttributeValue("", JetSecurityElement.ATTR_CONTENT_NAME);
+        String cipher = parser.getAttributeValue("", JetSecurityElement.ATTR_CIPHER_TYPE);
+        String type = parser.getAttributeValue("", JetSecurityElement.ATTR_ENVELOPE_TYPE);
         ExtensionElement child;
 
         Objects.requireNonNull(type);
         Objects.requireNonNull(cipher);
 
         ExtensionElementProvider<?> encryptionElementProvider =
-                JetManager.getEncryptionMethodProvider(type);
+                JetManager.getEnvelopeProvider(type);
 
         if (encryptionElementProvider != null) {
             child = encryptionElementProvider.parse(parser);

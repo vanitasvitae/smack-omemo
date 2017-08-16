@@ -80,7 +80,7 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
         jb = JetManager.getInstanceFor(conTwo);
         ia = JingleIBBTransportManager.getInstanceFor(conOne);
         ib = JingleIBBTransportManager.getInstanceFor(conTwo);
-        JetManager.registerEncryptionMethodProvider(OmemoConstants.OMEMO_NAMESPACE_V_AXOLOTL, new OmemoVAxolotlProvider());
+        JetManager.registerEnvelopeProvider(OmemoConstants.OMEMO_NAMESPACE_V_AXOLOTL, new OmemoVAxolotlProvider());
     }
 
     @SmackIntegrationTest
@@ -97,8 +97,8 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
         unidirectionalTrust(oa, ob);
         unidirectionalTrust(ob, oa);
 
-        ja.registerEncryptionMethod(oa);
-        jb.registerEncryptionMethod(ob);
+        ja.registerEnvelopeManager(oa);
+        jb.registerEnvelopeManager(ob);
 
         File source = prepareNewTestFile("source");
         final File target = new File(tempDir, "target");

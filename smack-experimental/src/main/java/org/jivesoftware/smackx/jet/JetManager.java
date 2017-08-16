@@ -50,8 +50,8 @@ public final class JetManager extends Manager implements JingleDescriptionManage
     private static final Logger LOGGER = Logger.getLogger(JetManager.class.getName());
 
     private static final WeakHashMap<XMPPConnection, JetManager> INSTANCES = new WeakHashMap<>();
-    private static final HashMap<String, JingleEncryptionMethod> encryptionMethods = new HashMap<>();
-    private static final HashMap<String, ExtensionElementProvider<?>> encryptionMethodProviders = new HashMap<>();
+    private static final HashMap<String, JingleEnvelopeManager> envelopeManagers = new HashMap<>();
+    private static final HashMap<String, ExtensionElementProvider<?>> envelopeProviders = new HashMap<>();
 
     private final JingleManager jingleManager;
 
@@ -78,17 +78,17 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         return manager;
     }
 
-    public OutgoingFileOfferController sendEncryptedFile(File file, FullJid recipient, JingleEncryptionMethod method) throws Exception {
-        return sendEncryptedFile(file, null, recipient, method);
+    public OutgoingFileOfferController sendEncryptedFile(File file, FullJid recipient, JingleEnvelopeManager envelopeManager) throws Exception {
+        return sendEncryptedFile(file, null, recipient, envelopeManager);
     }
 
-    public OutgoingFileOfferController sendEncryptedFile(File file, String filename, FullJid recipient, JingleEncryptionMethod method) throws Exception {
+    public OutgoingFileOfferController sendEncryptedFile(File file, String filename, FullJid recipient, JingleEnvelopeManager envelopeManager) throws Exception {
         if (file == null || !file.exists()) {
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
         }
 
         ServiceDiscoveryManager disco = ServiceDiscoveryManager.getInstanceFor(connection());
-        if (!disco.supportsFeature(recipient, getNamespace()) || !disco.supportsFeature(recipient, method.getNamespace())) {
+        if (!disco.supportsFeature(recipient, getNamespace()) || !disco.supportsFeature(recipient, envelopeManager.getJingleEnvelopeNamespace())) {
             throw new SmackException.FeatureNotSupportedException(getNamespace(), recipient);
         }
 
@@ -106,35 +106,35 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(recipient);
         content.setTransport(transportManager.createTransportForInitiator(content));
 
-        JetSecurity security = new JetSecurity(method, recipient, content.getName(), Aes256GcmNoPadding.NAMESPACE);
+        JetSecurity security = new JetSecurity(envelopeManager, recipient, content.getName(), Aes256GcmNoPadding.NAMESPACE);
         content.setSecurity(security);
         session.sendInitiate(connection());
 
         return offer;
     }
 
-    public void registerEncryptionMethod(JingleEncryptionMethod method) {
-        encryptionMethods.put(method.getNamespace(), method);
+    public void registerEnvelopeManager(JingleEnvelopeManager method) {
+        envelopeManagers.put(method.getJingleEnvelopeNamespace(), method);
     }
 
-    public void unregisterEncryptionMethod(String namespace) {
-        encryptionMethods.remove(namespace);
+    public void unregisterEnvelopeManager(String namespace) {
+        envelopeManagers.remove(namespace);
     }
 
-    public JingleEncryptionMethod getEncryptionMethod(String namespace) {
-        return encryptionMethods.get(namespace);
+    public JingleEnvelopeManager getEnvelopeManager(String namespace) {
+        return envelopeManagers.get(namespace);
     }
 
-    public static void registerEncryptionMethodProvider(String namespace, ExtensionElementProvider<?> provider) {
-        encryptionMethodProviders.put(namespace, provider);
+    public static void registerEnvelopeProvider(String namespace, ExtensionElementProvider<?> provider) {
+        envelopeProviders.put(namespace, provider);
     }
 
-    public static void removeEncryptionMethodProvider(String namespace) {
-        encryptionMethodProviders.remove(namespace);
+    public static void unregisterEnvelopeProvider(String namespace) {
+        envelopeProviders.remove(namespace);
     }
 
-    public static ExtensionElementProvider<?> getEncryptionMethodProvider(String namespace) {
-        return encryptionMethodProviders.get(namespace);
+    public static ExtensionElementProvider<?> getEnvelopeProvider(String namespace) {
+        return envelopeProviders.get(namespace);
     }
 
     @Override
