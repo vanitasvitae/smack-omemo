@@ -17,9 +17,8 @@
 package org.jivesoftware.smackx.jingle_filetransfer;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +30,6 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.bytestreams.BytestreamSession;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.jingle.JingleDescriptionManager;
 import org.jivesoftware.smackx.jingle.JingleManager;
@@ -97,13 +95,13 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
 
     public OutgoingFileOfferController sendFile(File file, FullJid to)
             throws SmackException.NotConnectedException, InterruptedException, XMPPException.XMPPErrorException,
-            SmackException.NoResponseException, SmackException.FeatureNotSupportedException {
+            SmackException.NoResponseException, SmackException.FeatureNotSupportedException, FileNotFoundException {
         return sendFile(file, null, to);
     }
 
     public OutgoingFileOfferController sendFile(File file, String alternativeFilename, FullJid to)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
-            SmackException.NoResponseException, SmackException.FeatureNotSupportedException {
+            SmackException.NoResponseException, SmackException.FeatureNotSupportedException, FileNotFoundException {
         if (file == null || !file.exists()) {
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
         }
@@ -142,40 +140,7 @@ public final class JingleFileTransferManager extends Manager implements JingleDe
         JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
         session.addContent(content);
 
-        JingleOutgoingFileOffer outgoingFileOffer = new JingleOutgoingFileOffer(file) {
-
-            @Override
-            public void onBytestreamReady(BytestreamSession bytestreamSession) {
-                OutputStream outputStream;
-                try {
-                    outputStream = bytestreamSession.getOutputStream();
-
-                    byte[] buf = new byte[4096];
-                    while (true) {
-                        int r = stream.read(buf);
-                        if (r < 0) {
-                            break;
-                        }
-                        outputStream.write(buf, 0, r);
-                    }
-                    outputStream.flush();
-                    outputStream.close();
-
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "Exception while sending file: " + e, e);
-                } finally {
-                    if (stream != null) {
-                        try {
-                            stream.close();
-                        } catch (IOException e) {
-                            LOGGER.log(Level.SEVERE, "Could not close FileInputStream: " + e, e);
-                        }
-                    }
-                }
-
-                notifyProgressListenersFinished();
-            }
-        };
+        JingleOutgoingFileOffer outgoingFileOffer = new JingleOutgoingFileOffer(file, stream);
 
         content.setDescription(outgoingFileOffer);
 

@@ -51,10 +51,10 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
 
     private static final Logger LOGGER = Logger.getLogger(JingleContent.class.getName());
 
-    private JingleSession parent;
-    private JingleContentElement.Creator creator;
+    private final JingleContentElement.Creator creator;
     private final String name;
     private final String disposition;
+    private JingleSession parent;
     private JingleContentElement.Senders senders;
     private JingleDescription<?> description;
     private JingleTransport<?> transport;

@@ -18,6 +18,7 @@ package org.jivesoftware.smackx.jingle_filetransfer.component;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,12 +36,15 @@ import org.jivesoftware.smackx.jingle_filetransfer.controller.OutgoingFileOfferC
 public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<JingleFileTransferFile.LocalFile> implements OutgoingFileOfferController {
     private static final Logger LOGGER = Logger.getLogger(JingleOutgoingFileOffer.class.getName());
 
-    public JingleOutgoingFileOffer(File file) {
-        this(new JingleFileTransferFile.LocalFile(file));
+    private final InputStream source;
+
+    public JingleOutgoingFileOffer(File file) throws FileNotFoundException {
+        this(new JingleFileTransferFile.LocalFile(file), new FileInputStream(file));
     }
 
-    public JingleOutgoingFileOffer(JingleFileTransferFile.LocalFile localFile) {
+    public JingleOutgoingFileOffer(JingleFileTransferFile.LocalFile localFile, InputStream inputStream) {
         super(localFile);
+        this.source = inputStream;
     }
 
     @Override
@@ -50,28 +54,34 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer<JingleFileT
 
     @Override
     public void onBytestreamReady(BytestreamSession bytestreamSession) {
-        File mFile = ((JingleFileTransferFile.LocalFile) file).getFile();
+        if (source == null) {
+            throw new IllegalStateException("Source InputStream is null!");
+        }
+
         OutputStream outputStream = null;
-        InputStream inputStream = null;
 
         try {
             outputStream = bytestreamSession.getOutputStream();
-            inputStream = new FileInputStream(mFile);
 
-            byte[] fileBuf = new byte[(int) mFile.length()];
+            byte[] buf = new byte[8192];
 
-            inputStream.read(fileBuf);
+            while (true) {
+                int r = source.read(buf);
+                if (r < 0) {
+                    break;
+                }
+                outputStream.write(buf, 0, r);
+            }
 
-            outputStream.write(fileBuf);
             outputStream.flush();
             outputStream.close();
 
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception while sending file: " + e, e);
         } finally {
-            if (inputStream != null) {
+            if (source != null) {
                 try {
-                    inputStream.close();
+                    source.close();
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Could not close FileInputStream: " + e, e);
                 }
