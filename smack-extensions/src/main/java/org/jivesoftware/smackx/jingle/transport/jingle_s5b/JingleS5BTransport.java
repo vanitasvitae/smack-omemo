@@ -236,11 +236,10 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
     private void establishBytestreamSession(XMPPConnection connection)
             throws SmackException.NotConnectedException, InterruptedException {
         Socks5Proxy.getSocks5Proxy().addTransfer(ourDstAddr);
-        JingleS5BTransportManager transportManager = JingleS5BTransportManager.getInstanceFor(connection);
         this.ourSelectedCandidate = connectToCandidates(MAX_TIMEOUT);
 
         if (ourSelectedCandidate == CANDIDATE_FAILURE) {
-            connection.createStanzaCollectorAndSend(transportManager.createCandidateError(this));
+            connection.createStanzaCollectorAndSend(JingleS5BTransportManager.createCandidateError(this));
             return;
         }
 
@@ -248,7 +247,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
             throw new AssertionError("MUST NOT BE NULL.");
         }
 
-        connection.createStanzaCollectorAndSend(transportManager.createCandidateUsed(this, ourSelectedCandidate));
+        connection.createStanzaCollectorAndSend(JingleS5BTransportManager.createCandidateUsed(this, ourSelectedCandidate));
         connectIfReady();
     }
 
@@ -281,7 +280,6 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
     @SuppressWarnings("ReferenceEquality")
     private void connectIfReady() {
-        final JingleS5BTransportManager jingleS5BTransportManager = JingleS5BTransportManager.getInstanceFor(getParent().getParent().getJingleManager().getConnection());
         final JingleSession session = getParent().getParent();
 
         if (ourSelectedCandidate == null || theirSelectedCandidate == null) {
@@ -331,7 +329,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
                     @Override
                     public void run() {
                         try {
-                            session.getJingleManager().getConnection().createStanzaCollectorAndSend(jingleS5BTransportManager.createProxyError(JingleS5BTransport.this));
+                            session.getJingleManager().getConnection().createStanzaCollectorAndSend(JingleS5BTransportManager.createProxyError(JingleS5BTransport.this));
                         } catch (SmackException.NotConnectedException | InterruptedException e1) {
                             LOGGER.log(Level.SEVERE, "Could not send proxy error: " + e, e);
                         }
@@ -344,7 +342,7 @@ public class JingleS5BTransport extends JingleTransport<JingleS5BTransportElemen
 
             if (isProxy) {
                 LOGGER.log(Level.INFO, "Send candidate-activate.");
-                JingleElement candidateActivate = jingleS5BTransportManager.createCandidateActivated((JingleS5BTransport) nominated.getParent(), nominated);
+                JingleElement candidateActivate = JingleS5BTransportManager.createCandidateActivated((JingleS5BTransport) nominated.getParent(), nominated);
 
                 try {
                     session.getJingleManager().getConnection().createStanzaCollectorAndSend(candidateActivate)

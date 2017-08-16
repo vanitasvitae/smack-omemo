@@ -963,50 +963,10 @@ public abstract class AbstractXMPPConnection implements XMPPConnection {
         replyTimeout = timeout;
     }
 
-    /**
-     * Set the default value used to determine if new connection will reply to unknown IQ requests. The pre-configured
-     * default is 'true'.
-     *
-     * @param replyToUnkownIqDefault
-     * @see #setReplyToUnknownIq(boolean)
-     * @deprecated Use {@link SmackConfiguration#setUnknownIqRequestReplyMode(org.jivesoftware.smack.SmackConfiguration.UnknownIqRequestReplyMode)} instead.
-     */
-    @Deprecated
-    // TODO Remove in Smack 4.3
-    public static void setReplyToUnknownIqDefault(boolean replyToUnkownIqDefault) {
-        SmackConfiguration.UnknownIqRequestReplyMode mode;
-        if (replyToUnkownIqDefault) {
-            mode = SmackConfiguration.UnknownIqRequestReplyMode.replyServiceUnavailable;
-        } else {
-            mode = SmackConfiguration.UnknownIqRequestReplyMode.doNotReply;
-        }
-        SmackConfiguration.setUnknownIqRequestReplyMode(mode);
-    }
-
     private SmackConfiguration.UnknownIqRequestReplyMode unknownIqRequestReplyMode = SmackConfiguration.getUnknownIqRequestReplyMode();
 
     public void setUnknownIqRequestReplyMode(UnknownIqRequestReplyMode unknownIqRequestReplyMode) {
         this.unknownIqRequestReplyMode = Objects.requireNonNull(unknownIqRequestReplyMode, "Mode must not be null");
-    }
-
-    /**
-     * Set if Smack will automatically send
-     * {@link org.jivesoftware.smack.packet.XMPPError.Condition#feature_not_implemented} when a request IQ without a
-     * registered {@link IQRequestHandler} is received.
-     *
-     * @param replyToUnknownIq
-     * @deprecated use {@link #setUnknownIqRequestReplyMode(UnknownIqRequestReplyMode)} instead.
-     */
-    @Deprecated
-    // TODO Remove in Smack 4.3
-    public void setReplyToUnknownIq(boolean replyToUnknownIq) {
-        SmackConfiguration.UnknownIqRequestReplyMode mode;
-        if (replyToUnknownIq) {
-            mode = SmackConfiguration.UnknownIqRequestReplyMode.replyServiceUnavailable;
-        } else {
-            mode = SmackConfiguration.UnknownIqRequestReplyMode.doNotReply;
-        }
-        unknownIqRequestReplyMode = mode;
     }
 
     protected void parseAndProcessStanza(XmlPullParser parser) throws Exception {
@@ -1476,12 +1436,14 @@ public abstract class AbstractXMPPConnection implements XMPPConnection {
         streamFeatures.put(key, feature);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void sendStanzaWithResponseCallback(Stanza stanza, StanzaFilter replyFilter,
                     StanzaListener callback) throws NotConnectedException, InterruptedException {
         sendStanzaWithResponseCallback(stanza, replyFilter, callback, null);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void sendStanzaWithResponseCallback(Stanza stanza, StanzaFilter replyFilter,
                     StanzaListener callback, ExceptionCallback exceptionCallback)
@@ -1571,7 +1533,7 @@ public abstract class AbstractXMPPConnection implements XMPPConnection {
         return future;
     }
 
-    @SuppressWarnings("FutureReturnValueIgnored")
+    @SuppressWarnings({ "FutureReturnValueIgnored", "deprecation" })
     @Override
     public void sendStanzaWithResponseCallback(Stanza stanza, final StanzaFilter replyFilter,
                     final StanzaListener callback, final ExceptionCallback exceptionCallback,
@@ -1624,18 +1586,21 @@ public abstract class AbstractXMPPConnection implements XMPPConnection {
         sendStanza(stanza);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void sendIqWithResponseCallback(IQ iqRequest, StanzaListener callback)
                     throws NotConnectedException, InterruptedException {
         sendIqWithResponseCallback(iqRequest, callback, null);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void sendIqWithResponseCallback(IQ iqRequest, StanzaListener callback,
                     ExceptionCallback exceptionCallback) throws NotConnectedException, InterruptedException {
         sendIqWithResponseCallback(iqRequest, callback, exceptionCallback, getReplyTimeout());
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void sendIqWithResponseCallback(IQ iqRequest, final StanzaListener callback,
                     final ExceptionCallback exceptionCallback, long timeout)

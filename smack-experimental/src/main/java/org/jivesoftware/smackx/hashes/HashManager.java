@@ -16,6 +16,8 @@
  */
 package org.jivesoftware.smackx.hashes;
 
+import static org.jivesoftware.smack.util.StringUtils.encodeHex;
+import static org.jivesoftware.smack.util.StringUtils.toUtf8Bytes;
 import static org.jivesoftware.smackx.hashes.HashManager.ALGORITHM.BLAKE2B160;
 import static org.jivesoftware.smackx.hashes.HashManager.ALGORITHM.BLAKE2B256;
 import static org.jivesoftware.smackx.hashes.HashManager.ALGORITHM.BLAKE2B384;
@@ -31,8 +33,6 @@ import static org.jivesoftware.smackx.hashes.HashManager.ALGORITHM.SHA_256;
 import static org.jivesoftware.smackx.hashes.HashManager.ALGORITHM.SHA_384;
 import static org.jivesoftware.smackx.hashes.HashManager.ALGORITHM.SHA_512;
 
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -44,7 +44,6 @@ import java.util.WeakHashMap;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.util.StringUtils;
 
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
@@ -52,7 +51,10 @@ import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
- * Manager that can be used to determine support for hash functions.
+ * Manager that can be used to determine support for hash functions. By default the Manager announces support for
+ * XEP-0300, as well as for the recommended set of hash algorithms. Those contain SHA256, SHA384, SHA512, SHA3-256,
+ * SHA3-384, SHA3-512, BLAKE2B256, BLAKE2B384 and BLAKE2B512. Those algorithms got recommended here:
+ * <a href="https://xmpp.org/extensions/xep-0300.html#recommendations">https://xmpp.org/extensions/xep-0300.html#recommendations</a>.
  */
 public final class HashManager extends Manager {
 
@@ -88,9 +90,7 @@ public final class HashManager extends Manager {
 
     /**
      * Constructor of the HashManager.
-     * By default the Manager announces support for XEP-0300, as well as for the RECOMMENDED set of hash algorithms.
-     * Those contain SHA256, SHA384, SHA512, SHA3-256, SHA3-384, SHA3-512, BLAKE2B256, BLAKE2B384 and BLAKE2B512.
-     * Those algorithms got recommended here: https://xmpp.org/extensions/xep-0300.html#recommendations
+     *
      * @param connection connection
      */
     private HashManager(XMPPConnection connection) {
@@ -122,9 +122,9 @@ public final class HashManager extends Manager {
     /**
      * Get an instance of the HashManager for the  given connection.
      * @param connection
-     * @return
+     * @return the manager for the given connection.
      */
-    public HashManager getInstanceFor(XMPPConnection connection) {
+    public static synchronized HashManager getInstanceFor(XMPPConnection connection) {
         HashManager hashManager = INSTANCES.get(connection);
         if (hashManager == null) {
             hashManager = new HashManager(connection);
@@ -142,26 +142,36 @@ public final class HashManager extends Manager {
         return PREFIX_NS_ALGO + algorithm.toString();
     }
 
-    public enum ALGORITHM {                 // RECOMMENDATION:
-        MD5 ("md5"),                        // MUST NOT use this
-        SHA_1 ("sha-1"),                    // SHOULD NOT use this
-        SHA_224 ("sha-224"),
-        SHA_256 ("sha-256"),                // MUST use this
-        SHA_384 ("sha-384"),
-        SHA_512 ("sha-512"),                // SHOULD use this
-        SHA3_224 ("sha3-224"),
-        SHA3_256 ("sha3-256"),              // MUST use this
-        SHA3_384 ("sha3-384"),
-        SHA3_512 ("sha3-512"),              // SHOULD use this
-        BLAKE2B160("id-blake2b160"),
-        BLAKE2B256("id-blake2b256"),        // MUST use this
-        BLAKE2B384("id-blake2b384"),
-        BLAKE2B512("id-blake2b512");        // SHOULD use this
+    enum AlgorithmRecommendation {
+        unknown,
+        must_not,
+        should_not,
+        should,
+        must,
+    }
+
+    public enum ALGORITHM {
+        MD5 ("md5", AlgorithmRecommendation.must_not),
+        SHA_1 ("sha-1", AlgorithmRecommendation.should_not),
+        SHA_224 ("sha-224", AlgorithmRecommendation.unknown),
+        SHA_256 ("sha-256", AlgorithmRecommendation.must),
+        SHA_384 ("sha-384", AlgorithmRecommendation.unknown),
+        SHA_512 ("sha-512", AlgorithmRecommendation.should),
+        SHA3_224 ("sha3-224", AlgorithmRecommendation.unknown),
+        SHA3_256 ("sha3-256", AlgorithmRecommendation.must),
+        SHA3_384 ("sha3-384", AlgorithmRecommendation.unknown),
+        SHA3_512 ("sha3-512", AlgorithmRecommendation.should),
+        BLAKE2B160("id-blake2b160", AlgorithmRecommendation.unknown),
+        BLAKE2B256("id-blake2b256", AlgorithmRecommendation.must),
+        BLAKE2B384("id-blake2b384", AlgorithmRecommendation.unknown),
+        BLAKE2B512("id-blake2b512", AlgorithmRecommendation.should);
 
         private final String name;
+        private final AlgorithmRecommendation recommendation;
 
-        ALGORITHM(String name) {
+        ALGORITHM(String name, AlgorithmRecommendation recommendation) {
             this.name = name;
+            this.recommendation = recommendation;
         }
 
         /**
@@ -173,10 +183,16 @@ public final class HashManager extends Manager {
             return this.name;
         }
 
+        public AlgorithmRecommendation getRecommendation() {
+            return recommendation;
+        }
+
         /**
          * Compensational method for static 'valueOf' function.
+         *
          * @param s
-         * @return
+         * @return the algorithm for the given string.
+         * @throws IllegalArgumentException if no algorithm for the given string is known.
          */
         public static ALGORITHM valueOfName(String s) {
             for (ALGORITHM a : ALGORITHM.values()) {
@@ -190,16 +206,17 @@ public final class HashManager extends Manager {
 
     /**
      * Calculate the hash sum of data using algorithm.
-     * @param algorithm
-     * @param data
-     * @return
+     *
+     * @param algorithm the algorithm to use.
+     * @param data the data to calculate the hash for.
+     * @return the hash value produced by the given algorithm for the given data.
      */
     public static byte[] hash(ALGORITHM algorithm, byte[] data) {
         return getMessageDigest(algorithm).digest(data);
     }
 
     public static byte[] hash(ALGORITHM algorithm, String data) {
-        return hash(algorithm, utf8(data));
+        return hash(algorithm, toUtf8Bytes(data));
     }
 
     public static MessageDigest getMessageDigest(ALGORITHM algorithm) {
@@ -249,7 +266,7 @@ public final class HashManager extends Manager {
                     md = MessageDigest.getInstance("BLAKE2b-512", PROVIDER);
                     break;
                 default:
-                    throw new AssertionError("Invalid enum value.");
+                    throw new AssertionError("Invalid enum value: " + algorithm);
             }
             return md;
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
@@ -262,15 +279,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] md5(String data) {
-        return md5(utf8(data));
+        return md5(toUtf8Bytes(data));
     }
 
     public static String md5HexString(byte[] data) {
-        return hex(md5(data));
+        return encodeHex(md5(data));
     }
 
     public static String md5HexString(String data) {
-        return hex(md5(data));
+        return encodeHex(md5(data));
     }
 
     public static byte[] sha_1(byte[] data) {
@@ -278,15 +295,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha_1(String data) {
-        return sha_1(utf8(data));
+        return sha_1(toUtf8Bytes(data));
     }
 
     public static String sha_1HexString(byte[] data) {
-        return hex(sha_1(data));
+        return encodeHex(sha_1(data));
     }
 
     public static String sha_1HexString(String data) {
-        return hex(sha_1(data));
+        return encodeHex(sha_1(data));
     }
 
     public static byte[] sha_224(byte[] data) {
@@ -294,15 +311,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha_224(String data) {
-        return sha_224(utf8(data));
+        return sha_224(toUtf8Bytes(data));
     }
 
     public static String sha_224HexString(byte[] data) {
-        return hex(sha_224(data));
+        return encodeHex(sha_224(data));
     }
 
     public static String sha_224HexString(String data) {
-        return hex(sha_224(data));
+        return encodeHex(sha_224(data));
     }
 
     public static byte[] sha_256(byte[] data) {
@@ -310,15 +327,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha_256(String data) {
-        return sha_256(utf8(data));
+        return sha_256(toUtf8Bytes(data));
     }
 
     public static String sha_256HexString(byte[] data) {
-        return hex(sha_256(data));
+        return encodeHex(sha_256(data));
     }
 
     public static String sha_256HexString(String data) {
-        return hex(sha_256(data));
+        return encodeHex(sha_256(data));
     }
 
     public static byte[] sha_384(byte[] data) {
@@ -326,15 +343,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha_384(String data) {
-        return sha_384(utf8(data));
+        return sha_384(toUtf8Bytes(data));
     }
 
     public static String sha_384HexString(byte[] data) {
-        return hex(sha_384(data));
+        return encodeHex(sha_384(data));
     }
 
     public static String sha_384HexString(String data) {
-        return hex(sha_384(data));
+        return encodeHex(sha_384(data));
     }
 
     public static byte[] sha_512(byte[] data) {
@@ -342,15 +359,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha_512(String data) {
-        return sha_512(utf8(data));
+        return sha_512(toUtf8Bytes(data));
     }
 
     public static String sha_512HexString(byte[] data) {
-        return hex(sha_512(data));
+        return encodeHex(sha_512(data));
     }
 
     public static String sha_512HexString(String data) {
-        return hex(sha_512(data));
+        return encodeHex(sha_512(data));
     }
 
     public static byte[] sha3_224(byte[] data) {
@@ -358,15 +375,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha3_224(String data) {
-        return sha3_224(utf8(data));
+        return sha3_224(toUtf8Bytes(data));
     }
 
     public static String sha3_224HexString(byte[] data) {
-        return hex(sha3_224(data));
+        return encodeHex(sha3_224(data));
     }
 
     public static String sha3_224HexString(String data) {
-        return hex(sha3_224(data));
+        return encodeHex(sha3_224(data));
     }
 
     public static byte[] sha3_256(byte[] data) {
@@ -374,15 +391,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha3_256(String data) {
-        return sha3_256(utf8(data));
+        return sha3_256(toUtf8Bytes(data));
     }
 
     public static String sha3_256HexString(byte[] data) {
-        return hex(sha3_256(data));
+        return encodeHex(sha3_256(data));
     }
 
     public static String sha3_256HexString(String data) {
-        return hex(sha3_256(data));
+        return encodeHex(sha3_256(data));
     }
 
     public static byte[] sha3_384(byte[] data) {
@@ -390,15 +407,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha3_384(String data) {
-        return sha3_384(utf8(data));
+        return sha3_384(toUtf8Bytes(data));
     }
 
     public static String sha3_384HexString(byte[] data) {
-        return hex(sha3_384(data));
+        return encodeHex(sha3_384(data));
     }
 
     public static String sha3_384HexString(String data) {
-        return hex(sha3_384(data));
+        return encodeHex(sha3_384(data));
     }
 
     public static byte[] sha3_512(byte[] data) {
@@ -406,15 +423,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] sha3_512(String data) {
-        return sha3_512(utf8(data));
+        return sha3_512(toUtf8Bytes(data));
     }
 
     public static String sha3_512HexString(byte[] data) {
-        return hex(sha3_512(data));
+        return encodeHex(sha3_512(data));
     }
 
     public static String sha3_512HexString(String data) {
-        return hex(sha3_512(data));
+        return encodeHex(sha3_512(data));
     }
 
     public static byte[] blake2b160(byte[] data) {
@@ -422,15 +439,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] blake2b160(String data) {
-        return blake2b160(utf8(data));
+        return blake2b160(toUtf8Bytes(data));
     }
 
     public static String blake2b160HexString(byte[] data) {
-        return hex(blake2b160(data));
+        return encodeHex(blake2b160(data));
     }
 
     public static String blake2b160HexString(String data) {
-        return hex(blake2b160(data));
+        return encodeHex(blake2b160(data));
     }
 
     public static byte[] blake2b256(byte[] data) {
@@ -438,15 +455,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] blake2b256(String data) {
-        return blake2b256(utf8(data));
+        return blake2b256(toUtf8Bytes(data));
     }
 
     public static String blake2b256HexString(byte[] data) {
-        return hex(blake2b256(data));
+        return encodeHex(blake2b256(data));
     }
 
     public static String blake2b256HexString(String data) {
-        return hex(blake2b256(data));
+        return encodeHex(blake2b256(data));
     }
 
     public static byte[] blake2b384(byte[] data) {
@@ -454,15 +471,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] blake2b384(String data) {
-        return blake2b384(utf8(data));
+        return blake2b384(toUtf8Bytes(data));
     }
 
-    public String blake2b384HexString(byte[] data) {
-        return hex(blake2b384(data));
+    public static String blake2b384HexString(byte[] data) {
+        return encodeHex(blake2b384(data));
     }
 
-    public String blake2b384HexString(String data) {
-        return hex(blake2b384(data));
+    public static  String blake2b384HexString(String data) {
+        return encodeHex(blake2b384(data));
     }
 
     public static byte[] blake2b512(byte[] data) {
@@ -470,32 +487,15 @@ public final class HashManager extends Manager {
     }
 
     public static byte[] blake2b512(String data) {
-        return blake2b512(utf8(data));
+        return blake2b512(toUtf8Bytes(data));
     }
 
-    public String blake2b512HexString(byte[] data) {
-        return hex(blake2b512(data));
+    public static String blake2b512HexString(byte[] data) {
+        return encodeHex(blake2b512(data));
     }
 
-    public String blake2b512HexString(String data) {
-        return hex(blake2b512(data));
-    }
-
-    /**
-     * Encode a byte array in HEX.
-     * @param hash
-     * @return
-     */
-    public static String hex(byte[] hash) {
-        return new BigInteger(1, hash).toString(16);
-    }
-
-    public static byte[] utf8(String data) {
-        try {
-            return data.getBytes(StringUtils.UTF8);
-        } catch (UnsupportedEncodingException e) {
-            throw new AssertionError(e);
-        }
+    public static String blake2b512HexString(String data) {
+        return encodeHex(blake2b512(data));
     }
 
 }
