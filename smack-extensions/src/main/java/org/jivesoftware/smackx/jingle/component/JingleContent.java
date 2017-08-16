@@ -16,10 +16,8 @@
  */
 package org.jivesoftware.smackx.jingle.component;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +30,6 @@ import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
-import org.jivesoftware.smackx.jingle.Callback;
 import org.jivesoftware.smackx.jingle.JingleManager;
 import org.jivesoftware.smackx.jingle.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.adapter.JingleDescriptionAdapter;
@@ -65,7 +62,6 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
 
     private JingleTransport<?> pendingReplacingTransport = null;
 
-    private final List<Callback> callbacks = Collections.synchronizedList(new ArrayList<Callback>());
     private final Set<String> transportBlacklist = Collections.synchronizedSet(new HashSet<String>());
 
     public JingleContent(JingleContentElement.Creator creator, JingleContentElement.Senders senders) {
@@ -296,10 +292,6 @@ public class JingleContent implements JingleTransportCallback, JingleSecurityCal
     }
 
     /* MISCELLANEOUS */
-
-    public void addCallback(Callback callback) {
-        callbacks.add(callback);
-    }
 
     public JingleContentElement getElement() {
         JingleContentElement.Builder builder = JingleContentElement.getBuilder()
