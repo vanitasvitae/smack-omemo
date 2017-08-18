@@ -199,14 +199,18 @@ public class JingleSession {
 
     private IQ handleSessionInitiate(JingleElement request) {
         JingleDescription<?> description = getSoleContentOrThrow().getDescription();
-        JingleDescriptionManager descriptionManager = jingleManager.getDescriptionManager(description.getNamespace());
+        final JingleDescriptionManager descriptionManager = jingleManager.getDescriptionManager(description.getNamespace());
 
         if (descriptionManager == null) {
             LOGGER.log(Level.WARNING, "Unsupported description type: " + description.getNamespace());
             return JingleElement.createSessionTerminate(getPeer(), getSessionId(), JingleReasonElement.Reason.unsupported_applications);
         }
-
-        descriptionManager.notifySessionInitiate(this);
+        Async.go(new Runnable() {
+            @Override
+            public void run() {
+                descriptionManager.notifySessionInitiate(JingleSession.this);
+            }
+        });
 
         return IQ.createResultIQ(request);
     }
