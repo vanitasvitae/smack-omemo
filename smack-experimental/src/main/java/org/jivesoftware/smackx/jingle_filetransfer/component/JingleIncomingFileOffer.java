@@ -21,6 +21,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,6 +31,8 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bytestreams.BytestreamSession;
+import org.jivesoftware.smackx.hashes.HashManager;
+import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle.component.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentDescriptionInfoElement;
 import org.jivesoftware.smackx.jingle.element.JingleElement;
@@ -45,6 +50,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
 
     public JingleIncomingFileOffer(JingleFileTransferChildElement offer) {
         super(new JingleFileTransferFile.RemoteFile(offer));
+        this.state = State.pending;
     }
 
     @Override
@@ -58,11 +64,24 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
             throw new IllegalStateException("Target OutputStream is null");
         }
 
+        state = State.active;
+
+        HashElement hashElement = file.getHashElement();
+        MessageDigest digest = null;
+        if (hashElement != null) {
+            digest = HashManager.getMessageDigest(hashElement.getAlgorithm());
+            LOGGER.log(Level.INFO, "File offer had checksum: " + digest.toString());
+        }
+
         LOGGER.log(Level.INFO, "Receive file");
 
         InputStream inputStream = null;
         try {
             inputStream = bytestreamSession.getInputStream();
+
+            if (digest != null) {
+                inputStream = new DigestInputStream(inputStream, digest);
+            }
 
             int length = 0;
             int read = 0;
@@ -79,6 +98,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Cannot get InputStream from BytestreamSession: " + e, e);
         } finally {
+            state = State.ended;
             if (inputStream != null) {
                 try {
                     inputStream.close();
@@ -97,7 +117,17 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
                 }
             }
         }
+
+        if (digest != null) {
+            byte[] mDigest = ((DigestInputStream) inputStream).getMessageDigest().digest();
+            if (!Arrays.equals(hashElement.getHash(), mDigest)) {
+                LOGGER.log(Level.WARNING, "CHECKSUM MISMATCH!");
+            } else {
+                LOGGER.log(Level.INFO, "CHECKSUM MATCHED :)");
+            }
+        }
         notifyProgressListenersFinished();
+        getParent().onContentFinished();
     }
 
     @Override
@@ -114,6 +144,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
     public void accept(XMPPConnection connection, File target)
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
             SmackException.NoResponseException, IOException {
+        state = State.negotiating;
 
         if (!target.exists()) {
             target.createNewFile();
@@ -131,6 +162,8 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
     public void accept(XMPPConnection connection, OutputStream stream)
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
             SmackException.NoResponseException {
+        state  = State.negotiating;
+
         target = stream;
 
         JingleSession session = getParent().getParent();

@@ -16,6 +16,8 @@
  */
 package org.jivesoftware.smackx.jingle_filetransfer.controller;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.JingleDescriptionController;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransferFile;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.ProgressListener;
@@ -31,5 +33,5 @@ public interface JingleFileTransferController extends JingleDescriptionControlle
 
     JingleFileTransferFile getFile();
 
-    void cancel();
+    void cancel(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException;
 }

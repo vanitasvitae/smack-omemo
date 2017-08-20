@@ -20,7 +20,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.jingle.component.JingleDescription;
+import org.jivesoftware.smackx.jingle.component.JingleSession;
+import org.jivesoftware.smackx.jingle.element.JingleElement;
+import org.jivesoftware.smackx.jingle.element.JingleReasonElement;
 import org.jivesoftware.smackx.jingle_filetransfer.controller.JingleFileTransferController;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferElement;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.ProgressListener;
@@ -33,9 +38,6 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
     public static final String NAMESPACE_V5 = "urn:xmpp:jingle:apps:file-transfer:5";
     public static final String NAMESPACE = NAMESPACE_V5;
 
-    public abstract boolean isOffer();
-    public abstract boolean isRequest();
-
     protected State state;
     protected JingleFileTransferFile file;
 
@@ -44,6 +46,10 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
     JingleFileTransfer(JingleFileTransferFile file) {
         this.file = file;
     }
+
+    public abstract boolean isOffer();
+
+    public abstract boolean isRequest();
 
     @Override
     public void addProgressListener(ProgressListener listener) {
@@ -57,8 +63,24 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
     }
 
     @Override
-    public void cancel() {
-        //TODO
+    public void cancel(XMPPConnection connection) throws SmackException.NotConnectedException, InterruptedException {
+        JingleSession session = getParent().getParent();
+        switch (state) {
+            case pending:
+                if (session.isResponder()) {
+                    connection.createStanzaCollectorAndSend(JingleElement.createSessionTerminate(session.getPeer(), session.getSessionId(), JingleReasonElement.Reason.decline));
+                } else {
+                    connection.createStanzaCollectorAndSend(JingleElement.createSessionTerminate(session.getPeer(), session.getSessionId(), JingleReasonElement.Reason.cancel));
+                }
+                break;
+
+            case active:
+                connection.createStanzaCollectorAndSend(JingleElement.createSessionTerminate(session.getPeer(), session.getSessionId(), JingleReasonElement.Reason.cancel));
+                break;
+
+            default: break;
+        }
+        getParent().onContentCancel();
     }
 
     public void notifyProgressListeners(float progress) {
