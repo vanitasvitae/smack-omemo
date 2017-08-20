@@ -39,12 +39,12 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
     public static final String NAMESPACE = NAMESPACE_V5;
 
     protected State state;
-    protected JingleFileTransferFile file;
+    protected JingleFile metadata;
 
     private final List<ProgressListener> progressListeners = Collections.synchronizedList(new ArrayList<ProgressListener>());
 
-    JingleFileTransfer(JingleFileTransferFile file) {
-        this.file = file;
+    JingleFileTransfer(JingleFile metadata) {
+        this.metadata = metadata;
     }
 
     public abstract boolean isOffer();
@@ -108,11 +108,16 @@ public abstract class JingleFileTransfer extends JingleDescription<JingleFileTra
 
     @Override
     public JingleFileTransferElement getElement() {
-        return new JingleFileTransferElement(file.getElement());
+        return new JingleFileTransferElement(metadata.getElement());
     }
 
     @Override
     public State getState() {
         return state;
+    }
+
+    @Override
+    public JingleFile getMetadata() {
+        return metadata;
     }
 }

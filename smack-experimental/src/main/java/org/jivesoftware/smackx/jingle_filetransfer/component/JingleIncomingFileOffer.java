@@ -49,7 +49,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
     private OutputStream target;
 
     public JingleIncomingFileOffer(JingleFileTransferChildElement offer) {
-        super(new JingleFileTransferFile.RemoteFile(offer));
+        super(new JingleFile(offer));
         this.state = State.pending;
     }
 
@@ -66,7 +66,7 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
 
         state = State.active;
 
-        HashElement hashElement = file.getHashElement();
+        HashElement hashElement = metadata.getHashElement();
         MessageDigest digest = null;
         if (hashElement != null) {
             digest = HashManager.getMessageDigest(hashElement.getAlgorithm());
@@ -89,8 +89,8 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
             while ((length = inputStream.read(bufbuf)) >= 0) {
                 target.write(bufbuf, 0, length);
                 read += length;
-                LOGGER.log(Level.INFO, "Read " + read + " (" + length + ") of " + file.getSize() + " bytes.");
-                if (read == (int) file.getSize()) {
+                LOGGER.log(Level.INFO, "Read " + read + " (" + length + ") of " + metadata.getSize() + " bytes.");
+                if (read == (int) metadata.getSize()) {
                     break;
                 }
             }
@@ -170,10 +170,5 @@ public class JingleIncomingFileOffer extends AbstractJingleFileOffer implements 
         if (session.getSessionState() == JingleSession.SessionState.pending) {
             session.sendAccept(connection);
         }
-    }
-
-    @Override
-    public JingleFileTransferFile.RemoteFile getFile() {
-        return (JingleFileTransferFile.RemoteFile) this.file;
     }
 }

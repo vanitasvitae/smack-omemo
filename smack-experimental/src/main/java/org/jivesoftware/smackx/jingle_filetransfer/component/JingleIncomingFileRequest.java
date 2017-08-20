@@ -27,10 +27,10 @@ import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferEle
  * Created by vanitas on 27.07.17.
  * TODO: RemoteFile????
  */
-public class JingleIncomingFileRequest extends AbstractJingleFileRequest<JingleFileTransferFile.RemoteFile> implements IncomingFileRequestController {
+public class JingleIncomingFileRequest extends AbstractJingleFileRequest implements IncomingFileRequestController {
 
     public JingleIncomingFileRequest(JingleFileTransferChildElement request) {
-        super(new JingleFileTransferFile.RemoteFile(request));
+        super(new JingleFile(request));
     }
 
     @Override
@@ -56,10 +56,5 @@ public class JingleIncomingFileRequest extends AbstractJingleFileRequest<JingleF
     @Override
     public void onBytestreamReady(BytestreamSession bytestreamSession) {
 
-    }
-
-    @Override
-    public JingleFileTransferFile.RemoteFile getFile() {
-        return (JingleFileTransferFile.RemoteFile) file;
     }
 }

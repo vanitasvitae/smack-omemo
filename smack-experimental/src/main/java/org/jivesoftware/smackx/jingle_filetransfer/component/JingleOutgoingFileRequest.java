@@ -24,15 +24,10 @@ import org.jivesoftware.smackx.jingle_filetransfer.controller.OutgoingFileReques
 /**
  * Created by vanitas on 27.07.17.
  */
-public class JingleOutgoingFileRequest extends AbstractJingleFileRequest<JingleFileTransferFile.RemoteFile> implements OutgoingFileRequestController {
+public class JingleOutgoingFileRequest extends AbstractJingleFileRequest implements OutgoingFileRequestController {
 
-    public JingleOutgoingFileRequest(JingleFileTransferFile.RemoteFile file) {
+    public JingleOutgoingFileRequest(JingleFile file) {
         super(file);
-    }
-
-    @Override
-    public JingleFileTransferFile.RemoteFile getFile() {
-        return (JingleFileTransferFile.RemoteFile) file;
     }
 
     @Override

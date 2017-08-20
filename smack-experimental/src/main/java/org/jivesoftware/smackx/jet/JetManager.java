@@ -45,7 +45,7 @@ import org.jivesoftware.smackx.jingle.component.JingleSession;
 import org.jivesoftware.smackx.jingle.element.JingleContentElement;
 import org.jivesoftware.smackx.jingle.util.Role;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
-import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransferFile;
+import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFile;
 import org.jivesoftware.smackx.jingle_filetransfer.component.JingleOutgoingFileOffer;
 import org.jivesoftware.smackx.jingle_filetransfer.controller.OutgoingFileOfferController;
 
@@ -88,10 +88,10 @@ public final class JetManager extends Manager implements JingleDescriptionManage
     }
 
     public OutgoingFileOfferController sendEncryptedFile(File file, FullJid recipient, JingleEnvelopeManager envelopeManager) throws Exception {
-        return sendEncryptedFile(file, null, recipient, envelopeManager);
+        return sendEncryptedFile(file, JingleFile.fromFile(file, null, null, null), recipient, envelopeManager);
     }
 
-    public OutgoingFileOfferController sendEncryptedFile(File file, String filename, FullJid recipient, JingleEnvelopeManager envelopeManager) throws Exception {
+    public OutgoingFileOfferController sendEncryptedFile(File file, JingleFile metadata, FullJid recipient, JingleEnvelopeManager envelopeManager) throws Exception {
         if (file == null || !file.exists()) {
             throw new IllegalArgumentException("File MUST NOT be null and MUST exist.");
         }
@@ -103,10 +103,7 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
         session.addContent(content);
 
-        JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(file);
-        if (filename != null) {
-            offer.getFile().setName(filename);
-        }
+        JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(file, metadata);
         content.setDescription(offer);
 
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(recipient);
@@ -119,7 +116,7 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         return offer;
     }
 
-    public OutgoingFileOfferController sendEncryptedStream(InputStream inputStream, JingleFileTransferFile.StreamFile file, FullJid recipient, JingleEnvelopeManager envelopeManager)
+    public OutgoingFileOfferController sendEncryptedStream(InputStream inputStream, JingleFile metadata, FullJid recipient, JingleEnvelopeManager envelopeManager)
             throws XMPPException.XMPPErrorException, SmackException.FeatureNotSupportedException, SmackException.NotConnectedException,
             InterruptedException, SmackException.NoResponseException, NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException,
             JingleEnvelopeManager.JingleEncryptionException, NoSuchProviderException, InvalidAlgorithmParameterException {
@@ -130,7 +127,7 @@ public final class JetManager extends Manager implements JingleDescriptionManage
         JingleContent content = new JingleContent(JingleContentElement.Creator.initiator, JingleContentElement.Senders.initiator);
         session.addContent(content);
 
-        JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(file, inputStream);
+        JingleOutgoingFileOffer offer = new JingleOutgoingFileOffer(inputStream, metadata);
         content.setDescription(offer);
 
         JingleTransportManager transportManager = jingleManager.getBestAvailableTransportManager(recipient);

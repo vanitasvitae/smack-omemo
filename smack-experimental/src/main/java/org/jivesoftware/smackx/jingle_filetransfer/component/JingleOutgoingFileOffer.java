@@ -38,13 +38,13 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer implements 
 
     private final InputStream source;
 
-    public JingleOutgoingFileOffer(File file) throws FileNotFoundException {
-        super(new JingleFileTransferFile.LocalFile(file));
+    public JingleOutgoingFileOffer(File file, JingleFile metadata) throws FileNotFoundException {
+        super(metadata);
         this.source = new FileInputStream(file);
     }
 
-    public JingleOutgoingFileOffer(JingleFileTransferFile.StreamFile streamFile, InputStream inputStream) {
-        super(streamFile);
+    public JingleOutgoingFileOffer(InputStream inputStream, JingleFile metadata) {
+        super(metadata);
         this.source = inputStream;
     }
 
@@ -99,10 +99,5 @@ public class JingleOutgoingFileOffer extends AbstractJingleFileOffer implements 
     @Override
     public boolean isRequest() {
         return false;
-    }
-
-    @Override
-    public JingleFileTransferFile.LocalFile getFile() {
-        return (JingleFileTransferFile.LocalFile) file;
     }
 }

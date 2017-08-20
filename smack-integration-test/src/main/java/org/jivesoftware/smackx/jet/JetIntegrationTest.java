@@ -33,7 +33,7 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.jingle.transport.jingle_ibb.JingleIBBTransportManager;
 import org.jivesoftware.smackx.jingle.transport.jingle_s5b.JingleS5BTransportManager;
 import org.jivesoftware.smackx.jingle_filetransfer.JingleFileTransferManager;
-import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFileTransferFile;
+import org.jivesoftware.smackx.jingle_filetransfer.component.JingleFile;
 import org.jivesoftware.smackx.jingle_filetransfer.controller.IncomingFileOfferController;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.IncomingFileOfferListener;
 import org.jivesoftware.smackx.jingle_filetransfer.listener.ProgressListener;
@@ -128,7 +128,7 @@ public class JetIntegrationTest extends AbstractOmemoIntegrationTest {
             }
         });
 
-        ja.sendEncryptedStream(sourceStream, new JingleFileTransferFile.StreamFile("test", sourceBytes.length, "desc", null, null, null), conTwo.getUser().asFullJidOrThrow(), oa);
+        ja.sendEncryptedStream(sourceStream, new JingleFile("test", "desc", (long) sourceBytes.length, null, null, null), conTwo.getUser().asFullJidOrThrow(), oa);
 
         received.waitForResult(60 * 1000);
 
