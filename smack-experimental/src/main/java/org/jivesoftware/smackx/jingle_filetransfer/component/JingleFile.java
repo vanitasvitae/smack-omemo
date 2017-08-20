@@ -28,9 +28,6 @@ import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.jingle_filetransfer.element.JingleFileTransferChildElement;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
-
 /**
  * Represent a file sent in a file transfer.
  * This can be both LocalFile (available to the client), or RemoteFile (file not yet available).
@@ -42,7 +39,7 @@ public class JingleFile {
     private Date date;
     private HashElement hashElement;
 
-    public static JingleFile fromFile(@NotNull File file, @Nullable String description, @Nullable String mediaType, @Nullable HashManager.ALGORITHM hashAlgorithm) throws NoSuchAlgorithmException, IOException {
+    public static JingleFile fromFile(File file, String description, String mediaType, HashManager.ALGORITHM hashAlgorithm) throws NoSuchAlgorithmException, IOException {
 
         HashElement hashElement = null;
         if (hashAlgorithm != null) {
