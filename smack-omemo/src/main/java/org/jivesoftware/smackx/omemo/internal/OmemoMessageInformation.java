@@ -16,6 +16,8 @@
  */
 package org.jivesoftware.smackx.omemo.internal;
 
+import org.jivesoftware.smackx.omemo.OmemoFingerprint;
+
 /**
  * Class that contains information about a decrypted message (eg. which key was used, if it was a carbon...).
  *
@@ -23,7 +25,7 @@ package org.jivesoftware.smackx.omemo.internal;
  */
 public class OmemoMessageInformation {
     private boolean isOmemoMessage;
-    private IdentityKeyWrapper senderIdentityKey;
+    private OmemoFingerprint senderFingerprint;
     private OmemoDevice senderDevice;
     private CARBON carbon = CARBON.NONE;
 
@@ -37,12 +39,12 @@ public class OmemoMessageInformation {
     /**
      * Creates a new OmemoMessageInformation object. Its assumed, that this is about an OMEMO message.
      *
-     * @param senderIdentityKey identityKey of the sender device
+     * @param senderFingerprint fingerprint of the identityKey of the sender device
      * @param senderDevice      device that sent the message
      * @param carbon            Carbon type
      */
-    public OmemoMessageInformation(IdentityKeyWrapper senderIdentityKey, OmemoDevice senderDevice, CARBON carbon) {
-        this.senderIdentityKey = senderIdentityKey;
+    public OmemoMessageInformation(OmemoFingerprint senderFingerprint, OmemoDevice senderDevice, CARBON carbon) {
+        this.senderFingerprint = senderFingerprint;
         this.senderDevice = senderDevice;
         this.carbon = carbon;
         this.isOmemoMessage = true;
@@ -51,13 +53,13 @@ public class OmemoMessageInformation {
     /**
      * Create a new OmemoMessageInformation.
      *
-     * @param senderIdentityKey identityKey of the sender device
+     * @param senderFingerprint fingerprint of the identityKey of the sender device
      * @param senderDevice      device that sent the message
      * @param carbon            Carbon type
      * @param omemo             is this an omemo message?
      */
-    public OmemoMessageInformation(IdentityKeyWrapper senderIdentityKey, OmemoDevice senderDevice, CARBON carbon, boolean omemo) {
-        this(senderIdentityKey, senderDevice, carbon);
+    public OmemoMessageInformation(OmemoFingerprint senderFingerprint, OmemoDevice senderDevice, CARBON carbon, boolean omemo) {
+        this(senderFingerprint, senderDevice, carbon);
         this.isOmemoMessage = omemo;
     }
 
@@ -66,17 +68,17 @@ public class OmemoMessageInformation {
      *
      * @return identityKey
      */
-    public IdentityKeyWrapper getSenderIdentityKey() {
-        return senderIdentityKey;
+    public OmemoFingerprint getSenderFingerprint() {
+        return senderFingerprint;
     }
 
     /**
      * Set the sender devices identityKey.
      *
-     * @param senderIdentityKey identityKey
+     * @param senderFingerprint fingerprint of the senders identityKey.
      */
-    public void setSenderIdentityKey(IdentityKeyWrapper senderIdentityKey) {
-        this.senderIdentityKey = senderIdentityKey;
+    public void setSenderFingerprint(OmemoFingerprint senderFingerprint) {
+        this.senderFingerprint = senderFingerprint;
     }
 
     /**

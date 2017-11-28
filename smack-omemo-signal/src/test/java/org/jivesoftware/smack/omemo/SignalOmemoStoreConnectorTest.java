@@ -41,6 +41,6 @@ public class SignalOmemoStoreConnectorTest {
     @Test
     public void isTrustedIdentityTest() {
         SignalOmemoStoreConnector connector = new SignalOmemoStoreConnector(null, null);
-        assertTrue("All identities must be trusted by default.", connector.isTrustedIdentity(null, null));
+        assertTrue("All identities must be trusted by default.", connector.isTrustedIdentity(null, null, null));
     }
 }

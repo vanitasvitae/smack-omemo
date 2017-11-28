@@ -57,7 +57,12 @@ import org.junit.Test;
 public class OmemoManagerTest extends SmackTestSuite {
 
     @Test
-    public void instantiationTest() throws CorruptedOmemoKeyException, NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException, InterruptedException, XMPPException.XMPPErrorException, NoSuchPaddingException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, IllegalBlockSizeException, SmackException {
+    public void instantiationTest()
+            throws CorruptedOmemoKeyException, NoSuchAlgorithmException, UnsupportedEncodingException,
+            InvalidKeyException, InterruptedException, XMPPException.XMPPErrorException, NoSuchPaddingException,
+            BadPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, IllegalBlockSizeException,
+            SmackException
+    {
         SignalOmemoService.acknowledgeLicense();
         SignalOmemoService.setup();
 
@@ -73,8 +78,8 @@ public class OmemoManagerTest extends SmackTestSuite {
         assertNotNull(c);
         assertNotNull(d);
 
-        assertEquals(123, a.getDeviceId());
-        assertEquals(234, b.getDeviceId());
+        assertEquals(Integer.valueOf(123), a.getDeviceId());
+        assertEquals(Integer.valueOf(234), b.getDeviceId());
 
         assertFalse(a == b);
         assertFalse(a == c);

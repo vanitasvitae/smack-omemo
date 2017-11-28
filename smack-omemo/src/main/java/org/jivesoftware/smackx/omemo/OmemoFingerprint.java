@@ -39,10 +39,6 @@ public class OmemoFingerprint implements CharSequence {
         return fingerprintString.subSequence(start, end);
     }
 
-    public CharSequence subSequence(int start) {
-        return fingerprintString.subSequence(start, fingerprintString.length() - 1);
-    }
-
     @Override
     public String toString() {
         return fingerprintString;

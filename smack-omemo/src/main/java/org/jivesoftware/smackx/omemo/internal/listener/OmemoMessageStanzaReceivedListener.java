@@ -14,23 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.omemo.internal;
+package org.jivesoftware.smackx.omemo.internal.listener;
 
-/**
- * Wrapper for IdentityKey objects.
- *
- * @author Paul Schaub
- */
-public class IdentityKeyWrapper {
-    private final Object identityKey;
+import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smackx.omemo.OmemoManager;
 
-    public IdentityKeyWrapper(Object wrapped) {
-        identityKey = wrapped;
-    }
+public interface OmemoMessageStanzaReceivedListener {
 
-    public Object getIdentityKey() {
-        return identityKey;
-    }
-
-
+    void onOmemoMessageStanzaReceived(Stanza stanza, OmemoManager.KnownBareJidGuard omemoManager);
 }

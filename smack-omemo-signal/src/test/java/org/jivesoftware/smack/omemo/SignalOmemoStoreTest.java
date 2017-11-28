@@ -20,15 +20,22 @@
  */
 package org.jivesoftware.smack.omemo;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.jivesoftware.smackx.omemo.OmemoStore;
+import org.jivesoftware.smackx.omemo.signal.SignalCachingOmemoStore;
+import org.jivesoftware.smackx.omemo.signal.SignalFileBasedOmemoStore;
 import org.jivesoftware.smackx.omemo.signal.SignalOmemoKeyUtil;
-import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.jxmpp.stringprep.XmppStringprepException;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.SessionCipher;
@@ -40,23 +47,38 @@ import org.whispersystems.libsignal.state.SessionRecord;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 
 /**
- * smack-omemo-signal implementation of {@link OmemoKeyUtilTest}.
- * This class executes tests of its super class with available implementations of {@link OmemoKeyUtil}.
- * So far this includes {@link SignalOmemoKeyUtil}.
+ * smack-omemo-signal implementation of {@link OmemoStoreTest}.
+ * This class executes tests of its super class with available implementations of {@link OmemoStore}.
+ * So far this includes {@link SignalFileBasedOmemoStore}, {@link SignalCachingOmemoStore}.
  */
 @RunWith(value = Parameterized.class)
-public class SignalOmemoKeyUtilTest
-        extends OmemoKeyUtilTest<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-        SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> {
+public class SignalOmemoStoreTest extends OmemoStoreTest<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> {
 
-    public SignalOmemoKeyUtilTest(OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> keyUtil) {
-        super(keyUtil);
+    public SignalOmemoStoreTest(OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> store)
+            throws XmppStringprepException {
+        super(store);
     }
 
+    /**
+     * We are running this Test with multiple available OmemoStore implementations.
+     * @return
+     * @throws IOException
+     */
     @Parameterized.Parameters
     public static Collection<Object[]> getParameters() throws IOException {
+        TemporaryFolder temp = initStaticTemp();
         return Arrays.asList(new Object[][] {
-                { new SignalOmemoKeyUtil()}
+                // Simple file based store
+                { new SignalFileBasedOmemoStore(temp.newFolder("sigFileBased"))},
+                // Ephemeral caching store
+                { new SignalCachingOmemoStore()},
+                // Caching file based store
+                { new SignalCachingOmemoStore(new SignalFileBasedOmemoStore(temp.newFolder("cachingSigFileBased")))}
         });
+    }
+
+    @Test
+    public void keyUtilTest() {
+        assertTrue(store.keyUtil() instanceof SignalOmemoKeyUtil);
     }
 }

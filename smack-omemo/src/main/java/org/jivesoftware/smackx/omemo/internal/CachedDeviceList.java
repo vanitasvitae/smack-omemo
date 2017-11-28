@@ -43,6 +43,16 @@ public class CachedDeviceList implements Serializable {
         this.inactiveDevices = new HashSet<>();
     }
 
+    public CachedDeviceList(Set<Integer> activeDevices, Set<Integer> inactiveDevices) {
+        this();
+        this.activeDevices.addAll(activeDevices);
+        this.inactiveDevices.addAll(inactiveDevices);
+    }
+
+    public CachedDeviceList(CachedDeviceList original) {
+        this(original.getActiveDevices(), original.getInactiveDevices());
+    }
+
     /**
      * Returns all active devices.
      * Active devices are all devices that were in the latest DeviceList update.

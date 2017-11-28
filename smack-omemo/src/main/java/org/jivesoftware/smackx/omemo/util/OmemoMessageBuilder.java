@@ -28,7 +28,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -38,17 +37,18 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.util.StringUtils;
-
+import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.OmemoManager;
-import org.jivesoftware.smackx.omemo.OmemoStore;
+import org.jivesoftware.smackx.omemo.OmemoSessionManager;
 import org.jivesoftware.smackx.omemo.element.OmemoVAxolotlElement;
+import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
 import org.jivesoftware.smackx.omemo.exceptions.UndecidedOmemoIdentityException;
 import org.jivesoftware.smackx.omemo.internal.CiphertextTuple;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
-import org.jivesoftware.smackx.omemo.internal.OmemoSession;
 
 /**
  * Class used to build OMEMO messages.
@@ -65,8 +65,8 @@ import org.jivesoftware.smackx.omemo.internal.OmemoSession;
  * @author Paul Schaub
  */
 public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
-    private final OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> omemoStore;
-    private final OmemoManager omemoManager;
+    private final OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> sessionManager;
+    private final OmemoManager.KnownBareJidGuard managerGuard;
 
     private byte[] messageKey = generateKey();
     private byte[] initializationVector = generateIv();
@@ -77,8 +77,8 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     /**
      * Create a OmemoMessageBuilder.
      *
-     * @param omemoManager      OmemoManager of our device.
-     * @param omemoStore        OmemoStore.
+     * @param managerGuard      OmemoManager of our device.
+     * @param sessionManager    OmemoSessionManager.
      * @param aesKey            AES key that will be transported to the recipient. This is used eg. to encrypt the body.
      * @param iv                IV
      * @throws NoSuchPaddingException
@@ -90,13 +90,13 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
-    public OmemoMessageBuilder(OmemoManager omemoManager,
-                               OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> omemoStore,
+    public OmemoMessageBuilder(OmemoManager.KnownBareJidGuard managerGuard,
+                               OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> sessionManager,
                                byte[] aesKey, byte[] iv)
             throws NoSuchPaddingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException,
             UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        this.omemoStore = omemoStore;
-        this.omemoManager = omemoManager;
+        this.managerGuard = managerGuard;
+        this.sessionManager = sessionManager;
         this.messageKey = aesKey;
         this.initializationVector = iv;
     }
@@ -104,9 +104,9 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     /**
      * Create a new OmemoMessageBuilder with random IV and AES key.
      *
-     * @param omemoManager  omemoManager of our device.
-     * @param omemoStore    omemoStore.
-     * @param message       Messages body.
+     * @param managerGuard      omemoManager of our device.
+     * @param sessionManager    omemoSessionManager.
+     * @param message           Messages body.
      * @throws NoSuchPaddingException
      * @throws BadPaddingException
      * @throws InvalidKeyException
@@ -116,12 +116,13 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
-    public OmemoMessageBuilder(OmemoManager omemoManager,
-                               OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> omemoStore, String message)
+    public OmemoMessageBuilder(OmemoManager.KnownBareJidGuard managerGuard,
+                               OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> sessionManager,
+                               String message)
             throws NoSuchPaddingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException,
             UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        this.omemoManager = omemoManager;
-        this.omemoStore = omemoStore;
+        this.managerGuard = managerGuard;
+        this.sessionManager = sessionManager;
         this.setMessage(message);
     }
 
@@ -175,34 +176,40 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws UndecidedOmemoIdentityException
      * @throws CorruptedOmemoKeyException
      */
-    public void addRecipient(OmemoDevice device) throws CryptoFailedException, UndecidedOmemoIdentityException, CorruptedOmemoKeyException {
+    public void addRecipient(OmemoDevice device)
+            throws CryptoFailedException, UndecidedOmemoIdentityException, CorruptedOmemoKeyException,
+            CannotEstablishOmemoSessionException {
         addRecipient(device, false);
     }
 
     /**
      * Add a new recipient device to the message.
-     * @param device recipient device
+     * @param contactsDevice recipient device
      * @param ignoreTrust ignore current trust state? Useful for keyTransportMessages that are sent to repair a session
      * @throws CryptoFailedException
      * @throws UndecidedOmemoIdentityException
      * @throws CorruptedOmemoKeyException
      */
-    public void addRecipient(OmemoDevice device, boolean ignoreTrust) throws
-            CryptoFailedException, UndecidedOmemoIdentityException, CorruptedOmemoKeyException {
-        OmemoSession<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> session =
-                omemoStore.getOmemoSessionOf(omemoManager, device);
+    public void addRecipient(OmemoDevice contactsDevice, boolean ignoreTrust) throws
+            CryptoFailedException, UndecidedOmemoIdentityException, CorruptedOmemoKeyException,
+            CannotEstablishOmemoSessionException {
 
-        if (session != null) {
-            if (!ignoreTrust && !omemoStore.isDecidedOmemoIdentity(omemoManager, device, session.getIdentityKey())) {
-                // Warn user of undecided device
-                throw new UndecidedOmemoIdentityException(device);
-            }
+        OmemoFingerprint fingerprint;
+        try {
+            fingerprint = managerGuard.get().getFingerprint(contactsDevice);
+        } catch (SmackException.NotLoggedInException e) {
+            throw new AssertionError("This should never happen.");
+        }
 
-            if (!ignoreTrust && omemoStore.isTrustedOmemoIdentity(omemoManager, device, session.getIdentityKey())) {
-                // Encrypt key and save to header
-                CiphertextTuple encryptedKey = session.encryptMessageKey(messageKey);
-                keys.add(new OmemoVAxolotlElement.OmemoHeader.Key(encryptedKey.getCiphertext(), device.getDeviceId(), encryptedKey.isPreKeyMessage()));
-            }
+        if (!ignoreTrust && !managerGuard.get().isDecidedOmemoIdentity(contactsDevice, fingerprint)) {
+            // Warn user of undecided device
+            throw new UndecidedOmemoIdentityException(contactsDevice);
+        }
+
+        if (ignoreTrust || managerGuard.get().isTrustedOmemoIdentity(contactsDevice, fingerprint)) {
+            // Encrypt key and save to header
+            CiphertextTuple encryptedKey = sessionManager.doubleRatchetEncrypt(contactsDevice, messageKey);
+            keys.add(new OmemoVAxolotlElement.OmemoHeader.Key(encryptedKey.getCiphertext(), contactsDevice.getDeviceId(), encryptedKey.isPreKeyMessage()));
         }
     }
 
@@ -213,7 +220,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      */
     public OmemoVAxolotlElement finish() {
         OmemoVAxolotlElement.OmemoHeader header = new OmemoVAxolotlElement.OmemoHeader(
-                omemoManager.getDeviceId(),
+                managerGuard.get().getDeviceId(),
                 keys,
                 initializationVector
         );

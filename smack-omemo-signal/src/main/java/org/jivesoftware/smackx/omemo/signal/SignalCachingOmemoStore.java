@@ -20,10 +20,8 @@
  */
 package org.jivesoftware.smackx.omemo.signal;
 
-import java.io.File;
-
-import org.jivesoftware.smackx.omemo.FileBasedOmemoStore;
-import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
+import org.jivesoftware.smackx.omemo.CachingOmemoStore;
+import org.jivesoftware.smackx.omemo.OmemoStore;
 
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
@@ -36,28 +34,29 @@ import org.whispersystems.libsignal.state.SessionRecord;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 
 /**
- * Implementation of a FileBasedOmemoStore for the smack-omemo-signal module.
- *
- * @author Paul Schaub
+ * Implementation of the CachingOmemoStore for smack-omemo-signal.
+ * This Store implementation can either be used as a proxy wrapping a persistent SignalOmemoStore in order to prevent
+ * excessive storage access, or it can be used standalone as an ephemeral store, which doesn't persist its contents.
  */
-@SuppressWarnings("unused")
-public class SignalFileBasedOmemoStore
-        extends FileBasedOmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-        SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
+public class SignalCachingOmemoStore extends CachingOmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord,
+        SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
 {
 
-    public SignalFileBasedOmemoStore() {
-        super();
-    }
-
-    public SignalFileBasedOmemoStore(File base) {
-        super(base);
-    }
-
-    @Override
-    public OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-            SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> keyUtil()
+    /**
+     * Create a new SignalCachingOmemoStore as a caching layer around a persisting OmemoStore
+     * (eg. a SignalFileBasedOmemoStore).
+     * @param wrappedStore
+     */
+    public SignalCachingOmemoStore(OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
+            SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> wrappedStore)
     {
-        return new SignalOmemoKeyUtil();
+        super(wrappedStore);
+    }
+
+    /**
+     * Create a new SignalCachingOmemoStore as an ephemeral standalone OmemoStore.
+     */
+    public SignalCachingOmemoStore() {
+        super(new SignalOmemoKeyUtil());
     }
 }

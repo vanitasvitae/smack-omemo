@@ -16,6 +16,7 @@
  */
 package org.jivesoftware.smack.omemo;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -67,5 +68,11 @@ public class DeviceListTest {
                 !cached.getInactiveDevices().contains(4));
 
         assertTrue(cached.getAllDevices().size() == 4);
+
+        assertFalse(cached.contains(17));
+        cached.addDevice(17);
+        assertTrue(cached.getActiveDevices().contains(17));
+
+        assertNotNull(cached.toString());
     }
 }

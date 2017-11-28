@@ -26,13 +26,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
 import org.jivesoftware.smack.packet.Message;
-
 import org.jivesoftware.smackx.omemo.element.OmemoElement;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
 import org.jivesoftware.smackx.omemo.internal.CipherAndAuthTag;
 import org.jivesoftware.smackx.omemo.internal.CiphertextTuple;
 import org.jivesoftware.smackx.omemo.internal.ClearTextMessage;
-import org.jivesoftware.smackx.omemo.internal.IdentityKeyWrapper;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.util.OmemoMessageBuilder;
@@ -46,13 +44,6 @@ import org.jxmpp.jid.impl.JidCreate;
  * Test the identityKeyWrapper.
  */
 public class WrapperObjectsTest {
-
-    @Test
-    public void identityKeyWrapperTest() {
-        Object pseudoKey = new Object();
-        IdentityKeyWrapper wrapper = new IdentityKeyWrapper(pseudoKey);
-        assertEquals(pseudoKey, wrapper.getIdentityKey());
-    }
 
     @Test
     public void ciphertextTupleTest() {
@@ -69,17 +60,14 @@ public class WrapperObjectsTest {
 
     @Test
     public void clearTextMessageTest() throws Exception {
-        Object pseudoKey = new Object();
-        IdentityKeyWrapper wrapper = new IdentityKeyWrapper(pseudoKey);
         BareJid senderJid = JidCreate.bareFrom("bob@server.tld");
         OmemoDevice sender = new OmemoDevice(senderJid, 1234);
-        OmemoMessageInformation information = new OmemoMessageInformation(wrapper, sender, OmemoMessageInformation.CARBON.NONE);
+        OmemoMessageInformation information = new OmemoMessageInformation(null, sender, OmemoMessageInformation.CARBON.NONE);
 
         assertTrue("OmemoInformation must state that the message is an OMEMO message.",
                 information.isOmemoMessage());
         assertEquals(OmemoMessageInformation.CARBON.NONE, information.getCarbon());
         assertEquals(sender, information.getSenderDevice());
-        assertEquals(wrapper, information.getSenderIdentityKey());
 
         String body = "Decrypted Body";
         Message message = new Message(senderJid, body);

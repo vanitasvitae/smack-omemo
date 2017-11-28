@@ -19,16 +19,14 @@ package org.jivesoftware.smackx.omemo.util;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.omemo.OmemoFingerprint;
-import org.jivesoftware.smackx.omemo.OmemoManager;
-import org.jivesoftware.smackx.omemo.OmemoStore;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
-import org.jivesoftware.smackx.omemo.internal.OmemoSession;
 
 import org.jxmpp.stringprep.XmppStringprepException;
 
@@ -207,7 +205,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param count   how many keys do we want to generate
      * @return Map of new preKeys
      */
-    public abstract HashMap<Integer, T_PreKey> generateOmemoPreKeys(int startId, int count);
+    public abstract TreeMap<Integer, T_PreKey> generateOmemoPreKeys(int startId, int count);
 
     /**
      * Generate a new signed preKey.
@@ -330,7 +328,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param preKeyHashMap HashMap of preKeys
      * @return HashMap of byte arrays but with the same keyIds as key
      */
-    public HashMap<Integer, byte[]> preKeyPublisKeysForBundle(HashMap<Integer, T_PreKey> preKeyHashMap) {
+    public HashMap<Integer, byte[]> preKeyPublisKeysForBundle(TreeMap<Integer, T_PreKey> preKeyHashMap) {
         HashMap<Integer, byte[]> out = new HashMap<>();
         for (Map.Entry<Integer, T_PreKey> e : preKeyHashMap.entrySet()) {
             out.put(e.getKey(), preKeyForBundle(e.getValue()));
@@ -352,32 +350,14 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param identityKey identityKey
      * @return fingerprint of the key
      */
-    public abstract OmemoFingerprint getFingerprint(T_IdKey identityKey);
+    public abstract OmemoFingerprint getFingerprintOfIdentityKey(T_IdKey identityKey);
 
     /**
-     * Create a new crypto-specific Session object.
-     *
-     * @param omemoManager  omemoManager of our device.
-     * @param omemoStore    omemoStore where we can save the session, get keys from etc.
-     * @param from          the device we want to create the session with.
-     * @return a new session
+     * Returns the fingerprint of the public key of an identityKeyPair.
+     * @param identityKeyPair IdentityKeyPair.
+     * @return fingerprint of the public key.
      */
-    public abstract OmemoSession<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-    createOmemoSession(OmemoManager omemoManager, OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> omemoStore,
-                       OmemoDevice from);
-
-    /**
-     * Create a new concrete OmemoSession with a contact.
-     *
-     * @param omemoManager  omemoManager of our device.
-     * @param omemoStore    omemoStore
-     * @param device        device to establish the session with
-     * @param identityKey   identityKey of the device
-     * @return concrete OmemoSession
-     */
-    public abstract OmemoSession<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-    createOmemoSession(OmemoManager omemoManager, OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> omemoStore,
-                       OmemoDevice device, T_IdKey identityKey);
+    public abstract OmemoFingerprint getFingerprintOfIdentityKeyPair(T_IdKeyPair identityKeyPair);
 
     /**
      * Deserialize a raw OMEMO Session from bytes.

@@ -21,16 +21,13 @@
 package org.jivesoftware.smackx.omemo.signal;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.jivesoftware.smackx.omemo.OmemoFingerprint;
-import org.jivesoftware.smackx.omemo.OmemoManager;
-import org.jivesoftware.smackx.omemo.OmemoStore;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
-import org.jivesoftware.smackx.omemo.internal.OmemoSession;
 import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 
 import org.jxmpp.jid.impl.JidCreate;
@@ -54,25 +51,27 @@ import org.whispersystems.libsignal.util.KeyHelper;
  * @author Paul Schaub
  */
 public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
-        SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> {
-
+        SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
+{
     @Override
     public IdentityKeyPair generateOmemoIdentityKeyPair() {
         return KeyHelper.generateIdentityKeyPair();
     }
 
     @Override
-    public HashMap<Integer, PreKeyRecord> generateOmemoPreKeys(int currentPreKeyId, int count) {
+    public TreeMap<Integer, PreKeyRecord> generateOmemoPreKeys(int currentPreKeyId, int count) {
         List<PreKeyRecord> preKeyRecords = KeyHelper.generatePreKeys(currentPreKeyId, count);
-        HashMap<Integer, PreKeyRecord> hashMap = new HashMap<>();
+        TreeMap<Integer, PreKeyRecord> map = new TreeMap<>();
         for (PreKeyRecord p : preKeyRecords) {
-            hashMap.put(p.getId(), p);
+            map.put(p.getId(), p);
         }
-        return hashMap;
+        return map;
     }
 
     @Override
-    public SignedPreKeyRecord generateOmemoSignedPreKey(IdentityKeyPair identityKeyPair, int currentPreKeyId) throws CorruptedOmemoKeyException {
+    public SignedPreKeyRecord generateOmemoSignedPreKey(IdentityKeyPair identityKeyPair, int currentPreKeyId)
+            throws CorruptedOmemoKeyException
+    {
         try {
             return KeyHelper.generateSignedPreKey(identityKeyPair, currentPreKeyId);
         } catch (InvalidKeyException e) {
@@ -82,6 +81,7 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
 
     @Override
     public SignedPreKeyRecord signedPreKeyFromBytes(byte[] data) throws IOException {
+        if (data == null) return null;
         return new SignedPreKeyRecord(data);
     }
 
@@ -91,20 +91,8 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
     }
 
     @Override
-    public OmemoSession<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
-    createOmemoSession(OmemoManager omemoManager, OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> omemoStore,
-                       OmemoDevice contact, IdentityKey identityKey) {
-        return new SignalOmemoSession(omemoManager, omemoStore, contact, identityKey);
-    }
-
-    @Override
-    public OmemoSession<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
-    createOmemoSession(OmemoManager omemoManager, OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> omemoStore, OmemoDevice from) {
-        return new SignalOmemoSession(omemoManager, omemoStore, from);
-    }
-
-    @Override
     public SessionRecord rawSessionFromBytes(byte[] data) throws IOException {
+        if (data == null) return null;
         return new SessionRecord(data);
     }
 
@@ -115,6 +103,7 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
 
     @Override
     public IdentityKeyPair identityKeyPairFromBytes(byte[] data) throws CorruptedOmemoKeyException {
+        if (data == null) return null;
         try {
             return new IdentityKeyPair(data);
         } catch (InvalidKeyException e) {
@@ -124,6 +113,7 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
 
     @Override
     public IdentityKey identityKeyFromBytes(byte[] data) throws CorruptedOmemoKeyException {
+        if (data == null) return null;
         try {
             return new IdentityKey(data, 0);
         } catch (InvalidKeyException e) {
@@ -133,6 +123,7 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
 
     @Override
     public ECPublicKey ellipticCurvePublicKeyFromBytes(byte[] data) throws CorruptedOmemoKeyException {
+        if (data == null) return null;
         try {
             return Curve.decodePoint(data, 0);
         } catch (InvalidKeyException e) {
@@ -147,11 +138,14 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
 
     @Override
     public PreKeyRecord preKeyFromBytes(byte[] bytes) throws IOException {
+        if (bytes == null) return null;
         return new PreKeyRecord(bytes);
     }
 
     @Override
-    public PreKeyBundle bundleFromOmemoBundle(OmemoBundleVAxolotlElement bundle, OmemoDevice contact, int preKeyId) throws CorruptedOmemoKeyException {
+    public PreKeyBundle bundleFromOmemoBundle(OmemoBundleVAxolotlElement bundle, OmemoDevice contact, int preKeyId)
+            throws CorruptedOmemoKeyException
+    {
         return new PreKeyBundle(0,
                 contact.getDeviceId(),
                 preKeyId,
@@ -208,11 +202,24 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
     }
 
     @Override
-    public OmemoFingerprint getFingerprint(IdentityKey identityKey) {
+    public OmemoFingerprint getFingerprintOfIdentityKey(IdentityKey identityKey) {
+        if (identityKey == null) {
+            return null;
+        }
+
         String fp = identityKey.getFingerprint();
         // Cut "(byte)0x" prefixes, remove spaces and commas, cut first two digits.
-        fp = fp.replace("(byte)0x", "").replace(",", "").replace(" ", "").substring(2);
+        fp = fp.replace("(byte)0x", "").replace(",", "")
+                .replace(" ", "").substring(2);
         return new OmemoFingerprint(fp);
+    }
+
+    @Override
+    public OmemoFingerprint getFingerprintOfIdentityKeyPair(IdentityKeyPair identityKeyPair) {
+        if (identityKeyPair == null) {
+            return null;
+        }
+        return getFingerprintOfIdentityKey(identityKeyPair.getPublicKey());
     }
 
     @Override
@@ -221,7 +228,9 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
     }
 
     @Override
-    public OmemoDevice addressAsOmemoDevice(SignalProtocolAddress address) throws XmppStringprepException {
+    public OmemoDevice addressAsOmemoDevice(SignalProtocolAddress address)
+            throws XmppStringprepException
+    {
         return new OmemoDevice(JidCreate.bareFrom(address.getName()), address.getDeviceId());
     }
 }
