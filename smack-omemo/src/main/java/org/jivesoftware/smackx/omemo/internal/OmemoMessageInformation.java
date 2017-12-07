@@ -16,7 +16,7 @@
  */
 package org.jivesoftware.smackx.omemo.internal;
 
-import org.jivesoftware.smackx.omemo.OmemoFingerprint;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 
 /**
  * Class that contains information about a decrypted message (eg. which key was used, if it was a carbon...).
@@ -32,7 +32,7 @@ public class OmemoMessageInformation {
     /**
      * Empty constructor.
      */
-    // TOOD Move this class into smackx.omemo and make this constructor package protected. -Flow
+    // TODO Move this class into smackx.omemo and make this constructor package protected. -Flow
     public OmemoMessageInformation() {
     }
 

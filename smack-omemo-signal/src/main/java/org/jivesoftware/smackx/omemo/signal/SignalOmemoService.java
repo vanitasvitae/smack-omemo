@@ -65,12 +65,12 @@ public final class SignalOmemoService
     private static boolean LICENSE_ACKNOWLEDGED = false;
 
     @Override
-    protected SignalOmemoSessionManager createOmemoSessionManager(
+    protected SignalOmemoRatchet instantiateOmemoRatchet(
             OmemoManager.KnownBareJidGuard manager,
             OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
                     SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> store)
     {
-        return new SignalOmemoSessionManager(manager, getOmemoStoreBackend());
+        return new SignalOmemoRatchet(manager, getOmemoStoreBackend());
     }
 
     public static void setup()

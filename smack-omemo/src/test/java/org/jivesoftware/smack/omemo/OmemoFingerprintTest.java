@@ -19,7 +19,7 @@ package org.jivesoftware.smack.omemo;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotSame;
 
-import org.jivesoftware.smackx.omemo.OmemoFingerprint;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 
 import org.junit.Test;
 

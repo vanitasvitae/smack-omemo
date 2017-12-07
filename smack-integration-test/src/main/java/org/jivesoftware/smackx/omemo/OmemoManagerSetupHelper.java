@@ -34,6 +34,7 @@ import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionExcep
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.util.OmemoConstants;
 import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jivesoftware.smackx.pubsub.PubSubManager;

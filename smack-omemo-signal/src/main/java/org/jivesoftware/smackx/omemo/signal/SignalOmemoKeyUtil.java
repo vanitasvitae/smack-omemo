@@ -24,10 +24,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.TreeMap;
 
-import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 
 import org.jxmpp.jid.impl.JidCreate;

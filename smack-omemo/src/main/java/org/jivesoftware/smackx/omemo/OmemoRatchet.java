@@ -36,14 +36,14 @@ import org.jivesoftware.smackx.omemo.internal.CipherAndAuthTag;
 import org.jivesoftware.smackx.omemo.internal.CiphertextTuple;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 
-public abstract class OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
-    private static final Logger LOGGER = Logger.getLogger(OmemoSessionManager.class.getName());
+public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
+    private static final Logger LOGGER = Logger.getLogger(OmemoRatchet.class.getName());
 
     protected final OmemoManager.KnownBareJidGuard managerGuard;
     protected final OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store;
 
-    public OmemoSessionManager(OmemoManager.KnownBareJidGuard managerGuard,
-                               OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store) {
+    public OmemoRatchet(OmemoManager.KnownBareJidGuard managerGuard,
+                        OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store) {
         this.managerGuard = managerGuard;
         this.store = store;
     }

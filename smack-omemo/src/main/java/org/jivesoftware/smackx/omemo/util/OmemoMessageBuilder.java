@@ -39,9 +39,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.OmemoManager;
-import org.jivesoftware.smackx.omemo.OmemoSessionManager;
+import org.jivesoftware.smackx.omemo.OmemoRatchet;
 import org.jivesoftware.smackx.omemo.element.OmemoVAxolotlElement;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
@@ -49,6 +48,8 @@ import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
 import org.jivesoftware.smackx.omemo.exceptions.UndecidedOmemoIdentityException;
 import org.jivesoftware.smackx.omemo.internal.CiphertextTuple;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
+
 
 /**
  * Class used to build OMEMO messages.
@@ -65,7 +66,7 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
  * @author Paul Schaub
  */
 public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
-    private final OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> sessionManager;
+    private final OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet;
     private final OmemoManager.KnownBareJidGuard managerGuard;
 
     private byte[] messageKey = generateKey();
@@ -78,7 +79,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * Create a OmemoMessageBuilder.
      *
      * @param managerGuard      OmemoManager of our device.
-     * @param sessionManager    OmemoSessionManager.
+     * @param ratchet           OmemoRatchet.
      * @param aesKey            AES key that will be transported to the recipient. This is used eg. to encrypt the body.
      * @param iv                IV
      * @throws NoSuchPaddingException
@@ -91,12 +92,13 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws InvalidAlgorithmParameterException
      */
     public OmemoMessageBuilder(OmemoManager.KnownBareJidGuard managerGuard,
-                               OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> sessionManager,
+                               OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet,
                                byte[] aesKey, byte[] iv)
-            throws NoSuchPaddingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException,
+            throws NoSuchPaddingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException,
+            IllegalBlockSizeException,
             UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException {
         this.managerGuard = managerGuard;
-        this.sessionManager = sessionManager;
+        this.ratchet = ratchet;
         this.messageKey = aesKey;
         this.initializationVector = iv;
     }
@@ -105,7 +107,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * Create a new OmemoMessageBuilder with random IV and AES key.
      *
      * @param managerGuard      omemoManager of our device.
-     * @param sessionManager    omemoSessionManager.
+     * @param ratchet    omemoSessionManager.
      * @param message           Messages body.
      * @throws NoSuchPaddingException
      * @throws BadPaddingException
@@ -117,12 +119,12 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws InvalidAlgorithmParameterException
      */
     public OmemoMessageBuilder(OmemoManager.KnownBareJidGuard managerGuard,
-                               OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> sessionManager,
+                               OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet,
                                String message)
             throws NoSuchPaddingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException,
             UnsupportedEncodingException, NoSuchProviderException, InvalidAlgorithmParameterException {
         this.managerGuard = managerGuard;
-        this.sessionManager = sessionManager;
+        this.ratchet = ratchet;
         this.setMessage(message);
     }
 
@@ -208,7 +210,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
 
         if (ignoreTrust || managerGuard.get().isTrustedOmemoIdentity(contactsDevice, fingerprint)) {
             // Encrypt key and save to header
-            CiphertextTuple encryptedKey = sessionManager.doubleRatchetEncrypt(contactsDevice, messageKey);
+            CiphertextTuple encryptedKey = ratchet.doubleRatchetEncrypt(contactsDevice, messageKey);
             keys.add(new OmemoVAxolotlElement.OmemoHeader.Key(encryptedKey.getCiphertext(), contactsDevice.getDeviceId(), encryptedKey.isPreKeyMessage()));
         }
     }

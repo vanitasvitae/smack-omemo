@@ -24,7 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.omemo.OmemoManager;
-import org.jivesoftware.smackx.omemo.OmemoSessionManager;
+import org.jivesoftware.smackx.omemo.OmemoRatchet;
 import org.jivesoftware.smackx.omemo.OmemoStore;
 import org.jivesoftware.smackx.omemo.element.OmemoElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
@@ -55,15 +55,15 @@ import org.whispersystems.libsignal.state.PreKeyRecord;
 import org.whispersystems.libsignal.state.SessionRecord;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 
-public class SignalOmemoSessionManager
-        extends OmemoSessionManager<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-        SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
+public class SignalOmemoRatchet
+        extends OmemoRatchet<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
+                SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
 {
-    private static final Logger LOGGER = Logger.getLogger(OmemoSessionManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(OmemoRatchet.class.getName());
     private final SignalOmemoStoreConnector storeConnector;
 
-    public SignalOmemoSessionManager(OmemoManager.KnownBareJidGuard managerGuard,
-                                     OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
+    SignalOmemoRatchet(OmemoManager.KnownBareJidGuard managerGuard,
+                              OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
                                              SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle,
                                              SessionCipher> store)
     {

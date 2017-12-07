@@ -70,6 +70,7 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 import org.jivesoftware.smackx.omemo.listener.OmemoMucMessageListener;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.trust.TrustCallback;
 import org.jivesoftware.smackx.omemo.trust.TrustState;
 import org.jivesoftware.smackx.pep.PEPListener;
@@ -1010,7 +1011,7 @@ public final class OmemoManager extends Manager {
                     // Device List <list>
                     OmemoDeviceListVAxolotlElement omemoDeviceListElement =
                             (OmemoDeviceListVAxolotlElement) payloadItem.getPayload();
-                    int ourDeviceId = getDeviceId();
+                    Integer ourDeviceId = getDeviceId();
 
                     getOmemoService().getOmemoStoreBackend()
                             .mergeCachedDeviceList(managerGuard.get().getOwnDevice(), from, omemoDeviceListElement);

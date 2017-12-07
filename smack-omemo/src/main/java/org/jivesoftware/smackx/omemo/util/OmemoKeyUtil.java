@@ -23,10 +23,10 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 
 import org.jxmpp.stringprep.XmppStringprepException;
 

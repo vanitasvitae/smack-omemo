@@ -18,8 +18,8 @@ package org.jivesoftware.smack.omemo.util;
 
 import java.util.HashMap;
 
-import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.trust.TrustCallback;
 import org.jivesoftware.smackx.omemo.trust.TrustState;
 

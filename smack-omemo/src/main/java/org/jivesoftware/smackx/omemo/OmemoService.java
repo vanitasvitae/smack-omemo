@@ -114,7 +114,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     private static OmemoService<?, ?, ?, ?, ?, ?, ?, ?, ?> INSTANCE;
 
     protected OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> omemoStore;
-    protected final HashMap<OmemoManager, OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>> sessionManagers = new HashMap<>();
+    protected final HashMap<OmemoManager, OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>> sessionManagers = new HashMap<>();
 
     /**
      * Return the singleton instance of this class. When no instance is set, throw an IllegalStateException instead.
@@ -223,7 +223,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             SmackException.NotConnectedException, SmackException.NoResponseException,
             PubSubException.NotALeafNodeException
     {
-        sessionManagers.put(managerGuard.get(), createOmemoSessionManager(managerGuard, getOmemoStoreBackend()));
+        sessionManagers.put(managerGuard.get(), instantiateOmemoRatchet(managerGuard, getOmemoStoreBackend()));
         // Create new keys if necessary and publish to the server.
         publishBundle(managerGuard);
 
@@ -981,7 +981,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             NoRawSessionException
     {
         CipherAndAuthTag transportedKey = decryptTransportedOmemoKey(managerGuard, from, message, information);
-        return OmemoSessionManager.decryptMessageElement(message, transportedKey);
+        return OmemoRatchet.decryptMessageElement(message, transportedKey);
     }
 
     /**
@@ -1045,7 +1045,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
                 builder;
         try {
-            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoSessionManager(managerGuard), message.getBody());
+            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard), message.getBody());
         } catch (UnsupportedEncodingException | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException |
                 NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new CryptoFailedException(e);
@@ -1098,7 +1098,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
                 builder;
         try {
-            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoSessionManager(managerGuard), null);
+            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard), null);
 
         } catch (UnsupportedEncodingException | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException |
                 NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | NoSuchAlgorithmException e) {
@@ -1135,7 +1135,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
                 builder;
         try {
-            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoSessionManager(managerGuard), aesKey, iv);
+            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard), aesKey, iv);
 
         } catch (UnsupportedEncodingException | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException |
                 NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | NoSuchAlgorithmException e) {
@@ -1444,16 +1444,16 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         }
     }
 
-    protected abstract OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-    createOmemoSessionManager(OmemoManager.KnownBareJidGuard manager,
-                              OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store);
+    protected abstract OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
+    instantiateOmemoRatchet(OmemoManager.KnownBareJidGuard manager,
+                            OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store);
 
-    protected OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-    getOmemoSessionManager(OmemoManager.KnownBareJidGuard guard) {
-        OmemoSessionManager<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
+    protected OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
+    getOmemoRatchet(OmemoManager.KnownBareJidGuard guard) {
+        OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
                 sessionManager = sessionManagers.get(guard.get());
         if (sessionManager == null) {
-            sessionManager = createOmemoSessionManager(guard, omemoStore);
+            sessionManager = instantiateOmemoRatchet(guard, omemoStore);
             sessionManagers.put(guard.get(), sessionManager);
         }
         return sessionManager;

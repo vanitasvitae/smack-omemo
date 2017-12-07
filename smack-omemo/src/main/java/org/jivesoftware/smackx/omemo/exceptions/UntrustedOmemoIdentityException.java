@@ -16,8 +16,8 @@
  */
 package org.jivesoftware.smackx.omemo.exceptions;
 
-import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 
 /**
  * Exception that gets thrown when we try to decrypt a message which contains an identityKey that differs from the one

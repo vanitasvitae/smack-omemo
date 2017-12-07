@@ -32,17 +32,18 @@ import java.util.HashSet;
 import java.util.TreeMap;
 
 import org.jivesoftware.smackx.omemo.FileBasedOmemoStore;
-import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.OmemoStore;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
+
 
 public abstract class OmemoStoreTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
 

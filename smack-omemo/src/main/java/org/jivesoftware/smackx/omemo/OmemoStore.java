@@ -32,6 +32,7 @@ import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionExcep
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 
 import org.jxmpp.jid.BareJid;
