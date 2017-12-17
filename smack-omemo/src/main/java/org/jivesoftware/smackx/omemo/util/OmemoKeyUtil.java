@@ -28,8 +28,6 @@ import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 
-import org.jxmpp.stringprep.XmppStringprepException;
-
 /**
  * Class that is used to convert bytes to keys and vice versa.
  *
@@ -328,7 +326,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param preKeyHashMap HashMap of preKeys
      * @return HashMap of byte arrays but with the same keyIds as key
      */
-    public HashMap<Integer, byte[]> preKeyPublisKeysForBundle(TreeMap<Integer, T_PreKey> preKeyHashMap) {
+    public HashMap<Integer, byte[]> preKeyPublicKeysForBundle(TreeMap<Integer, T_PreKey> preKeyHashMap) {
         HashMap<Integer, byte[]> out = new HashMap<>();
         for (Map.Entry<Integer, T_PreKey> e : preKeyHashMap.entrySet()) {
             out.put(e.getKey(), preKeyForBundle(e.getValue()));
@@ -339,7 +337,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     /**
      * Prepare a public signedPreKey for transport in a bundle.
      *
-     * @param signedPreKey signedPrekey
+     * @param signedPreKey signedPreKey
      * @return signedPreKey as byte array
      */
     public abstract byte[] signedPreKeyPublicForBundle(T_SigPreKey signedPreKey);
@@ -375,43 +373,6 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @return byte array
      */
     public abstract byte[] rawSessionToBytes(T_Sess session);
-
-    /**
-     * Convert an OmemoDevice to a crypto-lib specific contact format.
-     *
-     * @param contact omemoContact
-     * @return crypto-lib specific contact object
-     */
-    public abstract T_Addr omemoDeviceAsAddress(OmemoDevice contact);
-
-    /**
-     * Convert a crypto-lib specific contact object into an OmemoDevice.
-     *
-     * @param address contact
-     * @return as OmemoDevice
-     * @throws XmppStringprepException if the address is not a valid BareJid
-     */
-    public abstract OmemoDevice addressAsOmemoDevice(T_Addr address) throws XmppStringprepException;
-
-    public static String prettyFingerprint(OmemoFingerprint fingerprint) {
-        return prettyFingerprint(fingerprint.toString());
-    }
-
-    /**
-     * Split the fingerprint in blocks of 8 characters with spaces between.
-     *
-     * @param ugly fingerprint as continuous string
-     * @return fingerprint with spaces for better readability
-     */
-    public static String prettyFingerprint(String ugly) {
-        if (ugly == null) return null;
-        String pretty = "";
-        for (int i = 0; i < 8; i++) {
-            if (i != 0) pretty += " ";
-            pretty += ugly.substring(8 * i, 8 * (i + 1));
-        }
-        return pretty;
-    }
 
     /**
      * Add integers modulo MAX_VALUE.

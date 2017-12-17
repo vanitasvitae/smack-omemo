@@ -62,13 +62,13 @@ public class SignalOmemoRatchet
     private static final Logger LOGGER = Logger.getLogger(OmemoRatchet.class.getName());
     private final SignalOmemoStoreConnector storeConnector;
 
-    SignalOmemoRatchet(OmemoManager.KnownBareJidGuard managerGuard,
+    SignalOmemoRatchet(OmemoManager omemoManager,
                               OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
                                              SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle,
                                              SessionCipher> store)
     {
-        super(managerGuard, store);
-        this.storeConnector = new SignalOmemoStoreConnector(managerGuard, store);
+        super(omemoManager, store);
+        this.storeConnector = new SignalOmemoStoreConnector(omemoManager, store);
     }
 
     @Override
@@ -157,8 +157,7 @@ public class SignalOmemoRatchet
     }
 
     private SessionCipher getCipher(OmemoDevice device) {
-        SignalOmemoKeyUtil keyUtil = (SignalOmemoKeyUtil) store.keyUtil();
-        SignalProtocolAddress address = keyUtil.omemoDeviceAsAddress(device);
-        return new SessionCipher(storeConnector, storeConnector, storeConnector, storeConnector, address);
+        return new SessionCipher(storeConnector, storeConnector, storeConnector, storeConnector,
+                SignalOmemoStoreConnector.asAddress(device));
     }
 }

@@ -114,7 +114,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     private static OmemoService<?, ?, ?, ?, ?, ?, ?, ?, ?> INSTANCE;
 
     protected OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> omemoStore;
-    protected final HashMap<OmemoManager, OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>> sessionManagers = new HashMap<>();
+    protected final HashMap<OmemoManager, OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>> omemoRatchets = new HashMap<>();
 
     /**
      * Return the singleton instance of this class. When no instance is set, throw an IllegalStateException instead.
@@ -206,6 +206,10 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         checkAvailableAlgorithms();
     }
 
+    void registerManager(OmemoManager manager) {
+        omemoRatchets.put(manager, instantiateOmemoRatchet(manager, getOmemoStoreBackend()));
+    }
+
     /**
      * Initialize OMEMO functionality for OmemoManager omemoManager.
      *
@@ -218,12 +222,11 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NotLoggedInException
      * @throws PubSubException.NotALeafNodeException
      */
-    void initialize(OmemoManager.KnownBareJidGuard managerGuard)
+    void publish(OmemoManager.LoggedInOmemoManager managerGuard)
             throws InterruptedException, CorruptedOmemoKeyException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException,
             PubSubException.NotALeafNodeException
     {
-        sessionManagers.put(managerGuard.get(), instantiateOmemoRatchet(managerGuard, getOmemoStoreBackend()));
         // Create new keys if necessary and publish to the server.
         publishBundle(managerGuard);
 
@@ -260,9 +263,9 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CorruptedOmemoKeyException when freshly generated identityKey is invalid
      *                                  (should never ever happen *crosses fingers*)
      */
-    void regenerate(OmemoManager.KnownBareJidGuard managerGuard)
-            throws CorruptedOmemoKeyException
-    {
+    void regenerate(OmemoManager.LoggedInOmemoManager managerGuard)
+            throws CorruptedOmemoKeyException, InterruptedException, PubSubException.NotALeafNodeException,
+            XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
         OmemoManager omemoManager = managerGuard.get();
         OmemoDevice userDevice = omemoManager.getOwnDevice();
 
@@ -275,6 +278,8 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
 
         getOmemoStoreBackend().purgeOwnDeviceKeys(userDevice);
         omemoManager.setDeviceId(nDeviceId);
+
+        publish(managerGuard);
     }
 
     /**
@@ -287,7 +292,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CorruptedOmemoKeyException
      * @throws XMPPException.XMPPErrorException
      */
-    void publishBundle(OmemoManager.KnownBareJidGuard managerGuard)
+    void publishBundle(OmemoManager.LoggedInOmemoManager managerGuard)
             throws SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException,
             CorruptedOmemoKeyException, XMPPException.XMPPErrorException
     {
@@ -325,7 +330,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NotConnectedException
      * @throws SmackException.NoResponseException
      */
-    void publishDeviceIdIfNeeded(OmemoManager.KnownBareJidGuard managerGuard, boolean deleteOtherDevices)
+    void publishDeviceIdIfNeeded(OmemoManager.LoggedInOmemoManager managerGuard, boolean deleteOtherDevices)
             throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException
     {
@@ -346,7 +351,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws XMPPException.XMPPErrorException
      * @throws PubSubException.NotALeafNodeException
      */
-    void publishDeviceIdIfNeeded(OmemoManager.KnownBareJidGuard managerGuard, boolean deleteOtherDevices, boolean publish)
+    void publishDeviceIdIfNeeded(OmemoManager.LoggedInOmemoManager managerGuard, boolean deleteOtherDevices, boolean publish)
             throws SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException,
             XMPPException.XMPPErrorException, PubSubException.NotALeafNodeException
     {
@@ -386,7 +391,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param deviceListIds deviceIds we plan to publish. Stale devices are deleted from that list.
      * @return
      */
-    boolean removeStaleDevicesIfNeeded(OmemoManager.KnownBareJidGuard managerGuard, Set<Integer> deviceListIds) {
+    boolean removeStaleDevicesIfNeeded(OmemoManager.LoggedInOmemoManager managerGuard, Set<Integer> deviceListIds) {
         OmemoManager omemoManager = managerGuard.get();
         OmemoDevice userDevice = omemoManager.getOwnDevice();
         boolean publish = false;
@@ -433,7 +438,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NoResponseException   Exception
      * @throws PubSubException.NotALeafNodeException Exception
      */
-    static void publishDeviceIds(OmemoManager.KnownBareJidGuard managerGuard, OmemoDeviceListElement deviceList)
+    static void publishDeviceIds(OmemoManager.LoggedInOmemoManager managerGuard, OmemoDeviceListElement deviceList)
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
             SmackException.NoResponseException, PubSubException.NotALeafNodeException
     {
@@ -455,7 +460,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NoResponseException
      * @throws NotAPubSubNodeException
      */
-    static LeafNode fetchDeviceListNode(OmemoManager.KnownBareJidGuard managerGuard, BareJid contact)
+    static LeafNode fetchDeviceListNode(OmemoManager.LoggedInOmemoManager managerGuard, BareJid contact)
             throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException, NotAPubSubNodeException
     {
@@ -476,7 +481,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws PubSubException.NotALeafNodeException when the device lists node is not a LeafNode
      * @throws NotAPubSubNodeException
      */
-    static OmemoDeviceListElement fetchDeviceList(OmemoManager.KnownBareJidGuard managerGuard, BareJid contact)
+    static OmemoDeviceListElement fetchDeviceList(OmemoManager.LoggedInOmemoManager managerGuard, BareJid contact)
                     throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
                     SmackException.NoResponseException, PubSubException.NotALeafNodeException, NotAPubSubNodeException
     {
@@ -493,7 +498,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
      */
-    private boolean refreshOwnDeviceList(OmemoManager.KnownBareJidGuard managerGuard)
+    private boolean refreshOwnDeviceList(OmemoManager.LoggedInOmemoManager managerGuard)
             throws SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException,
             XMPPException.XMPPErrorException
     {
@@ -536,7 +541,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
      */
-    void refreshDeviceList(OmemoManager.KnownBareJidGuard managerGuard, BareJid contact)
+    void refreshDeviceList(OmemoManager.LoggedInOmemoManager managerGuard, BareJid contact)
             throws SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException
     {
         OmemoDeviceListElement omemoDeviceListElement;
@@ -565,7 +570,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws PubSubException.NotALeafNodeException when the bundles node is not a LeafNode
      * @throws NotAPubSubNodeException
      */
-    static OmemoBundleVAxolotlElement fetchBundle(OmemoManager.KnownBareJidGuard managerGuard, OmemoDevice contact)
+    static OmemoBundleVAxolotlElement fetchBundle(OmemoManager.LoggedInOmemoManager managerGuard, OmemoDevice contact)
                     throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
                     SmackException.NoResponseException, PubSubException.NotALeafNodeException, NotAPubSubNodeException
     {
@@ -642,7 +647,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param managerGuard omemoManager
      * @param jid the BareJid of the contact
      */
-    void buildMissingOmemoSessions(OmemoManager.KnownBareJidGuard managerGuard, BareJid jid)
+    void buildMissingOmemoSessions(OmemoManager.LoggedInOmemoManager managerGuard, BareJid jid)
             throws SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException,
             CannotEstablishOmemoSessionException
     {
@@ -702,7 +707,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CannotEstablishOmemoSessionException when no session could be established
      * @throws CorruptedOmemoKeyException when the bundle contained an invalid OMEMO identityKey
      */
-    public void buildSessionWithDevice(OmemoManager.KnownBareJidGuard managerGuard,
+    public void buildSessionWithDevice(OmemoManager.LoggedInOmemoManager managerGuard,
                                        OmemoDevice contactsDevice,
                                        boolean fresh)
             throws CannotEstablishOmemoSessionException, CorruptedOmemoKeyException
@@ -743,7 +748,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param device OmemoDevice
      * @throws CorruptedOmemoKeyException
      */
-    protected abstract void processBundle(OmemoManager.KnownBareJidGuard managerGuard,
+    protected abstract void processBundle(OmemoManager.LoggedInOmemoManager managerGuard,
                                           T_Bundle bundle,
                                           OmemoDevice device)
             throws CorruptedOmemoKeyException;
@@ -764,7 +769,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws XMPPException.XMPPErrorException
      * @throws CorruptedOmemoKeyException
      */
-    private Message processReceivingMessage(OmemoManager.KnownBareJidGuard managerGuard,
+    private Message processReceivingMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                             OmemoDevice contactsDevice,
                                             OmemoElement message,
                                             final OmemoMessageInformation information)
@@ -811,7 +816,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws NoRawSessionException                When there is no session to decrypt the message with in the double
      *                                              ratchet library
      */
-    ClearTextMessage processLocalMessage(OmemoManager.KnownBareJidGuard managerGuard,
+    ClearTextMessage processLocalMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                          BareJid sender,
                                          Message message)
             throws InterruptedException, SmackException.NoResponseException, SmackException.NotConnectedException,
@@ -842,7 +847,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws UndecidedOmemoIdentityException
      * @throws NoSuchAlgorithmException
      */
-    OmemoVAxolotlElement processSendingMessage(OmemoManager.KnownBareJidGuard managerGuard,
+    OmemoVAxolotlElement processSendingMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                                BareJid recipient,
                                                Message message)
             throws CryptoFailedException, UndecidedOmemoIdentityException, NoSuchAlgorithmException,
@@ -866,7 +871,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws UndecidedOmemoIdentityException
      * @throws NoSuchAlgorithmException
      */
-    OmemoVAxolotlElement processSendingMessage(OmemoManager.KnownBareJidGuard managerGuard,
+    OmemoVAxolotlElement processSendingMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                                ArrayList<BareJid> recipients,
                                                Message message)
             throws CryptoFailedException, UndecidedOmemoIdentityException, NoSuchAlgorithmException,
@@ -972,7 +977,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NoResponseException
      * @throws NoRawSessionException
      */
-    private Message decryptOmemoMessageElement(OmemoManager.KnownBareJidGuard managerGuard,
+    private Message decryptOmemoMessageElement(OmemoManager.LoggedInOmemoManager managerGuard,
                                                OmemoDevice from,
                                                OmemoElement message,
                                                final OmemoMessageInformation information)
@@ -1000,7 +1005,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NotConnectedException
      * @throws SmackException.NoResponseException
      */
-    private CipherAndAuthTag decryptTransportedOmemoKey(OmemoManager.KnownBareJidGuard managerGuard,
+    private CipherAndAuthTag decryptTransportedOmemoKey(OmemoManager.LoggedInOmemoManager managerGuard,
                                                         OmemoDevice  sender,
                                                         OmemoElement omemoMessage,
                                                         OmemoMessageInformation messageInfo)
@@ -1012,7 +1017,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
 
         int preKeyCountBefore = getOmemoStoreBackend().loadOmemoPreKeys(userDevice).size();
 
-        CipherAndAuthTag cipherAndAuthTag = sessionManagers.get(managerGuard.get()).retrieveMessageKeyAndAuthTag(sender, omemoMessage);
+        CipherAndAuthTag cipherAndAuthTag = omemoRatchets.get(managerGuard.get()).retrieveMessageKeyAndAuthTag(sender, omemoMessage);
 
         messageInfo.setSenderDevice(sender);
         messageInfo.setSenderFingerprint(omemoStore.keyUtil().getFingerprintOfIdentityKey(
@@ -1037,7 +1042,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      *
      * @return OmemoMessageElement
      */
-    OmemoVAxolotlElement encryptOmemoMessage(OmemoManager.KnownBareJidGuard managerGuard,
+    OmemoVAxolotlElement encryptOmemoMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                              HashMap<BareJid, ArrayList<OmemoDevice>> recipients,
                                              Message message)
             throws CryptoFailedException, UndecidedOmemoIdentityException
@@ -1045,7 +1050,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
                 builder;
         try {
-            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard), message.getBody());
+            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard.get()), message.getBody());
         } catch (UnsupportedEncodingException | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException |
                 NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new CryptoFailedException(e);
@@ -1090,7 +1095,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CorruptedOmemoKeyException
      * @throws CannotEstablishOmemoSessionException
      */
-    OmemoVAxolotlElement prepareOmemoKeyTransportElement(OmemoManager.KnownBareJidGuard managerGuard,
+    OmemoVAxolotlElement prepareOmemoKeyTransportElement(OmemoManager.LoggedInOmemoManager managerGuard,
                                                          OmemoDevice... recipients)
             throws CryptoFailedException, UndecidedOmemoIdentityException, CorruptedOmemoKeyException,
             CannotEstablishOmemoSessionException
@@ -1098,7 +1103,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
                 builder;
         try {
-            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard), null);
+            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard.get()), null);
 
         } catch (UnsupportedEncodingException | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException |
                 NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | NoSuchAlgorithmException e) {
@@ -1125,7 +1130,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CorruptedOmemoKeyException
      * @throws CannotEstablishOmemoSessionException
      */
-    OmemoVAxolotlElement prepareOmemoKeyTransportElement(OmemoManager.KnownBareJidGuard managerGuard,
+    OmemoVAxolotlElement prepareOmemoKeyTransportElement(OmemoManager.LoggedInOmemoManager managerGuard,
                                                          byte[] aesKey,
                                                          byte[] iv,
                                                          OmemoDevice... recipients)
@@ -1135,7 +1140,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
                 builder;
         try {
-            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard), aesKey, iv);
+            builder = new OmemoMessageBuilder<>(managerGuard, getOmemoRatchet(managerGuard.get()), aesKey, iv);
 
         } catch (UnsupportedEncodingException | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException |
                 NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | NoSuchAlgorithmException e) {
@@ -1162,7 +1167,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CryptoFailedException
      * @throws UndecidedOmemoIdentityException
      */
-    protected Message getOmemoRatchetUpdateMessage(OmemoManager.KnownBareJidGuard managerGuard,
+    protected Message getOmemoRatchetUpdateMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                                    OmemoDevice recipient,
                                                    boolean preKeyMessage)
             throws CannotEstablishOmemoSessionException, CorruptedOmemoKeyException, CryptoFailedException,
@@ -1191,7 +1196,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CryptoFailedException
      * @throws CannotEstablishOmemoSessionException
      */
-    protected void sendOmemoRatchetUpdateMessage(OmemoManager.KnownBareJidGuard managerGuard,
+    protected void sendOmemoRatchetUpdateMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                                  OmemoDevice recipient,
                                                  boolean preKeyMessage)
             throws UndecidedOmemoIdentityException, CorruptedOmemoKeyException, CryptoFailedException,
@@ -1220,7 +1225,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NotConnectedException
      * @throws SmackException.NoResponseException
      */
-    List<ClearTextMessage> decryptMamQueryResult(OmemoManager.KnownBareJidGuard managerGuard,
+    List<ClearTextMessage> decryptMamQueryResult(OmemoManager.LoggedInOmemoManager managerGuard,
                                                  MamManager.MamQueryResult mamQueryResult)
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
             SmackException.NoResponseException
@@ -1255,7 +1260,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param stanza message
      * @return BareJid of the sender.
      */
-    private static OmemoDevice getSender(OmemoManager.KnownBareJidGuard managerGuard,
+    private static OmemoDevice getSender(OmemoManager.LoggedInOmemoManager managerGuard,
                                          Stanza stanza) {
         OmemoElement omemoElement = stanza.getExtension(OmemoElement.ENCRYPTED, OMEMO_NAMESPACE_V_AXOLOTL);
         Jid sender = stanza.getFrom();
@@ -1276,7 +1281,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param stanza        stanza in question
      * @return              true if MUC message, otherwise false.
      */
-    private static boolean isMucMessage(OmemoManager.KnownBareJidGuard managerGuard, Stanza stanza) {
+    private static boolean isMucMessage(OmemoManager.LoggedInOmemoManager managerGuard, Stanza stanza) {
         BareJid sender = stanza.getFrom().asBareJid();
         MultiUserChatManager mucm = MultiUserChatManager.getInstanceFor(managerGuard.get().getConnection());
 
@@ -1284,7 +1289,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     }
 
     @Override
-    public void onOmemoMessageStanzaReceived(Stanza stanza, OmemoManager.KnownBareJidGuard managerGuard) {
+    public void onOmemoMessageStanzaReceived(Stanza stanza, OmemoManager.LoggedInOmemoManager managerGuard) {
         OmemoManager omemoManager = managerGuard.get();
         Message decrypted;
         OmemoElement omemoMessage = stanza.getExtension(OmemoElement.ENCRYPTED, OMEMO_NAMESPACE_V_AXOLOTL);
@@ -1360,7 +1365,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     public void onOmemoCarbonCopyReceived(CarbonExtension.Direction direction,
                                           Message carbonCopy,
                                           Message wrappingMessage,
-                                          final OmemoManager.KnownBareJidGuard managerGuard)
+                                          final OmemoManager.LoggedInOmemoManager managerGuard)
     {
         OmemoManager omemoManager = managerGuard.get();
 
@@ -1445,17 +1450,17 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     }
 
     protected abstract OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-    instantiateOmemoRatchet(OmemoManager.KnownBareJidGuard manager,
+    instantiateOmemoRatchet(OmemoManager manager,
                             OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store);
 
     protected OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-    getOmemoRatchet(OmemoManager.KnownBareJidGuard guard) {
+    getOmemoRatchet(OmemoManager manager) {
         OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-                sessionManager = sessionManagers.get(guard.get());
-        if (sessionManager == null) {
-            sessionManager = instantiateOmemoRatchet(guard, omemoStore);
-            sessionManagers.put(guard.get(), sessionManager);
+                omemoRatchet = omemoRatchets.get(manager);
+        if (omemoRatchet == null) {
+            omemoRatchet = instantiateOmemoRatchet(manager, omemoStore);
+            omemoRatchets.put(manager, omemoRatchet);
         }
-        return sessionManager;
+        return omemoRatchet;
     }
 }

@@ -59,20 +59,20 @@ public class SignalOmemoStoreConnector
 
     private static final Logger LOGGER = Logger.getLogger(SignalOmemoStoreConnector.class.getName());
 
-    private final OmemoManager.KnownBareJidGuard managerGuard;
+    private final OmemoManager omemoManager;
     private final OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
             SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
             omemoStore;
 
-    public SignalOmemoStoreConnector(OmemoManager.KnownBareJidGuard managerGuard, OmemoStore<IdentityKeyPair,
+    public SignalOmemoStoreConnector(OmemoManager omemoManager, OmemoStore<IdentityKeyPair,
             IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey,
             PreKeyBundle, SessionCipher> store) {
-        this.managerGuard = managerGuard;
+        this.omemoManager = omemoManager;
         this.omemoStore = store;
     }
 
     OmemoDevice getOurDevice() {
-        return managerGuard.get().getOwnDevice();
+        return omemoManager.getOwnDevice();
     }
 
     @Override
@@ -98,7 +98,7 @@ public class SignalOmemoStoreConnector
     public boolean saveIdentity(SignalProtocolAddress signalProtocolAddress, IdentityKey identityKey) {
         OmemoDevice device;
         try {
-            device = omemoStore.keyUtil().addressAsOmemoDevice(signalProtocolAddress);
+            device = asOmemoDevice(signalProtocolAddress);
         } catch (XmppStringprepException e) {
             throw new AssertionError(e);
         }
@@ -150,7 +150,7 @@ public class SignalOmemoStoreConnector
     public SessionRecord loadSession(SignalProtocolAddress signalProtocolAddress) {
         OmemoDevice device;
         try {
-            device = omemoStore.keyUtil().addressAsOmemoDevice(signalProtocolAddress);
+            device = asOmemoDevice(signalProtocolAddress);
         } catch (XmppStringprepException e) {
             throw new AssertionError(e);
         }
@@ -180,7 +180,7 @@ public class SignalOmemoStoreConnector
     public void storeSession(SignalProtocolAddress signalProtocolAddress, SessionRecord sessionRecord) {
         OmemoDevice device;
         try {
-            device = omemoStore.keyUtil().addressAsOmemoDevice(signalProtocolAddress);
+            device = asOmemoDevice(signalProtocolAddress);
         } catch (XmppStringprepException e) {
             throw new AssertionError(e);
         }
@@ -192,7 +192,7 @@ public class SignalOmemoStoreConnector
     public boolean containsSession(SignalProtocolAddress signalProtocolAddress) {
         OmemoDevice device;
         try {
-            device = omemoStore.keyUtil().addressAsOmemoDevice(signalProtocolAddress);
+            device = asOmemoDevice(signalProtocolAddress);
         } catch (XmppStringprepException e) {
             throw new AssertionError(e);
         }
@@ -204,7 +204,7 @@ public class SignalOmemoStoreConnector
     public void deleteSession(SignalProtocolAddress signalProtocolAddress) {
         OmemoDevice device;
         try {
-            device = omemoStore.keyUtil().addressAsOmemoDevice(signalProtocolAddress);
+            device = asOmemoDevice(signalProtocolAddress);
         } catch (XmppStringprepException e) {
             throw new AssertionError(e);
         }
@@ -258,5 +258,13 @@ public class SignalOmemoStoreConnector
     @Override
     public void removeSignedPreKey(int i) {
         omemoStore.removeOmemoSignedPreKey(getOurDevice(), i);
+    }
+
+    public static OmemoDevice asOmemoDevice(SignalProtocolAddress address) throws XmppStringprepException {
+        return new OmemoDevice(JidCreate.bareFrom(address.getName()), address.getDeviceId());
+    }
+
+    public static SignalProtocolAddress asAddress(OmemoDevice device) {
+        return new SignalProtocolAddress(device.getJid().toString(), device.getDeviceId());
     }
 }

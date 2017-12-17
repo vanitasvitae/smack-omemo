@@ -66,7 +66,7 @@ public final class SignalOmemoService
 
     @Override
     protected SignalOmemoRatchet instantiateOmemoRatchet(
-            OmemoManager.KnownBareJidGuard manager,
+            OmemoManager manager,
             OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
                     SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> store)
     {
@@ -111,14 +111,14 @@ public final class SignalOmemoService
     }
 
     @Override
-    protected void processBundle(OmemoManager.KnownBareJidGuard managerGuard,
+    protected void processBundle(OmemoManager.LoggedInOmemoManager managerGuard,
                                  PreKeyBundle preKeyBundle,
                                  OmemoDevice device)
             throws CorruptedOmemoKeyException
     {
-        SignalOmemoStoreConnector connector = new SignalOmemoStoreConnector(managerGuard, getOmemoStoreBackend());
+        SignalOmemoStoreConnector connector = new SignalOmemoStoreConnector(managerGuard.get(), getOmemoStoreBackend());
         SessionBuilder builder = new SessionBuilder(connector, connector, connector, connector,
-                getOmemoStoreBackend().keyUtil().omemoDeviceAsAddress(device));
+                SignalOmemoStoreConnector.asAddress(device));
         try {
             builder.process(preKeyBundle);
             LOGGER.log(Level.FINE, "Session built with " + device);

@@ -25,5 +25,5 @@ import org.jivesoftware.smackx.omemo.OmemoManager;
  */
 public interface OmemoCarbonCopyStanzaReceivedListener {
 
-    void onOmemoCarbonCopyReceived(CarbonExtension.Direction direction, Message carbonCopy, Message wrappingMessage, OmemoManager.KnownBareJidGuard omemoManager);
+    void onOmemoCarbonCopyReceived(CarbonExtension.Direction direction, Message carbonCopy, Message wrappingMessage, OmemoManager.LoggedInOmemoManager omemoManager);
 }

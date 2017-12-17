@@ -204,7 +204,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
                 keyUtil().signedPreKeyPublicForBundle(currentSignedPreKey),
                 keyUtil().signedPreKeySignatureFromKey(currentSignedPreKey),
                 keyUtil().identityKeyForBundle(keyUtil().identityKeyFromPair(identityKeyPair)),
-                keyUtil().preKeyPublisKeysForBundle(preKeys)
+                keyUtil().preKeyPublicKeysForBundle(preKeys)
         );
     }
 
@@ -526,7 +526,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws CannotEstablishOmemoSessionException if we cannot establish a session
      * @return fingerprint of the identityKey
      */
-    public OmemoFingerprint getFingerprint(OmemoManager.KnownBareJidGuard managerGuard, OmemoDevice contactsDevice)
+    public OmemoFingerprint getFingerprint(OmemoManager.LoggedInOmemoManager managerGuard, OmemoDevice contactsDevice)
             throws CannotEstablishOmemoSessionException, CorruptedOmemoKeyException
     {
         OmemoManager omemoManager = managerGuard.get();

@@ -53,6 +53,20 @@ public class OmemoFingerprint implements CharSequence {
         return this.toString().trim().equals(otherFingerprint.toString().trim());
     }
 
+    /**
+     * Split the fingerprint in blocks of 8 characters with spaces between.
+     *
+     * @return Block representation of the fingerprint.
+     */
+    public String blocksOf8Chars() {
+        StringBuilder pretty = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            if (i != 0) pretty.append(" ");
+            pretty.append(this.fingerprintString.substring(8 * i, 8 * (i + 1)));
+        }
+        return pretty.toString();
+    }
+
     @Override
     public int hashCode() {
         return toString().hashCode();

@@ -21,5 +21,5 @@ import org.jivesoftware.smackx.omemo.OmemoManager;
 
 public interface OmemoMessageStanzaReceivedListener {
 
-    void onOmemoMessageStanzaReceived(Stanza stanza, OmemoManager.KnownBareJidGuard omemoManager);
+    void onOmemoMessageStanzaReceived(Stanza stanza, OmemoManager.LoggedInOmemoManager omemoManager);
 }

@@ -25,7 +25,7 @@ import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 
 /**
- * Class that represents a OmemoElement.
+ * Class that represents an OmemoElement.
  * TODO: Move functionality here.
  *
  * @author Paul Schaub

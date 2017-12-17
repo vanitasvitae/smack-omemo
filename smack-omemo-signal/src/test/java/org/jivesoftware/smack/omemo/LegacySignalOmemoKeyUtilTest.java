@@ -28,15 +28,11 @@ import static junit.framework.TestCase.fail;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
-import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.signal.SignalOmemoKeyUtil;
 
 import org.junit.Test;
-import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.stringprep.XmppStringprepException;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
-import org.whispersystems.libsignal.SignalProtocolAddress;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 
 /**
@@ -96,27 +92,5 @@ public class LegacySignalOmemoKeyUtilTest extends SmackTestSuite {
         IdentityKey ik = ikp.getPublicKey();
         assertTrue("Length of fingerprint must be 64.",
                 keyUtil.getFingerprintOfIdentityKey(ik).length() == 64);
-    }
-
-    @Test
-    public void addressToDeviceTest() {
-        SignalProtocolAddress address = new SignalProtocolAddress("test@server.tld",1337);
-        try {
-            OmemoDevice device = keyUtil.addressAsOmemoDevice(address);
-            assertEquals(device, new OmemoDevice(JidCreate.bareFrom("test@server.tld"), 1337));
-        } catch (XmppStringprepException e) {
-            fail("Could not convert address to device: " + e + " " + e.getMessage());
-        }
-    }
-
-    @Test
-    public void deviceToAddressTest() {
-        try {
-            OmemoDevice device = new OmemoDevice(JidCreate.bareFrom("test@server.tld"), 1337);
-            SignalProtocolAddress address = keyUtil.omemoDeviceAsAddress(device);
-            assertEquals(address, new SignalProtocolAddress("test@server.tld", 1337));
-        } catch (XmppStringprepException e) {
-            fail("Could not convert device to address: " + e + " " + e.getMessage());
-        }
     }
 }

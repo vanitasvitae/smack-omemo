@@ -67,7 +67,7 @@ import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
  */
 public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
     private final OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet;
-    private final OmemoManager.KnownBareJidGuard managerGuard;
+    private final OmemoManager.LoggedInOmemoManager managerGuard;
 
     private byte[] messageKey = generateKey();
     private byte[] initializationVector = generateIv();
@@ -91,7 +91,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
-    public OmemoMessageBuilder(OmemoManager.KnownBareJidGuard managerGuard,
+    public OmemoMessageBuilder(OmemoManager.LoggedInOmemoManager managerGuard,
                                OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet,
                                byte[] aesKey, byte[] iv)
             throws NoSuchPaddingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException,
@@ -118,7 +118,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
-    public OmemoMessageBuilder(OmemoManager.KnownBareJidGuard managerGuard,
+    public OmemoMessageBuilder(OmemoManager.LoggedInOmemoManager managerGuard,
                                OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet,
                                String message)
             throws NoSuchPaddingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException,

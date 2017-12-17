@@ -39,12 +39,12 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
     private static final Logger LOGGER = Logger.getLogger(OmemoRatchet.class.getName());
 
-    protected final OmemoManager.KnownBareJidGuard managerGuard;
+    protected final OmemoManager omemoManager;
     protected final OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store;
 
-    public OmemoRatchet(OmemoManager.KnownBareJidGuard managerGuard,
+    public OmemoRatchet(OmemoManager omemoManager,
                         OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store) {
-        this.managerGuard = managerGuard;
+        this.omemoManager = omemoManager;
         this.store = store;
     }
 
@@ -58,13 +58,13 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * Try to decrypt the transported message key using the double ratchet session.
      *
      * @param element omemoElement
-     * @return tuple of cipher generated from the unpacked message key and the authtag
+     * @return tuple of cipher generated from the unpacked message key and the auth-tag
      * @throws CryptoFailedException if decryption using the double ratchet fails
      * @throws NoRawSessionException if we have no session, but the element was NOT a PreKeyMessage
      */
-    public CipherAndAuthTag retrieveMessageKeyAndAuthTag(OmemoDevice sender, OmemoElement element) throws CryptoFailedException,
+    CipherAndAuthTag retrieveMessageKeyAndAuthTag(OmemoDevice sender, OmemoElement element) throws CryptoFailedException,
             NoRawSessionException {
-        int keyId = managerGuard.get().getDeviceId();
+        int keyId = omemoManager.getDeviceId();
         byte[] unpackedKey = null;
         List<CryptoFailedException> decryptExceptions = new ArrayList<>();
         List<OmemoElement.OmemoHeader.Key> keys = element.getHeader().getKeys();
@@ -124,7 +124,7 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @return Message containing the decrypted payload in its body.
      * @throws CryptoFailedException
      */
-    public static Message decryptMessageElement(OmemoElement element, CipherAndAuthTag cipherAndAuthTag) throws CryptoFailedException {
+    static Message decryptMessageElement(OmemoElement element, CipherAndAuthTag cipherAndAuthTag) throws CryptoFailedException {
         if (!element.isMessageElement()) {
             throw new IllegalArgumentException("decryptMessageElement cannot decrypt OmemoElement which is no MessageElement!");
         }
@@ -133,10 +133,8 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             throw new CryptoFailedException("AuthenticationTag is null or has wrong length: "
                     + (cipherAndAuthTag.getAuthTag() == null ? "null" : cipherAndAuthTag.getAuthTag().length));
         }
-        byte[] encryptedBody = new byte[element.getPayload().length + 16];
-        byte[] payload = element.getPayload();
-        System.arraycopy(payload, 0, encryptedBody, 0, payload.length);
-        System.arraycopy(cipherAndAuthTag.getAuthTag(), 0, encryptedBody, payload.length, 16);
+
+        byte[] encryptedBody = payloadAndAuthTag(element, cipherAndAuthTag.getAuthTag());
 
         try {
             String plaintext = new String(cipherAndAuthTag.getCipher().doFinal(encryptedBody), StringUtils.UTF8);
@@ -149,4 +147,16 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                     + e.getMessage());
         }
     }
+
+    static byte[] payloadAndAuthTag(OmemoElement element, byte[] authTag) {
+        if (!element.isMessageElement()) {
+            throw new IllegalArgumentException("OmemoElement has no payload.");
+        }
+
+        byte[] payload = new byte[element.getPayload().length + authTag.length];
+        System.arraycopy(element.getPayload(), 0, payload, 0, element.getPayload().length);
+        System.arraycopy(authTag, 0, payload, payload.length, authTag.length);
+        return payload;
+    }
+
 }
