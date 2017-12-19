@@ -30,8 +30,6 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 
-import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.stringprep.XmppStringprepException;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.InvalidKeyException;
@@ -220,17 +218,5 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
             return null;
         }
         return getFingerprintOfIdentityKey(identityKeyPair.getPublicKey());
-    }
-
-    @Override
-    public SignalProtocolAddress omemoDeviceAsAddress(OmemoDevice contact) {
-        return new SignalProtocolAddress(contact.getJid().asBareJid().toString(), contact.getDeviceId());
-    }
-
-    @Override
-    public OmemoDevice addressAsOmemoDevice(SignalProtocolAddress address)
-            throws XmppStringprepException
-    {
-        return new OmemoDevice(JidCreate.bareFrom(address.getName()), address.getDeviceId());
     }
 }

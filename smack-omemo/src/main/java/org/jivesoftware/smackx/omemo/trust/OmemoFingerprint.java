@@ -61,7 +61,7 @@ public class OmemoFingerprint implements CharSequence {
     public String blocksOf8Chars() {
         StringBuilder pretty = new StringBuilder();
         for (int i = 0; i < 8; i++) {
-            if (i != 0) pretty.append(" ");
+            if (i != 0) pretty.append(' ');
             pretty.append(this.fingerprintString.substring(8 * i, 8 * (i + 1)));
         }
         return pretty.toString();

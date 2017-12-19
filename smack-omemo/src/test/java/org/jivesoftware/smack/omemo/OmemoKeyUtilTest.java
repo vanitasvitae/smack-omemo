@@ -31,6 +31,7 @@ import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.provider.OmemoBundleVAxolotlProvider;
+import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 
 import org.junit.Test;
@@ -127,8 +128,8 @@ extends SmackTestSuite {
 
     @Test
     public void testPrettyFingerprint() {
-        String ugly = "FFFFFFFFEEEEEEEEDDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA9999999988888888";
-        String pretty = OmemoKeyUtil.prettyFingerprint(ugly);
+        OmemoFingerprint fingerprint = new OmemoFingerprint("FFFFFFFFEEEEEEEEDDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA9999999988888888");
+        String pretty = fingerprint.blocksOf8Chars();
         assertEquals(pretty, "FFFFFFFF EEEEEEEE DDDDDDDD CCCCCCCC BBBBBBBB AAAAAAAA 99999999 88888888");
     }
 }
