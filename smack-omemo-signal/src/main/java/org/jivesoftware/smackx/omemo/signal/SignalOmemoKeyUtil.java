@@ -33,8 +33,6 @@ import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.InvalidKeyException;
-import org.whispersystems.libsignal.SessionCipher;
-import org.whispersystems.libsignal.SignalProtocolAddress;
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
 import org.whispersystems.libsignal.state.PreKeyBundle;
@@ -49,7 +47,7 @@ import org.whispersystems.libsignal.util.KeyHelper;
  * @author Paul Schaub
  */
 public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
-        SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
+        SessionRecord, ECPublicKey, PreKeyBundle>
 {
     @Override
     public IdentityKeyPair generateOmemoIdentityKeyPair() {

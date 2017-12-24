@@ -36,13 +36,11 @@ import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
  * @param <T_PreKey>    PreKey class
  * @param <T_SigPreKey> SignedPreKey class
  * @param <T_Sess>      Session class
- * @param <T_Addr>      Address class
  * @param <T_ECPub>     Elliptic Curve PublicKey class
  * @param <T_Bundle>    Bundle class
- * @param <T_Ciph>      Cipher class
  * @author Paul Schaub
  */
-public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
+public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_ECPub, T_Bundle> {
     private static final Logger LOGGER = Logger.getLogger(OmemoKeyUtil.class.getName());
 
     public final Bundle BUNDLE = new Bundle();

@@ -55,8 +55,7 @@ public class SignalFileBasedOmemoStore
     }
 
     @Override
-    public OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-            SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> keyUtil()
+    public OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, ECPublicKey, PreKeyBundle> keyUtil()
     {
         return new SignalOmemoKeyUtil();
     }

@@ -37,12 +37,12 @@ import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 import org.junit.Test;
 import org.jxmpp.jid.impl.JidCreate;
 
-public abstract class OmemoKeyUtilTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
+public abstract class OmemoKeyUtilTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_ECPub, T_Bundle>
 extends SmackTestSuite {
 
-    protected OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> keyUtil;
+    protected OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_ECPub, T_Bundle> keyUtil;
 
-    public OmemoKeyUtilTest(OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> keyUtil) {
+    public OmemoKeyUtilTest(OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_ECPub, T_Bundle> keyUtil) {
         this.keyUtil = keyUtil;
     }
 

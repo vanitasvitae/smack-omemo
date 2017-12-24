@@ -31,8 +31,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
-import org.whispersystems.libsignal.SessionCipher;
-import org.whispersystems.libsignal.SignalProtocolAddress;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
 import org.whispersystems.libsignal.state.PreKeyBundle;
 import org.whispersystems.libsignal.state.PreKeyRecord;
@@ -46,10 +44,9 @@ import org.whispersystems.libsignal.state.SignedPreKeyRecord;
  */
 @RunWith(value = Parameterized.class)
 public class SignalOmemoKeyUtilTest
-        extends OmemoKeyUtilTest<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-        SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> {
+        extends OmemoKeyUtilTest<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, ECPublicKey, PreKeyBundle> {
 
-    public SignalOmemoKeyUtilTest(OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> keyUtil) {
+    public SignalOmemoKeyUtilTest(OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, ECPublicKey, PreKeyBundle> keyUtil) {
         super(keyUtil);
     }
 

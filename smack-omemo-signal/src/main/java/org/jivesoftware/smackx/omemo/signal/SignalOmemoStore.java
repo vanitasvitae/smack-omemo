@@ -46,8 +46,7 @@ public abstract class SignalOmemoStore
     private final SignalOmemoKeyUtil signalKeyUtil = new SignalOmemoKeyUtil();
 
     @Override
-    public OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-            SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> keyUtil() {
+    public OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, ECPublicKey, PreKeyBundle> keyUtil() {
         return signalKeyUtil;
     }
 }
