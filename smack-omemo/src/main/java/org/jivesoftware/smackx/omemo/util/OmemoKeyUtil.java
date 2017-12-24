@@ -23,7 +23,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
+import org.jivesoftware.smackx.omemo.element.OmemoBundleElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
@@ -59,7 +59,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
          * @return identityKey
          * @throws CorruptedOmemoKeyException if the key is damaged/malformed
          */
-        public T_IdKey identityKey(OmemoBundleVAxolotlElement bundle) throws CorruptedOmemoKeyException {
+        public T_IdKey identityKey(OmemoBundleElement bundle) throws CorruptedOmemoKeyException {
             return identityKeyFromBytes(bundle.getIdentityKey());
         }
 
@@ -70,7 +70,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
          * @return singedPreKey
          * @throws CorruptedOmemoKeyException if the key is damaged/malformed
          */
-        public T_ECPub signedPreKeyPublic(OmemoBundleVAxolotlElement bundle) throws CorruptedOmemoKeyException {
+        public T_ECPub signedPreKeyPublic(OmemoBundleElement bundle) throws CorruptedOmemoKeyException {
             return signedPreKeyPublicFromBytes(bundle.getSignedPreKey());
         }
 
@@ -80,7 +80,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
          * @param bundle OmemoBundleElement
          * @return signedPreKeyId
          */
-        public int signedPreKeyId(OmemoBundleVAxolotlElement bundle) {
+        public int signedPreKeyId(OmemoBundleElement bundle) {
             return bundle.getSignedPreKeyId();
         }
 
@@ -90,7 +90,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
          * @param bundle OmemoBundleElement
          * @return signature
          */
-        public byte[] signedPreKeySignature(OmemoBundleVAxolotlElement bundle) {
+        public byte[] signedPreKeySignature(OmemoBundleElement bundle) {
             return bundle.getSignedPreKeySignature();
         }
 
@@ -102,7 +102,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
          * @return the preKey
          * @throws CorruptedOmemoKeyException when the key cannot be parsed from bytes
          */
-        public T_ECPub preKeyPublic(OmemoBundleVAxolotlElement bundle, int keyId) throws CorruptedOmemoKeyException {
+        public T_ECPub preKeyPublic(OmemoBundleElement bundle, int keyId) throws CorruptedOmemoKeyException {
             return preKeyPublicFromBytes(bundle.getPreKey(keyId));
         }
 
@@ -116,7 +116,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
          * @return a HashMap with one T_Bundle per preKey and the preKeyId as key
          * @throws CorruptedOmemoKeyException when one of the keys cannot be parsed
          */
-        public HashMap<Integer, T_Bundle> bundles(OmemoBundleVAxolotlElement bundle, OmemoDevice contact) throws CorruptedOmemoKeyException {
+        public HashMap<Integer, T_Bundle> bundles(OmemoBundleElement bundle, OmemoDevice contact) throws CorruptedOmemoKeyException {
             HashMap<Integer, T_Bundle> bundles = new HashMap<>();
             for (int deviceId : bundle.getPreKeys().keySet()) {
                 try {
@@ -255,7 +255,7 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @return PreKeyBundle (T_PreKey)
      * @throws CorruptedOmemoKeyException if some key is damaged or malformed
      */
-    public abstract T_Bundle bundleFromOmemoBundle(OmemoBundleVAxolotlElement bundle, OmemoDevice contact, int keyId) throws CorruptedOmemoKeyException;
+    public abstract T_Bundle bundleFromOmemoBundle(OmemoBundleElement bundle, OmemoDevice contact, int keyId) throws CorruptedOmemoKeyException;
 
     /**
      * Extract the signature from a signedPreKey.

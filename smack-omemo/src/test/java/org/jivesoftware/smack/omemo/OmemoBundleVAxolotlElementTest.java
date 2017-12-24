@@ -27,7 +27,7 @@ import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 
-import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
+import org.jivesoftware.smackx.omemo.element.OmemoBundleElement_VAxolotl;
 import org.jivesoftware.smackx.omemo.provider.OmemoBundleVAxolotlProvider;
 
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class OmemoBundleVAxolotlElementTest extends SmackTestSuite {
         preKeysB64.put(preKeyId1, preKey1B64);
         preKeysB64.put(preKeyId2, preKey2B64);
 
-        OmemoBundleVAxolotlElement bundle = new OmemoBundleVAxolotlElement(signedPreKeyId,
+        OmemoBundleElement_VAxolotl bundle = new OmemoBundleElement_VAxolotl(signedPreKeyId,
                 signedPreKeyB64, signedPreKeySigB64, identityKeyB64, preKeysB64);
 
         assertEquals("ElementName must match.", "bundle", bundle.getElementName());
@@ -85,7 +85,7 @@ public class OmemoBundleVAxolotlElementTest extends SmackTestSuite {
         byte[] firstPreKey = "FirstPreKey".getBytes(StringUtils.UTF8);
         byte[] secondPreKey = "SecondPreKey".getBytes(StringUtils.UTF8);
 
-        OmemoBundleVAxolotlElement parsed = new OmemoBundleVAxolotlProvider().parse(TestUtils.getParser(actual));
+        OmemoBundleElement_VAxolotl parsed = new OmemoBundleVAxolotlProvider().parse(TestUtils.getParser(actual));
 
         assertTrue("B64-decoded signedPreKey must match.", Arrays.equals(signedPreKey, parsed.getSignedPreKey()));
         assertEquals("SignedPreKeyId must match", signedPreKeyId, parsed.getSignedPreKeyId());

@@ -41,7 +41,10 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.omemo.OmemoManager;
 import org.jivesoftware.smackx.omemo.OmemoRatchet;
-import org.jivesoftware.smackx.omemo.element.OmemoVAxolotlElement;
+import org.jivesoftware.smackx.omemo.element.OmemoElement;
+import org.jivesoftware.smackx.omemo.element.OmemoElement_VAxolotl;
+import org.jivesoftware.smackx.omemo.element.OmemoHeaderElement_VAxolotl;
+import org.jivesoftware.smackx.omemo.element.OmemoKeyElement;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
@@ -73,7 +76,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     private byte[] initializationVector = generateIv();
 
     private byte[] ciphertextMessage;
-    private final ArrayList<OmemoVAxolotlElement.OmemoHeader.Key> keys = new ArrayList<>();
+    private final ArrayList<OmemoKeyElement> keys = new ArrayList<>();
 
     /**
      * Create a OmemoMessageBuilder.
@@ -211,7 +214,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
         if (ignoreTrust || managerGuard.get().isTrustedOmemoIdentity(contactsDevice, fingerprint)) {
             // Encrypt key and save to header
             CiphertextTuple encryptedKey = ratchet.doubleRatchetEncrypt(contactsDevice, messageKey);
-            keys.add(new OmemoVAxolotlElement.OmemoHeader.Key(encryptedKey.getCiphertext(), contactsDevice.getDeviceId(), encryptedKey.isPreKeyMessage()));
+            keys.add(new OmemoKeyElement(encryptedKey.getCiphertext(), contactsDevice.getDeviceId(), encryptedKey.isPreKeyMessage()));
         }
     }
 
@@ -220,13 +223,13 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      *
      * @return OmemoMessageElement
      */
-    public OmemoVAxolotlElement finish() {
-        OmemoVAxolotlElement.OmemoHeader header = new OmemoVAxolotlElement.OmemoHeader(
+    public OmemoElement finish() {
+        OmemoHeaderElement_VAxolotl header = new OmemoHeaderElement_VAxolotl(
                 managerGuard.get().getDeviceId(),
                 keys,
                 initializationVector
         );
-        return new OmemoVAxolotlElement(header, ciphertextMessage);
+        return new OmemoElement_VAxolotl(header, ciphertextMessage);
     }
 
     /**

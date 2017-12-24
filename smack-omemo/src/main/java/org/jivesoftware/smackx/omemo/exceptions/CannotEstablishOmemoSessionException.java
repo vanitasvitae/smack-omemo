@@ -35,6 +35,10 @@ public class CannotEstablishOmemoSessionException extends Exception {
     private final HashMap<BareJid, HashMap<OmemoDevice, Throwable>> failures = new HashMap<>();
     private final HashMap<BareJid, ArrayList<OmemoDevice>> successes = new HashMap<>();
 
+    public CannotEstablishOmemoSessionException() {
+        super();
+    }
+
     public CannotEstablishOmemoSessionException(OmemoDevice failed, Throwable reason) {
         super();
         getFailsOfContact(failed.getJid()).put(failed, reason);

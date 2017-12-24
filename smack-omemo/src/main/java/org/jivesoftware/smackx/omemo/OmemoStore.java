@@ -16,7 +16,7 @@
  */
 package org.jivesoftware.smackx.omemo;
 
-import static org.jivesoftware.smackx.omemo.util.OmemoConstants.TARGET_PRE_KEY_COUNT;
+import static org.jivesoftware.smackx.omemo.util.OmemoConstants.PRE_KEY_COUNT_PER_BUNDLE;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -26,7 +26,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
+import org.jivesoftware.smackx.omemo.element.OmemoBundleElement_VAxolotl;
 import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
@@ -99,7 +99,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @param contact Contact we received the list from.
      * @param list    List we received.
      */
-    void mergeCachedDeviceList(OmemoDevice userDevice, BareJid contact, OmemoDeviceListElement list) {
+    CachedDeviceList mergeCachedDeviceList(OmemoDevice userDevice, BareJid contact, OmemoDeviceListElement list) {
         CachedDeviceList cached = loadCachedDeviceList(userDevice, contact);
 
         if (cached == null) {
@@ -108,8 +108,10 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
 
         if (list != null) {
             cached.merge(list.getDeviceIds());
+            storeCachedDeviceList(userDevice, contact, cached);
         }
-        storeCachedDeviceList(userDevice, contact, cached);
+
+        return cached;
     }
 
     /**
@@ -165,13 +167,30 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     /**
      * Pack a OmemoBundleElement containing our key material.
      * If we used up n preKeys since we last published our bundle, generate n new preKeys and add them to the bundle.
-     * We should always publish TARGET_PRE_KEY_COUNT keys.
+     * We should always publish PRE_KEY_COUNT_PER_BUNDLE keys.
      *
      * @param userDevice our OmemoDevice.
      * @return OmemoBundleElement
      * @throws CorruptedOmemoKeyException when a key could not be loaded
      */
-    OmemoBundleVAxolotlElement packOmemoBundle(OmemoDevice userDevice)
+    OmemoBundleElement_VAxolotl packOmemoBundle(OmemoDevice userDevice)
+            throws CorruptedOmemoKeyException
+    {
+        createMissingKeys(userDevice);
+
+        int currentSignedPreKeyId = loadCurrentOmemoSignedPreKeyId(userDevice);
+        T_SigPreKey currentSignedPreKey = loadOmemoSignedPreKeys(userDevice).get(currentSignedPreKeyId);
+
+        return new OmemoBundleElement_VAxolotl(
+                currentSignedPreKeyId,
+                keyUtil().signedPreKeyPublicForBundle(currentSignedPreKey),
+                keyUtil().signedPreKeySignatureFromKey(currentSignedPreKey),
+                keyUtil().identityKeyForBundle(keyUtil().identityKeyFromPair(loadOmemoIdentityKeyPair(userDevice))),
+                keyUtil().preKeyPublicKeysForBundle(loadOmemoPreKeys(userDevice))
+        );
+    }
+
+    private void createMissingKeys(OmemoDevice userDevice)
             throws CorruptedOmemoKeyException
     {
         T_IdKeyPair identityKeyPair = loadOmemoIdentityKeyPair(userDevice);
@@ -183,29 +202,16 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
         TreeMap<Integer, T_SigPreKey> signedPreKeys = loadOmemoSignedPreKeys(userDevice);
         if (signedPreKeys.size() == 0) {
             changeSignedPreKey(userDevice);
-            signedPreKeys = loadOmemoSignedPreKeys(userDevice);
         }
 
-        int currentSignedPreKeyId = signedPreKeys.lastKey();
-        T_SigPreKey currentSignedPreKey = signedPreKeys.get(currentSignedPreKeyId);
-
         TreeMap<Integer, T_PreKey> preKeys = loadOmemoPreKeys(userDevice);
-        int newKeysCount = TARGET_PRE_KEY_COUNT - preKeys.size();
+        int newKeysCount = PRE_KEY_COUNT_PER_BUNDLE - preKeys.size();
         int startId = preKeys.size() == 0 ? 0 : preKeys.lastKey();
 
         if (newKeysCount > 0) {
             TreeMap<Integer, T_PreKey> newKeys = generateOmemoPreKeys(startId + 1, newKeysCount);
             storeOmemoPreKeys(userDevice, newKeys);
-            preKeys.putAll(newKeys);
         }
-
-        return new OmemoBundleVAxolotlElement(
-                currentSignedPreKeyId,
-                keyUtil().signedPreKeyPublicForBundle(currentSignedPreKey),
-                keyUtil().signedPreKeySignatureFromKey(currentSignedPreKey),
-                keyUtil().identityKeyForBundle(keyUtil().identityKeyFromPair(identityKeyPair)),
-                keyUtil().preKeyPublicKeysForBundle(preKeys)
-        );
     }
 
     // *sigh*
@@ -374,6 +380,10 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      */
     public abstract T_SigPreKey loadOmemoSignedPreKey(OmemoDevice userDevice, int signedPreKeyId);
 
+    public int loadCurrentOmemoSignedPreKeyId(OmemoDevice userDevice) {
+        return loadOmemoSignedPreKeys(userDevice).lastKey();
+    }
+
     /**
      * Load all our signed PreKeys.
      *
@@ -474,6 +484,15 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @return CachedDeviceList of the contact
      */
     public abstract CachedDeviceList loadCachedDeviceList(OmemoDevice userDevice, BareJid contact);
+
+    /**
+     * Load a list of deviceIds from our own devices.
+     * @param userDevice
+     * @return
+     */
+    public CachedDeviceList loadCachedDeviceList(OmemoDevice userDevice) {
+        return loadCachedDeviceList(userDevice, userDevice.getJid());
+    }
 
     /**
      * Store the DeviceList of the contact in local storage.

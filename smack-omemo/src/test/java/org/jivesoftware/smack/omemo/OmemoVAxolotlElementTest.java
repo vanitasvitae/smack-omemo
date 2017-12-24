@@ -24,9 +24,9 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smack.util.stringencoder.Base64;
-
-import org.jivesoftware.smackx.omemo.element.OmemoElement;
-import org.jivesoftware.smackx.omemo.element.OmemoVAxolotlElement;
+import org.jivesoftware.smackx.omemo.element.OmemoElement_VAxolotl;
+import org.jivesoftware.smackx.omemo.element.OmemoHeaderElement_VAxolotl;
+import org.jivesoftware.smackx.omemo.element.OmemoKeyElement;
 import org.jivesoftware.smackx.omemo.provider.OmemoVAxolotlProvider;
 import org.jivesoftware.smackx.omemo.util.OmemoMessageBuilder;
 
@@ -47,12 +47,12 @@ public class OmemoVAxolotlElementTest extends SmackTestSuite {
         int sid = 12131415;
         byte[] iv = OmemoMessageBuilder.generateIv();
 
-        ArrayList<OmemoElement.OmemoHeader.Key> keys = new ArrayList<>();
-        keys.add(new OmemoElement.OmemoHeader.Key(keyData1, keyId1));
-        keys.add(new OmemoElement.OmemoHeader.Key(keyData2, keyId2, true));
+        ArrayList<OmemoKeyElement> keys = new ArrayList<>();
+        keys.add(new OmemoKeyElement(keyData1, keyId1));
+        keys.add(new OmemoKeyElement(keyData2, keyId2, true));
 
-        OmemoVAxolotlElement.OmemoHeader header = new OmemoElement.OmemoHeader(sid, keys, iv);
-        OmemoVAxolotlElement element = new OmemoVAxolotlElement(header, payload);
+        OmemoHeaderElement_VAxolotl header = new OmemoHeaderElement_VAxolotl(sid, keys, iv);
+        OmemoElement_VAxolotl element = new OmemoElement_VAxolotl(header, payload);
 
         String expected =
                 "<encrypted xmlns='eu.siacs.conversations.axolotl'>" +
@@ -69,7 +69,9 @@ public class OmemoVAxolotlElementTest extends SmackTestSuite {
         String actual = element.toXML(null).toString();
         assertEquals("Serialized xml of OmemoElement must match.", expected, actual);
 
-        OmemoVAxolotlElement parsed = new OmemoVAxolotlProvider().parse(TestUtils.getParser(actual));
-        assertEquals("Parsed OmemoElement must equal the original.", element.toXML(null).toString(), parsed.toXML(null).toString());
+        OmemoElement_VAxolotl parsed = new OmemoVAxolotlProvider().parse(TestUtils.getParser(actual));
+        assertEquals("Parsed OmemoElement must equal the original.",
+                element.toXML(null).toString(),
+                parsed.toXML(null).toString());
     }
 }

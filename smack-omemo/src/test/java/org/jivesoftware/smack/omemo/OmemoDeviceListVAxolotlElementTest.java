@@ -24,7 +24,7 @@ import java.util.HashSet;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 
-import org.jivesoftware.smackx.omemo.element.OmemoDeviceListVAxolotlElement;
+import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement_VAxolotl;
 import org.jivesoftware.smackx.omemo.provider.OmemoDeviceListVAxolotlProvider;
 
 import org.junit.Test;
@@ -41,11 +41,11 @@ public class OmemoDeviceListVAxolotlElementTest extends SmackTestSuite {
         ids.add(1234);
         ids.add(9876);
 
-        OmemoDeviceListVAxolotlElement element = new OmemoDeviceListVAxolotlElement(ids);
+        OmemoDeviceListElement_VAxolotl element = new OmemoDeviceListElement_VAxolotl(ids);
         String xml = element.toXML(null).toString();
 
         XmlPullParser parser = TestUtils.getParser(xml);
-        OmemoDeviceListVAxolotlElement parsed = new OmemoDeviceListVAxolotlProvider().parse(parser);
+        OmemoDeviceListElement_VAxolotl parsed = new OmemoDeviceListVAxolotlProvider().parse(parser);
 
         assertTrue("Parsed element must equal the original.", parsed.getDeviceIds().equals(element.getDeviceIds()));
         assertEquals("Generated XML must match.",

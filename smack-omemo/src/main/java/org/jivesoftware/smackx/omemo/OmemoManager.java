@@ -55,9 +55,8 @@ import org.jivesoftware.smackx.mam.MamManager;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
-import org.jivesoftware.smackx.omemo.element.OmemoDeviceListVAxolotlElement;
+import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement_VAxolotl;
 import org.jivesoftware.smackx.omemo.element.OmemoElement;
-import org.jivesoftware.smackx.omemo.element.OmemoVAxolotlElement;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
@@ -148,9 +147,11 @@ public final class OmemoManager extends Manager {
      * Return an OmemoManager instance for the given connection and deviceId.
      * If there was an OmemoManager for the connection and id before, return it. Otherwise create a new OmemoManager
      * instance and return it.
+     *
      * @param connection XmppConnection.
      * @param deviceId MUST NOT be null and MUST be greater than 0.
-     * @return
+     *
+     * @return manager
      */
     public synchronized static OmemoManager getInstanceFor(XMPPConnection connection, Integer deviceId) {
         if (deviceId == null || deviceId < 1) {
@@ -173,10 +174,14 @@ public final class OmemoManager extends Manager {
     }
 
     /**
-     * Returns an OmemoManager instance for the given connection. If there was no OmemoManager for that connection
-     * before, create a new one. If there was one before, return it. If there were multiple managers before, return the
-     * one with the lowest deviceId.
+     * Returns an OmemoManager instance for the given connection. If there was one manager for the connection before,
+     * return it. If there were multiple managers before, return the one with the lowest deviceId.
+     * If there was no manager before, return a new one. As soon as the connection gets authenticated, the manager
+     * will look for local deviceIDs and select the lowest one as its id. If there are not local deviceIds, the manager
+     * will assign itself a random id.
+     *
      * @param connection XmppConnection.
+     *
      * @return manager
      */
     public synchronized static OmemoManager getInstanceFor(XMPPConnection connection) {
@@ -201,7 +206,9 @@ public final class OmemoManager extends Manager {
 
     /**
      * Set a TrustCallback for this particular OmemoManager.
-     * @param callback trustCallback used to query and modify trust states.
+     * TrustCallbacks are used to query and modify trust decisions.
+     *
+     * @param callback trustCallback.
      */
     public void setTrustCallback(TrustCallback callback) {
         if (trustCallback != null) {
@@ -237,7 +244,8 @@ public final class OmemoManager extends Manager {
     /**
      * Initialize the manager without blocking. Once the manager is successfully initialized, the finishedCallback will
      * be notified. It will also get notified, if an error occurs.
-     * @param finishedCallback
+     *
+     * @param finishedCallback callback that gets called once the manager is initialized.
      */
     public void initializeAsync(final FinishedCallback finishedCallback) {
         Async.go(new Runnable() {
@@ -257,7 +265,7 @@ public final class OmemoManager extends Manager {
      * OMEMO encrypt a cleartext message for a single recipient.
      * Note that this method does NOT set the 'to' attribute of the message.
      *
-     * @param to recipients barejid
+     * @param to recipients bareJid
      * @param message text to encrypt
      * @return encrypted message
      * @throws CryptoFailedException                when something crypto related fails
@@ -278,7 +286,7 @@ public final class OmemoManager extends Manager {
             LoggedInOmemoManager guard = new LoggedInOmemoManager(this);
             Message plaintext = new Message();
             plaintext.setBody(message);
-            OmemoVAxolotlElement encrypted = getOmemoService().processSendingMessage(guard, to, plaintext);
+            OmemoElement encrypted = getOmemoService().processSendingMessage(guard, to, plaintext);
             return finishMessage(encrypted);
         }
     }
@@ -306,7 +314,7 @@ public final class OmemoManager extends Manager {
         synchronized (LOCK) {
             Message m = new Message();
             m.setBody(message);
-            OmemoVAxolotlElement encrypted = getOmemoService().processSendingMessage(
+            OmemoElement encrypted = getOmemoService().processSendingMessage(
                     new LoggedInOmemoManager(this), recipients, m);
             return finishMessage(encrypted);
         }
@@ -368,7 +376,7 @@ public final class OmemoManager extends Manager {
         synchronized (LOCK) {
             Message m = new Message();
             m.setBody(message);
-            OmemoVAxolotlElement encrypted = getOmemoService()
+            OmemoElement encrypted = getOmemoService()
                     .encryptOmemoMessage(new LoggedInOmemoManager(this), exception.getSuccesses(), m);
             return finishMessage(encrypted);
         }
@@ -483,43 +491,6 @@ public final class OmemoManager extends Manager {
     }
 
     /**
-     * Clear all other devices except this one from our device list and republish the list.
-     *
-     * @throws InterruptedException
-     * @throws SmackException
-     * @throws XMPPException.XMPPErrorException
-     * @throws CorruptedOmemoKeyException
-     */
-    public void purgeDeviceList()
-            throws SmackException, InterruptedException, XMPPException.XMPPErrorException, CorruptedOmemoKeyException
-    {
-        synchronized (LOCK) {
-            LoggedInOmemoManager managerGuard = new LoggedInOmemoManager(this);
-            getOmemoService().publishDeviceIdIfNeeded(managerGuard, true);
-            getOmemoService().publishBundle(managerGuard);
-        }
-    }
-
-    /**
-     * Generate fresh identity keys and bundle and publish it to the server.
-     * @throws SmackException
-     * @throws InterruptedException
-     * @throws XMPPException.XMPPErrorException
-     * @throws CorruptedOmemoKeyException
-     */
-    public void regenerateIdentity()
-            throws SmackException, InterruptedException, XMPPException.XMPPErrorException, CorruptedOmemoKeyException
-    {
-        synchronized (LOCK) {
-            LoggedInOmemoManager managerGuard = new LoggedInOmemoManager(this);
-            // create a new identity and publish new keys to the server
-            getOmemoService().regenerate(managerGuard);
-            getOmemoService().publishDeviceIdIfNeeded(managerGuard, false);
-            getOmemoService().publishBundle(managerGuard);
-        }
-    }
-
-    /**
      * Send a ratchet update message. This can be used to advance the ratchet of a session in order to maintain forward
      * secrecy.
      *
@@ -552,7 +523,7 @@ public final class OmemoManager extends Manager {
      * @throws CryptoFailedException                When something fails with the crypto
      * @throws CannotEstablishOmemoSessionException When we can't establish a session with the recipient
      */
-    public OmemoVAxolotlElement createKeyTransportElement(byte[] aesKey, byte[] iv, OmemoDevice ... to)
+    public OmemoElement createKeyTransportElement(byte[] aesKey, byte[] iv, OmemoDevice ... to)
             throws UndecidedOmemoIdentityException, CorruptedOmemoKeyException, CryptoFailedException,
             CannotEstablishOmemoSessionException, SmackException.NotLoggedInException
     {
@@ -571,7 +542,7 @@ public final class OmemoManager extends Manager {
      * @param encrypted OmemoMessageElement
      * @return Message containing the OMEMO element and some additional information
      */
-    Message finishMessage(OmemoVAxolotlElement encrypted) {
+    Message finishMessage(OmemoElement encrypted) {
         if (encrypted == null) {
             return null;
         }
@@ -794,8 +765,7 @@ public final class OmemoManager extends Manager {
             // generate key
             getOmemoService().getOmemoStoreBackend().changeSignedPreKey(getOwnDevice());
             // publish
-            getOmemoService().publishDeviceIdIfNeeded(managerGuard, false);
-            getOmemoService().publishBundle(managerGuard);
+            getOmemoService().publish(managerGuard);
         }
     }
 
@@ -805,7 +775,7 @@ public final class OmemoManager extends Manager {
      * @return true if stanza has extension 'encrypted'
      */
     public static boolean stanzaContainsOmemoElement(Stanza stanza) {
-        return stanza.hasExtension(OmemoElement.ENCRYPTED, OMEMO_NAMESPACE_V_AXOLOTL);
+        return stanza.hasExtension(OmemoElement.NAME_ENCRYPTED, OMEMO_NAMESPACE_V_AXOLOTL);
     }
 
     /**
@@ -1013,13 +983,13 @@ public final class OmemoManager extends Manager {
 
                     PayloadItem<?> payloadItem = (PayloadItem<?>) item;
 
-                    if (!(payloadItem.getPayload() instanceof  OmemoDeviceListVAxolotlElement)) {
+                    if (!(payloadItem.getPayload() instanceof OmemoDeviceListElement_VAxolotl)) {
                         continue;
                     }
 
                     // Device List <list>
-                    OmemoDeviceListVAxolotlElement omemoDeviceListElement =
-                            (OmemoDeviceListVAxolotlElement) payloadItem.getPayload();
+                    OmemoDeviceListElement_VAxolotl omemoDeviceListElement =
+                            (OmemoDeviceListElement_VAxolotl) payloadItem.getPayload();
                     Integer ourDeviceId = getDeviceId();
 
                     getOmemoService().getOmemoStoreBackend()
@@ -1047,8 +1017,8 @@ public final class OmemoManager extends Manager {
 
                     // enroll at the deviceList
                     deviceListIds.add(ourDeviceId);
-                    final OmemoDeviceListVAxolotlElement newOmemoDeviceListElement =
-                            new OmemoDeviceListVAxolotlElement(deviceListIds);
+                    final OmemoDeviceListElement_VAxolotl newOmemoDeviceListElement =
+                            new OmemoDeviceListElement_VAxolotl(deviceListIds);
 
                     // PEPListener is a synchronous listener.
                     // Avoid any deadlocks by using an async task to update the device list.

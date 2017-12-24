@@ -100,12 +100,13 @@ public class CachedDeviceList implements Serializable {
     }
 
     /**
-     * Add a device to the list of active devices.
+     * Add a device to the list of active devices and remove it from inactive.
      *
      * @param deviceId deviceId that will be added
      */
     public void addDevice(int deviceId) {
         activeDevices.add(deviceId);
+        inactiveDevices.remove(deviceId);
     }
 
     /**
@@ -116,6 +117,10 @@ public class CachedDeviceList implements Serializable {
      */
     public boolean contains(int deviceId) {
         return activeDevices.contains(deviceId) || inactiveDevices.contains(deviceId);
+    }
+
+    public boolean isActive(int deviceId) {
+        return getActiveDevices().contains(deviceId);
     }
 
     @Override

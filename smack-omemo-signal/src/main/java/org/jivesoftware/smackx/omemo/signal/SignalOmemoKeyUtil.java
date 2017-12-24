@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.TreeMap;
 
-import org.jivesoftware.smackx.omemo.element.OmemoBundleVAxolotlElement;
+import org.jivesoftware.smackx.omemo.element.OmemoBundleElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
@@ -141,7 +141,7 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
     }
 
     @Override
-    public PreKeyBundle bundleFromOmemoBundle(OmemoBundleVAxolotlElement bundle, OmemoDevice contact, int preKeyId)
+    public PreKeyBundle bundleFromOmemoBundle(OmemoBundleElement bundle, OmemoDevice contact, int preKeyId)
             throws CorruptedOmemoKeyException
     {
         return new PreKeyBundle(0,

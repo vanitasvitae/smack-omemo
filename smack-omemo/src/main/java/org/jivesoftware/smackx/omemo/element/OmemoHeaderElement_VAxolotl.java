@@ -16,24 +16,12 @@
  */
 package org.jivesoftware.smackx.omemo.element;
 
-import static org.jivesoftware.smackx.omemo.util.OmemoConstants.OMEMO_NAMESPACE_V_AXOLOTL;
+import java.util.ArrayList;
 
-import java.util.Set;
+public class OmemoHeaderElement_VAxolotl extends OmemoHeaderElement {
 
-/**
- * The OMEMO device list element with the legacy Axolotl namespace.
- *
- * @author Paul Schaub
- */
-public class OmemoDeviceListVAxolotlElement extends OmemoDeviceListElement {
-
-    public OmemoDeviceListVAxolotlElement(Set<Integer> deviceIds) {
-        super(deviceIds);
-    }
-
-    @Override
-    public String getNamespace() {
-        return OMEMO_NAMESPACE_V_AXOLOTL;
+    public OmemoHeaderElement_VAxolotl(int sid, ArrayList<OmemoKeyElement> keys, byte[] iv) {
+        super(sid, keys, iv);
     }
 
 }

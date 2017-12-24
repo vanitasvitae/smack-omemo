@@ -27,6 +27,7 @@ import javax.crypto.IllegalBlockSizeException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.omemo.element.OmemoElement;
+import org.jivesoftware.smackx.omemo.element.OmemoKeyElement;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
 import org.jivesoftware.smackx.omemo.exceptions.MultipleCryptoFailedException;
@@ -67,9 +68,13 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         int keyId = omemoManager.getDeviceId();
         byte[] unpackedKey = null;
         List<CryptoFailedException> decryptExceptions = new ArrayList<>();
-        List<OmemoElement.OmemoHeader.Key> keys = element.getHeader().getKeys();
+        // CHECKSTYLE: OFF
+        @SuppressWarnings("unchecked")
+        List<OmemoKeyElement> keys = element.getHeader().getKeys();
+        // CHECKSTYLE: ON
+
         // Find key with our ID.
-        for (OmemoElement.OmemoHeader.Key k : keys) {
+        for (OmemoKeyElement k : keys) {
             if (k.getId() == keyId) {
                 try {
                     unpackedKey = doubleRatchetDecrypt(sender, k.getData());
