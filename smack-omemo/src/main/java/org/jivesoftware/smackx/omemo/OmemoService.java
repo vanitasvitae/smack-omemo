@@ -42,6 +42,9 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smackx.carbons.packet.CarbonExtension;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleElement;
 import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement;
 import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement_VAxolotl;
@@ -317,7 +320,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             throw new AssertionError("Gullible Trust Callback reported undecided or untrusted device, " +
                     "even though it MUST NOT do that.");
         } catch (NoIdentityKeyException e) {
-            throw new AssertionError("We MUST have an identityKey for " + contactsDevice + " since we built a session.", e);
+            throw new AssertionError("We MUST have an identityKey for " + contactsDevice + " since we built a session." + e);
         }
 
         return builder.finish();
@@ -390,7 +393,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                 skippedRecipients.put(contactsDevice, e);
             }
             catch (UndecidedOmemoIdentityException e) {
-                throw new AssertionError("At this point, devices cannot be undecided.", e);
+                throw new AssertionError("At this point, devices cannot be undecided. " + e);
             }
             catch (UntrustedOmemoIdentityException e) {
                 LOGGER.log(Level.WARNING, "Device " + contactsDevice + " is untrusted. Message is not encrypted for it.");
@@ -641,7 +644,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NoResponseException
      * @throws CorruptedOmemoKeyException if our IdentityKeyPair is corrupted.
      */
-    private void buildFreshSessionWithDevice(XMPPConnection connection, OmemoDevice userDevice, OmemoDevice contactsDevice)
+    void buildFreshSessionWithDevice(XMPPConnection connection, OmemoDevice userDevice, OmemoDevice contactsDevice)
             throws CannotEstablishOmemoSessionException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException, CorruptedOmemoKeyException {
 
@@ -664,7 +667,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         T_Bundle randomPreKeyBundle = new ArrayList<>(bundlesList.values()).get(randomIndex);
 
         // build the session
-        processBundle(connection, userDevice, randomPreKeyBundle, contactsDevice);
+        processBundle(userDevice, randomPreKeyBundle, contactsDevice);
     }
 
     /**
@@ -813,21 +816,19 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param contactsDevice OmemoDevice of the contact.
      * @return true if userDevice has session with contactsDevice.
      */
-    private boolean hasSession(OmemoDevice userDevice, OmemoDevice contactsDevice) {
+    boolean hasSession(OmemoDevice userDevice, OmemoDevice contactsDevice) {
         return getOmemoStoreBackend().loadRawSession(userDevice, contactsDevice) != null;
     }
 
     /**
      * Process a received bundle. Typically that includes saving keys and building a session.
      *
-     * @param connection authenticated XMPP connection
      * @param userDevice our OmemoDevice
      * @param contactsBundle bundle of the contact
      * @param contactsDevice OmemoDevice of the contact
      * @throws CorruptedOmemoKeyException
      */
-    protected abstract void processBundle(XMPPConnection connection,
-                                          OmemoDevice userDevice,
+    protected abstract void processBundle(OmemoDevice userDevice,
                                           T_Bundle contactsBundle,
                                           OmemoDevice contactsDevice)
             throws CorruptedOmemoKeyException;
@@ -974,4 +975,13 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         }
     };
 
+    @Override
+    public void onOmemoCarbonCopyReceived(CarbonExtension.Direction direction, Message carbonCopy, Message wrappingMessage, OmemoManager.LoggedInOmemoManager omemoManager) {
+        // TODO: implement
+    }
+
+    @Override
+    public void onOmemoMessageStanzaReceived(Stanza stanza, OmemoManager.LoggedInOmemoManager omemoManager) {
+        // TODO: Implement
+    }
 }

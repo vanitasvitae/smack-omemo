@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleElement_VAxolotl;
 import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
@@ -559,22 +560,33 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
 
     /**
      * Return the fingerprint of the given devices announced identityKey.
+     * If we have no local copy of the identityKey of the contact, build a fresh session in order to get the key.
      *
-     * @param managerGuard omemoManager of our device.
-     * @param contactsDevice device
-     * @throws CannotEstablishOmemoSessionException if we cannot establish a session
-     * @return fingerprint of the identityKey
+     * @param managerGuard authenticated OmemoManager
+     * @param contactsDevice OmemoDevice we want to get the fingerprint from
+     * @return fingerprint
+     *
+     * @throws CannotEstablishOmemoSessionException If we have no local copy of the identityKey of the contact
+     *                                              and are unable to build a fresh session
+     * @throws CorruptedOmemoKeyException           If the identityKey we have of the contact is corrupted
+     * @throws SmackException.NotConnectedException
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
      */
     public OmemoFingerprint getFingerprintAndMaybeBuildSession(OmemoManager.LoggedInOmemoManager managerGuard, OmemoDevice contactsDevice)
-            throws CannotEstablishOmemoSessionException, CorruptedOmemoKeyException
-    {
+            throws CannotEstablishOmemoSessionException, CorruptedOmemoKeyException,
+            SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         OmemoManager omemoManager = managerGuard.get();
+
+        // Load identityKey
         T_IdKey identityKey = loadOmemoIdentityKey(omemoManager.getOwnDevice(), contactsDevice);
         if (identityKey == null) {
             // Key cannot be loaded. Maybe it doesn't exist. Fetch a bundle to get it...
-            OmemoService.getInstance().buildSessionWithDevice(managerGuard, contactsDevice, true);
+            OmemoService.getInstance().buildFreshSessionWithDevice(omemoManager.getConnection(),
+                    omemoManager.getOwnDevice(), contactsDevice);
         }
 
+        // Load identityKey again
         identityKey = loadOmemoIdentityKey(omemoManager.getOwnDevice(), contactsDevice);
         if (identityKey == null) {
             return null;

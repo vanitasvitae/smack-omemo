@@ -111,17 +111,17 @@ public final class SignalOmemoService
     }
 
     @Override
-    protected void processBundle(OmemoManager.LoggedInOmemoManager managerGuard,
-                                 PreKeyBundle preKeyBundle,
-                                 OmemoDevice device)
+    protected void processBundle(OmemoDevice userDevice,
+                                 PreKeyBundle contactsBundle,
+                                 OmemoDevice contactsDevice)
             throws CorruptedOmemoKeyException
     {
-        SignalOmemoStoreConnector connector = new SignalOmemoStoreConnector(managerGuard.get(), getOmemoStoreBackend());
+        SignalOmemoStoreConnector connector = new SignalOmemoStoreConnector(userDevice, getOmemoStoreBackend());
         SessionBuilder builder = new SessionBuilder(connector, connector, connector, connector,
-                SignalOmemoStoreConnector.asAddress(device));
+                SignalOmemoStoreConnector.asAddress(contactsDevice));
         try {
-            builder.process(preKeyBundle);
-            LOGGER.log(Level.FINE, "Session built with " + device);
+            builder.process(contactsBundle);
+            LOGGER.log(Level.FINE, "Session built with " + contactsDevice);
         } catch (org.whispersystems.libsignal.InvalidKeyException e) {
             throw new CorruptedOmemoKeyException(e.getMessage());
         } catch (UntrustedIdentityException e) {

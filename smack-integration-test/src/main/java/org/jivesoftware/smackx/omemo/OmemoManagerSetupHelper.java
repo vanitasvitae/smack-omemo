@@ -25,7 +25,7 @@ import java.util.HashMap;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.omemo.util.EphemeralTrustCallback;
+import org.jivesoftware.smackx.omemo.util.EphemeralTrustCallback;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.PresenceEventListener;
 import org.jivesoftware.smack.roster.Roster;
@@ -98,8 +98,8 @@ public class OmemoManagerSetupHelper {
 
     public static void trustAllIdentities(OmemoManager alice, OmemoManager bob)
             throws InterruptedException, SmackException.NotConnectedException, SmackException.NotLoggedInException,
-            SmackException.NoResponseException, CannotEstablishOmemoSessionException, CorruptedOmemoKeyException
-    {
+            SmackException.NoResponseException, CannotEstablishOmemoSessionException, CorruptedOmemoKeyException,
+            XMPPException.XMPPErrorException, PubSubException.NotALeafNodeException {
         Roster roster = Roster.getInstanceFor(alice.getConnection());
 
         if (alice.getOwnJid() != bob.getOwnJid() &&
@@ -118,8 +118,8 @@ public class OmemoManagerSetupHelper {
 
     public static void trustAllIdentitiesWithTests(OmemoManager alice, OmemoManager bob)
             throws InterruptedException, SmackException.NotConnectedException, SmackException.NotLoggedInException,
-            SmackException.NoResponseException, CannotEstablishOmemoSessionException, CorruptedOmemoKeyException
-    {
+            SmackException.NoResponseException, CannotEstablishOmemoSessionException, CorruptedOmemoKeyException,
+            XMPPException.XMPPErrorException, PubSubException.NotALeafNodeException {
         alice.requestDeviceListUpdateFor(bob.getOwnJid());
         HashMap<OmemoDevice, OmemoFingerprint> fps1 = alice.getActiveFingerprints(bob.getOwnJid());
 
@@ -177,7 +177,10 @@ public class OmemoManagerSetupHelper {
         }
     }
 
-    public static void cleanUpPubSub(OmemoManager omemoManager) throws SmackException.NotLoggedInException {
+    public static void cleanUpPubSub(OmemoManager omemoManager)
+            throws SmackException.NotLoggedInException, XMPPException.XMPPErrorException,
+            PubSubException.NotALeafNodeException
+    {
         PubSubManager pm = PubSubManager.getInstance(omemoManager.getConnection(),omemoManager.getOwnJid());
         try {
             omemoManager.requestDeviceListUpdateFor(omemoManager.getOwnJid());

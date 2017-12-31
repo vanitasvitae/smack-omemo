@@ -18,6 +18,8 @@ package org.jivesoftware.smackx.omemo;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
+import static org.jivesoftware.smackx.omemo.util.OmemoConstants.Crypto.KEYLENGTH;
+import static org.jivesoftware.smackx.omemo.util.OmemoConstants.Crypto.KEYTYPE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -25,20 +27,14 @@ import static org.junit.Assert.assertNotNull;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
-import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.omemo.element.OmemoElement;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
 import org.jivesoftware.smackx.omemo.internal.CipherAndAuthTag;
 import org.jivesoftware.smackx.omemo.internal.CiphertextTuple;
-import org.jivesoftware.smackx.omemo.internal.ClearTextMessage;
-import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
-import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.util.OmemoMessageBuilder;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Test;
-import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.impl.JidCreate;
 
 /**
  * Test the identityKeyWrapper.
@@ -59,29 +55,9 @@ public class WrapperObjectsTest {
     }
 
     @Test
-    public void clearTextMessageTest() throws Exception {
-        BareJid senderJid = JidCreate.bareFrom("bob@server.tld");
-        OmemoDevice sender = new OmemoDevice(senderJid, 1234);
-        OmemoMessageInformation information = new OmemoMessageInformation(null, sender, OmemoMessageInformation.CARBON.NONE);
-
-        assertTrue("OmemoInformation must state that the message is an OMEMO message.",
-                information.isOmemoMessage());
-        assertEquals(OmemoMessageInformation.CARBON.NONE, information.getCarbon());
-        assertEquals(sender, information.getSenderDevice());
-
-        String body = "Decrypted Body";
-        Message message = new Message(senderJid, body);
-        ClearTextMessage c = new ClearTextMessage(body, message, information);
-
-        assertEquals(message, c.getOriginalMessage());
-        assertEquals(information, c.getMessageInformation());
-        assertEquals(body, c.getBody());
-    }
-
-    @Test
     public void cipherAndAuthTagTest() throws NoSuchAlgorithmException, CryptoFailedException {
         Security.addProvider(new BouncyCastleProvider());
-        byte[] key = OmemoMessageBuilder.generateKey();
+        byte[] key = OmemoMessageBuilder.generateKey(KEYTYPE, KEYLENGTH);
         byte[] iv = OmemoMessageBuilder.generateIv();
         byte[] authTag = OmemoMessageBuilder.generateIv();
 

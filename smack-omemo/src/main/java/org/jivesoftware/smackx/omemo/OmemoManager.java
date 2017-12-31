@@ -538,8 +538,8 @@ public final class OmemoManager extends Manager {
 
     public OmemoFingerprint getFingerprint(OmemoDevice device)
             throws CannotEstablishOmemoSessionException, SmackException.NotLoggedInException,
-            CorruptedOmemoKeyException
-    {
+            CorruptedOmemoKeyException, SmackException.NotConnectedException, InterruptedException,
+            SmackException.NoResponseException {
         synchronized (LOCK) {
             if (getOwnJid() == null) {
                 throw new SmackException.NotLoggedInException();
@@ -554,13 +554,22 @@ public final class OmemoManager extends Manager {
     }
 
     /**
-     * Return all fingerprints of active devices of a contact.
+     * Return all OmemoFingerprints of active devices of a contact.
+     * TODO: Make more fail-safe
      * @param contact contact
-     * @return HashMap of deviceIds and corresponding fingerprints.
+     * @return Map of all active devices of the contact and their fingerprints.
+     *
+     * @throws SmackException.NotLoggedInException
+     * @throws CorruptedOmemoKeyException
+     * @throws CannotEstablishOmemoSessionException
+     * @throws SmackException.NotConnectedException
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
      */
     public HashMap<OmemoDevice, OmemoFingerprint> getActiveFingerprints(BareJid contact)
             throws SmackException.NotLoggedInException, CorruptedOmemoKeyException,
-            CannotEstablishOmemoSessionException
+            CannotEstablishOmemoSessionException, SmackException.NotConnectedException, InterruptedException,
+            SmackException.NoResponseException
     {
         synchronized (LOCK) {
             if (getOwnJid() == null) {
