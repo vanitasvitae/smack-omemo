@@ -32,24 +32,24 @@ import java.util.Set;
  *
  * @author Paul Schaub
  */
-public class CachedDeviceList implements Serializable {
+public class OmemoCachedDeviceList implements Serializable {
     private static final long serialVersionUID = 3153579238321261203L;
 
     private final Set<Integer> activeDevices;
     private final Set<Integer> inactiveDevices;
 
-    public CachedDeviceList() {
+    public OmemoCachedDeviceList() {
         this.activeDevices = new HashSet<>();
         this.inactiveDevices = new HashSet<>();
     }
 
-    public CachedDeviceList(Set<Integer> activeDevices, Set<Integer> inactiveDevices) {
+    public OmemoCachedDeviceList(Set<Integer> activeDevices, Set<Integer> inactiveDevices) {
         this();
         this.activeDevices.addAll(activeDevices);
         this.inactiveDevices.addAll(inactiveDevices);
     }
 
-    public CachedDeviceList(CachedDeviceList original) {
+    public OmemoCachedDeviceList(OmemoCachedDeviceList original) {
         this(original.getActiveDevices(), original.getInactiveDevices());
     }
 
@@ -107,6 +107,11 @@ public class CachedDeviceList implements Serializable {
     public void addDevice(int deviceId) {
         activeDevices.add(deviceId);
         inactiveDevices.remove(deviceId);
+    }
+
+    public void addInactiveDevice(int deviceId) {
+        activeDevices.remove(deviceId);
+        inactiveDevices.add(deviceId);
     }
 
     /**

@@ -32,7 +32,7 @@ import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
-import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
+import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.util.OmemoConstants;
@@ -185,7 +185,7 @@ public class OmemoManagerSetupHelper {
             // ignore
         }
 
-        CachedDeviceList deviceList = OmemoService.getInstance().getOmemoStoreBackend()
+        OmemoCachedDeviceList deviceList = OmemoService.getInstance().getOmemoStoreBackend()
                 .loadCachedDeviceList(omemoManager.getOwnDevice(), omemoManager.getOwnJid());
 
         for (int id : deviceList.getAllDevices()) {

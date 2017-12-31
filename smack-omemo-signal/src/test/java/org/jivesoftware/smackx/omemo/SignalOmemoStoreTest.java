@@ -18,7 +18,7 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
  */
-package org.jivesoftware.smack.omemo;
+package org.jivesoftware.smackx.omemo;
 
 import static org.junit.Assert.assertTrue;
 
@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.jivesoftware.smackx.omemo.OmemoStore;
 import org.jivesoftware.smackx.omemo.signal.SignalCachingOmemoStore;
 import org.jivesoftware.smackx.omemo.signal.SignalFileBasedOmemoStore;
 import org.jivesoftware.smackx.omemo.signal.SignalOmemoKeyUtil;

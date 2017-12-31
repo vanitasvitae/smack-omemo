@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smack.omemo;
+package org.jivesoftware.smackx.omemo;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
+import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 
 import org.junit.Test;
 
@@ -43,7 +43,7 @@ public class DeviceListTest {
      */
     @Test
     public void mergeDeviceListsTest() {
-        CachedDeviceList cached = new CachedDeviceList();
+        OmemoCachedDeviceList cached = new OmemoCachedDeviceList();
         assertNotNull(cached.getActiveDevices());
         assertNotNull(cached.getInactiveDevices());
 

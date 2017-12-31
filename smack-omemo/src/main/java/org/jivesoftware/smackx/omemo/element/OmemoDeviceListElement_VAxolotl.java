@@ -20,6 +20,8 @@ import static org.jivesoftware.smackx.omemo.util.OmemoConstants.OMEMO_NAMESPACE_
 
 import java.util.Set;
 
+import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
+
 /**
  * The OMEMO device list element with the legacy Axolotl namespace.
  *
@@ -29,6 +31,10 @@ public class OmemoDeviceListElement_VAxolotl extends OmemoDeviceListElement {
 
     public OmemoDeviceListElement_VAxolotl(Set<Integer> deviceIds) {
         super(deviceIds);
+    }
+
+    public OmemoDeviceListElement_VAxolotl(OmemoCachedDeviceList cachedList) {
+        super(cachedList);
     }
 
     @Override

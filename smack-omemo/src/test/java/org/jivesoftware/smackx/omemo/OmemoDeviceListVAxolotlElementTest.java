@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smack.omemo;
+package org.jivesoftware.smackx.omemo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

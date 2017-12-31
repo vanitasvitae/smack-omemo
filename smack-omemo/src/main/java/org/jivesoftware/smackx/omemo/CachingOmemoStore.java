@@ -23,7 +23,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
-import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
+import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
 
@@ -345,8 +345,8 @@ public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Se
     }
 
     @Override
-    public CachedDeviceList loadCachedDeviceList(OmemoDevice userDevice, BareJid contact) {
-        CachedDeviceList list = getCache(userDevice).deviceLists.get(contact);
+    public OmemoCachedDeviceList loadCachedDeviceList(OmemoDevice userDevice, BareJid contact) {
+        OmemoCachedDeviceList list = getCache(userDevice).deviceLists.get(contact);
 
         if (list == null && persistent != null) {
             list = persistent.loadCachedDeviceList(userDevice, contact);
@@ -355,14 +355,14 @@ public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Se
             }
         }
 
-        return list == null ? new CachedDeviceList() : new CachedDeviceList(list);
+        return list == null ? new OmemoCachedDeviceList() : new OmemoCachedDeviceList(list);
     }
 
     @Override
     public void storeCachedDeviceList(OmemoDevice userDevice,
                                       BareJid contact,
-                                      CachedDeviceList deviceList) {
-        getCache(userDevice).deviceLists.put(contact, new CachedDeviceList(deviceList));
+                                      OmemoCachedDeviceList deviceList) {
+        getCache(userDevice).deviceLists.put(contact, new OmemoCachedDeviceList(deviceList));
 
         if (persistent != null) {
             persistent.storeCachedDeviceList(userDevice, contact, deviceList);
@@ -417,7 +417,7 @@ public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Se
         private final HashMap<BareJid, HashMap<Integer, T_Sess>> sessions = new HashMap<>();
         private final HashMap<OmemoDevice, T_IdKey> identityKeys = new HashMap<>();
         private final HashMap<OmemoDevice, Date> lastMessagesDates = new HashMap<>();
-        private final HashMap<BareJid, CachedDeviceList> deviceLists = new HashMap<>();
+        private final HashMap<BareJid, OmemoCachedDeviceList> deviceLists = new HashMap<>();
         private Date lastRenewalDate = null;
     }
 }

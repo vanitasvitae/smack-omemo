@@ -16,25 +16,18 @@
  */
 package org.jivesoftware.smackx.omemo.exceptions;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 
-public class MultipleIOException extends IOException {
-
+public class NoIdentityKeyException extends Exception {
     private static final long serialVersionUID = 1L;
 
-    private final ArrayList<IOException> exceptions = new ArrayList<>();
+    private final OmemoDevice device;
 
-    public MultipleIOException(IOException... exceptions) {
-        this.exceptions.addAll(Arrays.asList(exceptions));
+    public NoIdentityKeyException(OmemoDevice device) {
+        this.device = device;
     }
 
-    public void addException(IOException e) {
-        exceptions.add(e);
-    }
-
-    public ArrayList<IOException> getExceptions() {
-        return exceptions;
+    public OmemoDevice getDevice() {
+        return device;
     }
 }

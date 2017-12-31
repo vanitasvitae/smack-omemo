@@ -68,10 +68,7 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         int keyId = omemoManager.getDeviceId();
         byte[] unpackedKey = null;
         List<CryptoFailedException> decryptExceptions = new ArrayList<>();
-        // CHECKSTYLE: OFF
-        @SuppressWarnings("unchecked")
         List<OmemoKeyElement> keys = element.getHeader().getKeys();
-        // CHECKSTYLE: ON
 
         // Find key with our ID.
         for (OmemoKeyElement k : keys) {

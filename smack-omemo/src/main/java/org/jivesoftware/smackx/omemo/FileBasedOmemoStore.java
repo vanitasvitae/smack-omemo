@@ -36,7 +36,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
-import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
+import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 
 import org.jxmpp.jid.BareJid;
@@ -345,8 +345,8 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
     }
 
     @Override
-    public CachedDeviceList loadCachedDeviceList(OmemoDevice userDevice, BareJid contact) {
-        CachedDeviceList cachedDeviceList = new CachedDeviceList();
+    public OmemoCachedDeviceList loadCachedDeviceList(OmemoDevice userDevice, BareJid contact) {
+        OmemoCachedDeviceList cachedDeviceList = new OmemoCachedDeviceList();
 
         if (contact == null) {
             throw new IllegalArgumentException("Contact can not be null.");
@@ -372,7 +372,7 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
     @Override
     public void storeCachedDeviceList(OmemoDevice userDevice,
                                       BareJid contact,
-                                      CachedDeviceList contactsDeviceList) {
+                                      OmemoCachedDeviceList contactsDeviceList) {
         if (contact == null) {
             return;
         }

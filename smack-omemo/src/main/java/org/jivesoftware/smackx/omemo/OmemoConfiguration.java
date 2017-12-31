@@ -54,11 +54,13 @@ public final class OmemoConfiguration {
 
     /**
      * Add Explicit Message Encryption hint (XEP-0380) to the message.
+     * TODO: REMOVE
      */
     private static boolean ADD_EME_ENCRYPTION_HINT = true;
 
     /**
      * Add MAM storage hint to allow the server to store messages that do not contain a body.
+     * TODO: REMOVE
      */
     private static boolean ADD_MAM_STORAGE_HINT = true;
 

@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.omemo.element;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
@@ -33,10 +34,10 @@ public abstract class OmemoHeaderElement implements NamedElement {
     public static final String ATTR_IV = "iv";
 
     private final int sid;
-    private final ArrayList<OmemoKeyElement> keys;
+    private final List<OmemoKeyElement> keys;
     private final byte[] iv;
 
-    public OmemoHeaderElement(int sid, ArrayList<OmemoKeyElement> keys, byte[] iv) {
+    public OmemoHeaderElement(int sid, List<OmemoKeyElement> keys, byte[] iv) {
         this.sid = sid;
         this.keys = keys;
         this.iv = iv;

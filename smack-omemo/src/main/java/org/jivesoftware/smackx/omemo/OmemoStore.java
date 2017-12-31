@@ -30,7 +30,8 @@ import org.jivesoftware.smackx.omemo.element.OmemoBundleElement_VAxolotl;
 import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
-import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
+import org.jivesoftware.smackx.omemo.exceptions.NoIdentityKeyException;
+import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.util.OmemoKeyUtil;
@@ -81,12 +82,12 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
 
         // Lookup local cached device list
         BareJid ownJid = userDevice.getJid();
-        CachedDeviceList cachedDeviceList;
+        OmemoCachedDeviceList cachedDeviceList;
 
         cachedDeviceList = loadCachedDeviceList(userDevice, ownJid);
 
         if (cachedDeviceList == null) {
-            cachedDeviceList = new CachedDeviceList();
+            cachedDeviceList = new OmemoCachedDeviceList();
         }
         // Does the list already contain that id?
         return !cachedDeviceList.contains(id);
@@ -99,11 +100,11 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @param contact Contact we received the list from.
      * @param list    List we received.
      */
-    CachedDeviceList mergeCachedDeviceList(OmemoDevice userDevice, BareJid contact, OmemoDeviceListElement list) {
-        CachedDeviceList cached = loadCachedDeviceList(userDevice, contact);
+    OmemoCachedDeviceList mergeCachedDeviceList(OmemoDevice userDevice, BareJid contact, OmemoDeviceListElement list) {
+        OmemoCachedDeviceList cached = loadCachedDeviceList(userDevice, contact);
 
         if (cached == null) {
-            cached = new CachedDeviceList();
+            cached = new OmemoCachedDeviceList();
         }
 
         if (list != null) {
@@ -166,8 +167,6 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
 
     /**
      * Pack a OmemoBundleElement containing our key material.
-     * If we used up n preKeys since we last published our bundle, generate n new preKeys and add them to the bundle.
-     * We should always publish PRE_KEY_COUNT_PER_BUNDLE keys.
      *
      * @param userDevice our OmemoDevice.
      * @return OmemoBundleElement
@@ -176,8 +175,6 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     OmemoBundleElement_VAxolotl packOmemoBundle(OmemoDevice userDevice)
             throws CorruptedOmemoKeyException
     {
-        createMissingKeys(userDevice);
-
         int currentSignedPreKeyId = loadCurrentOmemoSignedPreKeyId(userDevice);
         T_SigPreKey currentSignedPreKey = loadOmemoSignedPreKeys(userDevice).get(currentSignedPreKeyId);
 
@@ -190,7 +187,12 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
         );
     }
 
-    private void createMissingKeys(OmemoDevice userDevice)
+    /**
+     * Replenish our supply of keys. If we are missing any type of keys, generate them fresh.
+     * @param userDevice
+     * @throws CorruptedOmemoKeyException
+     */
+    public void replenishKeys(OmemoDevice userDevice)
             throws CorruptedOmemoKeyException
     {
         T_IdKeyPair identityKeyPair = loadOmemoIdentityKeyPair(userDevice);
@@ -483,14 +485,14 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @param contact contact we want to get the deviceList of
      * @return CachedDeviceList of the contact
      */
-    public abstract CachedDeviceList loadCachedDeviceList(OmemoDevice userDevice, BareJid contact);
+    public abstract OmemoCachedDeviceList loadCachedDeviceList(OmemoDevice userDevice, BareJid contact);
 
     /**
      * Load a list of deviceIds from our own devices.
      * @param userDevice
      * @return
      */
-    public CachedDeviceList loadCachedDeviceList(OmemoDevice userDevice) {
+    public OmemoCachedDeviceList loadCachedDeviceList(OmemoDevice userDevice) {
         return loadCachedDeviceList(userDevice, userDevice.getJid());
     }
 
@@ -504,7 +506,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      */
     public abstract void storeCachedDeviceList(OmemoDevice userDevice,
                                                BareJid contact,
-                                               CachedDeviceList contactsDeviceList);
+                                               OmemoCachedDeviceList contactsDeviceList);
 
     /**
      * Delete this device's IdentityKey, PreKeys, SignedPreKeys and Sessions.
@@ -538,6 +540,24 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     }
 
     /**
+     * Return the fingerprint of the identityKey belonging to contactsDevice.
+     *
+     * @param userDevice our OmemoDevice.
+     * @param contactsDevice OmemoDevice we want to have the fingerprint for.
+     * @return fingerprint of the userDevices IdentityKey.
+     * @throws CorruptedOmemoKeyException if the IdentityKey is corrupted.
+     * @throws NoIdentityKeyException if no IdentityKey for contactsDevice has been found locally.
+     */
+    public OmemoFingerprint getFingerprint(OmemoDevice userDevice, OmemoDevice contactsDevice)
+            throws CorruptedOmemoKeyException, NoIdentityKeyException {
+        T_IdKey identityKey = loadOmemoIdentityKey(userDevice, contactsDevice);
+        if (identityKey == null) {
+            throw new NoIdentityKeyException(contactsDevice);
+        }
+        return keyUtil().getFingerprintOfIdentityKey(identityKey);
+    }
+
+    /**
      * Return the fingerprint of the given devices announced identityKey.
      *
      * @param managerGuard omemoManager of our device.
@@ -545,7 +565,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws CannotEstablishOmemoSessionException if we cannot establish a session
      * @return fingerprint of the identityKey
      */
-    public OmemoFingerprint getFingerprint(OmemoManager.LoggedInOmemoManager managerGuard, OmemoDevice contactsDevice)
+    public OmemoFingerprint getFingerprintAndMaybeBuildSession(OmemoManager.LoggedInOmemoManager managerGuard, OmemoDevice contactsDevice)
             throws CannotEstablishOmemoSessionException, CorruptedOmemoKeyException
     {
         OmemoManager omemoManager = managerGuard.get();

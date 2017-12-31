@@ -16,11 +16,11 @@
  */
 package org.jivesoftware.smackx.omemo.element;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class OmemoHeaderElement_VAxolotl extends OmemoHeaderElement {
 
-    public OmemoHeaderElement_VAxolotl(int sid, ArrayList<OmemoKeyElement> keys, byte[] iv) {
+    public OmemoHeaderElement_VAxolotl(int sid, List<OmemoKeyElement> keys, byte[] iv) {
         super(sid, keys, iv);
     }
 

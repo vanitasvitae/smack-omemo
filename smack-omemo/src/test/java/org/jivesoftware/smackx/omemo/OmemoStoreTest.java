@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smack.omemo;
+package org.jivesoftware.smackx.omemo;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -31,10 +31,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeMap;
 
-import org.jivesoftware.smackx.omemo.FileBasedOmemoStore;
-import org.jivesoftware.smackx.omemo.OmemoStore;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
-import org.jivesoftware.smackx.omemo.internal.CachedDeviceList;
+import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 
@@ -273,7 +271,7 @@ public abstract class OmemoStoreTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey
     public void loadStoreCachedDeviceList() throws IOException {
         Integer[] active = new Integer[] {1,5,999,10};
         Integer[] inactive = new Integer[] {6,7,8};
-        CachedDeviceList before = new CachedDeviceList(
+        OmemoCachedDeviceList before = new OmemoCachedDeviceList(
                 new HashSet<>(Arrays.asList(active)),
                 new HashSet<>(Arrays.asList(inactive)));
 
@@ -281,7 +279,7 @@ public abstract class OmemoStoreTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey
                 store.loadCachedDeviceList(alice, bob.getJid()));
 
         store.storeCachedDeviceList(alice, bob.getJid(), before);
-        CachedDeviceList after = store.loadCachedDeviceList(alice, bob.getJid());
+        OmemoCachedDeviceList after = store.loadCachedDeviceList(alice, bob.getJid());
         assertTrue("Loaded deviceList must not be empty", after.getAllDevices().size() != 0);
 
         assertEquals("Number of entries in active devices must match.", active.length, after.getActiveDevices().size());
@@ -298,7 +296,7 @@ public abstract class OmemoStoreTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey
             assertTrue(after.getAllDevices().contains(i));
         }
 
-        store.storeCachedDeviceList(alice, bob.getJid(), new CachedDeviceList());
+        store.storeCachedDeviceList(alice, bob.getJid(), new OmemoCachedDeviceList());
         assertEquals("DeviceList must be empty after overwriting it with empty list.", 0,
                 store.loadCachedDeviceList(alice, bob.getJid()).getAllDevices().size());
     }
