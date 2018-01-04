@@ -53,6 +53,7 @@ import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionExcep
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
 import org.jivesoftware.smackx.omemo.exceptions.NoIdentityKeyException;
+import org.jivesoftware.smackx.omemo.exceptions.StaleDeviceException;
 import org.jivesoftware.smackx.omemo.exceptions.UndecidedOmemoIdentityException;
 import org.jivesoftware.smackx.omemo.exceptions.UntrustedOmemoIdentityException;
 import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
@@ -384,6 +385,19 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                 }
             }
 
+            // Ignore stale devices
+            if (OmemoConfiguration.getIgnoreStaleDevices()) {
+
+                Date lastActivity = getOmemoStoreBackend().getDateOfLastReceivedMessage(userDevice, contactsDevice);
+
+                if (isStale(userDevice, contactsDevice, lastActivity, OmemoConfiguration.getIgnoreStaleDevicesAfterHours())) {
+                    LOGGER.log(Level.FINE, "Device " + contactsDevice + " seems to be stale (last message received "
+                            + lastActivity + "). Ignore it.");
+                    skippedRecipients.put(contactsDevice, new StaleDeviceException(contactsDevice, lastActivity));
+                    continue;
+                }
+            }
+
             // Add recipients
             try {
                 builder.addRecipient(contactsDevice);
@@ -393,7 +407,8 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                 skippedRecipients.put(contactsDevice, e);
             }
             catch (UndecidedOmemoIdentityException e) {
-                throw new AssertionError("At this point, devices cannot be undecided. " + e);
+                throw new AssertionError("Recipients device seems to be undecided, even though we should have thrown" +
+                        " an exception earlier in that case. " + e);
             }
             catch (UntrustedOmemoIdentityException e) {
                 LOGGER.log(Level.WARNING, "Device " + contactsDevice + " is untrusted. Message is not encrypted for it.");
