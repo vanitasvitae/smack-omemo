@@ -92,12 +92,12 @@ public final class SignalOmemoService
     }
 
     @Override
-    protected void processBundle(OmemoDevice userDevice,
+    protected void processBundle(OmemoManager omemoManager,
                                  PreKeyBundle contactsBundle,
                                  OmemoDevice contactsDevice)
             throws CorruptedOmemoKeyException
     {
-        SignalOmemoStoreConnector connector = new SignalOmemoStoreConnector(userDevice, getOmemoStoreBackend());
+        SignalOmemoStoreConnector connector = new SignalOmemoStoreConnector(omemoManager, getOmemoStoreBackend());
         SessionBuilder builder = new SessionBuilder(connector, connector, connector, connector,
                 SignalOmemoStoreConnector.asAddress(contactsDevice));
         try {

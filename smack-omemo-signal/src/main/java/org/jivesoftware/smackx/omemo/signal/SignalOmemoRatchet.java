@@ -68,7 +68,7 @@ public class SignalOmemoRatchet
                                              SessionCipher> store)
     {
         super(omemoManager, store);
-        this.storeConnector = new SignalOmemoStoreConnector(omemoManager.getOwnDevice(), store);
+        this.storeConnector = new SignalOmemoStoreConnector(omemoManager, store);
     }
 
     @Override

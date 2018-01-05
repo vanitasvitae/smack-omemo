@@ -351,6 +351,8 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         // Do not encrypt for our own device.
         removeOurDevice(userDevice, contactsDevices);
 
+        buildMissingSessionsWithDevices(manager.getConnection(), userDevice, contactsDevices);
+
         ArrayList<OmemoDevice> undecidedDevices = getUndecidedDevices(userDevice, manager.getTrustCallback(), contactsDevices);
         if (!undecidedDevices.isEmpty()) {
             throw new UndecidedOmemoIdentityException(undecidedDevices);
@@ -757,7 +759,8 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         T_Bundle randomPreKeyBundle = new ArrayList<>(bundlesList.values()).get(randomIndex);
 
         // build the session
-        processBundle(userDevice, randomPreKeyBundle, contactsDevice);
+        OmemoManager omemoManager = OmemoManager.getInstanceFor(connection, userDevice.getDeviceId());
+        processBundle(omemoManager, randomPreKeyBundle, contactsDevice);
     }
 
     /**
@@ -865,6 +868,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                 fingerprint = getOmemoStoreBackend().getFingerprint(userDevice, device);
             } catch (CorruptedOmemoKeyException | NoIdentityKeyException e) {
                 // TODO: Best solution?
+                LOGGER.log(Level.WARNING, "Could not load fingerprint of " + device, e);
                 undecidedDevices.add(device);
                 continue;
             }
@@ -913,12 +917,12 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     /**
      * Process a received bundle. Typically that includes saving keys and building a session.
      *
-     * @param userDevice our OmemoDevice
+     * @param omemoManager our OmemoManager
      * @param contactsBundle bundle of the contact
      * @param contactsDevice OmemoDevice of the contact
      * @throws CorruptedOmemoKeyException
      */
-    protected abstract void processBundle(OmemoDevice userDevice,
+    protected abstract void processBundle(OmemoManager omemoManager,
                                           T_Bundle contactsBundle,
                                           OmemoDevice contactsDevice)
             throws CorruptedOmemoKeyException;
@@ -1161,20 +1165,13 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     {
         OmemoManager omemoManager = managerGuard.get();
         OmemoDevice userDevice = omemoManager.getOwnDevice();
-        OmemoCachedDeviceList list = getOmemoStoreBackend().loadCachedDeviceList(userDevice);
 
-        //Mark all devices inactive
-        for (int i : list.getActiveDevices()) {
-            list.addInactiveDevice(i);
-        }
+        OmemoDeviceListElement_VAxolotl newList =
+                new OmemoDeviceListElement_VAxolotl(Collections.singleton(userDevice.getDeviceId()));
 
-        // Add back our device
-        list.addDevice(userDevice.getDeviceId());
-
-        OmemoDeviceListElement_VAxolotl listElement = new OmemoDeviceListElement_VAxolotl(list);
         // Merge list
-        getOmemoStoreBackend().mergeCachedDeviceList(userDevice, userDevice.getJid(), listElement);
+        getOmemoStoreBackend().mergeCachedDeviceList(userDevice, userDevice.getJid(), newList);
 
-        OmemoService.publishDeviceList(omemoManager.getConnection(), listElement);
+        OmemoService.publishDeviceList(omemoManager.getConnection(), newList);
     }
 }

@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jivesoftware.smackx.omemo.OmemoManager;
 import org.jivesoftware.smackx.omemo.OmemoStore;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
@@ -61,17 +62,17 @@ public class SignalOmemoStoreConnector
     private final OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
             SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
             omemoStore;
-    private final OmemoDevice userDevice;
+    private final OmemoManager omemoManager;
 
-    public SignalOmemoStoreConnector(OmemoDevice userDevice, OmemoStore<IdentityKeyPair,
+    public SignalOmemoStoreConnector(OmemoManager omemoManager, OmemoStore<IdentityKeyPair,
             IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey,
             PreKeyBundle, SessionCipher> store) {
-        this.userDevice = userDevice;
+        this.omemoManager = omemoManager;
         this.omemoStore = store;
     }
 
     OmemoDevice getOurDevice() {
-        return userDevice;
+        return omemoManager.getOwnDevice();
     }
 
     @Override
