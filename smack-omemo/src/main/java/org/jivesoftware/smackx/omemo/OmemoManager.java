@@ -242,6 +242,7 @@ public final class OmemoManager extends Manager {
             }
 
             getOmemoService().init(new LoggedInOmemoManager(this));
+            ServiceDiscoveryManager.getInstanceFor(connection()).addFeature(PEP_NODE_DEVICE_LIST_NOTIFY);
         }
     }
 
@@ -935,7 +936,7 @@ public final class OmemoManager extends Manager {
                     OmemoCachedDeviceList deviceList = getOmemoService().cleanUpDeviceList(getOwnDevice());
                     final OmemoDeviceListElement_VAxolotl newDeviceList = new OmemoDeviceListElement_VAxolotl(deviceList);
 
-                    if (!newDeviceList.equals(receivedDeviceList)) {
+                    if (!newDeviceList.copyDeviceIds().equals(receivedDeviceList.copyDeviceIds())) {
                         Async.go(new Runnable() {
                             @Override
                             public void run() {

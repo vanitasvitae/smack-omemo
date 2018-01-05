@@ -706,6 +706,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         try {
             publishedList = fetchDeviceList(connection, userDevice.getJid());
         } catch (PubSubException.NotAPubSubNodeException e) {
+            LOGGER.log(Level.WARNING, "Error refreshing deviceList: ", e);
             publishedList = null;
         }
         if (publishedList == null) {
