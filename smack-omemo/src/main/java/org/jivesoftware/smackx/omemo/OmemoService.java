@@ -384,6 +384,10 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             if (OmemoConfiguration.getIgnoreStaleDevices()) {
 
                 Date lastActivity = getOmemoStoreBackend().getDateOfLastReceivedMessage(userDevice, contactsDevice);
+                if (lastActivity == null) {
+                    lastActivity = new Date();
+                    getOmemoStoreBackend().setDateOfLastReceivedMessage(userDevice, contactsDevice, lastActivity);
+                }
 
                 if (isStale(userDevice, contactsDevice, lastActivity, OmemoConfiguration.getIgnoreStaleDevicesAfterHours())) {
                     LOGGER.log(Level.FINE, "Device " + contactsDevice + " seems to be stale (last message received "
@@ -1035,6 +1039,10 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      */
     static boolean isStale(OmemoDevice userDevice, OmemoDevice subject, Date lastReceipt, int maxAgeHours) {
         if (userDevice.equals(subject)) {
+            return false;
+        }
+
+        if (lastReceipt == null) {
             return false;
         }
 
