@@ -263,6 +263,8 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     /**
      * Generate a new AES key used to encrypt the message.
      *
+     * @param keyType Key Type
+     * @param keyLength Key Length in bit
      * @return new AES key
      * @throws NoSuchAlgorithmException
      */

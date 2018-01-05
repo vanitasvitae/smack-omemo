@@ -285,12 +285,10 @@ public final class OmemoManager extends Manager {
      * @return encrypted message
      * @throws CryptoFailedException                when something crypto related fails
      * @throws UndecidedOmemoIdentityException      When there are undecided devices
-     * @throws NoSuchAlgorithmException
      * @throws InterruptedException
-     * @throws CannotEstablishOmemoSessionException when we could not create session withs all of the recipients
-     *                                              devices.
      * @throws SmackException.NotConnectedException
      * @throws SmackException.NoResponseException
+     * @throws SmackException.NotLoggedInException
      */
     public OmemoMessage.Sent encrypt(BareJid recipient, String message)
             throws CryptoFailedException, UndecidedOmemoIdentityException,
@@ -312,12 +310,10 @@ public final class OmemoManager extends Manager {
      * @return encrypted message.
      * @throws CryptoFailedException    When something crypto related fails
      * @throws UndecidedOmemoIdentityException  When there are undecided devices.
-     * @throws NoSuchAlgorithmException
      * @throws InterruptedException
-     * @throws CannotEstablishOmemoSessionException When there is one recipient, for whom we failed to create a session
-     *                                              with every one of their devices.
      * @throws SmackException.NotConnectedException
      * @throws SmackException.NoResponseException
+     * @throws SmackException.NotLoggedInException
      */
     public OmemoMessage.Sent encrypt(ArrayList<BareJid> recipients, String message)
             throws CryptoFailedException, UndecidedOmemoIdentityException,
@@ -341,15 +337,13 @@ public final class OmemoManager extends Manager {
      * @param message message to send
      * @return encrypted message
      * @throws UndecidedOmemoIdentityException when there are undecided devices.
-     * @throws NoSuchAlgorithmException
      * @throws CryptoFailedException
      * @throws XMPPException.XMPPErrorException
      * @throws SmackException.NotConnectedException
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
      * @throws NoOmemoSupportException When the muc doesn't support OMEMO.
-     * @throws CannotEstablishOmemoSessionException when there is a user for whom we could not create a session
-     *                                              with any of their devices.
+     * @throws SmackException.NotLoggedInException
      */
     public OmemoMessage.Sent encrypt(MultiUserChat muc, String message)
             throws UndecidedOmemoIdentityException, CryptoFailedException,
@@ -438,10 +432,14 @@ public final class OmemoManager extends Manager {
      * secrecy.
      *
      * @param recipient recipient
-     * @throws UndecidedOmemoIdentityException      When the trust of session with the recipient is not decided yet
      * @throws CorruptedOmemoKeyException           When the used identityKeys are corrupted
      * @throws CryptoFailedException                When something fails with the crypto
      * @throws CannotEstablishOmemoSessionException When we can't establish a session with the recipient
+     * @throws SmackException.NotLoggedInException
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
+     * @throws NoSuchAlgorithmException
+     * @throws SmackException.NotConnectedException
      */
     public void sendRatchetUpdateMessage(OmemoDevice recipient)
             throws SmackException.NotLoggedInException, CorruptedOmemoKeyException, InterruptedException,
@@ -476,6 +474,8 @@ public final class OmemoManager extends Manager {
      * @throws SmackException.NotConnectedException
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
+     * @throws PubSubException.NotALeafNodeException
+     * @throws XMPPException.XMPPErrorException
      */
     public boolean contactSupportsOmemo(BareJid contact)
             throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
@@ -529,6 +529,8 @@ public final class OmemoManager extends Manager {
      * Return the fingerprint of our identity key.
      *
      * @return fingerprint
+     * @throws SmackException.NotLoggedInException if we don't know our bareJid yet.
+     * @throws CorruptedOmemoKeyException if our identityKey is corrupted.
      */
     public OmemoFingerprint getOwnFingerprint()
             throws SmackException.NotLoggedInException, CorruptedOmemoKeyException
@@ -542,6 +544,17 @@ public final class OmemoManager extends Manager {
         }
     }
 
+    /**
+     * Get the fingerprint of a contacts device.
+     * @param device contacts OmemoDevice
+     * @return fingerprint
+     * @throws CannotEstablishOmemoSessionException if we have no session yet, and are unable to create one.
+     * @throws SmackException.NotLoggedInException
+     * @throws CorruptedOmemoKeyException if the copy of the fingerprint we have is corrupted.
+     * @throws SmackException.NotConnectedException
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
+     */
     public OmemoFingerprint getFingerprint(OmemoDevice device)
             throws CannotEstablishOmemoSessionException, SmackException.NotLoggedInException,
             CorruptedOmemoKeyException, SmackException.NotConnectedException, InterruptedException,
@@ -643,7 +656,7 @@ public final class OmemoManager extends Manager {
      * @throws XMPPException.XMPPErrorException XMPP error
      * @throws SmackException.NotConnectedException XMPP error
      * @throws SmackException.NoResponseException XMPP error
-     * @throws PubSubException.NotALeafNodeException if the bundle node on the server is a CollectionNode
+     * @throws SmackException.NotLoggedInException
      */
     public void rotateSignedPreKey()
             throws CorruptedOmemoKeyException, SmackException.NotLoggedInException, XMPPException.XMPPErrorException,

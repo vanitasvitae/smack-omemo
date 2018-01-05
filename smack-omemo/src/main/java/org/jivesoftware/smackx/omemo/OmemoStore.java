@@ -528,6 +528,8 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      *
      * @param userDevice our OmemoDevice.
      * @return fingerprint of our identityKeyPair
+     *
+     * @throws CorruptedOmemoKeyException if the identityKey of userDevice is corrupted.
      */
     public OmemoFingerprint getFingerprint(OmemoDevice userDevice)
             throws CorruptedOmemoKeyException

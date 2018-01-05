@@ -117,20 +117,8 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
 
     /**
      * Create a new OmemoService object. This should only happen once.
-     * When the service gets created, it tries a placeholder crypto function in order to test, if all necessary
-     * algorithms are available on the system.
-     *
-     * @throws NoSuchPaddingException               When no Cipher could be instantiated.
-     * @throws NoSuchAlgorithmException             when no Cipher could be instantiated.
-     * @throws NoSuchProviderException              when BouncyCastle could not be found.
-     * @throws InvalidAlgorithmParameterException   when the Cipher could not be initialized
-     * @throws InvalidKeyException                  when the generated key is invalid
-     * @throws UnsupportedEncodingException         when UTF8 is unavailable
-     * @throws BadPaddingException                  when cipher.doFinal gets wrong padding
-     * @throws IllegalBlockSizeException            when cipher.doFinal gets wrong Block size.
      */
     protected OmemoService() {
-        // TODO
     }
 
     /**
