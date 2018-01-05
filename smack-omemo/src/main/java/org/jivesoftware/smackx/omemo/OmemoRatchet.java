@@ -177,6 +177,13 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         }
     }
 
+    /**
+     * Return the concatenation of the payload of the OmemoElement and the given auth tag.
+     *
+     * @param element omemoElement (message element)
+     * @param authTag authTag
+     * @return payload + authTag
+     */
     static byte[] payloadAndAuthTag(OmemoElement element, byte[] authTag) {
         if (!element.isMessageElement()) {
             throw new IllegalArgumentException("OmemoElement has no payload.");
