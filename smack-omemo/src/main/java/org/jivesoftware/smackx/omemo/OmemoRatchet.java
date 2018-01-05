@@ -184,7 +184,7 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
 
         byte[] payload = new byte[element.getPayload().length + authTag.length];
         System.arraycopy(element.getPayload(), 0, payload, 0, element.getPayload().length);
-        System.arraycopy(authTag, 0, payload, payload.length, authTag.length);
+        System.arraycopy(authTag, 0, payload, element.getPayload().length, authTag.length);
         return payload;
     }
 
