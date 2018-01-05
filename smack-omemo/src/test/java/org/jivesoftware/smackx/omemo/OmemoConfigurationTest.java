@@ -21,8 +21,6 @@ import static org.junit.Assert.assertNull;
 
 import java.io.File;
 
-import org.jivesoftware.smackx.omemo.OmemoConfiguration;
-
 import junit.framework.TestCase;
 import org.junit.Test;
 

@@ -25,7 +25,6 @@ import java.util.HashMap;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.omemo.util.EphemeralTrustCallback;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.PresenceEventListener;
 import org.jivesoftware.smack.roster.Roster;
@@ -35,6 +34,7 @@ import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
+import org.jivesoftware.smackx.omemo.util.EphemeralTrustCallback;
 import org.jivesoftware.smackx.omemo.util.OmemoConstants;
 import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
@@ -44,6 +44,7 @@ import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.FullJid;
 import org.jxmpp.jid.Jid;
+
 
 public class OmemoManagerSetupHelper {
 
@@ -177,14 +178,11 @@ public class OmemoManagerSetupHelper {
         }
     }
 
-    public static void cleanUpPubSub(OmemoManager omemoManager)
-            throws SmackException.NotLoggedInException, XMPPException.XMPPErrorException,
-            PubSubException.NotALeafNodeException
-    {
+    public static void cleanUpPubSub(OmemoManager omemoManager) {
         PubSubManager pm = PubSubManager.getInstance(omemoManager.getConnection(),omemoManager.getOwnJid());
         try {
             omemoManager.requestDeviceListUpdateFor(omemoManager.getOwnJid());
-        } catch (SmackException.NotConnectedException | InterruptedException | SmackException.NoResponseException e) {
+        } catch (SmackException.NotConnectedException | InterruptedException | SmackException.NoResponseException | PubSubException.NotALeafNodeException | XMPPException.XMPPErrorException e) {
             // ignore
         }
 

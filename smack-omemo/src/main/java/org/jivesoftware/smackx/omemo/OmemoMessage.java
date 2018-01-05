@@ -34,21 +34,32 @@ import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 public class OmemoMessage {
 
     private final OmemoElement element;
+    private final byte[] messageKey, iv;
 
-    OmemoMessage(OmemoElement element) {
+    OmemoMessage(OmemoElement element, byte[] key, byte[] iv) {
         this.element = element;
+        this.messageKey = key;
+        this.iv = iv;
     }
 
     public OmemoElement getElement() {
         return element;
     }
 
+    public byte[] getKey() {
+        return messageKey.clone();
+    }
+
+    public byte[] getIv() {
+        return iv.clone();
+    }
+
     public static class Sent extends OmemoMessage {
         private final ArrayList<OmemoDevice> intendedDevices = new ArrayList<>();
         private final HashMap<OmemoDevice, Throwable> skippedDevices = new HashMap<>();
 
-        Sent(OmemoElement element, List<OmemoDevice> intendedDevices, HashMap<OmemoDevice, Throwable> skippedDevices) {
-            super(element);
+        Sent(OmemoElement element, byte[] key, byte[] iv, List<OmemoDevice> intendedDevices, HashMap<OmemoDevice, Throwable> skippedDevices) {
+            super(element, key, iv);
             this.intendedDevices.addAll(intendedDevices);
             this.skippedDevices.putAll(skippedDevices);
         }
@@ -86,13 +97,15 @@ public class OmemoMessage {
         private final OmemoFingerprint sendersFingerprint;
         private final OmemoDevice senderDevice;
         private final CARBON carbon;
+        private final boolean preKeyMessage;
 
-        Received(OmemoElement element, String message, OmemoFingerprint sendersFingerprint, OmemoDevice senderDevice, CARBON carbon) {
-            super(element);
+        Received(OmemoElement element, byte[] key, byte[] iv, String message, OmemoFingerprint sendersFingerprint, OmemoDevice senderDevice, CARBON carbon, boolean preKeyMessage) {
+            super(element, key, iv);
             this.message = message;
             this.sendersFingerprint = sendersFingerprint;
             this.senderDevice = senderDevice;
             this.carbon = carbon;
+            this.preKeyMessage = preKeyMessage;
         }
 
         public String getMessage() {
@@ -114,6 +127,10 @@ public class OmemoMessage {
          */
         public CARBON getCarbon() {
             return carbon;
+        }
+
+        boolean isPreKeyMessage() {
+            return preKeyMessage;
         }
     }
 

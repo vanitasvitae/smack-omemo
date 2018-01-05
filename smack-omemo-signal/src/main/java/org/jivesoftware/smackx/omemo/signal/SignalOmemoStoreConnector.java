@@ -225,18 +225,19 @@ public class SignalOmemoStoreConnector
 
     @Override
     public SignedPreKeyRecord loadSignedPreKey(int i) throws InvalidKeyIdException {
-        return omemoStore.loadOmemoSignedPreKey(getOurDevice(), i);
+        SignedPreKeyRecord signedPreKeyRecord = omemoStore.loadOmemoSignedPreKey(getOurDevice(), i);
+        if (signedPreKeyRecord == null) {
+            throw new InvalidKeyIdException("No signed preKey with id " + i + " found.");
+        }
+        return signedPreKeyRecord;
     }
 
     @Override
     public List<SignedPreKeyRecord> loadSignedPreKeys() {
-        List<SignedPreKeyRecord> signedPreKeyRecordList = new ArrayList<>();
 
         TreeMap<Integer, SignedPreKeyRecord> signedPreKeyRecordHashMap =
                 omemoStore.loadOmemoSignedPreKeys(getOurDevice());
-        signedPreKeyRecordList.addAll(signedPreKeyRecordHashMap.values());
-
-        return signedPreKeyRecordList;
+        return new ArrayList<>(signedPreKeyRecordHashMap.values());
     }
 
     @Override
@@ -259,7 +260,7 @@ public class SignalOmemoStoreConnector
         omemoStore.removeOmemoSignedPreKey(getOurDevice(), i);
     }
 
-    public static OmemoDevice asOmemoDevice(SignalProtocolAddress address) throws XmppStringprepException {
+    private static OmemoDevice asOmemoDevice(SignalProtocolAddress address) throws XmppStringprepException {
         return new OmemoDevice(JidCreate.bareFrom(address.getName()), address.getDeviceId());
     }
 

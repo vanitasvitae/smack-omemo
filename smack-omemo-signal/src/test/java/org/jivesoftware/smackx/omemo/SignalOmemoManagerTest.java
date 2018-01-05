@@ -26,23 +26,11 @@ import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNotSame;
 import static junit.framework.TestCase.assertTrue;
 
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-
 import org.jivesoftware.smack.DummyConnection;
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.omemo.element.OmemoElement;
-import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.provider.OmemoVAxolotlProvider;
 import org.jivesoftware.smackx.omemo.signal.SignalOmemoService;
 
@@ -54,12 +42,7 @@ import org.junit.Test;
 public class SignalOmemoManagerTest extends SmackTestSuite {
 
     @Test
-    public void instantiationTest()
-            throws CorruptedOmemoKeyException, NoSuchAlgorithmException, UnsupportedEncodingException,
-            InvalidKeyException, InterruptedException, XMPPException.XMPPErrorException, NoSuchPaddingException,
-            BadPaddingException, InvalidAlgorithmParameterException, NoSuchProviderException, IllegalBlockSizeException,
-            SmackException
-    {
+    public void instantiationTest() {
         SignalOmemoService.acknowledgeLicense();
         SignalOmemoService.setup();
 

@@ -64,7 +64,7 @@ public abstract class AbstractTwoUsersOmemoIntegrationTest extends AbstractOmemo
     }
 
     @AfterClass
-    public void cleanUp() throws SmackException.NotLoggedInException {
+    public void cleanUp() {
         alice.stopListeners();
         bob.stopListeners();
         OmemoManagerSetupHelper.cleanUpPubSub(alice);

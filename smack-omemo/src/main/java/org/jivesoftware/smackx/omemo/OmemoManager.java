@@ -29,6 +29,7 @@ import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smack.AbstractConnectionListener;
@@ -38,6 +39,7 @@ import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.StanzaFilter;
+import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.packet.Stanza;
@@ -52,22 +54,26 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleElement;
+import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement;
+import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement_VAxolotl;
 import org.jivesoftware.smackx.omemo.element.OmemoElement;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
 import org.jivesoftware.smackx.omemo.exceptions.NoOmemoSupportException;
 import org.jivesoftware.smackx.omemo.exceptions.UndecidedOmemoIdentityException;
-import org.jivesoftware.smackx.omemo.internal.CipherAndAuthTag;
 import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
-import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 import org.jivesoftware.smackx.omemo.listener.OmemoMucMessageListener;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.trust.TrustCallback;
 import org.jivesoftware.smackx.omemo.trust.TrustState;
+import org.jivesoftware.smackx.pep.PEPListener;
 import org.jivesoftware.smackx.pep.PEPManager;
+import org.jivesoftware.smackx.pubsub.EventElement;
+import org.jivesoftware.smackx.pubsub.ItemsExtension;
+import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jivesoftware.smackx.pubsub.packet.PubSub;
 
@@ -245,7 +251,7 @@ public final class OmemoManager extends Manager {
      *
      * @param finishedCallback callback that gets called once the manager is initialized.
      */
-    public void initializeAsync(final FinishedCallback finishedCallback) {
+    public void initializeAsync(final InitializationFinishedCallback finishedCallback) {
         Async.go(new Runnable() {
             @Override
             public void run() {
@@ -287,8 +293,8 @@ public final class OmemoManager extends Manager {
      * @throws SmackException.NoResponseException
      */
     public OmemoMessage.Sent encrypt(BareJid recipient, String message)
-            throws CryptoFailedException, UndecidedOmemoIdentityException, NoSuchAlgorithmException,
-            InterruptedException, CannotEstablishOmemoSessionException, SmackException.NotConnectedException,
+            throws CryptoFailedException, UndecidedOmemoIdentityException,
+            InterruptedException, SmackException.NotConnectedException,
             SmackException.NoResponseException, SmackException.NotLoggedInException
     {
         synchronized (LOCK) {
@@ -314,8 +320,8 @@ public final class OmemoManager extends Manager {
      * @throws SmackException.NoResponseException
      */
     public OmemoMessage.Sent encrypt(ArrayList<BareJid> recipients, String message)
-            throws CryptoFailedException, UndecidedOmemoIdentityException, NoSuchAlgorithmException,
-            InterruptedException, CannotEstablishOmemoSessionException, SmackException.NotConnectedException,
+            throws CryptoFailedException, UndecidedOmemoIdentityException,
+            InterruptedException, SmackException.NotConnectedException,
             SmackException.NoResponseException, SmackException.NotLoggedInException
     {
         synchronized (LOCK) {
@@ -346,9 +352,9 @@ public final class OmemoManager extends Manager {
      *                                              with any of their devices.
      */
     public OmemoMessage.Sent encrypt(MultiUserChat muc, String message)
-            throws UndecidedOmemoIdentityException, NoSuchAlgorithmException, CryptoFailedException,
+            throws UndecidedOmemoIdentityException, CryptoFailedException,
             XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
-            SmackException.NoResponseException, NoOmemoSupportException, CannotEstablishOmemoSessionException,
+            SmackException.NoResponseException, NoOmemoSupportException,
             SmackException.NotLoggedInException
     {
         synchronized (LOCK) {
@@ -722,6 +728,10 @@ public final class OmemoManager extends Manager {
         }
     }
 
+    /**
+     * Set the deviceId of the manager to nDeviceId.
+     * @param nDeviceId new deviceId
+     */
     void setDeviceId(int nDeviceId) {
         synchronized (LOCK) {
             // Move this instance inside the HashMaps
@@ -735,64 +745,58 @@ public final class OmemoManager extends Manager {
     /**
      * Notify all registered OmemoMessageListeners about a received OmemoMessage.
      *
-     * @param decryptedBody      decrypted Body element of the message
-     * @param encryptedMessage   unmodified message as it was received
-     * @param wrappingMessage    message that wrapped the incoming message
-     * @param messageInformation information about the messages encryption (used identityKey, carbon...)
+     * @param stanza original stanza
+     * @param decryptedMessage decrypted OmemoMessage.
      */
-    void notifyOmemoMessageReceived(String decryptedBody,
-                                    Message encryptedMessage,
-                                    Message wrappingMessage,
-                                    OmemoMessageInformation messageInformation)
+    void notifyOmemoMessageReceived(Stanza stanza, OmemoMessage.Received decryptedMessage)
     {
         for (OmemoMessageListener l : omemoMessageListeners) {
-            l.onOmemoMessageReceived(decryptedBody, encryptedMessage, wrappingMessage, messageInformation);
+            l.onOmemoMessageReceived(stanza, decryptedMessage);
         }
     }
 
-    void notifyOmemoKeyTransportMessageReceived(CipherAndAuthTag cipherAndAuthTag,
-                                                Message transportingMessage,
-                                                Message wrappingMessage,
-                                                OmemoMessageInformation information)
+    /**
+     * Notify all registered OmemoMessageListeners about a received OMEMO KeyTransportMessage.
+     *
+     * @param stanza original stanza.
+     * @param decryptedKeyTransportMessage decrypted KeyTransportMessage.
+     */
+    void notifyOmemoKeyTransportMessageReceived(Stanza stanza, OmemoMessage.Received decryptedKeyTransportMessage)
     {
         for (OmemoMessageListener l : omemoMessageListeners) {
-            l.onOmemoKeyTransportReceived(cipherAndAuthTag, transportingMessage, wrappingMessage, information);
+            l.onOmemoKeyTransportReceived(stanza, decryptedKeyTransportMessage);
         }
     }
 
     /**
      * Notify all registered OmemoMucMessageListeners of an incoming OmemoMessageElement in a MUC.
      *
-     * @param muc              MultiUserChat the message was received in
-     * @param from             BareJid of the user that sent the message
-     * @param decryptedBody    decrypted body
-     * @param message          original message with encrypted content
-     * @param wrappingMessage  wrapping message (in case of carbon copy)
-     * @param omemoInformation information about the encryption of the message
+     * @param muc               MultiUserChat the message was received in.
+     * @param stanza            Original Stanza.
+     * @param decryptedMessage  Decryped OmemoMessage.
      */
     void notifyOmemoMucMessageReceived(MultiUserChat muc,
-                                       BareJid from,
-                                       String decryptedBody,
-                                       Message message,
-                                       Message wrappingMessage,
-                                       OmemoMessageInformation omemoInformation)
+                                       Stanza stanza,
+                                       OmemoMessage.Received decryptedMessage)
     {
         for (OmemoMucMessageListener l : omemoMucMessageListeners) {
-            l.onOmemoMucMessageReceived(muc, from, decryptedBody, message,
-                    wrappingMessage, omemoInformation);
+            l.onOmemoMucMessageReceived(muc, stanza, decryptedMessage);
         }
     }
 
+    /**
+     * Notify registered OmemoMucMessageReceived listeners about KeyTransportMessages sent in a MUC.
+     *
+     * @param muc MultiUserChat in which the message was sent
+     * @param stanza original stanza
+     * @param decryptedKeyTransportMessage decrypted OMEMO KeyTransportElement
+     */
     void notifyOmemoMucKeyTransportMessageReceived(MultiUserChat muc,
-                                                   BareJid from,
-                                                   CipherAndAuthTag cipherAndAuthTag,
-                                                   Message transportingMessage,
-                                                   Message wrappingMessage,
-                                                   OmemoMessageInformation messageInformation)
+                                                   Stanza stanza,
+                                                   OmemoMessage.Received decryptedKeyTransportMessage)
     {
         for (OmemoMucMessageListener l : omemoMucMessageListeners) {
-            l.onOmemoKeyTransportReceived(muc, from, cipherAndAuthTag,
-                    transportingMessage, wrappingMessage, messageInformation);
+            l.onOmemoKeyTransportReceived(muc, stanza, decryptedKeyTransportMessage);
         }
     }
 
@@ -808,10 +812,10 @@ public final class OmemoManager extends Manager {
         // Remove listeners to avoid them getting added twice
         connection().removeAsyncStanzaListener(internalOmemoMessageStanzaListener);
         carbonManager.removeCarbonCopyReceivedListener(internalOmemoCarbonCopyListener);
-        //pepManager.removePEPListener(deviceListUpdateListener);
+        pepManager.removePEPListener(deviceListUpdateListener);
 
         // Add listeners
-        //pepManager.addPEPListener(deviceListUpdateListener);
+        pepManager.addPEPListener(deviceListUpdateListener);
         connection().addAsyncStanzaListener(internalOmemoMessageStanzaListener, omemoMessageStanzaFilter);
         carbonManager.addCarbonCopyReceivedListener(internalOmemoCarbonCopyListener);
     }
@@ -820,7 +824,7 @@ public final class OmemoManager extends Manager {
      * Remove active stanza listeners needed for OMEMO.
      */
     public void stopListeners() {
-        //PEPManager.getInstanceFor(connection()).removePEPListener(deviceListUpdateListener);
+        PEPManager.getInstanceFor(connection()).removePEPListener(deviceListUpdateListener);
         connection().removeAsyncStanzaListener(internalOmemoMessageStanzaListener);
         CarbonManager.getInstanceFor(connection()).removeCarbonCopyReceivedListener(internalOmemoCarbonCopyListener);
     }
@@ -844,6 +848,9 @@ public final class OmemoManager extends Manager {
         return service;
     }
 
+    /**
+     * StanzaListener that listens for incoming Stanzas which contain OMEMO elements.
+     */
     private final StanzaListener internalOmemoMessageStanzaListener = new StanzaListener() {
         @Override
         public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException {
@@ -856,6 +863,9 @@ public final class OmemoManager extends Manager {
         }
     };
 
+    /**
+     * CarbonCopyListener that listens for incoming carbon copies which contain OMEMO elements.
+     */
     private final CarbonCopyReceivedListener internalOmemoCarbonCopyListener = new CarbonCopyReceivedListener() {
         @Override
         public void onCarbonCopyReceived(CarbonExtension.Direction direction,
@@ -873,6 +883,64 @@ public final class OmemoManager extends Manager {
     };
 
     /**
+     * PEPListener that listens for OMEMO deviceList updates.
+     */
+    private final PEPListener deviceListUpdateListener = new PEPListener() {
+        @Override
+        public void eventReceived(EntityBareJid from, EventElement event, Message message) {
+
+            // Unknown sender, no more work to do.
+            if (from == null) {
+                // TODO: This DOES happen for some reason. Figure out when...
+                return;
+            }
+
+            for (ExtensionElement items : event.getExtensions()) {
+                if (!(items instanceof ItemsExtension)) {
+                    continue;
+                }
+
+                for (ExtensionElement item : ((ItemsExtension) items).getItems()) {
+                    if (!(item instanceof PayloadItem<?>)) {
+                        continue;
+                    }
+
+                    PayloadItem<?> payloadItem = (PayloadItem<?>) item;
+
+                    if (!(payloadItem.getPayload() instanceof OmemoDeviceListElement)) {
+                        continue;
+                    }
+
+                    // Device List <list>
+                    OmemoDeviceListElement receivedDeviceList = (OmemoDeviceListElement) payloadItem.getPayload();
+                    getOmemoService().getOmemoStoreBackend().mergeCachedDeviceList(getOwnDevice(), from, receivedDeviceList);
+
+                    if (!from.asBareJid().equals(getOwnJid())) {
+                        continue;
+                    }
+
+                    OmemoCachedDeviceList deviceList = getOmemoService().cleanUpDeviceList(getOwnDevice());
+                    final OmemoDeviceListElement_VAxolotl newDeviceList = new OmemoDeviceListElement_VAxolotl(deviceList);
+
+                    if (!newDeviceList.equals(receivedDeviceList)) {
+                        Async.go(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    OmemoService.publishDeviceList(connection(), newDeviceList);
+                                } catch (InterruptedException | XMPPException.XMPPErrorException |
+                                        SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                                    LOGGER.log(Level.WARNING, "Could not publish our deviceList upon an received update.", e);
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    };
+
+    /**
      * StanzaFilter that filters messages containing a OMEMO element.
      */
     private final StanzaFilter omemoMessageStanzaFilter = new StanzaFilter() {
@@ -882,6 +950,9 @@ public final class OmemoManager extends Manager {
         }
     };
 
+    /**
+     * Guard class which ensures that the wrapped OmemoManager knows its BareJid.
+     */
     public static class LoggedInOmemoManager {
 
         private final OmemoManager manager;
@@ -909,13 +980,23 @@ public final class OmemoManager extends Manager {
         }
     }
 
-    public interface FinishedCallback {
+    /**
+     * Callback which can be used to get notified, when the OmemoManager finished initializing.
+     */
+    public interface InitializationFinishedCallback {
 
         void initializationFinished(OmemoManager manager);
 
         void initializationFailed(Exception cause);
     }
 
+    /**
+     * Get the bareJid of the user from the authenticated XMPP connection.
+     * If our deviceId is unknown, use the bareJid to look up deviceIds available in the omemoStore.
+     * If there are ids available, choose the smallest one. Otherwise generate a random deviceId.
+     *
+     * @param manager OmemoManager
+     */
     private static void initBareJidAndDeviceId(OmemoManager manager) {
         if (!manager.getConnection().isAuthenticated()) {
             throw new IllegalStateException("Connection MUST be authenticated.");

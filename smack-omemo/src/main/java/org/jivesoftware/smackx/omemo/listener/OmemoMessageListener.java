@@ -16,10 +16,8 @@
  */
 package org.jivesoftware.smackx.omemo.listener;
 
-import org.jivesoftware.smack.packet.Message;
-
-import org.jivesoftware.smackx.omemo.internal.CipherAndAuthTag;
-import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
+import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smackx.omemo.OmemoMessage;
 
 /**
  * Listener interface that allows implementations to receive decrypted OMEMO messages.
@@ -30,20 +28,16 @@ public interface OmemoMessageListener {
     /**
      * Gets called, whenever an OmemoMessage has been received and was successfully decrypted.
      *
-     * @param decryptedBody    Decrypted body
-     * @param encryptedMessage Encrypted Message
-     * @param wrappingMessage  Wrapping carbon message, in case the message was a carbon copy, else null.
-     * @param omemoInformation Information about the messages encryption etc.
+     * @param stanza Received (encrypted) stanza.
+     * @param decryptedMessage decrypted OmemoMessage.
      */
-    void onOmemoMessageReceived(String decryptedBody, Message encryptedMessage, Message wrappingMessage, OmemoMessageInformation omemoInformation);
+    void onOmemoMessageReceived(Stanza stanza, OmemoMessage.Received decryptedMessage);
 
     /**
      * Gets called, whenever an OmemoElement without a body (an OmemoKeyTransportElement) is received.
      *
-     * @param cipherAndAuthTag  transported Cipher along with an optional AuthTag
-     * @param message           Message that contained the KeyTransport
-     * @param wrappingMessage   Wrapping message (eg. carbon), or null
-     * @param omemoInformation  Information about the messages encryption etc.
+     * @param stanza received (encrypted) stanza.
+     * @param decryptedKeyTransportMessage decrypted OMEMO key transport message.
      */
-    void onOmemoKeyTransportReceived(CipherAndAuthTag cipherAndAuthTag, Message message, Message wrappingMessage, OmemoMessageInformation omemoInformation);
+    void onOmemoKeyTransportReceived(Stanza stanza, OmemoMessage.Received decryptedKeyTransportMessage);
 }

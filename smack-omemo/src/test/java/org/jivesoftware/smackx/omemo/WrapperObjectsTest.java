@@ -61,11 +61,12 @@ public class WrapperObjectsTest {
         byte[] iv = OmemoMessageBuilder.generateIv();
         byte[] authTag = OmemoMessageBuilder.generateIv();
 
-        CipherAndAuthTag cat = new CipherAndAuthTag(key, iv, authTag);
+        CipherAndAuthTag cat = new CipherAndAuthTag(key, iv, authTag, true);
 
         assertNotNull(cat.getCipher());
         assertArrayEquals(key, cat.getKey());
         assertArrayEquals(iv, cat.getIv());
         assertArrayEquals(authTag, cat.getAuthTag());
+        assertTrue(cat.wasPreKeyEncrypted());
     }
 }

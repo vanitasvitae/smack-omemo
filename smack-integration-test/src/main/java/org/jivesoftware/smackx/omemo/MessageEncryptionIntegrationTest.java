@@ -22,9 +22,8 @@ import static org.junit.Assert.assertFalse;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleElement;
-import org.jivesoftware.smackx.omemo.internal.CipherAndAuthTag;
-import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
@@ -51,13 +50,13 @@ public class MessageEncryptionIntegrationTest extends AbstractTwoUsersOmemoInteg
         OmemoBundleElement bobsBundle1 = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
 
         final String message1 = "One is greater than zero (for small values of zero).";
-        Message encrypted1 = alice.encrypt(bob.getOwnJid(), message1);
+        OmemoMessage.Sent encrypted1 = alice.encrypt(bob.getOwnJid(), message1);
         final SimpleResultSyncPoint bobReceivedMessage = new SimpleResultSyncPoint();
 
         bob.addOmemoMessageListener(new OmemoMessageListener() {
             @Override
-            public void onOmemoMessageReceived(String decryptedBody, Message encryptedMessage, Message wrappingMessage, OmemoMessageInformation omemoInformation) {
-                if (decryptedBody.equals(message1)) {
+            public void onOmemoMessageReceived(Stanza stanza, OmemoMessage.Received received) {
+                if (received.getMessage().equals(message1)) {
                     bobReceivedMessage.signal();
                 } else {
                     bobReceivedMessage.signalFailure("Received decrypted message was not equal to sent message.");
@@ -65,13 +64,16 @@ public class MessageEncryptionIntegrationTest extends AbstractTwoUsersOmemoInteg
             }
 
             @Override
-            public void onOmemoKeyTransportReceived(CipherAndAuthTag cipherAndAuthTag, Message message, Message wrappingMessage, OmemoMessageInformation omemoInformation) {
-                // Not used
+            public void onOmemoKeyTransportReceived(Stanza stanza, OmemoMessage.Received decryptedKeyTransportMessage) {
+                // Not needed
             }
+
         });
 
-        encrypted1.setTo(bob.getOwnJid());
-        alice.getConnection().sendStanza(encrypted1);
+        Message m1 = new Message();
+        m1.addExtension(encrypted1.getElement());
+        m1.setTo(bob.getOwnJid());
+        alice.getConnection().sendStanza(m1);
         bobReceivedMessage.waitForResult(10 * 1000);
 
         OmemoBundleElement aliceBundle2 = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());
@@ -82,13 +84,13 @@ public class MessageEncryptionIntegrationTest extends AbstractTwoUsersOmemoInteg
         assertFalse(bobsBundle1.equals(bobsBundle2));
 
         final String message2 = "The german words for 'leek' and 'wimp' are the same.";
-        final Message encrypted2 = bob.encrypt(alice.getOwnJid(), message2);
+        final OmemoMessage.Sent encrypted2 = bob.encrypt(alice.getOwnJid(), message2);
         final SimpleResultSyncPoint aliceReceivedMessage = new SimpleResultSyncPoint();
 
         alice.addOmemoMessageListener(new OmemoMessageListener() {
             @Override
-            public void onOmemoMessageReceived(String decryptedBody, Message encryptedMessage, Message wrappingMessage, OmemoMessageInformation omemoInformation) {
-                if (decryptedBody.equals(message2)) {
+            public void onOmemoMessageReceived(Stanza stanza, OmemoMessage.Received received) {
+                if (received.getMessage().equals(message2)) {
                     aliceReceivedMessage.signal();
                 } else {
                     aliceReceivedMessage.signalFailure("Received decrypted message was not equal to sent message.");
@@ -96,13 +98,15 @@ public class MessageEncryptionIntegrationTest extends AbstractTwoUsersOmemoInteg
             }
 
             @Override
-            public void onOmemoKeyTransportReceived(CipherAndAuthTag cipherAndAuthTag, Message message, Message wrappingMessage, OmemoMessageInformation omemoInformation) {
-                // Not needed here either.
+            public void onOmemoKeyTransportReceived(Stanza stanza, OmemoMessage.Received decryptedKeyTransportMessage) {
+                // Not needed
             }
         });
 
-        encrypted2.setTo(alice.getOwnJid());
-        bob.getConnection().sendStanza(encrypted2);
+        Message m2 = new Message();
+        m2.addExtension(encrypted2.getElement());
+        m2.setTo(alice.getOwnJid());
+        bob.getConnection().sendStanza(m2);
         aliceReceivedMessage.waitForResult(10 * 1000);
 
         OmemoBundleElement aliceBundle3 = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());

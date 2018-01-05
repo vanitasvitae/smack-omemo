@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
-import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.omemo.element.OmemoElement;
 import org.jivesoftware.smackx.omemo.element.OmemoKeyElement;
@@ -43,16 +42,41 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     protected final OmemoManager omemoManager;
     protected final OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store;
 
+    /**
+     * Constructor.
+     *
+     * @param omemoManager omemoManager
+     * @param store omemoStore
+     */
     public OmemoRatchet(OmemoManager omemoManager,
                         OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> store) {
         this.omemoManager = omemoManager;
         this.store = store;
     }
 
+    /**
+     * Decrypt a double-ratchet-encrypted message key.
+     *
+     * @param sender sender of the message.
+     * @param encryptedKey key encrypted with the ratchet of the sender.
+     * @return decrypted message key.
+     *
+     * @throws CorruptedOmemoKeyException
+     * @throws NoRawSessionException
+     * @throws CryptoFailedException
+     * @throws UntrustedOmemoIdentityException
+     */
     public abstract byte[] doubleRatchetDecrypt(OmemoDevice sender, byte[] encryptedKey)
             throws CorruptedOmemoKeyException, NoRawSessionException, CryptoFailedException,
             UntrustedOmemoIdentityException;
 
+    /**
+     * Encrypt a messageKey with the double ratchet session of the recipient.
+     *
+     * @param recipient recipient of the message.
+     * @param messageKey key we want to encrypt.
+     * @return encrypted message key.
+     */
     public abstract CiphertextTuple doubleRatchetEncrypt(OmemoDevice recipient, byte[] messageKey);
 
     /**
@@ -70,11 +94,14 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         List<CryptoFailedException> decryptExceptions = new ArrayList<>();
         List<OmemoKeyElement> keys = element.getHeader().getKeys();
 
+        boolean preKey = false;
+
         // Find key with our ID.
         for (OmemoKeyElement k : keys) {
             if (k.getId() == keyId) {
                 try {
                     unpackedKey = doubleRatchetDecrypt(sender, k.getData());
+                    preKey = k.isPreKey();
                     break;
                 } catch (CryptoFailedException e) {
                     // There might be multiple keys with our id, but we can only decrypt one.
@@ -114,7 +141,7 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                     + unpackedKey.length + ". Probably legacy auth tag format.");
         }
 
-        return new CipherAndAuthTag(messageKey, element.getHeader().getIv(), authTag);
+        return new CipherAndAuthTag(messageKey, element.getHeader().getIv(), authTag, preKey);
     }
 
     /**
@@ -123,10 +150,12 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      *
      * @param element omemoElement containing a payload.
      * @param cipherAndAuthTag cipher and authentication tag.
-     * @return Message containing the decrypted payload in its body.
-     * @throws CryptoFailedException
+     * @return decrypted plain text.
+     * @throws CryptoFailedException if decryption using AES key fails.
      */
-    static Message decryptMessageElement(OmemoElement element, CipherAndAuthTag cipherAndAuthTag) throws CryptoFailedException {
+    static String decryptMessageElement(OmemoElement element, CipherAndAuthTag cipherAndAuthTag)
+            throws CryptoFailedException
+    {
         if (!element.isMessageElement()) {
             throw new IllegalArgumentException("decryptMessageElement cannot decrypt OmemoElement which is no MessageElement!");
         }
@@ -140,9 +169,7 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
 
         try {
             String plaintext = new String(cipherAndAuthTag.getCipher().doFinal(encryptedBody), StringUtils.UTF8);
-            Message decrypted = new Message();
-            decrypted.setBody(plaintext);
-            return decrypted;
+            return plaintext;
 
         } catch (UnsupportedEncodingException | IllegalBlockSizeException | BadPaddingException e) {
             throw new CryptoFailedException("decryptMessageElement could not decipher message body: "

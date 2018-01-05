@@ -25,6 +25,8 @@ import static org.jivesoftware.smackx.omemo.util.OmemoConstants.OMEMO_NAMESPACE_
  */
 public class OmemoElement_VAxolotl extends OmemoElement {
 
+    public static final String NAMESPACE = OMEMO_NAMESPACE_V_AXOLOTL;
+
     /**
      * Create a new OmemoMessageElement from a header and a payload.
      *
@@ -37,6 +39,6 @@ public class OmemoElement_VAxolotl extends OmemoElement {
 
     @Override
     public String getNamespace() {
-        return OMEMO_NAMESPACE_V_AXOLOTL;
+        return NAMESPACE;
     }
 }

@@ -20,7 +20,6 @@
  */
 package org.jivesoftware.smackx.omemo;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -51,7 +50,7 @@ public class SignalOmemoKeyUtilTest
     }
 
     @Parameterized.Parameters
-    public static Collection<Object[]> getParameters() throws IOException {
+    public static Collection<Object[]> getParameters() {
         return Arrays.asList(new Object[][] {
                 { new SignalOmemoKeyUtil()}
         });

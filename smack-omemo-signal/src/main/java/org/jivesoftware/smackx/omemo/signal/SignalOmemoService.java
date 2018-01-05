@@ -20,19 +20,8 @@
  */
 package org.jivesoftware.smackx.omemo.signal;
 
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.logging.Level;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.XMPPException.XMPPErrorException;
 import org.jivesoftware.smackx.omemo.OmemoManager;
 import org.jivesoftware.smackx.omemo.OmemoService;
 import org.jivesoftware.smackx.omemo.OmemoStore;
@@ -73,11 +62,7 @@ public final class SignalOmemoService
         return new SignalOmemoRatchet(manager, getOmemoStoreBackend());
     }
 
-    public static void setup()
-            throws InvalidKeyException, XMPPErrorException, NoSuchPaddingException, InvalidAlgorithmParameterException,
-            UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException,
-            NoSuchProviderException, SmackException, InterruptedException, CorruptedOmemoKeyException
-    {
+    public static void setup() {
         if (!LICENSE_ACKNOWLEDGED) {
             throw new IllegalStateException("smack-omemo-signal is licensed under the terms of the GPLv3. " +
                     "Please be aware that you can only use this library within the terms of the GPLv3. " +
@@ -98,11 +83,7 @@ public final class SignalOmemoService
         return new SignalCachingOmemoStore();
     }
 
-    private SignalOmemoService()
-            throws SmackException, InterruptedException, XMPPException.XMPPErrorException, CorruptedOmemoKeyException,
-            NoSuchPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException,
-            IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException,
-            java.security.InvalidKeyException {
+    private SignalOmemoService() {
         super();
     }
 

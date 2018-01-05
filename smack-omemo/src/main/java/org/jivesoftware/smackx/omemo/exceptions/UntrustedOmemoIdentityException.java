@@ -78,4 +78,16 @@ public class UntrustedOmemoIdentityException extends Exception {
     public OmemoFingerprint getUntrustedFingerprint() {
         return untrustedKey;
     }
+
+    @Override
+    public String toString() {
+        if (trustedKey != null) {
+            return "Untrusted OMEMO Identity encountered:\n" +
+                    "Fingerprint of trusted key:\n" + trustedKey.blocksOf8Chars() + "\n" +
+                    "Fingerprint of untrusted key:\n" + untrustedKey.blocksOf8Chars();
+        } else {
+            return "Untrusted OMEMO Identity encountered:\n" +
+                    "Fingerprint of untrusted key:\n" + untrustedKey.blocksOf8Chars();
+        }
+    }
 }
