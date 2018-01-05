@@ -704,7 +704,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         // refreshOmemoDeviceList;
         OmemoDeviceListElement publishedList;
         try {
-            publishedList = fetchDeviceList(connection, userDevice.getJid());
+            publishedList = fetchDeviceList(connection, contact);
         } catch (PubSubException.NotAPubSubNodeException e) {
             LOGGER.log(Level.WARNING, "Error refreshing deviceList: ", e);
             publishedList = null;
@@ -1136,5 +1136,37 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         }
 
         return null;
+    }
+
+    /**
+     * Publish a new DeviceList with just our device in it.
+     *
+     * @param managerGuard authenticated OmemoManager.
+     * @throws InterruptedException
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException.NotConnectedException
+     * @throws SmackException.NoResponseException
+     */
+    public void purgeDeviceList(OmemoManager.LoggedInOmemoManager managerGuard)
+            throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NotConnectedException,
+            SmackException.NoResponseException
+    {
+        OmemoManager omemoManager = managerGuard.get();
+        OmemoDevice userDevice = omemoManager.getOwnDevice();
+        OmemoCachedDeviceList list = getOmemoStoreBackend().loadCachedDeviceList(userDevice);
+
+        //Mark all devices inactive
+        for (int i : list.getActiveDevices()) {
+            list.addInactiveDevice(i);
+        }
+
+        // Add back our device
+        list.addDevice(userDevice.getDeviceId());
+
+        OmemoDeviceListElement_VAxolotl listElement = new OmemoDeviceListElement_VAxolotl(list);
+        // Merge list
+        getOmemoStoreBackend().mergeCachedDeviceList(userDevice, userDevice.getJid(), listElement);
+
+        OmemoService.publishDeviceList(omemoManager.getConnection(), listElement);
     }
 }

@@ -133,7 +133,7 @@ public final class OmemoManager extends Manager {
         service.registerRatchetForManager(this);
 
         // StanzaListeners
-        startStanzaListeners();
+        resumeStanzaListeners();
 
         // Announce OMEMO support
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(PEP_NODE_DEVICE_LIST_NOTIFY);
@@ -648,6 +648,24 @@ public final class OmemoManager extends Manager {
     }
 
     /**
+     * Publish a new device list with just our own deviceId in it.
+     *
+     * @throws SmackException.NotLoggedInException
+     * @throws InterruptedException
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException.NotConnectedException
+     * @throws SmackException.NoResponseException
+     */
+    public void purgeDeviceList()
+            throws SmackException.NotLoggedInException, InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException
+    {
+        synchronized (LOCK) {
+            getOmemoService().purgeDeviceList(new LoggedInOmemoManager(this));
+        }
+    }
+
+    /**
      * Rotate the signedPreKey published in our OmemoBundle and republish it. This should be done every now and
      * then (7-14 days). The old signedPreKey should be kept for some more time (a month or so) to enable decryption
      * of messages that have been sent since the key was changed.
@@ -682,7 +700,7 @@ public final class OmemoManager extends Manager {
      * @param stanza stanza
      * @return true if stanza has extension 'encrypted'
      */
-    public static boolean stanzaContainsOmemoElement(Stanza stanza) {
+    static boolean stanzaContainsOmemoElement(Stanza stanza) {
         return stanza.hasExtension(OmemoElement.NAME_ENCRYPTED, OMEMO_NAMESPACE_V_AXOLOTL);
     }
 
@@ -819,7 +837,7 @@ public final class OmemoManager extends Manager {
      * This method is called automatically in the constructor and should only be used to restore the previous state
      * after {@link #stopListeners()} was called.
      */
-    public void startStanzaListeners() {
+    public void resumeStanzaListeners() {
         PEPManager pepManager = PEPManager.getInstanceFor(connection());
         CarbonManager carbonManager = CarbonManager.getInstanceFor(connection());
 
@@ -866,14 +884,20 @@ public final class OmemoManager extends Manager {
      * StanzaListener that listens for incoming Stanzas which contain OMEMO elements.
      */
     private final StanzaListener internalOmemoMessageStanzaListener = new StanzaListener() {
+
         @Override
-        public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException {
-            try {
-                getOmemoService().onOmemoMessageStanzaReceived(packet,
-                        new LoggedInOmemoManager(OmemoManager.this));
-            } catch (SmackException.NotLoggedInException e) {
-                LOGGER.warning("Received OMEMO stanza while being offline: " + e);
-            }
+        public void processStanza(final Stanza packet) {
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        getOmemoService().onOmemoMessageStanzaReceived(packet,
+                                new LoggedInOmemoManager(OmemoManager.this));
+                    } catch (SmackException.NotLoggedInException e) {
+                        LOGGER.warning("Received OMEMO stanza while being offline: " + e);
+                    }
+                }
+            });
         }
     };
 
@@ -882,17 +906,22 @@ public final class OmemoManager extends Manager {
      */
     private final CarbonCopyReceivedListener internalOmemoCarbonCopyListener = new CarbonCopyReceivedListener() {
         @Override
-        public void onCarbonCopyReceived(CarbonExtension.Direction direction,
-                                         Message carbonCopy,
-                                         Message wrappingMessage) {
-            if (omemoMessageStanzaFilter.accept(carbonCopy)) {
-                try {
-                    getOmemoService().onOmemoCarbonCopyReceived(direction, carbonCopy, wrappingMessage,
-                            new LoggedInOmemoManager(OmemoManager.this));
-                } catch (SmackException.NotLoggedInException e) {
-                    LOGGER.warning("Received OMEMO carbon copy while being offline: " + e);
+        public void onCarbonCopyReceived(final CarbonExtension.Direction direction,
+                                         final Message carbonCopy,
+                                         final Message wrappingMessage) {
+            Async.go(new Runnable() {
+                @Override
+                public void run() {
+                    if (omemoMessageStanzaFilter.accept(carbonCopy)) {
+                        try {
+                            getOmemoService().onOmemoCarbonCopyReceived(direction, carbonCopy, wrappingMessage,
+                                    new LoggedInOmemoManager(OmemoManager.this));
+                        } catch (SmackException.NotLoggedInException e) {
+                            LOGGER.warning("Received OMEMO carbon copy while being offline: " + e);
+                        }
+                    }
                 }
-            }
+            });
         }
     };
 
