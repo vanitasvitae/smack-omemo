@@ -52,17 +52,9 @@ public final class OmemoConfiguration {
      */
     private static boolean ADD_OMEMO_HINT_BODY = true;
 
-    /**
-     * Add Explicit Message Encryption hint (XEP-0380) to the message.
-     * TODO: REMOVE
-     */
-    private static boolean ADD_EME_ENCRYPTION_HINT = true;
+    private static boolean REPAIR_BROKEN_SESSIONS_WITH_PREKEY_MESSAGES = true;
 
-    /**
-     * Add MAM storage hint to allow the server to store messages that do not contain a body.
-     * TODO: REMOVE
-     */
-    private static boolean ADD_MAM_STORAGE_HINT = true;
+    private static boolean COMPLETE_SESSION_WITH_EMPTY_MESSAGE = true;
 
     private static File FILE_BASED_OMEMO_STORE_DEFAULT_PATH = null;
 
@@ -104,14 +96,31 @@ public final class OmemoConfiguration {
         return DELETE_STALE_DEVICE_AFTER_HOURS;
     }
 
+    /**
+     * Decide, whether signed preKeys are automatically rotated or not.
+     * It is highly recommended to rotate signed preKeys to preserve forward secrecy.
+     *
+     * @param renew automatically rotate signed preKeys?
+     */
     public static void setRenewOldSignedPreKeys(boolean renew) {
         RENEW_OLD_SIGNED_PREKEYS = renew;
     }
 
+    /**
+     * Determine, whether signed preKeys are automatically rotated or not.
+     *
+     * @return auto-rotate signed preKeys?
+     */
     public static boolean getRenewOldSignedPreKeys() {
         return RENEW_OLD_SIGNED_PREKEYS;
     }
 
+    /**
+     * Set the interval in hours, after which the published signed preKey should be renewed.
+     * This value should be between one or two weeks.
+     *
+     * @param hours hours after which signed preKeys should be rotated.
+     */
     public static void setRenewOldSignedPreKeysAfterHours(int hours) {
         if (hours <= 0) {
             throw new IllegalArgumentException("Hours must be greater than 0.");
@@ -119,10 +128,23 @@ public final class OmemoConfiguration {
         RENEW_OLD_SIGNED_PREKEYS_AFTER_HOURS = hours;
     }
 
+    /**
+     * Get the interval in hours, after which the published signed preKey should be renewed.
+     * This value should be between one or two weeks.
+     *
+     * @return hours after which signed preKeys should be rotated.
+     */
     public static int getRenewOldSignedPreKeysAfterHours() {
         return RENEW_OLD_SIGNED_PREKEYS_AFTER_HOURS;
     }
 
+    /**
+     * Set the maximum number of signed preKeys that are cached until the oldest one gets deleted.
+     * This number should not be too small in order to prevent message loss, but also not too big
+     * to preserve forward secrecy.
+     *
+     * @param number number of cached signed preKeys.
+     */
     public static void setMaxNumberOfStoredSignedPreKeys(int number) {
         if (number <= 0) {
             throw new IllegalArgumentException("Number must be greater than 0.");
@@ -130,32 +152,31 @@ public final class OmemoConfiguration {
         MAX_NUMBER_OF_STORED_SIGNED_PREKEYS = number;
     }
 
+    /**
+     * Return the maximum number of signed preKeys that are cached until the oldest one gets deleted.
+     * @return max number of cached signed preKeys.
+     */
     public static int getMaxNumberOfStoredSignedPreKeys() {
         return MAX_NUMBER_OF_STORED_SIGNED_PREKEYS;
     }
 
+    /**
+     * Decide, whether an OMEMO message should carry a plaintext hint about OMEMO encryption.
+     * Eg. "I sent you an OMEMO encrypted message..."
+     *
+     * @param addHint shall we add a hint?
+     */
     public static void setAddOmemoHintBody(boolean addHint) {
         ADD_OMEMO_HINT_BODY = addHint;
     }
 
+    /**
+     * Determine, whether an OMEMO message should carry a plaintext hint about OMEMO encryption.
+     *
+     * @return true, if a hint is added to the message.
+     */
     public static boolean getAddOmemoHintBody() {
         return ADD_OMEMO_HINT_BODY;
-    }
-
-    public static void setAddEmeEncryptionHint(boolean addHint) {
-        ADD_EME_ENCRYPTION_HINT = addHint;
-    }
-
-    public static boolean getAddEmeEncryptionHint() {
-        return ADD_EME_ENCRYPTION_HINT;
-    }
-
-    public static void setAddMAMStorageProcessingHint(boolean addStorageHint) {
-        ADD_MAM_STORAGE_HINT = addStorageHint;
-    }
-
-    public static boolean getAddMAMStorageProcessingHint() {
-        return ADD_MAM_STORAGE_HINT;
     }
 
     public static void setFileBasedOmemoStoreDefaultPath(File path) {
@@ -164,5 +185,45 @@ public final class OmemoConfiguration {
 
     public static File getFileBasedOmemoStoreDefaultPath() {
         return FILE_BASED_OMEMO_STORE_DEFAULT_PATH;
+    }
+
+    /**
+     * Determine, whether incoming messages, which have broken sessions should automatically be answered by an empty
+     * preKeyMessage in order to establish a new session.
+     *
+     * @return true if session should be repaired automatically.
+     */
+    public static boolean getRepairBrokenSessionsWithPreKeyMessages() {
+        return REPAIR_BROKEN_SESSIONS_WITH_PREKEY_MESSAGES;
+    }
+
+    /**
+     * Decide, whether incoming messages, which have broken sessions should automatically be answered by an empty
+     * preKeyMessage in order to establish a new session.
+     *
+     * @param repair repair sessions?
+     */
+    public static void setRepairBrokenSessionsWithPrekeyMessages(boolean repair) {
+        REPAIR_BROKEN_SESSIONS_WITH_PREKEY_MESSAGES = repair;
+    }
+
+    /**
+     * Determine, whether incoming preKeyMessages should automatically be answered by an empty message in order to
+     * complete the session.
+     *
+     * @return true if sessions should be completed.
+     */
+    public static boolean getCompleteSessionWithEmptyMessage() {
+        return COMPLETE_SESSION_WITH_EMPTY_MESSAGE;
+    }
+
+    /**
+     * Decide, whether incoming preKeyMessages should automatically be answered by an empty message in order to
+     * complete the session.
+     *
+     * @param complete complete the session or not
+     */
+    public static void setCompleteSessionWithEmptyMessage(boolean complete) {
+        COMPLETE_SESSION_WITH_EMPTY_MESSAGE = complete;
     }
 }

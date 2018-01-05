@@ -107,7 +107,7 @@ public class SignalOmemoRatchet
                 throw new CryptoFailedException(e);
             }
             catch (InvalidKeyIdException e) {
-                throw new NoRawSessionException(e);
+                throw new NoRawSessionException(sender, e);
             }
             catch (DuplicateMessageException e) {
                 LOGGER.log(Level.INFO, "Decryption of PreKeyMessage from " + sender +
@@ -125,7 +125,7 @@ public class SignalOmemoRatchet
                 throw new AssertionError("Signals trust management MUST be disabled.");
             }
             catch (InvalidMessageException | NoSessionException e) {
-                throw new NoRawSessionException(e);
+                throw new NoRawSessionException(sender, e);
             }
             catch (LegacyMessageException e) {
                 throw new CryptoFailedException(e);

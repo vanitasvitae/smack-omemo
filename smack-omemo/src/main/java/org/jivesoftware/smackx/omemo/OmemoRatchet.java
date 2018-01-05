@@ -62,7 +62,7 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @return decrypted message key.
      *
      * @throws CorruptedOmemoKeyException
-     * @throws NoRawSessionException
+     * @throws NoRawSessionException when no double ratchet session was found.
      * @throws CryptoFailedException
      * @throws UntrustedOmemoIdentityException
      */

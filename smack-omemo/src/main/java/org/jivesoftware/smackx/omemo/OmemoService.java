@@ -1087,20 +1087,23 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         }
 
         OmemoMessage.Received decrypted;
+        BareJid sender;
 
-        MultiUserChat muc = getMuc(manager.getConnection(), stanza.getFrom());
-        if (muc != null) {
-            Occupant occupant = muc.getOccupant(stanza.getFrom().asEntityFullJidIfPossible());
-            Jid occupantJid = occupant.getJid();
+        try {
+            MultiUserChat muc = getMuc(manager.getConnection(), stanza.getFrom());
+            if (muc != null) {
+                Occupant occupant = muc.getOccupant(stanza.getFrom().asEntityFullJidIfPossible());
+                Jid occupantJid = occupant.getJid();
 
-            if (occupantJid == null) {
-                LOGGER.log(Level.WARNING, "MUC message received, but there is no way to retrieve the senders Jid. " +
-                        stanza.getFrom());
-                return;
-            }
+                if (occupantJid == null) {
+                    LOGGER.log(Level.WARNING, "MUC message received, but there is no way to retrieve the senders Jid. " +
+                            stanza.getFrom());
+                    return;
+                }
 
-            BareJid sender = occupantJid.asBareJid();
-            try {
+                sender = occupantJid.asBareJid();
+
+                // try is for this
                 decrypted = decryptMessage(managerGuard, sender, element, OmemoMessage.CARBON.NONE);
 
                 if (element.isMessageElement()) {
@@ -1108,14 +1111,10 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                 } else {
                     manager.notifyOmemoMucKeyTransportMessageReceived(muc, stanza, decrypted);
                 }
+            } else {
+                sender = stanza.getFrom().asBareJid();
 
-            } catch (CorruptedOmemoKeyException | CryptoFailedException | NoRawSessionException e) {
-                LOGGER.log(Level.WARNING, "Could not decrypt incoming message: ", e);
-            }
-
-        } else {
-            BareJid sender = stanza.getFrom().asBareJid();
-            try {
+                // and this
                 decrypted = decryptMessage(managerGuard, sender, element, OmemoMessage.CARBON.NONE);
 
                 if (element.isMessageElement()) {
@@ -1123,9 +1122,48 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                 } else {
                     manager.notifyOmemoKeyTransportMessageReceived(stanza, decrypted);
                 }
-            } catch (CorruptedOmemoKeyException | CryptoFailedException | NoRawSessionException e) {
-                LOGGER.log(Level.WARNING, "Could not decrypt incoming message: ", e);
             }
+        }
+        catch (NoRawSessionException e) {
+            OmemoDevice device = e.getDeviceWithoutSession();
+            LOGGER.log(Level.WARNING, "No raw session found for contact " + device + ". ", e);
+
+            if (OmemoConfiguration.getRepairBrokenSessionsWithPreKeyMessages()) {
+                repairBrokenSessionWithPreKeyMessage(managerGuard, device);
+            }
+        }
+            catch (CorruptedOmemoKeyException | CryptoFailedException e) {
+            LOGGER.log(Level.WARNING, "Could not decrypt incoming message: ", e);
+        }
+    }
+
+    /**
+     * Fetch and process a fresh bundle and send an empty preKeyMessage in order to establish a fresh session.
+     *
+     * @param managerGuard authenticated OmemoManager.
+     * @param brokenDevice device which session broke.
+     */
+    private void repairBrokenSessionWithPreKeyMessage(OmemoManager.LoggedInOmemoManager managerGuard,
+                                                      OmemoDevice brokenDevice)
+    {
+        LOGGER.log(Level.WARNING, "Attempt to repair the session by sending a fresh preKey message to "
+                + brokenDevice);
+        OmemoManager manager = managerGuard.get();
+        try {
+            // Create fresh session and send new preKeyMessage.
+            buildFreshSessionWithDevice(manager.getConnection(), manager.getOwnDevice(), brokenDevice);
+            OmemoElement ratchetUpdate = createRatchetUpdateElement(managerGuard, brokenDevice);
+            Message m = new Message();
+            m.setTo(brokenDevice.getJid());
+            m.addExtension(ratchetUpdate);
+            manager.getConnection().sendStanza(m);
+
+        } catch (CannotEstablishOmemoSessionException | CorruptedOmemoKeyException e) {
+            LOGGER.log(Level.WARNING, "Unable to repair session with " + brokenDevice, e);
+        } catch (SmackException.NotConnectedException | InterruptedException | SmackException.NoResponseException e) {
+            LOGGER.log(Level.WARNING, "Could not fetch fresh bundle for " + brokenDevice, e);
+        } catch (CryptoFailedException | NoSuchAlgorithmException e) {
+            LOGGER.log(Level.WARNING, "Could not create PreKeyMessage", e);
         }
     }
 
