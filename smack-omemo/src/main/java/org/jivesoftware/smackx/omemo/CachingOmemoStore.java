@@ -63,6 +63,9 @@ public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Se
     }
 
     public CachingOmemoStore(OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> wrappedStore) {
+        if (wrappedStore == null) {
+            throw new NullPointerException("Wrapped OmemoStore MUST NOT be null!");
+        }
         this.keyUtil = null;
         persistent = wrappedStore;
     }
