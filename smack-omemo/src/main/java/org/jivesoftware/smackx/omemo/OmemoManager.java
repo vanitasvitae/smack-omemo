@@ -93,7 +93,7 @@ public final class OmemoManager extends Manager {
     private static final Logger LOGGER = Logger.getLogger(OmemoManager.class.getName());
 
     private static final Integer UNKNOWN_DEVICE_ID = -1;
-    private final Object LOCK = new Object();
+    final Object LOCK = new Object();
 
     private static final WeakHashMap<XMPPConnection, TreeMap<Integer,OmemoManager>> INSTANCES = new WeakHashMap<>();
     private final OmemoService<?, ?, ?, ?, ?, ?, ?, ?, ?> service;
@@ -613,18 +613,37 @@ public final class OmemoManager extends Manager {
         }
     }
 
+    /**
+     * Add an OmemoMessageListener. This listener will be informed about incoming OMEMO messages
+     * (as well as KeyTransportMessages) and OMEMO encrypted message carbons.
+     *
+     * @param listener OmemoMessageListener
+     */
     public void addOmemoMessageListener(OmemoMessageListener listener) {
         omemoMessageListeners.add(listener);
     }
 
+    /**
+     * Remove an OmemoMessageListener.
+     * @param listener OmemoMessageListener
+     */
     public void removeOmemoMessageListener(OmemoMessageListener listener) {
         omemoMessageListeners.remove(listener);
     }
 
+    /**
+     * Add an OmemoMucMessageListener. This listener will be informed about incoming OMEMO encrypted MUC messages.
+     *
+     * @param listener OmemoMessageListener.
+     */
     public void addOmemoMucMessageListener(OmemoMucMessageListener listener) {
         omemoMucMessageListeners.add(listener);
     }
 
+    /**
+     * Remove an OmemoMucMessageListener.
+     * @param listener OmemoMucMessageListener
+     */
     public void removeOmemoMucMessageListener(OmemoMucMessageListener listener) {
         omemoMucMessageListeners.remove(listener);
     }
@@ -788,24 +807,11 @@ public final class OmemoManager extends Manager {
     }
 
     /**
-     * Notify all registered OmemoMessageListeners about a received OMEMO KeyTransportMessage.
-     *
-     * @param stanza original stanza.
-     * @param decryptedKeyTransportMessage decrypted KeyTransportMessage.
-     */
-    void notifyOmemoKeyTransportMessageReceived(Stanza stanza, OmemoMessage.Received decryptedKeyTransportMessage)
-    {
-        for (OmemoMessageListener l : omemoMessageListeners) {
-            l.onOmemoKeyTransportReceived(stanza, decryptedKeyTransportMessage);
-        }
-    }
-
-    /**
      * Notify all registered OmemoMucMessageListeners of an incoming OmemoMessageElement in a MUC.
      *
      * @param muc               MultiUserChat the message was received in.
      * @param stanza            Original Stanza.
-     * @param decryptedMessage  Decryped OmemoMessage.
+     * @param decryptedMessage  Decrypted OmemoMessage.
      */
     void notifyOmemoMucMessageReceived(MultiUserChat muc,
                                        Stanza stanza,
@@ -817,18 +823,21 @@ public final class OmemoManager extends Manager {
     }
 
     /**
-     * Notify registered OmemoMucMessageReceived listeners about KeyTransportMessages sent in a MUC.
+     * Notify all registered OmemoMessageListeners of an incoming OMEMO encrypted Carbon Copy.
+     * Remember: If you want to receive OMEMO encrypted carbon copies, you have to enable carbons using
+     * {@link CarbonManager#enableCarbons()}.
      *
-     * @param muc MultiUserChat in which the message was sent
-     * @param stanza original stanza
-     * @param decryptedKeyTransportMessage decrypted OMEMO KeyTransportElement
+     * @param direction             direction of the carbon copy
+     * @param carbonCopy            carbon copy itself
+     * @param wrappingMessage       wrapping message
+     * @param decryptedCarbonCopy   decrypted carbon copy OMEMO element
      */
-    void notifyOmemoMucKeyTransportMessageReceived(MultiUserChat muc,
-                                                   Stanza stanza,
-                                                   OmemoMessage.Received decryptedKeyTransportMessage)
-    {
-        for (OmemoMucMessageListener l : omemoMucMessageListeners) {
-            l.onOmemoKeyTransportReceived(muc, stanza, decryptedKeyTransportMessage);
+    void notifyOmemoCarbonCopyReceived(CarbonExtension.Direction direction,
+                                       Message carbonCopy,
+                                       Message wrappingMessage,
+                                       OmemoMessage.Received decryptedCarbonCopy) {
+        for (OmemoMessageListener l : omemoMessageListeners) {
+            l.onOmemoCarbonCopyReceived(direction, carbonCopy, wrappingMessage, decryptedCarbonCopy);
         }
     }
 

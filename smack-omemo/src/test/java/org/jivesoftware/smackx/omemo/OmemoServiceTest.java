@@ -20,6 +20,7 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.Date;
+import java.util.HashSet;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
@@ -33,6 +34,16 @@ public class OmemoServiceTest extends SmackTestSuite {
     private static final long ONE_HOUR = 1000L * 60 * 60;
     private static final int IGNORE_STALE = OmemoConfiguration.getIgnoreStaleDevicesAfterHours();
     private static final int DELETE_STALE = OmemoConfiguration.getDeleteStaleDevicesAfterHours();
+
+    @Test(expected = IllegalStateException.class)
+    public void getInstanceFailsWhenNullTest() {
+        OmemoService.getInstance();
+    }
+
+    @Test
+    public void isServiceRegisteredTest() {
+        assertFalse(OmemoService.isServiceRegistered());
+    }
 
     /**
      * Test correct functionality of isStale method.
@@ -57,5 +68,24 @@ public class OmemoServiceTest extends SmackTestSuite {
 
         // Own device is never stale, no matter how old
         assertFalse(OmemoService.isStale(user, user, deleteMe, DELETE_STALE));
+
+        // Always return false if date is null.
+        assertFalse(OmemoService.isStale(user, other, null, DELETE_STALE));
+    }
+
+    @Test
+    public void removeOurDeviceTest() throws XmppStringprepException {
+        OmemoDevice a = new OmemoDevice(JidCreate.bareFrom("a@b.c"), 123);
+        OmemoDevice b = new OmemoDevice(JidCreate.bareFrom("a@b.c"), 124);
+
+        HashSet<OmemoDevice> devices = new HashSet<>();
+        devices.add(a); devices.add(b);
+
+        assertTrue(devices.contains(a));
+        assertTrue(devices.contains(b));
+        OmemoService.removeOurDevice(a, devices);
+
+        assertFalse(devices.contains(a));
+        assertTrue(devices.contains(b));
     }
 }

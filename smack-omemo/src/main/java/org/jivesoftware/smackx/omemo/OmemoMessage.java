@@ -31,6 +31,8 @@ import org.jivesoftware.smackx.omemo.element.OmemoElement;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
 
+import org.jxmpp.jid.Jid;
+
 public class OmemoMessage {
 
     private final OmemoElement element;
@@ -42,43 +44,91 @@ public class OmemoMessage {
         this.iv = iv;
     }
 
+    /**
+     * Return the original OmemoElement (&lt;encrypted/&gt;).
+     *
+     * @return omemoElement
+     */
     public OmemoElement getElement() {
         return element;
     }
 
+    /**
+     * Return the messageKey (or transported key in case of a KeyTransportMessage).
+     *
+     * @return key
+     */
     public byte[] getKey() {
         return messageKey.clone();
     }
 
+    /**
+     * Return the initialization vector belonging to the key.
+     * @return initialization vector
+     */
     public byte[] getIv() {
         return iv.clone();
     }
 
+    /**
+     * Outgoing OMEMO message.
+     */
     public static class Sent extends OmemoMessage {
         private final ArrayList<OmemoDevice> intendedDevices = new ArrayList<>();
         private final HashMap<OmemoDevice, Throwable> skippedDevices = new HashMap<>();
 
+        /**
+         * Create a new outgoing OMEMO message.
+         * @param element OmemoElement
+         * @param key messageKey (or transported key)
+         * @param iv initialization vector belonging to key
+         * @param intendedDevices devices the client intended to encrypt the message for
+         * @param skippedDevices devices which were skipped during encryption process because encryption
+         *                       failed for some reason
+         */
         Sent(OmemoElement element, byte[] key, byte[] iv, List<OmemoDevice> intendedDevices, HashMap<OmemoDevice, Throwable> skippedDevices) {
             super(element, key, iv);
             this.intendedDevices.addAll(intendedDevices);
             this.skippedDevices.putAll(skippedDevices);
         }
 
-        public ArrayList<OmemoDevice> getIntendedDevices() {
+        /**
+         * Return a list of all devices the sender originally intended to encrypt the message for.
+         * @return list of intended recipients.
+         */
+        public List<OmemoDevice> getIntendedDevices() {
             return intendedDevices;
         }
 
+        /**
+         * Return a map of all skipped recipients and the reasons for skipping.
+         * @return map of skipped recipients and reasons for that.
+         */
         public HashMap<OmemoDevice, Throwable> getSkippedDevices() {
             return skippedDevices;
         }
 
+        /**
+         * Determine, if some recipients were skipped during encryption.
+         * @return true if recipients were skipped.
+         */
         public boolean isMissingRecipients() {
             return !getSkippedDevices().isEmpty();
         }
 
-        public Message asMessage() {
+        /**
+         * Return the OmemoElement wrapped in a Message ready to be sent.
+         * The message is addressed to recipient, contains the OmemoElement
+         * as well as an optional clear text hint as body, a MAM storage hint
+         * and an EME hint about OMEMO encryption.
+         *
+         * @param recipient recipient for the to-field of the message.
+         * @return Message
+         */
+        public Message asMessage(Jid recipient) {
 
             Message messageStanza = new Message();
+            messageStanza.setTo(recipient);
             messageStanza.addExtension(getElement());
 
             if (OmemoConfiguration.getAddOmemoHintBody()) {
@@ -92,54 +142,72 @@ public class OmemoMessage {
         }
     }
 
+    /**
+     * Incoming OMEMO message.
+     */
     public static class Received extends OmemoMessage {
         private final String message;
         private final OmemoFingerprint sendersFingerprint;
         private final OmemoDevice senderDevice;
-        private final CARBON carbon;
         private final boolean preKeyMessage;
 
-        Received(OmemoElement element, byte[] key, byte[] iv, String message, OmemoFingerprint sendersFingerprint, OmemoDevice senderDevice, CARBON carbon, boolean preKeyMessage) {
+        /**
+         * Create a new incoming OMEMO message.
+         * @param element original OmemoElement
+         * @param key message key (or transported key)
+         * @param iv respective initialization vector
+         * @param body decrypted body
+         * @param sendersFingerprint OmemoFingerprint of the senders identityKey
+         * @param senderDevice OmemoDevice of the sender
+         * @param preKeyMessage if this was a preKeyMessage or not
+         */
+        Received(OmemoElement element, byte[] key, byte[] iv, String body, OmemoFingerprint sendersFingerprint, OmemoDevice senderDevice, boolean preKeyMessage) {
             super(element, key, iv);
-            this.message = message;
+            this.message = body;
             this.sendersFingerprint = sendersFingerprint;
             this.senderDevice = senderDevice;
-            this.carbon = carbon;
             this.preKeyMessage = preKeyMessage;
         }
 
-        public String getMessage() {
+        /**
+         * Return the decrypted body of the message.
+         * @return decrypted body
+         */
+        public String getBody() {
             return message;
         }
 
+        /**
+         * Return the fingerprint of the messages sender device.
+         * @return fingerprint of sender
+         */
         public OmemoFingerprint getSendersFingerprint() {
             return sendersFingerprint;
         }
 
+        /**
+         * Return the OmemoDevice which sent the message.
+         * @return senderDevice
+         */
         public OmemoDevice getSenderDevice() {
             return senderDevice;
         }
 
         /**
-         * Return the carbon type.
-         *
-         * @return carbon type
+         * Return true, if this message was sent as a preKeyMessage.
+         * @return preKeyMessage or not
          */
-        public CARBON getCarbon() {
-            return carbon;
-        }
-
         boolean isPreKeyMessage() {
             return preKeyMessage;
         }
-    }
 
-    /**
-     * Types of Carbon Messages.
-     */
-    public enum CARBON {
-        NONE,   //No carbon
-        SENT,   //Sent carbon
-        RECV    //Received Carbon
+        /**
+         * Return true, if the message was a KeyTransportMessage.
+         * A KeyTransportMessage is a OmemoMessage without a payload.
+         * @return keyTransportMessage?
+         */
+        public boolean isKeyTransportMessage() {
+            return message == null;
+        }
     }
 }

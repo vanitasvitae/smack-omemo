@@ -17,19 +17,15 @@
 package org.jivesoftware.smackx.omemo;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smackx.omemo.element.OmemoBundleElement;
-import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.TestNotPossibleException;
-import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 
 /**
  * Simple OMEMO message encryption integration test.
@@ -44,77 +40,71 @@ public class MessageEncryptionIntegrationTest extends AbstractTwoUsersOmemoInteg
         super(environment);
     }
 
+    /**
+     * This test checks whether the following actions are performed.
+     *
+     * Alice publishes bundle A1
+     * Bob publishes bundle B1
+     *
+     * Alice sends message to Bob (preKeyMessage)
+     * Bob publishes bundle B2
+     * Alice still has A1
+     *
+     * (Alice sends second message to bob to avoid race condition in the code (just for this example))
+     *
+     * Bob responds to Alice (normal message)
+     * Alice still has A1
+     * Bob still has B2
+     * @throws Exception
+     */
     @SmackIntegrationTest
     public void messageTest() throws Exception {
-        OmemoBundleElement aliceBundle1 = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());
-        OmemoBundleElement bobsBundle1 = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
+        OmemoBundleElement a1 = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());
+        OmemoBundleElement b1 = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
 
-        final String message1 = "One is greater than zero (for small values of zero).";
-        OmemoMessage.Sent encrypted1 = alice.encrypt(bob.getOwnJid(), message1);
-        final SimpleResultSyncPoint bobReceivedMessage = new SimpleResultSyncPoint();
+        // Alice sends message(s) to bob
+        // PreKeyMessage A -> B
+        final String body1 = "One is greater than zero (for small values of zero).";
+        AbstractOmemoMessageListener.PreKeyMessageListener listener1 =
+                new AbstractOmemoMessageListener.PreKeyMessageListener(body1);
+        bob.addOmemoMessageListener(listener1);
+        OmemoMessage.Sent e1 = alice.encrypt(bob.getOwnJid(), body1);
+        alice.getConnection().sendStanza(e1.asMessage(bob.getOwnJid()));
+        listener1.getSyncPoint().waitForResult(10 * 1000);
+        bob.removeOmemoMessageListener(listener1);
 
-        bob.addOmemoMessageListener(new OmemoMessageListener() {
-            @Override
-            public void onOmemoMessageReceived(Stanza stanza, OmemoMessage.Received received) {
-                if (received.getMessage().equals(message1)) {
-                    bobReceivedMessage.signal();
-                } else {
-                    bobReceivedMessage.signalFailure("Received decrypted message was not equal to sent message.");
-                }
-            }
+        // Message A -> B
+        final String body2 = "This message is sent to mitigate a race condition in the test";
+        AbstractOmemoMessageListener.MessageListener listener2 =
+                new AbstractOmemoMessageListener.MessageListener(body2);
+        bob.addOmemoMessageListener(listener2);
+        OmemoMessage.Sent e2 = alice.encrypt(bob.getOwnJid(), body2);
+        alice.getConnection().sendStanza(e2.asMessage(bob.getOwnJid()));
+        listener2.getSyncPoint().waitForResult(10 * 1000);
+        bob.removeOmemoMessageListener(listener2);
 
-            @Override
-            public void onOmemoKeyTransportReceived(Stanza stanza, OmemoMessage.Received decryptedKeyTransportMessage) {
-                // Not needed
-            }
+        OmemoBundleElement a1_ = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());
+        OmemoBundleElement b2 = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
 
-        });
+        assertEquals("Alice sent bob a preKeyMessage, so her bundle MUST still be the same.", a1, a1_);
+        assertNotEquals("Bob just received a preKeyMessage from alice, so his bundle must have changed.", b1, b2);
 
-        Message m1 = new Message();
-        m1.addExtension(encrypted1.getElement());
-        m1.setTo(bob.getOwnJid());
-        alice.getConnection().sendStanza(m1);
-        bobReceivedMessage.waitForResult(10 * 1000);
+        // Message B -> A
+        final String body3 = "The german words for 'leek' and 'wimp' are the same.";
+        AbstractOmemoMessageListener.MessageListener listener3 =
+                new AbstractOmemoMessageListener.MessageListener(body3);
+        alice.addOmemoMessageListener(listener3);
+        OmemoMessage.Sent e3 = bob.encrypt(alice.getOwnJid(), body3);
+        bob.getConnection().sendStanza(e3.asMessage(alice.getOwnJid()));
+        listener3.getSyncPoint().waitForResult(10 * 1000);
+        alice.removeOmemoMessageListener(listener3);
 
-        OmemoBundleElement aliceBundle2 = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());
-        OmemoBundleElement bobsBundle2 = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
+        OmemoBundleElement a1__ = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());
+        OmemoBundleElement b2_ = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
 
-        // Alice bundle is still the same, but bobs bundle changed, because he used up a pre-key.
-        assertEquals(aliceBundle1, aliceBundle2);
-        assertFalse(bobsBundle1.equals(bobsBundle2));
-
-        final String message2 = "The german words for 'leek' and 'wimp' are the same.";
-        final OmemoMessage.Sent encrypted2 = bob.encrypt(alice.getOwnJid(), message2);
-        final SimpleResultSyncPoint aliceReceivedMessage = new SimpleResultSyncPoint();
-
-        alice.addOmemoMessageListener(new OmemoMessageListener() {
-            @Override
-            public void onOmemoMessageReceived(Stanza stanza, OmemoMessage.Received received) {
-                if (received.getMessage().equals(message2)) {
-                    aliceReceivedMessage.signal();
-                } else {
-                    aliceReceivedMessage.signalFailure("Received decrypted message was not equal to sent message.");
-                }
-            }
-
-            @Override
-            public void onOmemoKeyTransportReceived(Stanza stanza, OmemoMessage.Received decryptedKeyTransportMessage) {
-                // Not needed
-            }
-        });
-
-        Message m2 = new Message();
-        m2.addExtension(encrypted2.getElement());
-        m2.setTo(alice.getOwnJid());
-        bob.getConnection().sendStanza(m2);
-        aliceReceivedMessage.waitForResult(10 * 1000);
-
-        OmemoBundleElement aliceBundle3 = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());
-        OmemoBundleElement bobsBundle3 = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
-
-        // Alice bundle did not change, because she already has a session with bob, which he initiated.
-        // Bobs bundle doesn't change this time.
-        assertEquals(aliceBundle2, aliceBundle3);
-        assertEquals(bobsBundle2, bobsBundle3);
+        assertEquals("Since alice initiated the session with bob, at no time he sent a preKeyMessage, " +
+                "so her bundle MUST still be the same.", a1_, a1__);
+        assertEquals("Bob changed his bundle earlier, but at this point his bundle must be equal to " +
+                "after the first change.", b2, b2_);
     }
 }

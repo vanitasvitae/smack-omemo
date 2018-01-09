@@ -33,13 +33,4 @@ public interface OmemoMucMessageListener {
      * @param decryptedOmemoMessage decrypted Omemo message
      */
     void onOmemoMucMessageReceived(MultiUserChat muc, Stanza stanza, OmemoMessage.Received decryptedOmemoMessage);
-
-    /**
-     * Gets called, whenever an OmemoElement without a body (an OmemoKeyTransportElement) is received.
-     *
-     * @param muc MultiUserChat the message was sent in
-     * @param stanza original stanza
-     * @param decryptedKeyTransportElement decrypted KeyTransportMessage
-     */
-    void onOmemoKeyTransportReceived(MultiUserChat muc, Stanza stanza, OmemoMessage.Received decryptedKeyTransportElement);
 }

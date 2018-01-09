@@ -16,7 +16,9 @@
  */
 package org.jivesoftware.smackx.omemo.listener;
 
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smackx.carbons.packet.CarbonExtension;
 import org.jivesoftware.smackx.omemo.OmemoMessage;
 
 /**
@@ -33,11 +35,8 @@ public interface OmemoMessageListener {
      */
     void onOmemoMessageReceived(Stanza stanza, OmemoMessage.Received decryptedMessage);
 
-    /**
-     * Gets called, whenever an OmemoElement without a body (an OmemoKeyTransportElement) is received.
-     *
-     * @param stanza received (encrypted) stanza.
-     * @param decryptedKeyTransportMessage decrypted OMEMO key transport message.
-     */
-    void onOmemoKeyTransportReceived(Stanza stanza, OmemoMessage.Received decryptedKeyTransportMessage);
+    void onOmemoCarbonCopyReceived(CarbonExtension.Direction direction,
+                                   Message carbonCopy,
+                                   Message wrappingMessage,
+                                   OmemoMessage.Received decryptedCarbonCopy);
 }

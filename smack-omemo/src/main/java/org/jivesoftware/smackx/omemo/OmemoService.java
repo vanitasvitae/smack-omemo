@@ -435,8 +435,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      */
     private OmemoMessage.Received decryptMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                                  BareJid senderJid,
-                                                 OmemoElement omemoElement,
-                                                 OmemoMessage.CARBON carbon)
+                                                 OmemoElement omemoElement)
             throws CorruptedOmemoKeyException, CryptoFailedException, NoRawSessionException
     {
         OmemoManager manager = managerGuard.get();
@@ -459,12 +458,12 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             String plaintext = OmemoRatchet.decryptMessageElement(omemoElement, cipherAndAuthTag);
 
             return new OmemoMessage.Received(omemoElement, cipherAndAuthTag.getKey(), cipherAndAuthTag.getIv(),
-                    plaintext, senderFingerprint, senderDevice, carbon, cipherAndAuthTag.wasPreKeyEncrypted());
+                    plaintext, senderFingerprint, senderDevice, cipherAndAuthTag.wasPreKeyEncrypted());
 
         } else {
             // KeyTransportMessages don't require decryption of the payload.
             return new OmemoMessage.Received(omemoElement, cipherAndAuthTag.getKey(), cipherAndAuthTag.getIv(),
-                    null, senderFingerprint, senderDevice, carbon, cipherAndAuthTag.wasPreKeyEncrypted());
+                    null, senderFingerprint, senderDevice, cipherAndAuthTag.wasPreKeyEncrypted());
         }
     }
 
@@ -1027,7 +1026,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @param userDevice our OmemoDevice
      * @param devices collection of OmemoDevices
      */
-    private static void removeOurDevice(OmemoDevice userDevice, Collection<OmemoDevice> devices) {
+    static void removeOurDevice(OmemoDevice userDevice, Collection<OmemoDevice> devices) {
         if (devices.contains(userDevice)) {
             devices.remove(userDevice);
         }
@@ -1074,66 +1073,137 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     };
 
     @Override
-    public void onOmemoCarbonCopyReceived(CarbonExtension.Direction direction, Message carbonCopy, Message wrappingMessage, OmemoManager.LoggedInOmemoManager omemoManager) {
-        // TODO: implement
+    public void onOmemoCarbonCopyReceived(CarbonExtension.Direction direction,
+                                          Message carbonCopy,
+                                          Message wrappingMessage,
+                                          OmemoManager.LoggedInOmemoManager managerGuard) {
+        OmemoManager manager = managerGuard.get();
+        // Avoid the ratchet being manipulated and the bundle being published multiple times simultaneously
+        synchronized (manager) {
+            OmemoDevice userDevice = manager.getOwnDevice();
+            OmemoElement element = carbonCopy.getExtension(OmemoElement.NAME_ENCRYPTED, OmemoElement_VAxolotl.NAMESPACE);
+            if (element == null) {
+                return;
+            }
+
+            OmemoMessage.Received decrypted;
+            BareJid sender = carbonCopy.getFrom().asBareJid();
+
+            try {
+                decrypted = decryptMessage(managerGuard, sender, element);
+                manager.notifyOmemoCarbonCopyReceived(direction, carbonCopy, wrappingMessage, decrypted);
+
+                if (decrypted.isPreKeyMessage() && OmemoConfiguration.getCompleteSessionWithEmptyMessage()) {
+                    LOGGER.log(Level.FINE, "Received a preKeyMessage in a carbon copy from " + decrypted.getSenderDevice() + ".\n" +
+                            "Complete the session by sending an empty response message.");
+                    try {
+                        sendRatchetUpdate(managerGuard, decrypted.getSenderDevice());
+                    } catch (CannotEstablishOmemoSessionException e) {
+                        throw new AssertionError("Since we successfully received a message, we MUST be able to " +
+                                "establish a session. " + e);
+                    } catch (NoSuchAlgorithmException | InterruptedException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                        LOGGER.log(Level.WARNING, "Cannot send a ratchet update message.", e);
+                    }
+                }
+            } catch (NoRawSessionException e) {
+                OmemoDevice device = e.getDeviceWithoutSession();
+                LOGGER.log(Level.WARNING, "No raw session found for contact " + device + ". ", e);
+
+                if (OmemoConfiguration.getRepairBrokenSessionsWithPreKeyMessages()) {
+                    repairBrokenSessionWithPreKeyMessage(managerGuard, device);
+                }
+            } catch (CorruptedOmemoKeyException | CryptoFailedException e) {
+                LOGGER.log(Level.WARNING, "Could not decrypt incoming carbon copy: ", e);
+            }
+
+            // Upload fresh bundle.
+            if (getOmemoStoreBackend().loadOmemoPreKeys(userDevice).size() < OmemoConstants.PRE_KEY_COUNT_PER_BUNDLE) {
+                LOGGER.log(Level.FINE, "We used up a preKey. Upload a fresh bundle.");
+                try {
+                    getOmemoStoreBackend().replenishKeys(userDevice);
+                    OmemoBundleElement bundleElement = getOmemoStoreBackend().packOmemoBundle(userDevice);
+                    publishBundle(manager.getConnection(), userDevice, bundleElement);
+                } catch (CorruptedOmemoKeyException | InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+                    LOGGER.log(Level.WARNING, "Could not republish replenished bundle.", e);
+                }
+            }
+        }
     }
 
     @Override
     public void onOmemoMessageStanzaReceived(Stanza stanza, OmemoManager.LoggedInOmemoManager managerGuard) {
         OmemoManager manager = managerGuard.get();
-        OmemoElement element = stanza.getExtension(OmemoElement.NAME_ENCRYPTED, OmemoElement_VAxolotl.NAMESPACE);
-        if (element == null) {
-            return;
-        }
+        // Avoid the ratchet being manipulated and the bundle being published multiple times simultaneously
+        synchronized (manager.LOCK) {
+            OmemoDevice userDevice = manager.getOwnDevice();
+            OmemoElement element = stanza.getExtension(OmemoElement.NAME_ENCRYPTED, OmemoElement_VAxolotl.NAMESPACE);
+            if (element == null) {
+                return;
+            }
 
-        OmemoMessage.Received decrypted;
-        BareJid sender;
+            OmemoMessage.Received decrypted;
+            BareJid sender;
 
-        try {
-            MultiUserChat muc = getMuc(manager.getConnection(), stanza.getFrom());
-            if (muc != null) {
-                Occupant occupant = muc.getOccupant(stanza.getFrom().asEntityFullJidIfPossible());
-                Jid occupantJid = occupant.getJid();
+            try {
+                MultiUserChat muc = getMuc(manager.getConnection(), stanza.getFrom());
+                if (muc != null) {
+                    Occupant occupant = muc.getOccupant(stanza.getFrom().asEntityFullJidIfPossible());
+                    Jid occupantJid = occupant.getJid();
 
-                if (occupantJid == null) {
-                    LOGGER.log(Level.WARNING, "MUC message received, but there is no way to retrieve the senders Jid. " +
-                            stanza.getFrom());
-                    return;
-                }
+                    if (occupantJid == null) {
+                        LOGGER.log(Level.WARNING, "MUC message received, but there is no way to retrieve the senders Jid. " +
+                                stanza.getFrom());
+                        return;
+                    }
 
-                sender = occupantJid.asBareJid();
+                    sender = occupantJid.asBareJid();
 
-                // try is for this
-                decrypted = decryptMessage(managerGuard, sender, element, OmemoMessage.CARBON.NONE);
-
-                if (element.isMessageElement()) {
+                    // try is for this
+                    decrypted = decryptMessage(managerGuard, sender, element);
                     manager.notifyOmemoMucMessageReceived(muc, stanza, decrypted);
+
                 } else {
-                    manager.notifyOmemoMucKeyTransportMessageReceived(muc, stanza, decrypted);
-                }
-            } else {
-                sender = stanza.getFrom().asBareJid();
+                    sender = stanza.getFrom().asBareJid();
 
-                // and this
-                decrypted = decryptMessage(managerGuard, sender, element, OmemoMessage.CARBON.NONE);
-
-                if (element.isMessageElement()) {
+                    // and this
+                    decrypted = decryptMessage(managerGuard, sender, element);
                     manager.notifyOmemoMessageReceived(stanza, decrypted);
-                } else {
-                    manager.notifyOmemoKeyTransportMessageReceived(stanza, decrypted);
+                }
+
+                if (decrypted.isPreKeyMessage() && OmemoConfiguration.getCompleteSessionWithEmptyMessage()) {
+                    LOGGER.log(Level.FINE, "Received a preKeyMessage from " + decrypted.getSenderDevice() + ".\n" +
+                            "Complete the session by sending an empty response message.");
+                    try {
+                        sendRatchetUpdate(managerGuard, decrypted.getSenderDevice());
+                    } catch (CannotEstablishOmemoSessionException e) {
+                        throw new AssertionError("Since we successfully received a message, we MUST be able to " +
+                                "establish a session. " + e);
+                    } catch (NoSuchAlgorithmException | InterruptedException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                        LOGGER.log(Level.WARNING, "Cannot send a ratchet update message.", e);
+                    }
+                }
+            } catch (NoRawSessionException e) {
+                OmemoDevice device = e.getDeviceWithoutSession();
+                LOGGER.log(Level.WARNING, "No raw session found for contact " + device + ". ", e);
+
+                if (OmemoConfiguration.getRepairBrokenSessionsWithPreKeyMessages()) {
+                    repairBrokenSessionWithPreKeyMessage(managerGuard, device);
+                }
+            } catch (CorruptedOmemoKeyException | CryptoFailedException e) {
+                LOGGER.log(Level.WARNING, "Could not decrypt incoming message: ", e);
+            }
+
+            // Upload fresh bundle.
+            if (getOmemoStoreBackend().loadOmemoPreKeys(userDevice).size() < OmemoConstants.PRE_KEY_COUNT_PER_BUNDLE) {
+                LOGGER.log(Level.FINE, "We used up a preKey. Upload a fresh bundle.");
+                try {
+                    getOmemoStoreBackend().replenishKeys(userDevice);
+                    OmemoBundleElement bundleElement = getOmemoStoreBackend().packOmemoBundle(userDevice);
+                    publishBundle(manager.getConnection(), userDevice, bundleElement);
+                } catch (CorruptedOmemoKeyException | InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+                    LOGGER.log(Level.WARNING, "Could not republish replenished bundle.", e);
                 }
             }
-        }
-        catch (NoRawSessionException e) {
-            OmemoDevice device = e.getDeviceWithoutSession();
-            LOGGER.log(Level.WARNING, "No raw session found for contact " + device + ". ", e);
-
-            if (OmemoConfiguration.getRepairBrokenSessionsWithPreKeyMessages()) {
-                repairBrokenSessionWithPreKeyMessage(managerGuard, device);
-            }
-        }
-            catch (CorruptedOmemoKeyException | CryptoFailedException e) {
-            LOGGER.log(Level.WARNING, "Could not decrypt incoming message: ", e);
         }
     }
 
@@ -1152,11 +1222,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         try {
             // Create fresh session and send new preKeyMessage.
             buildFreshSessionWithDevice(manager.getConnection(), manager.getOwnDevice(), brokenDevice);
-            OmemoElement ratchetUpdate = createRatchetUpdateElement(managerGuard, brokenDevice);
-            Message m = new Message();
-            m.setTo(brokenDevice.getJid());
-            m.addExtension(ratchetUpdate);
-            manager.getConnection().sendStanza(m);
+            sendRatchetUpdate(managerGuard, brokenDevice);
 
         } catch (CannotEstablishOmemoSessionException | CorruptedOmemoKeyException e) {
             LOGGER.log(Level.WARNING, "Unable to repair session with " + brokenDevice, e);
@@ -1165,6 +1231,31 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         } catch (CryptoFailedException | NoSuchAlgorithmException e) {
             LOGGER.log(Level.WARNING, "Could not create PreKeyMessage", e);
         }
+    }
+
+    /**
+     * Send an empty OMEMO message to contactsDevice in order to forward the ratchet.
+     * @param managerGuard
+     * @param contactsDevice
+     * @throws CorruptedOmemoKeyException if our or their OMEMO key is corrupted.
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
+     * @throws NoSuchAlgorithmException if AES encryption fails
+     * @throws SmackException.NotConnectedException
+     * @throws CryptoFailedException if encryption fails (should not happen though, but who knows...)
+     * @throws CannotEstablishOmemoSessionException if we cannot establish a session with contactsDevice.
+     */
+    private void sendRatchetUpdate(OmemoManager.LoggedInOmemoManager managerGuard, OmemoDevice contactsDevice)
+            throws CorruptedOmemoKeyException, InterruptedException, SmackException.NoResponseException,
+            NoSuchAlgorithmException, SmackException.NotConnectedException, CryptoFailedException,
+            CannotEstablishOmemoSessionException
+    {
+        OmemoManager manager = managerGuard.get();
+        OmemoElement ratchetUpdate = createRatchetUpdateElement(managerGuard, contactsDevice);
+        Message m = new Message();
+        m.setTo(contactsDevice.getJid());
+        m.addExtension(ratchetUpdate);
+        manager.getConnection().sendStanza(m);
     }
 
     /**

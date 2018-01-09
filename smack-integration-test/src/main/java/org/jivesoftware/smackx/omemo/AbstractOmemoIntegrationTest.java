@@ -40,5 +40,8 @@ public abstract class AbstractOmemoIntegrationTest extends AbstractSmackIntegrat
         if (!OmemoService.isServiceRegistered()) {
             throw new TestNotPossibleException("No OmemoService registered.");
         }
+
+        OmemoConfiguration.setCompleteSessionWithEmptyMessage(true);
+        OmemoConfiguration.setRepairBrokenSessionsWithPrekeyMessages(true);
     }
 }

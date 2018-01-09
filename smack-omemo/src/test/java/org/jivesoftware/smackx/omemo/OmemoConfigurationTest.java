@@ -17,7 +17,9 @@
 package org.jivesoftware.smackx.omemo;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
@@ -39,18 +41,6 @@ public class OmemoConfigurationTest {
         OmemoConfiguration.setFileBasedOmemoStoreDefaultPath(storePath);
         assertEquals("FileBasedOmemoStoreDefaultPath must equal the one we set.", storePath.getAbsolutePath(),
                 OmemoConfiguration.getFileBasedOmemoStoreDefaultPath().getAbsolutePath());
-
-        // EME
-        OmemoConfiguration.setAddEmeEncryptionHint(false);
-        assertEquals(false, OmemoConfiguration.getAddEmeEncryptionHint());
-        OmemoConfiguration.setAddEmeEncryptionHint(true);
-        assertEquals(true, OmemoConfiguration.getAddEmeEncryptionHint());
-
-        // MAM
-        OmemoConfiguration.setAddMAMStorageProcessingHint(false);
-        assertEquals(false, OmemoConfiguration.getAddMAMStorageProcessingHint());
-        OmemoConfiguration.setAddMAMStorageProcessingHint(true);
-        assertEquals(true, OmemoConfiguration.getAddMAMStorageProcessingHint());
 
         // Body hint
         OmemoConfiguration.setAddOmemoHintBody(false);
@@ -107,5 +97,17 @@ public class OmemoConfigurationTest {
         } catch (IllegalArgumentException e) {
             // Expected
         }
+
+        // Repair broken sessions
+        OmemoConfiguration.setRepairBrokenSessionsWithPrekeyMessages(false);
+        assertFalse(OmemoConfiguration.getRepairBrokenSessionsWithPreKeyMessages());
+        OmemoConfiguration.setRepairBrokenSessionsWithPrekeyMessages(true);
+        assertTrue(OmemoConfiguration.getRepairBrokenSessionsWithPreKeyMessages());
+
+        // Complete fresh sessions
+        OmemoConfiguration.setCompleteSessionWithEmptyMessage(false);
+        assertFalse(OmemoConfiguration.getCompleteSessionWithEmptyMessage());
+        OmemoConfiguration.setCompleteSessionWithEmptyMessage(true);
+        assertTrue(OmemoConfiguration.getCompleteSessionWithEmptyMessage());
     }
 }
