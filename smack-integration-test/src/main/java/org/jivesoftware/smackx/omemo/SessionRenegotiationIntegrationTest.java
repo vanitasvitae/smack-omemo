@@ -16,8 +16,6 @@
  */
 package org.jivesoftware.smackx.omemo;
 
-import java.util.logging.Level;
-
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 
@@ -42,57 +40,38 @@ public class SessionRenegotiationIntegrationTest extends AbstractTwoUsersOmemoIn
                     "set to 'true'.");
         }
 
+        // send PreKeyMessage -> Success
         final String body1 = "P = NP is true for all N,P from the set of complex numbers, where P is equal to 0";
         AbstractOmemoMessageListener.PreKeyMessageListener listener1 =
                 new AbstractOmemoMessageListener.PreKeyMessageListener(body1);
         OmemoMessage.Sent e1 = alice.encrypt(bob.getOwnJid(), body1);
         bob.addOmemoMessageListener(listener1);
         alice.getConnection().sendStanza(e1.asMessage(bob.getOwnJid()));
-        LOGGER.log(Level.INFO, "Message 1 sent");
         listener1.getSyncPoint().waitForResult(10 * 1000);
         bob.removeOmemoMessageListener(listener1);
 
-        LOGGER.log(Level.INFO, "Message 1 received");
+        // Remove the session on Bobs side.
+        synchronized (bob.LOCK) {
+            bob.getOmemoService().getOmemoStoreBackend().removeRawSession(bob.getOwnDevice(), alice.getOwnDevice());
+        }
 
-        final String body2 = "This message is sent to circumvent a race condition in the test.";
-        AbstractOmemoMessageListener.MessageListener listener2 = new AbstractOmemoMessageListener.MessageListener(body2);
-        OmemoMessage.Sent e2 = alice.encrypt(bob.getOwnJid(), body2);
-        bob.addOmemoMessageListener(listener2);
-        alice.getConnection().sendStanza(e2.asMessage(bob.getOwnJid()));
-        LOGGER.log(Level.INFO, "Message 2 sent");
-        listener2.getSyncPoint().waitForResult(10 * 1000);
-        bob.removeOmemoMessageListener(listener2);
-
-        LOGGER.log(Level.INFO, "Message 2 received");
-
-        // Remove bobs session with alice.
-
-        LOGGER.log(Level.INFO, "Delete session");
-        bob.getOmemoService().getOmemoStoreBackend().removeRawSession(bob.getOwnDevice(), alice.getOwnDevice());
-
+        // Send normal message -> fail, bob repairs session with preKeyMessage
         final String body3 = "P = NP is also true for all N,P from the set of complex numbers, where N is equal to 1.";
         AbstractOmemoMessageListener.PreKeyKeyTransportListener listener3 =
                 new AbstractOmemoMessageListener.PreKeyKeyTransportListener();
         OmemoMessage.Sent e3 = alice.encrypt(bob.getOwnJid(), body3);
         alice.addOmemoMessageListener(listener3);
         alice.getConnection().sendStanza(e3.asMessage(bob.getOwnJid()));
-        LOGGER.log(Level.INFO, "Message 3 sent");
         listener3.getSyncPoint().waitForResult(10 * 1000);
         alice.removeOmemoMessageListener(listener3);
 
-        LOGGER.log(Level.INFO, "Message 3 received");
-
+        // Send normal message -> success
         final String body4 = "P = NP would be a disaster for the world of cryptography.";
         AbstractOmemoMessageListener.MessageListener listener4 = new AbstractOmemoMessageListener.MessageListener(body4);
-        LOGGER.log(Level.INFO, "Attempt to encrypt message 4");
         OmemoMessage.Sent e4 = alice.encrypt(bob.getOwnJid(), body4);
-        LOGGER.log(Level.INFO, "Message 4 encrypted");
         bob.addOmemoMessageListener(listener4);
         alice.getConnection().sendStanza(e4.asMessage(bob.getOwnJid()));
-        LOGGER.log(Level.INFO, "Message 4 sent");
         listener4.getSyncPoint().waitForResult(10 * 1000);
         bob.removeOmemoMessageListener(listener4);
-
-        LOGGER.log(Level.INFO, "Message 4 received");
     }
 }

@@ -50,8 +50,6 @@ public class MessageEncryptionIntegrationTest extends AbstractTwoUsersOmemoInteg
      * Bob publishes bundle B2
      * Alice still has A1
      *
-     * (Alice sends second message to bob to avoid race condition in the code (just for this example))
-     *
      * Bob responds to Alice (normal message)
      * Alice still has A1
      * Bob still has B2
@@ -73,18 +71,12 @@ public class MessageEncryptionIntegrationTest extends AbstractTwoUsersOmemoInteg
         listener1.getSyncPoint().waitForResult(10 * 1000);
         bob.removeOmemoMessageListener(listener1);
 
-        // Message A -> B
-        final String body2 = "This message is sent to mitigate a race condition in the test";
-        AbstractOmemoMessageListener.MessageListener listener2 =
-                new AbstractOmemoMessageListener.MessageListener(body2);
-        bob.addOmemoMessageListener(listener2);
-        OmemoMessage.Sent e2 = alice.encrypt(bob.getOwnJid(), body2);
-        alice.getConnection().sendStanza(e2.asMessage(bob.getOwnJid()));
-        listener2.getSyncPoint().waitForResult(10 * 1000);
-        bob.removeOmemoMessageListener(listener2);
-
         OmemoBundleElement a1_ = alice.getOmemoService().getOmemoStoreBackend().packOmemoBundle(alice.getOwnDevice());
-        OmemoBundleElement b2 = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
+        OmemoBundleElement b2;
+
+        synchronized (bob.LOCK) { // Circumvent race condition where bundle gets replenished after getting stored in b2
+            b2 = bob.getOmemoService().getOmemoStoreBackend().packOmemoBundle(bob.getOwnDevice());
+        }
 
         assertEquals("Alice sent bob a preKeyMessage, so her bundle MUST still be the same.", a1, a1_);
         assertNotEquals("Bob just received a preKeyMessage from alice, so his bundle must have changed.", b1, b2);
