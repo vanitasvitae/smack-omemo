@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.omemo.trust;
 
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 
-public interface TrustCallback {
+public interface OmemoTrustCallback {
 
     TrustState getTrust(OmemoDevice device, OmemoFingerprint fingerprint);
 

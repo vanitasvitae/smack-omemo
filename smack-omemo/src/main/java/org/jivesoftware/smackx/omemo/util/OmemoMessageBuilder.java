@@ -51,7 +51,7 @@ import org.jivesoftware.smackx.omemo.exceptions.UntrustedOmemoIdentityException;
 import org.jivesoftware.smackx.omemo.internal.CiphertextTuple;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
-import org.jivesoftware.smackx.omemo.trust.TrustCallback;
+import org.jivesoftware.smackx.omemo.trust.OmemoTrustCallback;
 
 
 /**
@@ -72,7 +72,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
 
     private final OmemoDevice userDevice;
     private final OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet;
-    private final TrustCallback trustCallback;
+    private final OmemoTrustCallback trustCallback;
 
     private byte[] messageKey;
     private final byte[] initializationVector;
@@ -100,7 +100,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws InvalidAlgorithmParameterException
      */
     public OmemoMessageBuilder(OmemoDevice userDevice,
-                               TrustCallback callback,
+                               OmemoTrustCallback callback,
                                OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet,
                                byte[] aesKey,
                                byte[] iv,
@@ -134,7 +134,7 @@ public class OmemoMessageBuilder<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws InvalidAlgorithmParameterException
      */
     public OmemoMessageBuilder(OmemoDevice userDevice,
-                               TrustCallback callback,
+                               OmemoTrustCallback callback,
                                OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> ratchet,
                                String message)
             throws NoSuchPaddingException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException,

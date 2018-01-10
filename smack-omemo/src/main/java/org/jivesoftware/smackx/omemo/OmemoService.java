@@ -68,7 +68,7 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.internal.listener.OmemoCarbonCopyStanzaReceivedListener;
 import org.jivesoftware.smackx.omemo.internal.listener.OmemoMessageStanzaReceivedListener;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
-import org.jivesoftware.smackx.omemo.trust.TrustCallback;
+import org.jivesoftware.smackx.omemo.trust.OmemoTrustCallback;
 import org.jivesoftware.smackx.omemo.trust.TrustState;
 import org.jivesoftware.smackx.omemo.util.OmemoConstants;
 import org.jivesoftware.smackx.omemo.util.OmemoMessageBuilder;
@@ -857,7 +857,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         return devicesWithSessions;
     }
 
-    private ArrayList<OmemoDevice> getUndecidedDevices(OmemoDevice userDevice, TrustCallback callback, List<OmemoDevice> devices) {
+    private ArrayList<OmemoDevice> getUndecidedDevices(OmemoDevice userDevice, OmemoTrustCallback callback, List<OmemoDevice> devices) {
         ArrayList<OmemoDevice> undecidedDevices = new ArrayList<>();
 
         for (OmemoDevice device : devices) {
@@ -880,7 +880,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         return undecidedDevices;
     }
 
-    private ArrayList<OmemoDevice> getUntrustedDeviced(OmemoDevice userDevice, TrustCallback trustCallback, List<OmemoDevice> devices) {
+    private ArrayList<OmemoDevice> getUntrustedDeviced(OmemoDevice userDevice, OmemoTrustCallback trustCallback, List<OmemoDevice> devices) {
         ArrayList<OmemoDevice> untrustedDevices = new ArrayList<>();
 
         for (OmemoDevice device : devices) {
@@ -1060,7 +1060,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * This is only used for insensitive OMEMO messages like RatchetUpdateMessages.
      * DO NOT USE THIS FOR ANYTHING ELSE!
      */
-    private static final TrustCallback gullibleTrustCallback = new TrustCallback() {
+    private static final OmemoTrustCallback gullibleTrustCallback = new OmemoTrustCallback() {
         @Override
         public TrustState getTrust(OmemoDevice device, OmemoFingerprint fingerprint) {
             return TrustState.trusted;

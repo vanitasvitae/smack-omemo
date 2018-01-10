@@ -18,10 +18,7 @@ package org.jivesoftware.smackx.omemo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import java.io.File;
 
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -34,13 +31,6 @@ public class OmemoConfigurationTest {
     @Test
     public void omemoConfigurationTest() {
         @SuppressWarnings("unused") OmemoConfiguration configuration = new OmemoConfiguration();
-        // Default Store Path
-        File storePath = new File("test");
-        assertNull("getFileBasedOmemoStoreDefaultPath MUST return null at this point.",
-                OmemoConfiguration.getFileBasedOmemoStoreDefaultPath());
-        OmemoConfiguration.setFileBasedOmemoStoreDefaultPath(storePath);
-        assertEquals("FileBasedOmemoStoreDefaultPath must equal the one we set.", storePath.getAbsolutePath(),
-                OmemoConfiguration.getFileBasedOmemoStoreDefaultPath().getAbsolutePath());
 
         // Body hint
         OmemoConfiguration.setAddOmemoHintBody(false);

@@ -52,10 +52,6 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
     private final FileHierarchy hierarchy;
     private static final Logger LOGGER = Logger.getLogger(FileBasedOmemoStore.class.getName());
 
-    public FileBasedOmemoStore() {
-        this(OmemoConfiguration.getFileBasedOmemoStoreDefaultPath());
-    }
-
     public FileBasedOmemoStore(File basePath) {
         super();
         if (basePath == null) {

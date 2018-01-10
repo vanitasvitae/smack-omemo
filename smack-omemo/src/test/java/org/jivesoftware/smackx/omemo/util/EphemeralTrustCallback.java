@@ -20,13 +20,13 @@ import java.util.HashMap;
 
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
-import org.jivesoftware.smackx.omemo.trust.TrustCallback;
+import org.jivesoftware.smackx.omemo.trust.OmemoTrustCallback;
 import org.jivesoftware.smackx.omemo.trust.TrustState;
 
 /**
  * Ephemera Trust Callback used to make trust decisions in tests.
  */
-public class EphemeralTrustCallback implements TrustCallback {
+public class EphemeralTrustCallback implements OmemoTrustCallback {
 
     private final HashMap<OmemoDevice, HashMap<OmemoFingerprint, TrustState>> trustStates = new HashMap<>();
 

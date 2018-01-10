@@ -67,7 +67,7 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 import org.jivesoftware.smackx.omemo.listener.OmemoMucMessageListener;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
-import org.jivesoftware.smackx.omemo.trust.TrustCallback;
+import org.jivesoftware.smackx.omemo.trust.OmemoTrustCallback;
 import org.jivesoftware.smackx.omemo.trust.TrustState;
 import org.jivesoftware.smackx.pep.PEPListener;
 import org.jivesoftware.smackx.pep.PEPManager;
@@ -101,7 +101,7 @@ public final class OmemoManager extends Manager {
     private final HashSet<OmemoMessageListener> omemoMessageListeners = new HashSet<>();
     private final HashSet<OmemoMucMessageListener> omemoMucMessageListeners = new HashSet<>();
 
-    private TrustCallback trustCallback;
+    private OmemoTrustCallback trustCallback;
 
     private BareJid ownJid;
     private Integer deviceId;
@@ -206,7 +206,7 @@ public final class OmemoManager extends Manager {
      *
      * @param callback trustCallback.
      */
-    public void setTrustCallback(TrustCallback callback) {
+    public void setTrustCallback(OmemoTrustCallback callback) {
         if (trustCallback != null) {
             throw new IllegalStateException("TrustCallback can only be set once.");
         }
@@ -217,7 +217,7 @@ public final class OmemoManager extends Manager {
      * Return the TrustCallback of this manager.
      * @return
      */
-    TrustCallback getTrustCallback() {
+    OmemoTrustCallback getTrustCallback() {
         return trustCallback;
     }
 
@@ -266,12 +266,19 @@ public final class OmemoManager extends Manager {
         });
     }
 
-    public List<OmemoDevice> getDevicesOf(BareJid recipient) {
-        OmemoCachedDeviceList list = getOmemoService().getOmemoStoreBackend().loadCachedDeviceList(getOwnDevice(), recipient);
+    /**
+     * Return a list of all OMEMO capable devices of a contact.
+     * Note, that this method does not explicitly refresh the device list of the contact, so it might be outdated.
+     * @see #requestDeviceListUpdateFor(BareJid)
+     * @param contact contact we want to get a list of device of.
+     * @return list of known devices of that contact.
+     */
+    public List<OmemoDevice> getDevicesOf(BareJid contact) {
+        OmemoCachedDeviceList list = getOmemoService().getOmemoStoreBackend().loadCachedDeviceList(getOwnDevice(), contact);
         ArrayList<OmemoDevice> devices = new ArrayList<>();
 
         for (int deviceId : list.getActiveDevices()) {
-            devices.add(new OmemoDevice(recipient, deviceId));
+            devices.add(new OmemoDevice(contact, deviceId));
         }
 
         return devices;
@@ -353,7 +360,7 @@ public final class OmemoManager extends Manager {
             SmackException.NotLoggedInException
     {
         synchronized (LOCK) {
-            if (!multiUserChatSupportsOmemo(muc.getRoom())) {
+            if (!multiUserChatSupportsOmemo(muc)) {
                 throw new NoOmemoSupportException();
             }
 
@@ -492,18 +499,19 @@ public final class OmemoManager extends Manager {
      * Returns true, if the MUC with the EntityBareJid multiUserChat is non-anonymous and members only (prerequisite
      * for OMEMO encryption in MUC).
      *
-     * @param multiUserChat EntityBareJid of the MUC
+     * @param multiUserChat MUC
      * @return true if chat supports OMEMO
      * @throws XMPPException.XMPPErrorException     if
      * @throws SmackException.NotConnectedException something
      * @throws InterruptedException                 goes
      * @throws SmackException.NoResponseException   wrong
      */
-    public boolean multiUserChatSupportsOmemo(EntityBareJid multiUserChat)
+    public boolean multiUserChatSupportsOmemo(MultiUserChat multiUserChat)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException
     {
-        RoomInfo roomInfo = MultiUserChatManager.getInstanceFor(connection()).getRoomInfo(multiUserChat);
+        EntityBareJid jid = multiUserChat.getRoom();
+        RoomInfo roomInfo = MultiUserChatManager.getInstanceFor(connection()).getRoomInfo(jid);
         return roomInfo.isNonanonymous() && roomInfo.isMembersOnly();
     }
 

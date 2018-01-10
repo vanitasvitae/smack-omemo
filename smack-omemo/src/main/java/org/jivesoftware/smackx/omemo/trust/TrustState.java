@@ -17,5 +17,7 @@
 package org.jivesoftware.smackx.omemo.trust;
 
 public enum TrustState {
-    undecided, untrusted, trusted
+    undecided, // User has yet to decide, whether the identity is trusted or not.
+    untrusted, // User decided NOT to trust this device.
+    trusted    // User decided to trust this device.
 }

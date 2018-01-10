@@ -16,8 +16,6 @@
  */
 package org.jivesoftware.smackx.omemo;
 
-import java.io.File;
-
 /**
  * Contains OMEMO related configuration options.
  *
@@ -32,31 +30,6 @@ public final class OmemoConfiguration {
      */
     private static boolean IGNORE_STALE_DEVICES = true;
     private static int IGNORE_STALE_DEVICE_AFTER_HOURS = 24 * 7;         //One week
-
-    /**
-     * Delete stale devices from the device list after a period of time.
-     */
-    private static boolean DELETE_STALE_DEVICES = true;
-    private static int DELETE_STALE_DEVICE_AFTER_HOURS = 24 * 7 * 4;     //4 weeks
-
-    /**
-     * Upload a new signed prekey in intervals. This improves forward secrecy. Old keys are kept for some more time and
-     * then deleted.
-     */
-    private static boolean RENEW_OLD_SIGNED_PREKEYS = false;
-    private static int RENEW_OLD_SIGNED_PREKEYS_AFTER_HOURS = 24 * 7;    //One week
-    private static int MAX_NUMBER_OF_STORED_SIGNED_PREKEYS = 4;
-
-    /**
-     * Add a plaintext body hint about omemo encryption to the message.
-     */
-    private static boolean ADD_OMEMO_HINT_BODY = true;
-
-    private static boolean REPAIR_BROKEN_SESSIONS_WITH_PREKEY_MESSAGES = true;
-
-    private static boolean COMPLETE_SESSION_WITH_EMPTY_MESSAGE = true;
-
-    private static File FILE_BASED_OMEMO_STORE_DEFAULT_PATH = null;
 
     public static void setIgnoreStaleDevices(boolean ignore) {
         IGNORE_STALE_DEVICES = ignore;
@@ -77,6 +50,12 @@ public final class OmemoConfiguration {
         return IGNORE_STALE_DEVICE_AFTER_HOURS;
     }
 
+    /**
+     * Delete stale devices from the device list after a period of time.
+     */
+    private static boolean DELETE_STALE_DEVICES = true;
+    private static int DELETE_STALE_DEVICE_AFTER_HOURS = 24 * 7 * 4;     //4 weeks
+
     public static void setDeleteStaleDevices(boolean delete) {
         DELETE_STALE_DEVICES = delete;
     }
@@ -95,6 +74,14 @@ public final class OmemoConfiguration {
     public static int getDeleteStaleDevicesAfterHours() {
         return DELETE_STALE_DEVICE_AFTER_HOURS;
     }
+
+    /**
+     * Upload a new signed prekey in intervals. This improves forward secrecy. Old keys are kept for some more time and
+     * then deleted.
+     */
+    private static boolean RENEW_OLD_SIGNED_PREKEYS = false;
+    private static int RENEW_OLD_SIGNED_PREKEYS_AFTER_HOURS = 24 * 7;    //One week
+    private static int MAX_NUMBER_OF_STORED_SIGNED_PREKEYS = 4;
 
     /**
      * Decide, whether signed preKeys are automatically rotated or not.
@@ -161,6 +148,11 @@ public final class OmemoConfiguration {
     }
 
     /**
+     * Add a plaintext body hint about omemo encryption to the message.
+     */
+    private static boolean ADD_OMEMO_HINT_BODY = true;
+
+    /**
      * Decide, whether an OMEMO message should carry a plaintext hint about OMEMO encryption.
      * Eg. "I sent you an OMEMO encrypted message..."
      *
@@ -179,13 +171,7 @@ public final class OmemoConfiguration {
         return ADD_OMEMO_HINT_BODY;
     }
 
-    public static void setFileBasedOmemoStoreDefaultPath(File path) {
-        FILE_BASED_OMEMO_STORE_DEFAULT_PATH = path;
-    }
-
-    public static File getFileBasedOmemoStoreDefaultPath() {
-        return FILE_BASED_OMEMO_STORE_DEFAULT_PATH;
-    }
+    private static boolean REPAIR_BROKEN_SESSIONS_WITH_PREKEY_MESSAGES = true;
 
     /**
      * Determine, whether incoming messages, which have broken sessions should automatically be answered by an empty
@@ -206,6 +192,8 @@ public final class OmemoConfiguration {
     public static void setRepairBrokenSessionsWithPrekeyMessages(boolean repair) {
         REPAIR_BROKEN_SESSIONS_WITH_PREKEY_MESSAGES = repair;
     }
+
+    private static boolean COMPLETE_SESSION_WITH_EMPTY_MESSAGE = true;
 
     /**
      * Determine, whether incoming preKeyMessages should automatically be answered by an empty message in order to

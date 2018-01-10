@@ -46,10 +46,6 @@ public class SignalFileBasedOmemoStore
         SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
 {
 
-    public SignalFileBasedOmemoStore() {
-        super();
-    }
-
     public SignalFileBasedOmemoStore(File base) {
         super(base);
     }
