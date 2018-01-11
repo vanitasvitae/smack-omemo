@@ -433,7 +433,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CryptoFailedException if decryption fails.
      * @throws NoRawSessionException if we have no session with the device and it sent a normal (non-preKey) message.
      */
-    private OmemoMessage.Received decryptMessage(OmemoManager.LoggedInOmemoManager managerGuard,
+    OmemoMessage.Received decryptMessage(OmemoManager.LoggedInOmemoManager managerGuard,
                                                  BareJid senderJid,
                                                  OmemoElement omemoElement)
             throws CorruptedOmemoKeyException, CryptoFailedException, NoRawSessionException

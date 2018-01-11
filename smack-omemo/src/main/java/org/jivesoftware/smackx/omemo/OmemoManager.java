@@ -61,6 +61,7 @@ import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionExcep
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
 import org.jivesoftware.smackx.omemo.exceptions.NoOmemoSupportException;
+import org.jivesoftware.smackx.omemo.exceptions.NoRawSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.UndecidedOmemoIdentityException;
 import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
@@ -374,9 +375,32 @@ public final class OmemoManager extends Manager {
     }
 
     /**
+     * Manually decrypt an OmemoElement.
+     * This method should only be used for use-cases, where the internal listeners don't pick up on an incoming message.
+     * (for example MAM query results).
+     *
+     * @param sender bareJid of the message sender (must be the jid of the contact who sent the message)
+     * @param omemoElement omemoElement
+     * @return decrypted OmemoMessage
+     *
+     * @throws SmackException.NotLoggedInException if the Manager is not authenticated
+     * @throws CorruptedOmemoKeyException if our or their key is corrupted
+     * @throws NoRawSessionException if the message was not a preKeyMessage, but we had no session with the contact
+     * @throws CryptoFailedException if decryption fails
+     */
+    public OmemoMessage.Received decrypt(BareJid sender, OmemoElement omemoElement)
+            throws SmackException.NotLoggedInException, CorruptedOmemoKeyException, NoRawSessionException,
+            CryptoFailedException
+    {
+        LoggedInOmemoManager managerGuard = new LoggedInOmemoManager(this);
+        return getOmemoService().decryptMessage(managerGuard, sender, omemoElement);
+    }
+
+    /**
      * Trust that a fingerprint belongs to an OmemoDevice.
      * The fingerprint must be the lowercase, hexadecimal fingerprint of the identityKey of the device and must
      * be of length 64.
+     * 
      * @param device device
      * @param fingerprint fingerprint
      */
