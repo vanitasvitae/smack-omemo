@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -49,7 +50,9 @@ import org.jivesoftware.smackx.carbons.CarbonManager;
 import org.jivesoftware.smackx.carbons.packet.CarbonExtension;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
+import org.jivesoftware.smackx.forward.packet.Forwarded;
 import org.jivesoftware.smackx.hints.element.StoreHint;
+import org.jivesoftware.smackx.mam.MamManager;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
@@ -397,10 +400,38 @@ public final class OmemoManager extends Manager {
     }
 
     /**
+     * Decrypt OmemoMessages of a {@link org.jivesoftware.smackx.mam.MamManager.MamQueryResult}.
+     * Return a map of Stanzas and their decrypted counterparts.
+     *
+     * Note: This method does not repair broken sessions.
+     *
+     * @param result MamQueryResult
+     * @return map of encrypted stanzas and decrypted messages.
+     *
+     * @throws SmackException.NotLoggedInException if the OmemoManager is not authenticated
+     */
+    public Map<Stanza, OmemoMessage.Received> decryptMAMQueryResult(MamManager.MamQueryResult result)
+            throws SmackException.NotLoggedInException
+    {
+        LoggedInOmemoManager managerGuard = new LoggedInOmemoManager(this);
+        HashMap<Stanza, OmemoMessage.Received> decryptedMessages = new HashMap<>();
+
+        for (Forwarded forwarded : result.forwardedMessages) {
+            Stanza stanza = forwarded.getForwardedStanza();
+            OmemoMessage.Received decrypted = getOmemoService().decryptStanza(stanza, managerGuard);
+            if (decrypted != null) {
+                decryptedMessages.put(stanza, decrypted);
+            }
+        }
+
+        return decryptedMessages;
+    }
+
+    /**
      * Trust that a fingerprint belongs to an OmemoDevice.
      * The fingerprint must be the lowercase, hexadecimal fingerprint of the identityKey of the device and must
      * be of length 64.
-     * 
+     *
      * @param device device
      * @param fingerprint fingerprint
      */
@@ -489,11 +520,8 @@ public final class OmemoManager extends Manager {
 
             // Set MAM Storage hint
             StoreHint.set(message);
-
-            if (OmemoConfiguration.getAddEmeEncryptionHint()) {
-                message.addExtension(new ExplicitMessageEncryptionElement(
-                        ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.omemoVAxolotl));
-            }
+            message.addExtension(new ExplicitMessageEncryptionElement(
+                    ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.omemoVAxolotl));
             connection().sendStanza(message);
         }
     }

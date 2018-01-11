@@ -1079,7 +1079,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                                           OmemoManager.LoggedInOmemoManager managerGuard) {
         OmemoManager manager = managerGuard.get();
         // Avoid the ratchet being manipulated and the bundle being published multiple times simultaneously
-        synchronized (manager) {
+        synchronized (manager.LOCK) {
             OmemoDevice userDevice = manager.getOwnDevice();
             OmemoElement element = carbonCopy.getExtension(OmemoElement.NAME_ENCRYPTED, OmemoElement_VAxolotl.NAMESPACE);
             if (element == null) {
@@ -1204,6 +1204,86 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                     LOGGER.log(Level.WARNING, "Could not republish replenished bundle.", e);
                 }
             }
+        }
+    }
+
+    /**
+     * Decrypt the OmemoElement inside the given Stanza and return it.
+     * Return null if something goes wrong.
+     *
+     * @param stanza stanza
+     * @param managerGuard authenticated OmemoManager
+     * @return decrypted OmemoMessage or null
+     */
+    OmemoMessage.Received decryptStanza(Stanza stanza, OmemoManager.LoggedInOmemoManager managerGuard) {
+        OmemoManager manager = managerGuard.get();
+        // Avoid the ratchet being manipulated and the bundle being published multiple times simultaneously
+        synchronized (manager.LOCK) {
+            OmemoDevice userDevice = manager.getOwnDevice();
+            OmemoElement element = stanza.getExtension(OmemoElement.NAME_ENCRYPTED, OmemoElement_VAxolotl.NAMESPACE);
+            if (element == null) {
+                return null;
+            }
+
+            OmemoMessage.Received decrypted = null;
+            BareJid sender;
+
+            try {
+                MultiUserChat muc = getMuc(manager.getConnection(), stanza.getFrom());
+                if (muc != null) {
+                    Occupant occupant = muc.getOccupant(stanza.getFrom().asEntityFullJidIfPossible());
+                    Jid occupantJid = occupant.getJid();
+
+                    if (occupantJid == null) {
+                        LOGGER.log(Level.WARNING, "MUC message received, but there is no way to retrieve the senders Jid. " +
+                                stanza.getFrom());
+                        return null;
+                    }
+
+                    sender = occupantJid.asBareJid();
+
+                    // try is for this
+                    decrypted = decryptMessage(managerGuard, sender, element);
+
+                } else {
+                    sender = stanza.getFrom().asBareJid();
+
+                    // and this
+                    decrypted = decryptMessage(managerGuard, sender, element);
+                }
+
+                if (decrypted.isPreKeyMessage() && OmemoConfiguration.getCompleteSessionWithEmptyMessage()) {
+                    LOGGER.log(Level.FINE, "Received a preKeyMessage from " + decrypted.getSenderDevice() + ".\n" +
+                            "Complete the session by sending an empty response message.");
+                    try {
+                        sendRatchetUpdate(managerGuard, decrypted.getSenderDevice());
+                    } catch (CannotEstablishOmemoSessionException e) {
+                        throw new AssertionError("Since we successfully received a message, we MUST be able to " +
+                                "establish a session. " + e);
+                    } catch (NoSuchAlgorithmException | InterruptedException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
+                        LOGGER.log(Level.WARNING, "Cannot send a ratchet update message.", e);
+                    }
+                }
+            } catch (NoRawSessionException e) {
+                OmemoDevice device = e.getDeviceWithoutSession();
+                LOGGER.log(Level.WARNING, "No raw session found for contact " + device + ". ", e);
+
+            } catch (CorruptedOmemoKeyException | CryptoFailedException e) {
+                LOGGER.log(Level.WARNING, "Could not decrypt incoming message: ", e);
+            }
+
+            // Upload fresh bundle.
+            if (getOmemoStoreBackend().loadOmemoPreKeys(userDevice).size() < OmemoConstants.PRE_KEY_COUNT_PER_BUNDLE) {
+                LOGGER.log(Level.FINE, "We used up a preKey. Upload a fresh bundle.");
+                try {
+                    getOmemoStoreBackend().replenishKeys(userDevice);
+                    OmemoBundleElement bundleElement = getOmemoStoreBackend().packOmemoBundle(userDevice);
+                    publishBundle(manager.getConnection(), userDevice, bundleElement);
+                } catch (CorruptedOmemoKeyException | InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException | XMPPException.XMPPErrorException e) {
+                    LOGGER.log(Level.WARNING, "Could not republish replenished bundle.", e);
+                }
+            }
+            return decrypted;
         }
     }
 
