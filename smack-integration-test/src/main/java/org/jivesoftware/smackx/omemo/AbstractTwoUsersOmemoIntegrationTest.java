@@ -65,8 +65,8 @@ public abstract class AbstractTwoUsersOmemoIntegrationTest extends AbstractOmemo
 
     @AfterClass
     public void cleanUp() {
-        alice.stopListeners();
-        bob.stopListeners();
+        alice.stopStanzaAndPEPListeners();
+        bob.stopStanzaAndPEPListeners();
         OmemoManagerSetupHelper.cleanUpPubSub(alice);
         OmemoManagerSetupHelper.cleanUpRoster(alice);
         OmemoManagerSetupHelper.cleanUpPubSub(bob);

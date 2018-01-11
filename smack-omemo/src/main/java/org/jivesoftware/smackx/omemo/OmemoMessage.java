@@ -210,4 +210,34 @@ public class OmemoMessage {
             return message == null;
         }
     }
+
+    /**
+     * Binds together a {@link org.jivesoftware.smackx.forward.packet.Forwarded} object and a decrypted OmemoMessage.
+     */
+    public static class Forwarded {
+
+        private final org.jivesoftware.smackx.forward.packet.Forwarded forwarded;
+        private final Received decrypted;
+
+        public Forwarded(Received decrypted, org.jivesoftware.smackx.forward.packet.Forwarded forwarded) {
+            this.decrypted = decrypted;
+            this.forwarded = forwarded;
+        }
+
+        /**
+         * Return the Forwarded element, which contained the encrypted OmemoMessage.
+         * @return forwarded element.
+         */
+        public org.jivesoftware.smackx.forward.packet.Forwarded getForwarded() {
+            return forwarded;
+        }
+
+        /**
+         * Return the decrypted OmemoMessage.
+         * @return decrypted omemoMessage
+         */
+        public Received getDecrypted() {
+            return decrypted;
+        }
+    }
 }

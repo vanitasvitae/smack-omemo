@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -137,7 +136,7 @@ public final class OmemoManager extends Manager {
         service.registerRatchetForManager(this);
 
         // StanzaListeners
-        resumeStanzaListeners();
+        resumeStanzaAndPEPListeners();
 
         // Announce OMEMO support
         ServiceDiscoveryManager.getInstanceFor(connection).addFeature(PEP_NODE_DEVICE_LIST_NOTIFY);
@@ -401,26 +400,28 @@ public final class OmemoManager extends Manager {
 
     /**
      * Decrypt OmemoMessages of a {@link org.jivesoftware.smackx.mam.MamManager.MamQueryResult}.
-     * Return a map of Stanzas and their decrypted counterparts.
+     * Return a list of decrypted messages. Messages that cannot be decrypted, or were not decrypted in the first place
+     * are left out of the list.
      *
      * Note: This method does not repair broken sessions.
      *
      * @param result MamQueryResult
-     * @return map of encrypted stanzas and decrypted messages.
+     * @return list of decrypted messages.
      *
      * @throws SmackException.NotLoggedInException if the OmemoManager is not authenticated
      */
-    public Map<Stanza, OmemoMessage.Received> decryptMAMQueryResult(MamManager.MamQueryResult result)
+    public List<OmemoMessage.Forwarded> decryptMAMQueryResult(MamManager.MamQueryResult result)
             throws SmackException.NotLoggedInException
     {
         LoggedInOmemoManager managerGuard = new LoggedInOmemoManager(this);
-        HashMap<Stanza, OmemoMessage.Received> decryptedMessages = new HashMap<>();
+        ArrayList<OmemoMessage.Forwarded> decryptedMessages = new ArrayList<>();
 
         for (Forwarded forwarded : result.forwardedMessages) {
             Stanza stanza = forwarded.getForwardedStanza();
             OmemoMessage.Received decrypted = getOmemoService().decryptStanza(stanza, managerGuard);
             if (decrypted != null) {
-                decryptedMessages.put(stanza, decrypted);
+                OmemoMessage.Forwarded pair = new OmemoMessage.Forwarded(decrypted, forwarded);
+                decryptedMessages.add(pair);
             }
         }
 
@@ -904,9 +905,9 @@ public final class OmemoManager extends Manager {
     /**
      * Register stanza listeners needed for OMEMO.
      * This method is called automatically in the constructor and should only be used to restore the previous state
-     * after {@link #stopListeners()} was called.
+     * after {@link #stopStanzaAndPEPListeners()} was called.
      */
-    public void resumeStanzaListeners() {
+    public void resumeStanzaAndPEPListeners() {
         PEPManager pepManager = PEPManager.getInstanceFor(connection());
         CarbonManager carbonManager = CarbonManager.getInstanceFor(connection());
 
@@ -924,7 +925,7 @@ public final class OmemoManager extends Manager {
     /**
      * Remove active stanza listeners needed for OMEMO.
      */
-    public void stopListeners() {
+    public void stopStanzaAndPEPListeners() {
         PEPManager.getInstanceFor(connection()).removePEPListener(deviceListUpdateListener);
         connection().removeAsyncStanzaListener(internalOmemoMessageStanzaListener);
         CarbonManager.getInstanceFor(connection()).removeCarbonCopyReceivedListener(internalOmemoCarbonCopyListener);
