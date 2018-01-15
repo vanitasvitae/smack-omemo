@@ -932,6 +932,30 @@ public final class OmemoManager extends Manager {
     }
 
     /**
+     * Build a fresh session with a contacts device.
+     * This might come in handy if a session is broken.
+     *
+     * @param contactsDevice OmemoDevice of a contact.
+     *
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
+     * @throws CorruptedOmemoKeyException if our or their identityKey is corrupted.
+     * @throws SmackException.NotConnectedException
+     * @throws CannotEstablishOmemoSessionException if no new session can be established.
+     * @throws SmackException.NotLoggedInException if the connection is not authenticated.
+     */
+    public void rebuildSessionWith(OmemoDevice contactsDevice)
+            throws InterruptedException, SmackException.NoResponseException, CorruptedOmemoKeyException,
+            SmackException.NotConnectedException, CannotEstablishOmemoSessionException,
+            SmackException.NotLoggedInException
+    {
+        if (!connection().isAuthenticated()) {
+            throw new SmackException.NotLoggedInException();
+        }
+        getOmemoService().buildFreshSessionWithDevice(connection(), getOwnDevice(), contactsDevice);
+    }
+
+    /**
      * Get our connection.
      *
      * @return the connection of this manager
