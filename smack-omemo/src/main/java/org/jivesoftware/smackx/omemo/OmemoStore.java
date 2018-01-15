@@ -282,7 +282,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     public abstract void removeOmemoIdentityKey(OmemoDevice userDevice, OmemoDevice contactsDevice);
 
     /**
-     * Set the date in millis of the last message that was received from a device.
+     * Set the date of the last message that was received from a device.
      *
      * @param userDevice omemoManager of our device.
      * @param contactsDevice device in question
@@ -291,16 +291,16 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     public abstract void setDateOfLastReceivedMessage(OmemoDevice userDevice, OmemoDevice contactsDevice, Date date);
 
     /**
-     * Return the date in millis of the last message that was received from device 'from'.
+     * Return the date of the last message that was received from device 'from'.
      *
      * @param userDevice our OmemoDevice.
      * @param contactsDevice device in question
-     * @return date if existent as long, otherwise -1
+     * @return date if existent, null
      */
     public abstract Date getDateOfLastReceivedMessage(OmemoDevice userDevice, OmemoDevice contactsDevice);
 
     /**
-     * Set the date in millis of the last time the signed preKey was renewed.
+     * Set the date of the last time the signed preKey was renewed.
      *
      * @param userDevice our OmemoDevice.
      * @param date date
@@ -308,7 +308,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     public abstract void setDateOfLastSignedPreKeyRenewal(OmemoDevice userDevice, Date date);
 
     /**
-     * Get the date in millis of the last time the signed preKey was renewed.
+     * Get the date of the last time the signed preKey was renewed.
      *
      * @param userDevice our OmemoDevice.
      * @return date if existent, otherwise null
@@ -358,7 +358,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
     }
 
     /**
-     * remove a preKey from storage. This is called, when a contact used one of our preKeys to establish a session
+     * Remove a preKey from storage. This is called, when a contact used one of our preKeys to establish a session
      * with us.
      *
      * @param userDevice our OmemoDevice.
