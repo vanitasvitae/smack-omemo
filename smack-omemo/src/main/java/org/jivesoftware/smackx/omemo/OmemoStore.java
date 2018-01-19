@@ -230,6 +230,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
 
     /**
      * Load our identityKeyPair from storage.
+     * Return null, if we have no identityKeyPair.
      *
      * @param userDevice our OmemoDevice.
      * @return identityKeyPair
