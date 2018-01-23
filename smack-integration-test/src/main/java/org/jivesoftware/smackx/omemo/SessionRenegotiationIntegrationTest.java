@@ -34,11 +34,10 @@ public class SessionRenegotiationIntegrationTest extends AbstractTwoUsersOmemoIn
     @SmackIntegrationTest
     public void sessionRenegotiationTest() throws Exception {
 
-        if (!OmemoConfiguration.getRepairBrokenSessionsWithPreKeyMessages()) {
-            throw new TestNotPossibleException("This test requires the property " +
-                    "OmemoConfiguration.REPAIR_BROKEN_SESSIONS_WITH_PREKEY_MESSAGES " +
-                    "set to 'true'.");
-        }
+        boolean prevRepairProperty = OmemoConfiguration.getRepairBrokenSessionsWithPreKeyMessages();
+        OmemoConfiguration.setRepairBrokenSessionsWithPrekeyMessages(true);
+        boolean prevCompleteSessionProperty = OmemoConfiguration.getCompleteSessionWithEmptyMessage();
+        OmemoConfiguration.setCompleteSessionWithEmptyMessage(false);
 
         // send PreKeyMessage -> Success
         final String body1 = "P = NP is true for all N,P from the set of complex numbers, where P is equal to 0";
@@ -56,22 +55,25 @@ public class SessionRenegotiationIntegrationTest extends AbstractTwoUsersOmemoIn
         }
 
         // Send normal message -> fail, bob repairs session with preKeyMessage
-        final String body3 = "P = NP is also true for all N,P from the set of complex numbers, where N is equal to 1.";
-        AbstractOmemoMessageListener.PreKeyKeyTransportListener listener3 =
+        final String body2 = "P = NP is also true for all N,P from the set of complex numbers, where N is equal to 1.";
+        AbstractOmemoMessageListener.PreKeyKeyTransportListener listener2 =
                 new AbstractOmemoMessageListener.PreKeyKeyTransportListener();
-        OmemoMessage.Sent e3 = alice.encrypt(bob.getOwnJid(), body3);
-        alice.addOmemoMessageListener(listener3);
-        alice.getConnection().sendStanza(e3.asMessage(bob.getOwnJid()));
-        listener3.getSyncPoint().waitForResult(10 * 1000);
-        alice.removeOmemoMessageListener(listener3);
+        OmemoMessage.Sent e2 = alice.encrypt(bob.getOwnJid(), body2);
+        alice.addOmemoMessageListener(listener2);
+        alice.getConnection().sendStanza(e2.asMessage(bob.getOwnJid()));
+        listener2.getSyncPoint().waitForResult(10 * 1000);
+        alice.removeOmemoMessageListener(listener2);
 
         // Send normal message -> success
-        final String body4 = "P = NP would be a disaster for the world of cryptography.";
-        AbstractOmemoMessageListener.MessageListener listener4 = new AbstractOmemoMessageListener.MessageListener(body4);
-        OmemoMessage.Sent e4 = alice.encrypt(bob.getOwnJid(), body4);
-        bob.addOmemoMessageListener(listener4);
-        alice.getConnection().sendStanza(e4.asMessage(bob.getOwnJid()));
-        listener4.getSyncPoint().waitForResult(10 * 1000);
-        bob.removeOmemoMessageListener(listener4);
+        final String body3 = "P = NP would be a disaster for the world of cryptography.";
+        AbstractOmemoMessageListener.MessageListener listener3 = new AbstractOmemoMessageListener.MessageListener(body3);
+        OmemoMessage.Sent e3 = alice.encrypt(bob.getOwnJid(), body3);
+        bob.addOmemoMessageListener(listener3);
+        alice.getConnection().sendStanza(e3.asMessage(bob.getOwnJid()));
+        listener3.getSyncPoint().waitForResult(10 * 1000);
+        bob.removeOmemoMessageListener(listener3);
+
+        OmemoConfiguration.setRepairBrokenSessionsWithPrekeyMessages(prevRepairProperty);
+        OmemoConfiguration.setCompleteSessionWithEmptyMessage(prevCompleteSessionProperty);
     }
 }
