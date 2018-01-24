@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
@@ -270,15 +271,15 @@ public final class OmemoManager extends Manager {
     }
 
     /**
-     * Return a list of all OMEMO capable devices of a contact.
+     * Return a set of all OMEMO capable devices of a contact.
      * Note, that this method does not explicitly refresh the device list of the contact, so it might be outdated.
      * @see #requestDeviceListUpdateFor(BareJid)
-     * @param contact contact we want to get a list of device of.
-     * @return list of known devices of that contact.
+     * @param contact contact we want to get a set of device of.
+     * @return set of known devices of that contact.
      */
-    public List<OmemoDevice> getDevicesOf(BareJid contact) {
+    public Set<OmemoDevice> getDevicesOf(BareJid contact) {
         OmemoCachedDeviceList list = getOmemoService().getOmemoStoreBackend().loadCachedDeviceList(getOwnDevice(), contact);
-        ArrayList<OmemoDevice> devices = new ArrayList<>();
+        HashSet<OmemoDevice> devices = new HashSet<>();
 
         for (int deviceId : list.getActiveDevices()) {
             devices.add(new OmemoDevice(contact, deviceId));
@@ -307,7 +308,7 @@ public final class OmemoManager extends Manager {
             SmackException.NoResponseException, SmackException.NotLoggedInException
     {
         synchronized (LOCK) {
-            ArrayList<BareJid> recipients = new ArrayList<>();
+            Set<BareJid> recipients = new HashSet<>();
             recipients.add(recipient);
             return encrypt(recipients, message);
         }
@@ -326,14 +327,14 @@ public final class OmemoManager extends Manager {
      * @throws SmackException.NoResponseException
      * @throws SmackException.NotLoggedInException
      */
-    public OmemoMessage.Sent encrypt(ArrayList<BareJid> recipients, String message)
+    public OmemoMessage.Sent encrypt(Set<BareJid> recipients, String message)
             throws CryptoFailedException, UndecidedOmemoIdentityException,
             InterruptedException, SmackException.NotConnectedException,
             SmackException.NoResponseException, SmackException.NotLoggedInException
     {
         synchronized (LOCK) {
             LoggedInOmemoManager guard = new LoggedInOmemoManager(this);
-            List<OmemoDevice> devices = getDevicesOf(getOwnJid());
+            Set<OmemoDevice> devices = getDevicesOf(getOwnJid());
             for (BareJid recipient : recipients) {
                 devices.addAll(getDevicesOf(recipient));
             }
@@ -367,7 +368,7 @@ public final class OmemoManager extends Manager {
                 throw new NoOmemoSupportException();
             }
 
-            ArrayList<BareJid> recipients = new ArrayList<>();
+            Set<BareJid> recipients = new HashSet<>();
 
             for (EntityFullJid e : muc.getOccupants()) {
                 recipients.add(muc.getOccupant(e).getJid().asBareJid());

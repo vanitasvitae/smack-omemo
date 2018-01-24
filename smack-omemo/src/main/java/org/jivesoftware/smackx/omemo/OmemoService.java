@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -326,7 +327,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * Encrypt a message with a messageKey and an IV and create an OmemoMessage from it.
      *
      * @param managerGuard authenticated OmemoManager
-     * @param contactsDevices list of recipient OmemoDevices
+     * @param contactsDevices set of recipient OmemoDevices
      * @param messageKey AES key to encrypt the message
      * @param iv iv to be used with the messageKey
      * @return OmemoMessage object which contains the OmemoElement and some information.
@@ -338,7 +339,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CryptoFailedException if we are lacking some crypto primitives
      */
     private OmemoMessage.Sent encrypt(OmemoManager.LoggedInOmemoManager managerGuard,
-                                      List<OmemoDevice> contactsDevices,
+                                      Set<OmemoDevice> contactsDevices,
                                       byte[] messageKey,
                                       byte[] iv,
                                       String message)
@@ -353,7 +354,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
 
         buildMissingSessionsWithDevices(manager.getConnection(), userDevice, contactsDevices);
 
-        ArrayList<OmemoDevice> undecidedDevices = getUndecidedDevices(userDevice, manager.getTrustCallback(), contactsDevices);
+        Set<OmemoDevice> undecidedDevices = getUndecidedDevices(userDevice, manager.getTrustCallback(), contactsDevices);
         if (!undecidedDevices.isEmpty()) {
             throw new UndecidedOmemoIdentityException(undecidedDevices);
         }
@@ -472,7 +473,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @see <a href="https://xmpp.org/extensions/xep-0384.html#usecases-keysend">XEP-0384: Sending a key</a>.
      *
      * @param managerGuard Initialized OmemoManager.
-     * @param contactsDevices recipient devices.
+     * @param contactsDevices set of recipient devices.
      * @param key AES-Key to be transported.
      * @param iv initialization vector to be used with the key.
      * @return KeyTransportElement
@@ -484,7 +485,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NoResponseException
      */
     OmemoMessage.Sent createKeyTransportElement(OmemoManager.LoggedInOmemoManager managerGuard,
-                                                List<OmemoDevice> contactsDevices,
+                                                Set<OmemoDevice> contactsDevices,
                                                 byte[] key,
                                                 byte[] iv)
             throws InterruptedException, UndecidedOmemoIdentityException, CryptoFailedException,
@@ -494,11 +495,13 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     }
 
     /**
+     * Create an OmemoMessage.
      *
-     * @param managerGuard
-     * @param contactsDevices
-     * @param message
-     * @return
+     * @param managerGuard initialized OmemoManager
+     * @param contactsDevices set of recipient devices
+     * @param message message we want to send
+     * @return encrypted OmemoMessage
+     *
      * @throws InterruptedException
      * @throws UndecidedOmemoIdentityException if the list of recipient devices contains an undecided device.
      * @throws CryptoFailedException if we are lacking some cryptographic algorithms
@@ -506,7 +509,7 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws SmackException.NoResponseException
      */
     OmemoMessage.Sent createOmemoMessage(OmemoManager.LoggedInOmemoManager managerGuard,
-                                         List<OmemoDevice> contactsDevices,
+                                         Set<OmemoDevice> contactsDevices,
                                          String message)
             throws InterruptedException, UndecidedOmemoIdentityException, CryptoFailedException,
             SmackException.NotConnectedException, SmackException.NoResponseException
@@ -764,24 +767,24 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
 
     /**
      * Build OMEMO sessions with all devices of the contact, we haven't had sessions with before.
-     * This method returns a list of OmemoDevices. This list contains all devices, with which we either had sessions
+     * This method returns a set of OmemoDevices. This set contains all devices, with which we either had sessions
      * before, plus those devices with which we just built sessions.
      *
      * @param connection authenticated XMPP connection.
      * @param userDevice our OmemoDevice
      * @param contact the BareJid of the contact with whom we want to build sessions with.
-     * @return list of devices with a session.
+     * @return set of devices with a session.
      * @throws SmackException.NotConnectedException
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
      */
-    private ArrayList<OmemoDevice> buildMissingSessionsWithContact(XMPPConnection connection,
+    private Set<OmemoDevice> buildMissingSessionsWithContact(XMPPConnection connection,
                                                                    OmemoDevice userDevice,
                                                                    BareJid contact)
             throws SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException
     {
         OmemoCachedDeviceList contactsDeviceIds = getOmemoStoreBackend().loadCachedDeviceList(userDevice, contact);
-        ArrayList<OmemoDevice> contactsDevices = new ArrayList<>();
+        Set<OmemoDevice> contactsDevices = new HashSet<>();
         for (int deviceId : contactsDeviceIds.getActiveDevices()) {
             contactsDevices.add(new OmemoDevice(contact, deviceId));
         }
@@ -790,22 +793,22 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
     }
 
     /**
-     * Build sessions with all devices from the list, we don't have a session with yet.
-     * Return the list of all devices we have a session with afterwards.
+     * Build sessions with all devices from the set, we don't have a session with yet.
+     * Return the set of all devices we have a session with afterwards.
      * @param connection authenticated XMPP connection
      * @param userDevice our OmemoDevice
-     * @param devices list of devices we may want to build a session with if necessary
-     * @return list of all devices with sessions
+     * @param devices set of devices we may want to build a session with if necessary
+     * @return set of all devices with sessions
      *
      * @throws SmackException.NotConnectedException
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
      */
-    private ArrayList<OmemoDevice> buildMissingSessionsWithDevices(XMPPConnection connection,
+    private Set<OmemoDevice> buildMissingSessionsWithDevices(XMPPConnection connection,
                                                                    OmemoDevice userDevice,
-                                                                   List<OmemoDevice> devices)
+                                                                   Set<OmemoDevice> devices)
             throws SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
-        ArrayList<OmemoDevice> devicesWithSession = new ArrayList<>();
+        Set<OmemoDevice> devicesWithSession = new HashSet<>();
         for (OmemoDevice device : devices) {
 
             if (hasSession(userDevice, device)) {
@@ -831,34 +834,34 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
 
     /**
      * Build OMEMO sessions with all devices of the contacts, we haven't had sessions with before.
-     * This method returns a list of OmemoDevices. This list contains all devices, with which we either had sessions
+     * This method returns a set of OmemoDevices. This set contains all devices, with which we either had sessions
      * before, plus those devices with which we just built sessions.
      *
      * @param connection authenticated XMPP connection.
      * @param userDevice our OmemoDevice
-     * @param contacts list of BareJids of contacts, we want to build sessions with.
-     * @return list of devices, we have sessions with.
+     * @param contacts set of BareJids of contacts, we want to build sessions with.
+     * @return set of devices, we have sessions with.
      * @throws SmackException.NotConnectedException
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
      */
-    private ArrayList<OmemoDevice> buildMissingSessionsWithContacts(XMPPConnection connection,
+    private Set<OmemoDevice> buildMissingSessionsWithContacts(XMPPConnection connection,
                                                                     OmemoDevice userDevice,
-                                                                    List<BareJid> contacts)
+                                                                    Set<BareJid> contacts)
             throws SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException
     {
-        ArrayList<OmemoDevice> devicesWithSessions = new ArrayList<>();
+        Set<OmemoDevice> devicesWithSessions = new HashSet<>();
 
         for (BareJid contact : contacts) {
-            ArrayList<OmemoDevice> devices = buildMissingSessionsWithContact(connection, userDevice, contact);
+            Set<OmemoDevice> devices = buildMissingSessionsWithContact(connection, userDevice, contact);
             devicesWithSessions.addAll(devices);
         }
 
         return devicesWithSessions;
     }
 
-    private ArrayList<OmemoDevice> getUndecidedDevices(OmemoDevice userDevice, OmemoTrustCallback callback, List<OmemoDevice> devices) {
-        ArrayList<OmemoDevice> undecidedDevices = new ArrayList<>();
+    private Set<OmemoDevice> getUndecidedDevices(OmemoDevice userDevice, OmemoTrustCallback callback, Set<OmemoDevice> devices) {
+        Set<OmemoDevice> undecidedDevices = new HashSet<>();
 
         for (OmemoDevice device : devices) {
 
@@ -880,8 +883,8 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         return undecidedDevices;
     }
 
-    private ArrayList<OmemoDevice> getUntrustedDeviced(OmemoDevice userDevice, OmemoTrustCallback trustCallback, List<OmemoDevice> devices) {
-        ArrayList<OmemoDevice> untrustedDevices = new ArrayList<>();
+    private Set<OmemoDevice> getUntrustedDeviced(OmemoDevice userDevice, OmemoTrustCallback trustCallback, Set<OmemoDevice> devices) {
+        Set<OmemoDevice> untrustedDevices = new HashSet<>();
 
         for (OmemoDevice device : devices) {
 

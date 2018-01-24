@@ -20,9 +20,9 @@ import static org.jivesoftware.smackx.omemo.util.OmemoConstants.BODY_OMEMO_HINT;
 import static org.jivesoftware.smackx.omemo.util.OmemoConstants.OMEMO;
 import static org.jivesoftware.smackx.omemo.util.OmemoConstants.OMEMO_NAMESPACE_V_AXOLOTL;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
@@ -74,7 +74,7 @@ public class OmemoMessage {
      * Outgoing OMEMO message.
      */
     public static class Sent extends OmemoMessage {
-        private final ArrayList<OmemoDevice> intendedDevices = new ArrayList<>();
+        private final Set<OmemoDevice> intendedDevices = new HashSet<>();
         private final HashMap<OmemoDevice, Throwable> skippedDevices = new HashMap<>();
 
         /**
@@ -86,7 +86,7 @@ public class OmemoMessage {
          * @param skippedDevices devices which were skipped during encryption process because encryption
          *                       failed for some reason
          */
-        Sent(OmemoElement element, byte[] key, byte[] iv, List<OmemoDevice> intendedDevices, HashMap<OmemoDevice, Throwable> skippedDevices) {
+        Sent(OmemoElement element, byte[] key, byte[] iv, Set<OmemoDevice> intendedDevices, HashMap<OmemoDevice, Throwable> skippedDevices) {
             super(element, key, iv);
             this.intendedDevices.addAll(intendedDevices);
             this.skippedDevices.putAll(skippedDevices);
@@ -96,7 +96,7 @@ public class OmemoMessage {
          * Return a list of all devices the sender originally intended to encrypt the message for.
          * @return list of intended recipients.
          */
-        public List<OmemoDevice> getIntendedDevices() {
+        public Set<OmemoDevice> getIntendedDevices() {
             return intendedDevices;
         }
 
