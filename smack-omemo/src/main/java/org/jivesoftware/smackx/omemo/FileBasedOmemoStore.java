@@ -106,12 +106,6 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
     }
 
     @Override
-    public void setDateOfLastReceivedMessage(OmemoDevice userDevice, OmemoDevice contactsDevice, Date date) {
-        File lastMessageReceived = hierarchy.getLastMessageReceivedDatePath(userDevice, contactsDevice);
-        writeLong(lastMessageReceived, date.getTime());
-    }
-
-    @Override
     public SortedSet<Integer> localDeviceIdsOf(BareJid localUser) {
         SortedSet<Integer> deviceIds = new TreeSet<>();
         File userDir = hierarchy.getUserDirectory(localUser);
@@ -129,9 +123,28 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
     }
 
     @Override
+    public void setDateOfLastReceivedMessage(OmemoDevice userDevice, OmemoDevice contactsDevice, Date date) {
+        File lastMessageReceived = hierarchy.getLastMessageReceivedDatePath(userDevice, contactsDevice);
+        writeLong(lastMessageReceived, date.getTime());
+    }
+
+    @Override
     public Date getDateOfLastReceivedMessage(OmemoDevice userDevice, OmemoDevice contactsDevice) {
         File lastMessageReceived = hierarchy.getLastMessageReceivedDatePath(userDevice, contactsDevice);
         Long date = readLong(lastMessageReceived);
+        return date != null ? new Date(date) : null;
+    }
+
+    @Override
+    public void setDateOfLastDeviceIdPublication(OmemoDevice userDevice, OmemoDevice contactsDevice, Date date) {
+        File lastDeviceIdPublished = hierarchy.getLastDeviceIdPublicationDatePath(userDevice, contactsDevice);
+        writeLong(lastDeviceIdPublished, date.getTime());
+    }
+
+    @Override
+    public Date getDateOfLastDeviceIdPublication(OmemoDevice userDevice, OmemoDevice contactsDevice) {
+        File lastDeviceIdPublished = hierarchy.getLastDeviceIdPublicationDatePath(userDevice, contactsDevice);
+        Long date = readLong(lastDeviceIdPublished);
         return date != null ? new Date(date) : null;
     }
 
@@ -753,6 +766,7 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
         static final String IDENTITY_KEY_PAIR = "identityKeyPair";
         static final String PRE_KEYS = "preKeys";
         static final String LAST_MESSAGE_RECEVIED_DATE = "lastMessageReceivedDate";
+        static final String LAST_DEVICEID_PUBLICATION_DATE = "lastDeviceIdPublicationDate";
         static final String SIGNED_PRE_KEYS = "signedPreKeys";
         static final String LAST_SIGNED_PRE_KEY_RENEWAL = "lastSignedPreKeyRenewal";
         static final String SESSION = "session";
@@ -810,6 +824,10 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
 
         File getLastMessageReceivedDatePath(OmemoDevice userDevice, OmemoDevice device) {
             return new File(getContactsDir(userDevice, device), LAST_MESSAGE_RECEVIED_DATE);
+        }
+
+        File getLastDeviceIdPublicationDatePath(OmemoDevice userDevice, OmemoDevice device) {
+            return new File(getContactsDir(userDevice, device), LAST_DEVICEID_PUBLICATION_DATE);
         }
 
         File getSignedPreKeysDirectory(OmemoDevice userDevice) {

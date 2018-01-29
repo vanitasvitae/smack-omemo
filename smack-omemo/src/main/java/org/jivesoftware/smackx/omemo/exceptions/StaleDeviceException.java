@@ -24,17 +24,42 @@ public class StaleDeviceException extends Exception {
     private static final long serialVersionUID = 1L;
 
     private final OmemoDevice device;
-    private final Date lastActivity;
+    private final Date lastMessageDate;
+    private final Date lastDeviceIdPublication;
 
-    public StaleDeviceException(OmemoDevice device, Date lastActivity) {
+    /**
+     * This exception gets thrown if a message cannot be encrypted for a device due to the device being inactive for too long (stale).
+     *
+     * @param device OmemoDevice.
+     * @param lastMessageDate
+     * @param lastDeviceIdPublicationDate
+     */
+    public StaleDeviceException(OmemoDevice device, Date lastMessageDate, Date lastDeviceIdPublicationDate) {
         this.device = device;
-        this.lastActivity = lastActivity;
+        this.lastMessageDate = lastMessageDate;
+        this.lastDeviceIdPublication = lastDeviceIdPublicationDate;
     }
 
-    public Date getLastActivity() {
-        return lastActivity;
+    /**
+     * Return the date on which the last OMEMO message sent from the device was received.
+     * @return last messages date
+     */
+    public Date getLastMessageDate() {
+        return lastMessageDate;
     }
 
+    /**
+     * Return the date of the last time the deviceId was republished after being inactive/non-existent before.
+     * @return date of last deviceId (re)publication.
+     */
+    public Date getLastDeviceIdPublicationDate() {
+        return lastDeviceIdPublication;
+    }
+
+    /**
+     * Return the stale OMEMO device.
+     * @return stale device
+     */
     public OmemoDevice getDevice() {
         return device;
     }

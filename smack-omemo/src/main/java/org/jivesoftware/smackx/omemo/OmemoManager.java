@@ -22,6 +22,7 @@ import static org.jivesoftware.smackx.omemo.util.OmemoConstants.PEP_NODE_DEVICE_
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -243,6 +244,10 @@ public final class OmemoManager extends Manager {
         synchronized (LOCK) {
             if (!connection().isAuthenticated()) {
                 throw new SmackException.NotLoggedInException();
+            }
+
+            if (getTrustCallback() == null) {
+                throw new IllegalStateException("No TrustCallback set.");
             }
 
             getOmemoService().init(new LoggedInOmemoManager(this));
@@ -1061,6 +1066,9 @@ public final class OmemoManager extends Manager {
                     final OmemoDeviceListElement_VAxolotl newDeviceList = new OmemoDeviceListElement_VAxolotl(deviceList);
 
                     if (!newDeviceList.copyDeviceIds().equals(receivedDeviceList.copyDeviceIds())) {
+                        LOGGER.log(Level.FINE, "Republish deviceList due to changes:" +
+                                " Received: " + Arrays.toString(receivedDeviceList.copyDeviceIds().toArray()) +
+                                " Published: " + Arrays.toString(newDeviceList.copyDeviceIds().toArray()));
                         Async.go(new Runnable() {
                             @Override
                             public void run() {

@@ -108,10 +108,18 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
             cached = new OmemoCachedDeviceList();
         }
 
-        if (list != null) {
-            cached.merge(list.getDeviceIds());
-            storeCachedDeviceList(userDevice, contact, cached);
+        if (list == null) {
+            return cached;
         }
+
+        for (int devId : list.getDeviceIds()) {
+            if (!cached.contains(devId)) {
+                setDateOfLastDeviceIdPublication(userDevice, new OmemoDevice(contact, devId), new Date());
+            }
+        }
+
+        cached.merge(list.getDeviceIds());
+        storeCachedDeviceList(userDevice, contact, cached);
 
         return cached;
     }
@@ -299,6 +307,26 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @return date if existent, null
      */
     public abstract Date getDateOfLastReceivedMessage(OmemoDevice userDevice, OmemoDevice contactsDevice);
+
+    /**
+     * Set the date of the last time the deviceId was published. This method only gets called, when the deviceId
+     * was inactive/non-existent before it was published.
+     *
+     * @param userDevice our OmemoDevice
+     * @param contactsDevice OmemoDevice in question
+     * @param date date of the last publication after not being published
+     */
+    public abstract void setDateOfLastDeviceIdPublication(OmemoDevice userDevice, OmemoDevice contactsDevice, Date date);
+
+    /**
+     * Return the date of the last time the deviceId was published after previously being not published.
+     * (Point in time, where the status of the deviceId changed from inactive/non-existent to active).
+     *
+     * @param userDevice our OmemoDevice
+     * @param contactsDevice OmemoDevice in question
+     * @return date of the last publication after not being published
+     */
+    public abstract Date getDateOfLastDeviceIdPublication(OmemoDevice userDevice, OmemoDevice contactsDevice);
 
     /**
      * Set the date of the last time the signed preKey was renewed.

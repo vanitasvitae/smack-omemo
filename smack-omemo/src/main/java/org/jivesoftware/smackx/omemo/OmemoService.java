@@ -386,16 +386,25 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             // Ignore stale devices
             if (OmemoConfiguration.getIgnoreStaleDevices()) {
 
-                Date lastActivity = getOmemoStoreBackend().getDateOfLastReceivedMessage(userDevice, contactsDevice);
-                if (lastActivity == null) {
-                    lastActivity = new Date();
-                    getOmemoStoreBackend().setDateOfLastReceivedMessage(userDevice, contactsDevice, lastActivity);
+                Date lastMessageDate = getOmemoStoreBackend().getDateOfLastReceivedMessage(userDevice, contactsDevice);
+                if (lastMessageDate == null) {
+                    lastMessageDate = new Date();
+                    getOmemoStoreBackend().setDateOfLastReceivedMessage(userDevice, contactsDevice, lastMessageDate);
                 }
 
-                if (isStale(userDevice, contactsDevice, lastActivity, OmemoConfiguration.getIgnoreStaleDevicesAfterHours())) {
+                Date lastPublicationDate = getOmemoStoreBackend().getDateOfLastDeviceIdPublication(userDevice, contactsDevice);
+                if (lastPublicationDate == null) {
+                    lastPublicationDate = new Date();
+                    getOmemoStoreBackend().setDateOfLastDeviceIdPublication(userDevice, contactsDevice, lastPublicationDate);
+                }
+
+                boolean stale = isStale(userDevice, contactsDevice, lastPublicationDate, OmemoConfiguration.getIgnoreStaleDevicesAfterHours());
+                stale &= isStale(userDevice, contactsDevice, lastMessageDate, OmemoConfiguration.getIgnoreStaleDevicesAfterHours());
+
+                if (stale) {
                     LOGGER.log(Level.FINE, "Device " + contactsDevice + " seems to be stale (last message received "
-                            + lastActivity + "). Ignore it.");
-                    skippedRecipients.put(contactsDevice, new StaleDeviceException(contactsDevice, lastActivity));
+                            + lastMessageDate + ", last publication of deviceId: " + lastPublicationDate + "). Ignore it.");
+                    skippedRecipients.put(contactsDevice, new StaleDeviceException(contactsDevice, lastMessageDate, lastPublicationDate));
                     continue;
                 }
             }
@@ -860,6 +869,15 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         return devicesWithSessions;
     }
 
+    /**
+     * Return a set of all devices from the provided set, which trust level is undecided.
+     * A device is also considered undecided, if its fingerprint cannot be loaded.
+     *
+     * @param userDevice our OmemoDevice
+     * @param callback OmemoTrustCallback to query the trust decisions from
+     * @param devices set of OmemoDevices
+     * @return set of OmemoDevices which contains all devices from the set devices, which are undecided
+     */
     private Set<OmemoDevice> getUndecidedDevices(OmemoDevice userDevice, OmemoTrustCallback callback, Set<OmemoDevice> devices) {
         Set<OmemoDevice> undecidedDevices = new HashSet<>();
 
@@ -883,6 +901,15 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         return undecidedDevices;
     }
 
+    /**
+     * Return a set of all devices from the provided set, which are untrusted.
+     * A device is also considered untrusted, if its fingerprint cannot be loaded.
+     *
+     * @param userDevice our own OmemoDevice
+     * @param trustCallback OmemoTrustCallback to query trust decisions from
+     * @param devices set of OmemoDevices
+     * @return set of OmemoDevices from devices, which contains all devices which are untrusted
+     */
     private Set<OmemoDevice> getUntrustedDeviced(OmemoDevice userDevice, OmemoTrustCallback trustCallback, Set<OmemoDevice> devices) {
         Set<OmemoDevice> untrustedDevices = new HashSet<>();
 
@@ -1009,13 +1036,22 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
         for (int deviceId : deviceList.getActiveDevices()) {
             OmemoDevice device = new OmemoDevice(contact, deviceId);
 
+            Date lastDeviceIdPublication = getOmemoStoreBackend().getDateOfLastDeviceIdPublication(userDevice, device);
+            if (lastDeviceIdPublication == null) {
+                lastDeviceIdPublication = new Date();
+                getOmemoStoreBackend().setDateOfLastDeviceIdPublication(userDevice, device, lastDeviceIdPublication);
+            }
+
             Date lastMessageReceived = getOmemoStoreBackend().getDateOfLastReceivedMessage(userDevice, device);
             if (lastMessageReceived == null) {
                 lastMessageReceived = new Date();
                 getOmemoStoreBackend().setDateOfLastReceivedMessage(userDevice, device, lastMessageReceived);
             }
 
-            if (isStale(userDevice, device, lastMessageReceived, maxAgeHours)) {
+            boolean stale = isStale(userDevice, device, lastDeviceIdPublication, maxAgeHours);
+            stale &= isStale(userDevice, device, lastMessageReceived, maxAgeHours);
+
+            if (stale) {
                 deviceList.addInactiveDevice(deviceId);
             }
         }

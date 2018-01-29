@@ -166,6 +166,28 @@ public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Se
     }
 
     @Override
+    public void setDateOfLastDeviceIdPublication(OmemoDevice userDevice, OmemoDevice contactsDevice, Date date) {
+        getCache(userDevice).lastDeviceIdPublicationDates.put(contactsDevice, date);
+        if (persistent != null) {
+            persistent.setDateOfLastReceivedMessage(userDevice, contactsDevice, date);
+        }
+    }
+
+    @Override
+    public Date getDateOfLastDeviceIdPublication(OmemoDevice userDevice, OmemoDevice contactsDevice) {
+        Date last = getCache(userDevice).lastDeviceIdPublicationDates.get(contactsDevice);
+
+        if (last == null && persistent != null) {
+            last = persistent.getDateOfLastDeviceIdPublication(userDevice, contactsDevice);
+            if (last != null) {
+                getCache(userDevice).lastDeviceIdPublicationDates.put(contactsDevice, last);
+            }
+        }
+
+        return last;
+    }
+
+    @Override
     public void setDateOfLastSignedPreKeyRenewal(OmemoDevice userDevice, Date date) {
         getCache(userDevice).lastRenewalDate = date;
         if (persistent != null) {
@@ -420,6 +442,7 @@ public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Se
         private final HashMap<BareJid, HashMap<Integer, T_Sess>> sessions = new HashMap<>();
         private final HashMap<OmemoDevice, T_IdKey> identityKeys = new HashMap<>();
         private final HashMap<OmemoDevice, Date> lastMessagesDates = new HashMap<>();
+        private final HashMap<OmemoDevice, Date> lastDeviceIdPublicationDates = new HashMap<>();
         private final HashMap<BareJid, OmemoCachedDeviceList> deviceLists = new HashMap<>();
         private Date lastRenewalDate = null;
     }
