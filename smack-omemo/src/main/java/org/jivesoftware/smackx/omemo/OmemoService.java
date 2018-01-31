@@ -1187,10 +1187,14 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                 MultiUserChat muc = getMuc(manager.getConnection(), stanza.getFrom());
                 if (muc != null) {
                     Occupant occupant = muc.getOccupant(stanza.getFrom().asEntityFullJidIfPossible());
+                    if (occupant == null) {
+                        LOGGER.log(Level.WARNING, "Cannot decrypt OMEMO MUC message; MUC Occupant is null.");
+                        return;
+                    }
                     Jid occupantJid = occupant.getJid();
 
                     if (occupantJid == null) {
-                        LOGGER.log(Level.WARNING, "MUC message received, but there is no way to retrieve the senders Jid. " +
+                        LOGGER.log(Level.WARNING, "Cannot decrypt OMEMO MUC message; Senders Jid is null. " +
                                 stanza.getFrom());
                         return;
                     }
