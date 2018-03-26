@@ -1033,7 +1033,8 @@ public abstract class OmemoService<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
                                                                    int maxAgeHours) {
         OmemoCachedDeviceList deviceList = new OmemoCachedDeviceList(contactsDeviceList); // Don't work on original list.
 
-        for (int deviceId : deviceList.getActiveDevices()) {
+        // Iterate through original list, but modify copy instead
+        for (int deviceId : contactsDeviceList.getActiveDevices()) {
             OmemoDevice device = new OmemoDevice(contact, deviceId);
 
             Date lastDeviceIdPublication = getOmemoStoreBackend().getDateOfLastDeviceIdPublication(userDevice, device);
