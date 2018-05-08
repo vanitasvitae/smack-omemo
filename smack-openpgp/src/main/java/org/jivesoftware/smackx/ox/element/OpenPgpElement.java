@@ -33,10 +33,12 @@ public class OpenPgpElement implements ExtensionElement {
     public static final String ELEMENT = "openpgp";
     public static final String NAMESPACE = "urn:xmpp:openpgp:0";
 
+    // Represents the OpenPGP message, but encoded using base64.
     private final String base64EncodedOpenPgpMessage;
 
     private OpenPgpMessage openPgpMessage;
 
+    // Represents the OpenPGP message, but base64 decoded.
     private byte[] openPgpMessageBytes;
 
     private OpenPgpContentElement openPgpContentElement;

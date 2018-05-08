@@ -50,14 +50,26 @@ public abstract class OpenPgpContentElement implements ExtensionElement {
         this.payload = payload;
     }
 
+    /**
+     * Return the set of recipients.
+     * @return recipients.
+     */
     public final Set<Jid> getTo() {
         return to;
     }
 
+    /**
+     * Return the timestamp on which the encrypted element has been created.
+     * @return timestamp.
+     */
     public final Date getTimestamp() {
         return timestamp;
     }
 
+    /**
+     * Return the payload of the message.
+     * @return payload.
+     */
     public final List<ExtensionElement> getPayload() {
         return payload;
     }

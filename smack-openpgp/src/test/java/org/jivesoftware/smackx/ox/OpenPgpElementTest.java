@@ -82,7 +82,6 @@ public class OpenPgpElementTest extends SmackTestSuite {
         payload.add(new Message.Body("de", "Hallo Welt!"));
         CryptElement element = new CryptElement(recipients, payload);
 
-        assertNotNull(element.getRandomPadding());
         assertNotNull(element.getTimestamp());
     }
 
@@ -140,7 +139,6 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
         assertEquals(element.getPayload(), parsed.getPayload());
-        assertEquals(element.getRandomPadding(), parsed.getRandomPadding());
     }
 
     @Test
@@ -171,7 +169,6 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
         assertEquals(element.getPayload(), parsed.getPayload());
-        assertEquals(element.getRandomPadding(), parsed.getRandomPadding());
     }
 
 

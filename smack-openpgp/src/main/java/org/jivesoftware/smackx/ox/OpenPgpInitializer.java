@@ -18,6 +18,9 @@ package org.jivesoftware.smackx.ox;
 
 import org.jivesoftware.smack.initializer.UrlInitializer;
 
+/**
+ * Initializer class which registers ExtensionElementProviders on startup.
+ */
 public class OpenPgpInitializer extends UrlInitializer {
 
     @Override

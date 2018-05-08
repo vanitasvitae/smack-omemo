@@ -43,10 +43,6 @@ public abstract class EncryptedOpenPgpContentElement extends OpenPgpContentEleme
         this.rpad = createRandomPadding();
     }
 
-    public String getRandomPadding() {
-        return rpad;
-    }
-
     private static String createRandomPadding() {
         SecureRandom secRan = new SecureRandom();
         int len = secRan.nextInt(256); // TODO: Find suitable value.
