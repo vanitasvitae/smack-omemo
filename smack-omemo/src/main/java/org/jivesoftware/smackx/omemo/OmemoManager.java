@@ -49,7 +49,6 @@ import org.jivesoftware.smackx.carbons.CarbonCopyReceivedListener;
 import org.jivesoftware.smackx.carbons.CarbonManager;
 import org.jivesoftware.smackx.carbons.packet.CarbonExtension;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
 import org.jivesoftware.smackx.forward.packet.Forwarded;
 import org.jivesoftware.smackx.hints.element.StoreHint;
 import org.jivesoftware.smackx.mam.MamManager;
@@ -526,8 +525,6 @@ public final class OmemoManager extends Manager {
 
             // Set MAM Storage hint
             StoreHint.set(message);
-            message.addExtension(new ExplicitMessageEncryptionElement(
-                    ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.omemoVAxolotl));
             connection().sendStanza(message);
         }
     }
