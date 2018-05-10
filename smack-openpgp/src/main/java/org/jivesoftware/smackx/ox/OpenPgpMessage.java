@@ -28,7 +28,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 public class OpenPgpMessage {
 
-    enum State {
+    public enum State {
         signcrypt,
         sign,
         crypt,

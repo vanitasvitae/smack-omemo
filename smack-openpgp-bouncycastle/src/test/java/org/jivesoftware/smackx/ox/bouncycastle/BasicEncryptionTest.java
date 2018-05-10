@@ -36,7 +36,7 @@ import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smackx.ox.TestKeys;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.DefaultPGPAlgorithmSuites;
+import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeySelectionStrategy;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeyringConfigCallbacks;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.Xep0373KeySelectionStrategy;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.InMemoryKeyring;
@@ -74,14 +74,15 @@ public class BasicEncryptionTest extends SmackTestSuite {
 
 
         ByteArrayOutputStream result = new ByteArrayOutputStream();
+        KeySelectionStrategy selectionStrategy = new Xep0373KeySelectionStrategy(new Date());
 
         byte[] message = "Hello World!!!!".getBytes(UTF8);
 
         // Encrypt
         OutputStream out = BouncyGPG.encryptToStream()
                 .withConfig(keyringJuliet)
-                .withKeySelectionStrategy(new Xep0373KeySelectionStrategy(new Date()))
-                .withAlgorithms(DefaultPGPAlgorithmSuites.defaultSuiteForGnuPG())
+                .withKeySelectionStrategy(selectionStrategy)
+                .withOxAlgorithms()
                 .toRecipients(ROMEO_UID, JULIET_UID)
                 .andSignWith(JULIET_UID)
                 .binaryOutput()
@@ -96,7 +97,7 @@ public class BasicEncryptionTest extends SmackTestSuite {
         ByteArrayInputStream encIn = new ByteArrayInputStream(encrypted);
         InputStream in = BouncyGPG.decryptAndVerifyStream()
                 .withConfig(keyringRomeo)
-                .withKeySelectionStrategy(new Xep0373KeySelectionStrategy(new Date()))
+                .withKeySelectionStrategy(selectionStrategy)
                 .andRequireSignatureFromAllKeys(JULIET_UID)
                 .fromEncryptedInputStream(encIn);
 
