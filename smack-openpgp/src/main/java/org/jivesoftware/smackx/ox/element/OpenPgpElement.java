@@ -25,6 +25,7 @@ import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.OpenPgpManager;
 import org.jivesoftware.smackx.ox.OpenPgpMessage;
+import org.jivesoftware.smackx.ox.OpenPgpProvider;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -47,7 +48,7 @@ public class OpenPgpElement implements ExtensionElement {
         this.base64EncodedOpenPgpMessage = base64EncodedOpenPgpMessage;
     }
 
-    public OpenPgpMessage getOpenPgpMessage() {
+    public OpenPgpMessage getOpenPgpMessage(OpenPgpProvider provider) {
         if (openPgpMessage == null) {
             ensureOpenPgpMessageBytesSet();
             InputStream is = new ByteArrayInputStream(openPgpMessageBytes);
@@ -57,12 +58,16 @@ public class OpenPgpElement implements ExtensionElement {
         return openPgpMessage;
     }
 
-    public OpenPgpContentElement getContentElement() throws XmlPullParserException, IOException {
+    public OpenPgpContentElement getContentElement(OpenPgpProvider provider) throws XmlPullParserException, IOException {
         if (openPgpContentElement == null) {
-            openPgpContentElement = getOpenPgpMessage().getOpenPgpContentElement();
+            openPgpContentElement = getOpenPgpMessage(provider).getOpenPgpContentElement();
         }
 
         return openPgpContentElement;
+    }
+
+    public String getEncryptedBase64MessageContent() {
+        return base64EncodedOpenPgpMessage;
     }
 
     @Override

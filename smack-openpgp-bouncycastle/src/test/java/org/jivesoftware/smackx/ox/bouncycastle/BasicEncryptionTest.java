@@ -38,13 +38,17 @@ import org.jivesoftware.smackx.ox.TestKeys;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeySelectionStrategy;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeyringConfigCallbacks;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.Xep0373KeySelectionStrategy;
+import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.XmppKeySelectionStrategy;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.InMemoryKeyring;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.KeyringConfig;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.KeyringConfigs;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.Test;
+import org.jxmpp.jid.impl.JidCreate;
 
 public class BasicEncryptionTest extends SmackTestSuite {
 
@@ -55,7 +59,7 @@ public class BasicEncryptionTest extends SmackTestSuite {
     public BasicEncryptionTest() throws IOException, PGPException {
         super();
 
-        // Prepare Juliets keyring
+        // Prepare Juliet's keyring
         keyringJuliet = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
         ((InMemoryKeyring) keyringJuliet).addSecretKey(TestKeys.JULIET_PRIV.getBytes(UTF8));
         ((InMemoryKeyring) keyringJuliet).addPublicKey(TestKeys.JULIET_PUB.getBytes(UTF8));
@@ -71,12 +75,10 @@ public class BasicEncryptionTest extends SmackTestSuite {
     @Test
     public void encryptionTest()
             throws IOException, PGPException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException {
-
-
         ByteArrayOutputStream result = new ByteArrayOutputStream();
-        KeySelectionStrategy selectionStrategy = new Xep0373KeySelectionStrategy(new Date());
+        KeySelectionStrategy selectionStrategy = new XmppKeySelectionStrategy(new Date());
 
-        byte[] message = "Hello World!!!!".getBytes(UTF8);
+        byte[] message = "How long do you want these messages to remain secret?".getBytes(UTF8);
 
         // Encrypt
         OutputStream out = BouncyGPG.encryptToStream()
@@ -107,5 +109,57 @@ public class BasicEncryptionTest extends SmackTestSuite {
         byte[] message2 = decrypted.toByteArray();
 
         assertTrue(Arrays.equals(message, message2));
+    }
+
+    @Test
+    public void encryptionWithFreshKeysTest()
+            throws IOException, PGPException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+        final String alice = "alice@wonderland.lit";
+        final String bob = "bob@builder.tv";
+        PGPKeyRingGenerator g1 = BouncycastleOpenPgpProvider.generateKey(JidCreate.bareFrom(alice), null);
+        PGPKeyRingGenerator g2 = BouncycastleOpenPgpProvider.generateKey(JidCreate.bareFrom(bob), null);
+        PGPSecretKey s1 = g1.generateSecretKeyRing().getSecretKey();
+        PGPSecretKey s2 = g2.generateSecretKeyRing().getSecretKey();
+        PGPPublicKey p1 = g1.generatePublicKeyRing().getPublicKey();
+        PGPPublicKey p2 = g2.generatePublicKeyRing().getPublicKey();
+
+        KeyringConfig c1 = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
+        KeyringConfig c2 = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
+        ((InMemoryKeyring) c1).addSecretKey(s1.getEncoded());
+        ((InMemoryKeyring) c1).addPublicKey(p1.getEncoded());
+        ((InMemoryKeyring) c1).addPublicKey(p2.getEncoded());
+        ((InMemoryKeyring) c2).addSecretKey(s2.getEncoded());
+        ((InMemoryKeyring) c2).addPublicKey(p2.getEncoded());
+        ((InMemoryKeyring) c2).addPublicKey(p1.getEncoded());
+
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+
+        byte[] m1 = "I want them to remain secret for as long as men are capable of evil.".getBytes(UTF8);
+        OutputStream encrypt = BouncyGPG.encryptToStream()
+                .withConfig(c1)
+                .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
+                .withOxAlgorithms()
+                .toRecipients("xmpp:" + alice, "xmpp:" + bob)
+                .andSignWith("xmpp:" + alice)
+                .binaryOutput()
+                .andWriteTo(result);
+
+        encrypt.write(m1);
+        encrypt.close();
+
+        byte[] e1 = result.toByteArray();
+        result.reset();
+
+        ByteArrayInputStream in = new ByteArrayInputStream(e1);
+        InputStream decrypt = BouncyGPG.decryptAndVerifyStream()
+                .withConfig(c2)
+                .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
+                .andValidateSomeoneSigned()
+                .fromEncryptedInputStream(in);
+
+        Streams.pipeAll(decrypt, result);
+
+        byte[] m2 = result.toByteArray();
+        assertTrue(Arrays.equals(m1, m2));
     }
 }

@@ -36,7 +36,7 @@ public class OpenPgpMessage {
     }
 
     private final String element;
-    private final State state;
+    private State state;
 
     private OpenPgpContentElement openPgpContentElement;
 
@@ -56,6 +56,16 @@ public class OpenPgpMessage {
             return;
 
         openPgpContentElement = OpenPgpContentElementProvider.parseOpenPgpContentElement(element);
+        if (state == null) {
+            if (openPgpContentElement instanceof SigncryptElement) {
+                state = State.signcrypt;
+            } else if (openPgpContentElement instanceof SignElement) {
+                state = State.sign;
+            } else {
+                state = State.crypt;
+            }
+            return;
+        }
         switch (state) {
         case signcrypt:
             if (!(openPgpContentElement instanceof SigncryptElement)) {

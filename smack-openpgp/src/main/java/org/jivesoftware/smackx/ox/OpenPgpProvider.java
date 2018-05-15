@@ -17,9 +17,15 @@
 package org.jivesoftware.smackx.ox;
 
 import java.io.InputStream;
+import java.util.Set;
+
+import org.jivesoftware.smackx.ox.element.OpenPgpElement;
+
+import org.jxmpp.jid.BareJid;
 
 public interface OpenPgpProvider {
 
-    OpenPgpMessage toOpenPgpMessage(InputStream is);
+    OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception;
 
+    OpenPgpElement signAndEncrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception;
 }

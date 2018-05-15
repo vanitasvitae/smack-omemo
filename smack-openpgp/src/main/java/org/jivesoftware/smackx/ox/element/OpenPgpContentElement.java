@@ -16,6 +16,9 @@
  */
 package org.jivesoftware.smackx.ox.element;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -98,5 +101,10 @@ public abstract class OpenPgpContentElement implements ExtensionElement {
             xml.append(element.toXML(getNamespace()));
         }
         xml.closeElement(ELEM_PAYLOAD);
+    }
+
+    public InputStream toInputStream() {
+        byte[] encoded = toXML(null).toString().getBytes(Charset.forName("UTF-8"));
+        return new ByteArrayInputStream(encoded);
     }
 }

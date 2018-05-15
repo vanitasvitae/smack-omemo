@@ -55,9 +55,20 @@ public abstract class OpenPgpContentElementProvider<O extends OpenPgpContentElem
     }
 
     public static OpenPgpContentElement parseOpenPgpContentElement(XmlPullParser parser)
-            throws IOException, XmlPullParserException {
-        // TODO
-        return null;
+            throws  XmlPullParserException, IOException {
+        try {
+            switch (parser.getName()) {
+                case SigncryptElement.ELEMENT:
+                    return SigncryptElementProvider.TEST_INSTANCE.parse(parser);
+                case SignElement.ELEMENT:
+                    return SignElementProvider.TEST_INSTANCE.parse(parser);
+                case CryptElement.ELEMENT:
+                    return CryptElementProvider.TEST_INSTANCE.parse(parser);
+                default: return null;
+            }
+        } catch (Exception e) {
+            throw new XmlPullParserException(e.getMessage());
+        }
     }
 
     @Override
