@@ -28,7 +28,7 @@ public class KeyGenerationTest {
 
     @Test
     public void createSecretKey() throws Exception {
-        PGPSecretKey secretKey = BouncycastleOpenPgpProvider
+        PGPSecretKey secretKey = BouncyCastleOpenPgpProvider
                 .generateKey(JidCreate.bareFrom("alice@wonderland.lit"))
                 .generateSecretKeyRing()
                 .getSecretKey();

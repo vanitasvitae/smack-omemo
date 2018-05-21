@@ -33,6 +33,7 @@ import org.jivesoftware.smackx.ox.OpenPgpMessage;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
+import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PublicKeySize;
@@ -50,14 +51,14 @@ import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
 
-public class BouncycastleOpenPgpProvider implements OpenPgpProvider {
+public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
 
     private final BareJid ourJid;
     private final InMemoryKeyring ourKeys;
     private final Long ourKeyId;
     private final Map<BareJid, InMemoryKeyring> theirKeys = new HashMap<>();
 
-    public BouncycastleOpenPgpProvider(BareJid ourJid) throws IOException, PGPException, NoSuchAlgorithmException {
+    public BouncyCastleOpenPgpProvider(BareJid ourJid) throws IOException, PGPException, NoSuchAlgorithmException {
         this.ourJid = ourJid;
         PGPSecretKeyRing ourKey = generateKey(ourJid).generateSecretKeyRing();
         ourKeyId = ourKey.getPublicKey().getKeyID();
@@ -85,6 +86,11 @@ public class BouncycastleOpenPgpProvider implements OpenPgpProvider {
         }
 
         contactsKeyring.addPublicKey(decoded);
+    }
+
+    @Override
+    public void processPublicKeysListElement(PublicKeysListElement listElement, BareJid from) throws Exception {
+
     }
 
     @Override
@@ -139,6 +145,16 @@ public class BouncycastleOpenPgpProvider implements OpenPgpProvider {
     }
 
     @Override
+    public OpenPgpElement sign(InputStream inputStream) throws Exception {
+        return null;
+    }
+
+    @Override
+    public OpenPgpElement encrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception {
+        return null;
+    }
+
+    @Override
     public OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception {
         InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
 
@@ -168,7 +184,7 @@ public class BouncycastleOpenPgpProvider implements OpenPgpProvider {
 
         Streams.pipeAll(decrypted, decryptedOut);
 
-        return new OpenPgpMessage(null, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
+        return new OpenPgpMessage(new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
     }
 
     @Override

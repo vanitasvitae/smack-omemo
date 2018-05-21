@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
+import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 
 import org.jxmpp.jid.BareJid;
 
@@ -30,9 +31,15 @@ public interface OpenPgpProvider {
 
     OpenPgpElement signAndEncrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception;
 
+    OpenPgpElement sign(InputStream inputStream) throws Exception;
+
+    OpenPgpElement encrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception;
+
     PubkeyElement createPubkeyElement() throws Exception;
 
     void processPubkeyElement(PubkeyElement element, BareJid from) throws Exception;
+
+    void processPublicKeysListElement(PublicKeysListElement listElement, BareJid from) throws Exception;
 
     /**
      * Return the OpenPGP v4-fingerprint of our key in hexadecimal upper case.

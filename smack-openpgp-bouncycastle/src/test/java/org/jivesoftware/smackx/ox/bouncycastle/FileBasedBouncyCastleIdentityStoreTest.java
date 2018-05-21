@@ -1,14 +1,31 @@
+/**
+ *
+ * Copyright 2018 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.ox.bouncycastle;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.Stack;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 
 import org.junit.After;
@@ -34,36 +51,6 @@ public class FileBasedBouncyCastleIdentityStoreTest extends SmackTestSuite {
         }
     }
 
-    @Before
-    public void before() {
-        deleteStore();
-    }
-
-    @After
-    public void after() {
-        deleteStore();
-    }
-
-    public void deleteStore() {
-        File[] currList;
-        Stack<File> stack = new Stack<>();
-        stack.push(storePath);
-        while (!stack.isEmpty()) {
-            if (stack.lastElement().isDirectory()) {
-                currList = stack.lastElement().listFiles();
-                if (currList != null && currList.length > 0) {
-                    for (File curr : currList) {
-                        stack.push(curr);
-                    }
-                } else {
-                    stack.pop().delete();
-                }
-            } else {
-                stack.pop().delete();
-            }
-        }
-    }
-
     @Test
     public void writeReadPublicKeysLists() throws ParseException, IOException {
         BareJid jid = JidCreate.bareFrom("edward@snowden.org");
@@ -78,9 +65,26 @@ public class FileBasedBouncyCastleIdentityStoreTest extends SmackTestSuite {
                 .build();
 
         FileBasedBouncyCastleIdentityStore store = new FileBasedBouncyCastleIdentityStore(storePath);
+
+        PublicKeysListElement shouldBeNull = store.loadPubkeyList(jid);
+        assertNull(shouldBeNull);
         store.storePubkeyList(jid, list);
 
         PublicKeysListElement retrieved = store.loadPubkeyList(jid);
         assertEquals(list.getMetadata(), retrieved.getMetadata());
+    }
+
+    @Before
+    public void before() {
+        deleteStore();
+    }
+
+    @After
+    public void after() {
+        deleteStore();
+    }
+
+    public void deleteStore() {
+        FileUtils.deleteDirectory(storePath);
     }
 }

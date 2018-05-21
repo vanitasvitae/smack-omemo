@@ -20,12 +20,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
@@ -33,6 +36,7 @@ import org.jivesoftware.smackx.pep.PEPListener;
 import org.jivesoftware.smackx.pep.PEPManager;
 import org.jivesoftware.smackx.pubsub.EventElement;
 import org.jivesoftware.smackx.pubsub.Item;
+import org.jivesoftware.smackx.pubsub.ItemsExtension;
 import org.jivesoftware.smackx.pubsub.LeafNode;
 import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.PubSubException;
@@ -41,7 +45,9 @@ import org.jivesoftware.smackx.pubsub.PubSubManager;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 
-public final class OpenPgpManager extends Manager implements PEPListener {
+public final class OpenPgpManager extends Manager {
+
+    private static final Logger LOGGER = Logger.getLogger(OpenPgpManager.class.getName());
 
     public static final String PEP_NODE_PUBLIC_KEYS = "urn:xmpp:openpgp:0:public-keys";
     public static final String PEP_NODE_PUBLIC_KEYS_NOTIFY = PEP_NODE_PUBLIC_KEYS + "+notify";
@@ -57,7 +63,7 @@ public final class OpenPgpManager extends Manager implements PEPListener {
         super(connection);
 
         // Subscribe to public key changes
-        PEPManager.getInstanceFor(connection()).addPEPListener(this);
+        PEPManager.getInstanceFor(connection()).addPEPListener(metadataListener);
         ServiceDiscoveryManager.getInstanceFor(connection())
                 .addFeature(PEP_NODE_PUBLIC_KEYS_NOTIFY);
     }
@@ -73,7 +79,6 @@ public final class OpenPgpManager extends Manager implements PEPListener {
 
     public void setOpenPgpProvider(OpenPgpProvider provider) {
         this.provider = provider;
-
     }
 
     public void publishPublicKey() throws Exception {
@@ -89,6 +94,7 @@ public final class OpenPgpManager extends Manager implements PEPListener {
         LeafNode keyNode = pm.getOrCreateLeafNode(keyNodeName);
         List<Item> items = keyNode.getItems(1);
         if (items.isEmpty()) {
+            LOGGER.log(Level.FINE, "Node " + keyNodeName + " is empty. Publish.");
             keyNode.publish(new PayloadItem<>(pubkeyElement));
         }
 
@@ -116,11 +122,17 @@ public final class OpenPgpManager extends Manager implements PEPListener {
         return fetchPubkeysList(connection().getUser().asBareJid());
     }
 
+    public void deletePubkeysListNode()
+            throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
+            SmackException.NoResponseException {
+        PubSubManager pm = PubSubManager.getInstance(connection(), connection().getUser().asBareJid());
+        pm.deleteNode(PEP_NODE_PUBLIC_KEYS);
+    }
+
     public PublicKeysListElement fetchPubkeysList(BareJid jid)
             throws InterruptedException, PubSubException.NotALeafNodeException, SmackException.NoResponseException,
             SmackException.NotConnectedException, XMPPException.XMPPErrorException,
-            PubSubException.NotAPubSubNodeException
-    {
+            PubSubException.NotAPubSubNodeException {
         PubSubManager pm = PubSubManager.getInstance(connection(), jid);
 
         LeafNode node = pm.getLeafNode(PEP_NODE_PUBLIC_KEYS);
@@ -171,8 +183,30 @@ public final class OpenPgpManager extends Manager implements PEPListener {
         }
     }
 
-    @Override
-    public void eventReceived(EntityBareJid from, EventElement event, Message message) {
-
+    public boolean canSyncSecretKey()
+            throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
+            SmackException.NoResponseException {
+        boolean pep = PEPManager.getInstanceFor(connection()).isSupported();
+        boolean whitelist = PubSubManager.getInstance(connection(), connection().getUser().asBareJid())
+                .getSupportedFeatures().containsFeature("http://jabber.org/protocol/pubsub#access-whitelist");
+        return pep && whitelist;
     }
+
+    private final PEPListener metadataListener = new PEPListener() {
+        @Override
+        public void eventReceived(EntityBareJid from, final EventElement event, Message message) {
+            if (PEP_NODE_PUBLIC_KEYS.equals(event.getEvent().getNode())) {
+                LOGGER.log(Level.INFO, "Received OpenPGP metadata update from " + from);
+                Async.go(new Runnable() {
+                    @Override
+                    public void run() {
+                        ItemsExtension items = (ItemsExtension) event.getExtensions().get(0);
+                        PayloadItem<?> payload = (PayloadItem) items.getItems().get(0);
+                        PublicKeysListElement listElement = (PublicKeysListElement) payload.getPayload();
+
+                    }
+                }, "ProcessOXPublicKey");
+            }
+        }
+    };
 }

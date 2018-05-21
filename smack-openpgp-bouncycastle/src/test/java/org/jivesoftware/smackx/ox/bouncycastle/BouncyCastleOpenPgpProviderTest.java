@@ -37,7 +37,7 @@ import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 
-public class BouncycastleOpenPgpProviderTest extends SmackTestSuite {
+public class BouncyCastleOpenPgpProviderTest extends SmackTestSuite {
 
     @Test
     public void encryptAndSign_decryptAndVerifyElementTest() throws Exception {
@@ -46,8 +46,8 @@ public class BouncycastleOpenPgpProviderTest extends SmackTestSuite {
         // Create providers for alice and the cat
         BareJid alice = JidCreate.bareFrom("alice@wonderland.lit");
         BareJid cheshire = JidCreate.bareFrom("cheshire@wonderland.lit");
-        BouncycastleOpenPgpProvider aliceProvider = new BouncycastleOpenPgpProvider(alice);
-        BouncycastleOpenPgpProvider cheshireProvider = new BouncycastleOpenPgpProvider(cheshire);
+        BouncyCastleOpenPgpProvider aliceProvider = new BouncyCastleOpenPgpProvider(alice);
+        BouncyCastleOpenPgpProvider cheshireProvider = new BouncyCastleOpenPgpProvider(cheshire);
 
         // dry exchange keys
         PubkeyElement aliceKeys = aliceProvider.createPubkeyElement();

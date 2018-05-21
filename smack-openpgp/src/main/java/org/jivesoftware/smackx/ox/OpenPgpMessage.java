@@ -18,7 +18,6 @@ package org.jivesoftware.smackx.ox;
 
 import java.io.IOException;
 
-import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
@@ -40,9 +39,8 @@ public class OpenPgpMessage {
 
     private OpenPgpContentElement openPgpContentElement;
 
-    public OpenPgpMessage(State state, String content) {
+    public OpenPgpMessage(String content) {
         this.element = content;
-        this.state = state;
     }
 
     public OpenPgpContentElement getOpenPgpContentElement() throws XmlPullParserException, IOException {
@@ -56,38 +54,16 @@ public class OpenPgpMessage {
             return;
 
         openPgpContentElement = OpenPgpContentElementProvider.parseOpenPgpContentElement(element);
-        if (state == null) {
-            if (openPgpContentElement instanceof SigncryptElement) {
-                state = State.signcrypt;
-            } else if (openPgpContentElement instanceof SignElement) {
-                state = State.sign;
-            } else {
-                state = State.crypt;
-            }
+        if (openPgpContentElement == null) {
             return;
         }
-        switch (state) {
-        case signcrypt:
-            if (!(openPgpContentElement instanceof SigncryptElement)) {
-                throw new IllegalStateException(
-                        "The used OpenPGP content element does not match the mode used in the raw OpenPGP message. Content element: "
-                                + openPgpContentElement.getElementName() + ". Mode: " + state);
-            }
-            break;
-        case sign:
-            if (!(openPgpContentElement instanceof SignElement)) {
-                throw new IllegalStateException(
-                        "The used OpenPGP content element does not match the mode used in the raw OpenPGP message. Content element: "
-                                + openPgpContentElement.getElementName() + ". Mode: " + state);
-            }
-            break;
-        case crypt:
-            if (!(openPgpContentElement instanceof CryptElement)) {
-                throw new IllegalStateException(
-                        "The used OpenPGP content element does not match the mode used in the raw OpenPGP message. Content element: "
-                                + openPgpContentElement.getElementName() + ". Mode: " + state);
-            }
-            break;
+
+        if (openPgpContentElement instanceof SigncryptElement) {
+            state = State.signcrypt;
+        } else if (openPgpContentElement instanceof SignElement) {
+            state = State.sign;
+        } else {
+            state = State.crypt;
         }
     }
 }
