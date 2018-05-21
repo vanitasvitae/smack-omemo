@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.util.Set;
 
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
+import org.jivesoftware.smackx.ox.element.PubkeyElement;
 
 import org.jxmpp.jid.BareJid;
 
@@ -28,4 +29,16 @@ public interface OpenPgpProvider {
     OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception;
 
     OpenPgpElement signAndEncrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception;
+
+    PubkeyElement createPubkeyElement() throws Exception;
+
+    void processPubkeyElement(PubkeyElement element, BareJid from) throws Exception;
+
+    /**
+     * Return the OpenPGP v4-fingerprint of our key in hexadecimal upper case.
+     *
+     * @return fingerprint
+     * @throws Exception
+     */
+    String getFingerprint() throws Exception;
 }

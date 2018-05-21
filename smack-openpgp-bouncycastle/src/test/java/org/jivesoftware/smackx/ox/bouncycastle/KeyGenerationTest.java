@@ -29,7 +29,7 @@ public class KeyGenerationTest {
     @Test
     public void createSecretKey() throws Exception {
         PGPSecretKey secretKey = BouncycastleOpenPgpProvider
-                .generateKey(JidCreate.bareFrom("alice@wonderland.lit"), null)
+                .generateKey(JidCreate.bareFrom("alice@wonderland.lit"))
                 .generateSecretKeyRing()
                 .getSecretKey();
         assertEquals(PublicKeyType.RSA_GENERAL.getId(), secretKey.getPublicKey().getAlgorithm());

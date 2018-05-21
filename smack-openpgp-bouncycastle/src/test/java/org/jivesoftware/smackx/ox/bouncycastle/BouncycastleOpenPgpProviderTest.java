@@ -52,9 +52,10 @@ public class BouncycastleOpenPgpProviderTest extends SmackTestSuite {
         // dry exchange keys
         PubkeyElement aliceKeys = aliceProvider.createPubkeyElement();
         PubkeyElement cheshireKeys = cheshireProvider.createPubkeyElement();
-        aliceProvider.processRecipientsPublicKey(cheshire, cheshireKeys);
-        cheshireProvider.processRecipientsPublicKey(alice, aliceKeys);
+        aliceProvider.processPubkeyElement(cheshireKeys, cheshire);
+        cheshireProvider.processPubkeyElement(aliceKeys, alice);
 
+        // Create signed and encrypted message from alice to the cheshire cat
         SigncryptElement signcryptElement = new SigncryptElement(
                 Collections.<Jid>singleton(cheshire),
                 Collections.<ExtensionElement>singletonList(
@@ -63,10 +64,11 @@ public class BouncycastleOpenPgpProviderTest extends SmackTestSuite {
                 signcryptElement.toInputStream(),
                 Collections.singleton(cheshire));
 
+        // Decrypt the message as the cheshire cat
         OpenPgpMessage decrypted = cheshireProvider.decryptAndVerify(encrypted, alice);
         OpenPgpContentElement content = decrypted.getOpenPgpContentElement();
-        assertTrue(content instanceof SigncryptElement);
 
+        assertTrue(content instanceof SigncryptElement);
         assertXMLEqual(signcryptElement.toXML(null).toString(), content.toXML(null).toString());
     }
 }

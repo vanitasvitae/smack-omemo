@@ -36,7 +36,6 @@ import org.jivesoftware.smackx.ox.element.PubkeyElement;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PublicKeySize;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeySelectionStrategy;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeyringConfigCallbacks;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.XmppKeySelectionStrategy;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.InMemoryKeyring;
@@ -47,6 +46,7 @@ import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
 
@@ -56,51 +56,26 @@ public class BouncycastleOpenPgpProvider implements OpenPgpProvider {
     private final InMemoryKeyring ourKeys;
     private final Long ourKeyId;
     private final Map<BareJid, InMemoryKeyring> theirKeys = new HashMap<>();
-    private final KeySelectionStrategy keySelectionStrategy = new XmppKeySelectionStrategy(new Date());
-
-    @Override
-    public OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception {
-        InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
-
-        // Add our keys to decryption config
-        for (PGPPublicKeyRing p : ourKeys.getPublicKeyRings()) {
-            decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
-        }
-        for (PGPSecretKeyRing s : ourKeys.getSecretKeyRings()) {
-            decryptionConfig.addSecretKey(s.getSecretKey().getEncoded());
-        }
-
-        // Add their keys to decryption config
-        for (PGPPublicKeyRing p : theirKeys.get(sender).getPublicKeyRings()) {
-            decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
-        }
-
-        ByteArrayInputStream encryptedIn = new ByteArrayInputStream(
-                element.getEncryptedBase64MessageContent().getBytes(Charset.forName("UTF-8")));
-
-        InputStream decrypted = BouncyGPG.decryptAndVerifyStream()
-                .withConfig(decryptionConfig)
-                .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
-                .andValidateSomeoneSigned()
-                .fromEncryptedInputStream(encryptedIn);
-
-        ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();
-
-        Streams.pipeAll(decrypted, decryptedOut);
-
-        return new OpenPgpMessage(null, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
-    }
 
     public BouncycastleOpenPgpProvider(BareJid ourJid) throws IOException, PGPException, NoSuchAlgorithmException {
         this.ourJid = ourJid;
-        PGPSecretKeyRing ourKey = generateKey(ourJid, null).generateSecretKeyRing();
+        PGPSecretKeyRing ourKey = generateKey(ourJid).generateSecretKeyRing();
         ourKeyId = ourKey.getPublicKey().getKeyID();
         ourKeys = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
         ourKeys.addSecretKey(ourKey.getSecretKey().getEncoded());
         ourKeys.addPublicKey(ourKey.getPublicKey().getEncoded());
     }
 
-    public void processRecipientsPublicKey(BareJid jid, PubkeyElement element) throws IOException, PGPException {
+    @Override
+    public PubkeyElement createPubkeyElement() throws IOException, PGPException {
+        PGPPublicKey pubKey = ourKeys.getPublicKeyRings().getPublicKey(ourKeyId);
+        PubkeyElement.PubkeyDataElement dataElement = new PubkeyElement.PubkeyDataElement(
+                Base64.encode(pubKey.getEncoded()));
+        return new PubkeyElement(dataElement, new Date());
+    }
+
+    @Override
+    public void processPubkeyElement(PubkeyElement element, BareJid jid) throws IOException, PGPException {
         byte[] decoded = Base64.decode(element.getDataElement().getB64Data());
 
         InMemoryKeyring contactsKeyring = theirKeys.get(jid);
@@ -110,13 +85,6 @@ public class BouncycastleOpenPgpProvider implements OpenPgpProvider {
         }
 
         contactsKeyring.addPublicKey(decoded);
-    }
-
-    public PubkeyElement createPubkeyElement() throws IOException, PGPException {
-        PGPPublicKey pubKey = ourKeys.getPublicKeyRings().getPublicKey(ourKeyId);
-        PubkeyElement.PubkeyDataElement dataElement = new PubkeyElement.PubkeyDataElement(
-                Base64.encode(pubKey.getEncoded()));
-        return new PubkeyElement(dataElement, new Date());
     }
 
     @Override
@@ -170,12 +138,52 @@ public class BouncycastleOpenPgpProvider implements OpenPgpProvider {
         return new OpenPgpElement(base64);
     }
 
-    public static PGPKeyRingGenerator generateKey(BareJid owner, char[] passPhrase) throws NoSuchAlgorithmException, PGPException {
+    @Override
+    public OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception {
+        InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
+
+        // Add our keys to decryption config
+        for (PGPPublicKeyRing p : ourKeys.getPublicKeyRings()) {
+            decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
+        }
+        for (PGPSecretKeyRing s : ourKeys.getSecretKeyRings()) {
+            decryptionConfig.addSecretKey(s.getSecretKey().getEncoded());
+        }
+
+        // Add their keys to decryption config
+        for (PGPPublicKeyRing p : theirKeys.get(sender).getPublicKeyRings()) {
+            decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
+        }
+
+        ByteArrayInputStream encryptedIn = new ByteArrayInputStream(
+                element.getEncryptedBase64MessageContent().getBytes(Charset.forName("UTF-8")));
+
+        InputStream decrypted = BouncyGPG.decryptAndVerifyStream()
+                .withConfig(decryptionConfig)
+                .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
+                .andValidateSomeoneSigned()
+                .fromEncryptedInputStream(encryptedIn);
+
+        ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();
+
+        Streams.pipeAll(decrypted, decryptedOut);
+
+        return new OpenPgpMessage(null, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
+    }
+
+    @Override
+    public String getFingerprint() throws IOException, PGPException {
+        return new String(Hex.encode(ourKeys.getKeyFingerPrintCalculator()
+                .calculateFingerprint(ourKeys.getPublicKeyRings().getPublicKey(ourKeyId)
+                        .getPublicKeyPacket())), Charset.forName("UTF-8")).toUpperCase();
+    }
+
+    public static PGPKeyRingGenerator generateKey(BareJid owner) throws NoSuchAlgorithmException, PGPException {
         PGPKeyRingGenerator generator = BouncyGPG.createKeyPair()
                 .withRSAKeys()
                 .ofSize(PublicKeySize.RSA._2048)
                 .forIdentity("xmpp:" + owner.toString())
-                .withPassphrase(passPhrase)
+                .withoutPassphrase()
                 .build();
         return generator;
     }

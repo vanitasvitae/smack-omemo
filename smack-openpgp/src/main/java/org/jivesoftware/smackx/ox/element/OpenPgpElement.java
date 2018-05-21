@@ -16,18 +16,8 @@
  */
 package org.jivesoftware.smackx.ox.element;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
-import org.jivesoftware.smack.util.stringencoder.Base64;
-import org.jivesoftware.smackx.ox.OpenPgpManager;
-import org.jivesoftware.smackx.ox.OpenPgpMessage;
-import org.jivesoftware.smackx.ox.OpenPgpProvider;
-
-import org.xmlpull.v1.XmlPullParserException;
 
 public class OpenPgpElement implements ExtensionElement {
 
@@ -37,33 +27,8 @@ public class OpenPgpElement implements ExtensionElement {
     // Represents the OpenPGP message, but encoded using base64.
     private final String base64EncodedOpenPgpMessage;
 
-    private OpenPgpMessage openPgpMessage;
-
-    // Represents the OpenPGP message, but base64 decoded.
-    private byte[] openPgpMessageBytes;
-
-    private OpenPgpContentElement openPgpContentElement;
-
     public OpenPgpElement(String base64EncodedOpenPgpMessage) {
         this.base64EncodedOpenPgpMessage = base64EncodedOpenPgpMessage;
-    }
-
-    public OpenPgpMessage getOpenPgpMessage(OpenPgpProvider provider) {
-        if (openPgpMessage == null) {
-            ensureOpenPgpMessageBytesSet();
-            InputStream is = new ByteArrayInputStream(openPgpMessageBytes);
-            openPgpMessage = OpenPgpManager.toOpenPgpMessage(is);
-        }
-
-        return openPgpMessage;
-    }
-
-    public OpenPgpContentElement getContentElement(OpenPgpProvider provider) throws XmlPullParserException, IOException {
-        if (openPgpContentElement == null) {
-            openPgpContentElement = getOpenPgpMessage(provider).getOpenPgpContentElement();
-        }
-
-        return openPgpContentElement;
     }
 
     public String getEncryptedBase64MessageContent() {
@@ -85,11 +50,5 @@ public class OpenPgpElement implements ExtensionElement {
         XmlStringBuilder xml = new XmlStringBuilder(this);
         xml.rightAngleBracket().append(base64EncodedOpenPgpMessage).closeElement(this);
         return xml;
-    }
-
-    private void ensureOpenPgpMessageBytesSet() {
-        if (openPgpMessageBytes != null) return;
-
-        openPgpMessageBytes = Base64.decode(base64EncodedOpenPgpMessage);
     }
 }
