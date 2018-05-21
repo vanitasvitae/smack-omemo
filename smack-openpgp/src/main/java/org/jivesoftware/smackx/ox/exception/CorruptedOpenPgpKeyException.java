@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox;
+package org.jivesoftware.smackx.ox.exception;
 
 public class CorruptedOpenPgpKeyException extends Exception {
 
@@ -22,5 +22,9 @@ public class CorruptedOpenPgpKeyException extends Exception {
 
     public CorruptedOpenPgpKeyException() {
         super();
+    }
+
+    public CorruptedOpenPgpKeyException(Exception cause) {
+        super(cause);
     }
 }

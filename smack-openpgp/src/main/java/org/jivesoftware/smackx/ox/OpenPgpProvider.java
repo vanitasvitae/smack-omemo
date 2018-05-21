@@ -22,6 +22,7 @@ import java.util.Set;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
+import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 
 import org.jxmpp.jid.BareJid;
 
@@ -35,9 +36,9 @@ public interface OpenPgpProvider {
 
     OpenPgpElement encrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception;
 
-    PubkeyElement createPubkeyElement() throws Exception;
+    PubkeyElement createPubkeyElement() throws CorruptedOpenPgpKeyException;
 
-    void processPubkeyElement(PubkeyElement element, BareJid from) throws Exception;
+    void processPubkeyElement(PubkeyElement element, BareJid from) throws CorruptedOpenPgpKeyException;
 
     void processPublicKeysListElement(PublicKeysListElement listElement, BareJid from) throws Exception;
 
@@ -45,7 +46,7 @@ public interface OpenPgpProvider {
      * Return the OpenPGP v4-fingerprint of our key in hexadecimal upper case.
      *
      * @return fingerprint
-     * @throws Exception
+     * @throws CorruptedOpenPgpKeyException if for some reason the fingerprint cannot be derived from the key pair.
      */
-    String getFingerprint() throws Exception;
+    String getFingerprint() throws CorruptedOpenPgpKeyException;
 }
