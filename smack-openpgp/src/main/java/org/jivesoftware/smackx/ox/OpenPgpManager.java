@@ -53,14 +53,14 @@ public final class OpenPgpManager extends Manager {
     /**
      * Name of the OX metadata node.
      *
-     * @see <a href="https://xmpp.org/extensions/xep-0373.html#announcing-pubkey-list">XEP-0373 §4.2</a>.
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#announcing-pubkey-list">XEP-0373 §4.2</a>
      */
     public static final String PEP_NODE_PUBLIC_KEYS = "urn:xmpp:openpgp:0:public-keys";
 
     /**
      * Feature to be announced using the {@link ServiceDiscoveryManager} to subscribe to the OX metadata node.
      *
-     * @see <a href="https://xmpp.org/extensions/xep-0373.html#pubsub-notifications">XEP-0373 §4.4</a>.
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#pubsub-notifications">XEP-0373 §4.4</a>
      */
     public static final String PEP_NODE_PUBLIC_KEYS_NOTIFY = PEP_NODE_PUBLIC_KEYS + "+notify";
 
@@ -127,7 +127,7 @@ public final class OpenPgpManager extends Manager {
      * Publish the users OpenPGP public key to the public key node if necessary.
      * Also announce the key to other users by updating the metadata node.
      *
-     * @see <a href="https://xmpp.org/extensions/xep-0373.html#annoucning-pubkey">XEP-0373 §4.1</a>.
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#annoucning-pubkey">XEP-0373 §4.1</a>
      *
      * @throws CorruptedOpenPgpKeyException if our OpenPGP key is corrupted and for that reason cannot be serialized.
      * @throws InterruptedException
@@ -241,7 +241,7 @@ public final class OpenPgpManager extends Manager {
     /**
      * Fetch the OpenPGP public key of a {@code contact}, identified by its OpenPGP {@code v4_fingerprint}.
      *
-     * @see <a href="https://xmpp.org/extensions/xep-0373.html#discover-pubkey">XEP-0373 §4.3</a>.
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#discover-pubkey">XEP-0373 §4.3</a>
      *
      * @param contact {@link BareJid} of the contact we want to fetch a key from.
      * @param v4_fingerprint upper case, hex encoded v4 fingerprint of the contacts key.
@@ -305,7 +305,7 @@ public final class OpenPgpManager extends Manager {
      * Determine, if we can sync secret keys using private PEP nodes as described in the XEP.
      * Requirements on the server side are support for PEP and support for the whitelist access model of PubSub.
      *
-     * @see <a href="https://xmpp.org/extensions/xep-0373.html#synchro-pep">XEP-0373 §5</a> for more information.
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#synchro-pep">XEP-0373 §5</a>
      *
      * @return
      * @throws XMPPException.XMPPErrorException
@@ -325,7 +325,7 @@ public final class OpenPgpManager extends Manager {
     /**
      * {@link PEPListener} that listens for changes to the OX public keys metadata node.
      *
-     * @see <a href="https://xmpp.org/extensions/xep-0373.html#pubsub-notifications">XEP-0373 §4.4</a>.
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#pubsub-notifications">XEP-0373 §4.4</a>
      */
     private final PEPListener metadataListener = new PEPListener() {
         @Override
