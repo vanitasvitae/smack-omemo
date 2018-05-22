@@ -168,9 +168,9 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
 
         // Add our keys to decryption config
-        for (PGPPublicKeyRing p : ourKeys.getPublicKeyRings()) {
-            decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
-        }
+        // for (PGPPublicKeyRing p : ourKeys.getPublicKeyRings()) {
+        //     decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
+        // }
         for (PGPSecretKeyRing s : ourKeys.getSecretKeyRings()) {
             decryptionConfig.addSecretKey(s.getSecretKey().getEncoded());
         }
