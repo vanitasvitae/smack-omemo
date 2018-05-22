@@ -31,9 +31,12 @@ import java.util.Set;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.OpenPgpMessage;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
+import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
+import org.jivesoftware.smackx.ox.element.SignElement;
+import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
@@ -81,14 +84,14 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
     }
 
     @Override
-    public void processPubkeyElement(PubkeyElement element, BareJid jid) throws CorruptedOpenPgpKeyException {
+    public void processPubkeyElement(PubkeyElement element, BareJid owner) throws CorruptedOpenPgpKeyException {
         byte[] decoded = Base64.decode(element.getDataElement().getB64Data());
 
         try {
-            InMemoryKeyring contactsKeyring = theirKeys.get(jid);
+            InMemoryKeyring contactsKeyring = theirKeys.get(owner);
             if (contactsKeyring == null) {
                 contactsKeyring = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
-                theirKeys.put(jid, contactsKeyring);
+                theirKeys.put(owner, contactsKeyring);
             }
 
             contactsKeyring.addPublicKey(decoded);
@@ -98,12 +101,12 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
     }
 
     @Override
-    public void processPublicKeysListElement(PublicKeysListElement listElement, BareJid from) throws Exception {
+    public void processPublicKeysListElement(PublicKeysListElement listElement, BareJid owner) throws Exception {
 
     }
 
     @Override
-    public OpenPgpElement signAndEncrypt(InputStream inputStream, Set<BareJid> recipients)
+    public OpenPgpElement signAndEncrypt(SigncryptElement element, Set<BareJid> recipients)
             throws Exception {
         if (recipients.isEmpty()) {
             throw new IllegalArgumentException("Set of recipients must not be empty");
@@ -119,7 +122,7 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
             }
         }
 
-        // Add our keys to encryption config
+        // Add our public and secret keys to encryption config
         for (PGPPublicKeyRing p : ourKeys.getPublicKeyRings()) {
             encryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
         }
@@ -134,6 +137,7 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         }
         recipientUIDs[pos] = "xmpp:" + ourJid.toString();
 
+        InputStream inputStream = element.toInputStream();
         ByteArrayOutputStream encryptedOut = new ByteArrayOutputStream();
 
         OutputStream encryptor = BouncyGPG.encryptToStream()
@@ -154,28 +158,109 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
     }
 
     @Override
-    public OpenPgpElement sign(InputStream inputStream) throws Exception {
+    public OpenPgpElement sign(SignElement element) throws Exception {
+        InMemoryKeyring signingConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
+
+        // Add our secret keys to signing config
+        for (PGPSecretKeyRing s : ourKeys.getSecretKeyRings()) {
+            signingConfig.addSecretKey(s.getSecretKey().getEncoded());
+        }
+
+        InputStream inputStream = element.toInputStream();
+        // TODO: Implement
+
         return null;
     }
 
     @Override
-    public OpenPgpElement encrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception {
+    public OpenPgpMessage verify(OpenPgpElement element, BareJid sender) throws Exception {
+        // TODO: Implement
         return null;
+    }
+
+    @Override
+    public OpenPgpMessage decrypt(OpenPgpElement element) throws Exception {
+        InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
+
+        // Add our secret keys to decryption config
+        for (PGPSecretKeyRing s : ourKeys.getSecretKeyRings()) {
+            decryptionConfig.addSecretKey(s.getSecretKey().getEncoded());
+        }
+
+        ByteArrayInputStream encryptedIn = new ByteArrayInputStream(
+                element.getEncryptedBase64MessageContent().getBytes(Charset.forName("UTF-8")));
+
+        InputStream decrypted = BouncyGPG.decryptAndVerifyStream()
+                .withConfig(decryptionConfig)
+                .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
+                .andIgnoreSignatures()
+                .fromEncryptedInputStream(encryptedIn);
+
+        ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();
+
+        Streams.pipeAll(decrypted, decryptedOut);
+
+        return new OpenPgpMessage(OpenPgpMessage.State.crypt, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
+    }
+
+    @Override
+    public OpenPgpElement encrypt(CryptElement element, Set<BareJid> recipients) throws Exception {
+        if (recipients.isEmpty()) {
+            throw new IllegalArgumentException("Set of recipients must not be empty");
+        }
+
+        InMemoryKeyring encryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
+
+        // Add all recipients public keys to encryption config
+        for (BareJid recipient : recipients) {
+            KeyringConfig c = theirKeys.get(recipient);
+            for (PGPPublicKeyRing p : c.getPublicKeyRings()) {
+                encryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
+            }
+        }
+
+        // Add our public keys to encryption config
+        for (PGPPublicKeyRing p : ourKeys.getPublicKeyRings()) {
+            encryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
+        }
+
+        String[] recipientUIDs = new String[recipients.size() + 1];
+        int pos = 0;
+        for (BareJid b : recipients) {
+            recipientUIDs[pos++] = "xmpp:" + b.toString();
+        }
+        recipientUIDs[pos] = "xmpp:" + ourJid.toString();
+
+        InputStream inputStream = element.toInputStream();
+        ByteArrayOutputStream encryptedOut = new ByteArrayOutputStream();
+
+        OutputStream encryptor = BouncyGPG.encryptToStream()
+                .withConfig(encryptionConfig)
+                .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
+                .withOxAlgorithms()
+                .toRecipients(recipientUIDs)
+                .andDoNotSign()
+                .binaryOutput()
+                .andWriteTo(encryptedOut);
+
+        Streams.pipeAll(inputStream, encryptor);
+        encryptor.close();
+
+        String base64 = Base64.encodeToString(encryptedOut.toByteArray());
+
+        return new OpenPgpElement(base64);
     }
 
     @Override
     public OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception {
         InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
 
-        // Add our keys to decryption config
-        // for (PGPPublicKeyRing p : ourKeys.getPublicKeyRings()) {
-        //     decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
-        // }
+        // Add our secret keys to decryption config
         for (PGPSecretKeyRing s : ourKeys.getSecretKeyRings()) {
             decryptionConfig.addSecretKey(s.getSecretKey().getEncoded());
         }
 
-        // Add their keys to decryption config
+        // Add their public keys to decryption config
         for (PGPPublicKeyRing p : theirKeys.get(sender).getPublicKeyRings()) {
             decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
         }
@@ -193,7 +278,7 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
 
         Streams.pipeAll(decrypted, decryptedOut);
 
-        return new OpenPgpMessage(new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
+        return new OpenPgpMessage(OpenPgpMessage.State.signcrypt, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
     }
 
     @Override

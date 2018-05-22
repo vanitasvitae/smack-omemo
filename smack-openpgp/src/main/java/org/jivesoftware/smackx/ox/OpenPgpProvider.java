@@ -16,31 +16,133 @@
  */
 package org.jivesoftware.smackx.ox;
 
-import java.io.InputStream;
 import java.util.Set;
 
+import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
+import org.jivesoftware.smackx.ox.element.SignElement;
+import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 
 import org.jxmpp.jid.BareJid;
 
 public interface OpenPgpProvider {
 
+    /**
+     * Sign and encrypt a {@link SigncryptElement} element for usage within the context of instant messaging.
+     * The resulting {@link OpenPgpElement} contains a Base64 encoded, unarmored OpenPGP message,
+     * which can be decrypted by each recipient, as well as by ourselves.
+     * The message contains a signature made by our key.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#signcrypt">XEP-0373 §3</a>
+     * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
+     * @param element {@link SigncryptElement} which contains the content of the message as plaintext.
+     * @param recipients {@link Set} of {@link BareJid} of recipients.
+     * @return encrypted {@link OpenPgpElement} which contains the encrypted, encoded message.
+     * @throws Exception
+     */
+    OpenPgpElement signAndEncrypt(SigncryptElement element, Set<BareJid> recipients) throws Exception;
+
+    /**
+     * Decrypt an incoming {@link OpenPgpElement} which must contain a {@link SigncryptElement} and verify
+     * the signature made by the sender in the context of instant messaging.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
+     * @param element {@link OpenPgpElement} which contains an encrypted and signed {@link SigncryptElement}.
+     * @param sender {@link BareJid} of the user which sent the message. This is also the user who signed the message.
+     * @return decrypted {@link OpenPgpMessage} which contains the decrypted {@link SigncryptElement}.
+     * @throws Exception
+     */
     OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception;
 
-    OpenPgpElement signAndEncrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception;
+    /**
+     * Sign a {@link SignElement} and pack it inside a {@link OpenPgpElement}.
+     * The resulting {@link OpenPgpElement} contains the {@link SignElement} signed and base64 encoded.
+     *
+     * Note: DO NOT use this method in the context of instant messaging, as XEP-0374 forbids that.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#exchange">XEP-0373 §3.1</a>
+     * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
+     * @param element {@link SignElement} which will be signed.
+     * @return {@link OpenPgpElement} which contains the signed, Base64 encoded {@link SignElement}.
+     * @throws Exception
+     */
+    OpenPgpElement sign(SignElement element) throws Exception;
 
-    OpenPgpElement sign(InputStream inputStream) throws Exception;
+    /**
+     * Verify the signature on an incoming {@link OpenPgpElement} which must contain a {@link SignElement}.
+     *
+     * Note: DO NOT use this method in the context of instant messaging, as XEP-0374 forbids that.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#exchange">XEP-0373 §3.1</a>
+     * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
+     * @param element incoming {@link OpenPgpElement} which must contain a signed {@link SignElement}.
+     * @param sender {@link BareJid} of the sender which also signed the message.
+     * @return {@link OpenPgpMessage} which contains the decoded {@link SignElement}.
+     * @throws Exception
+     */
+    OpenPgpMessage verify(OpenPgpElement element, BareJid sender) throws Exception;
 
-    OpenPgpElement encrypt(InputStream inputStream, Set<BareJid> recipients) throws Exception;
+    /**
+     * Encrypt a {@link CryptElement} and pack it inside a {@link OpenPgpElement}.
+     * The resulting {@link OpenPgpElement} contains the encrypted and Base64 encoded {@link CryptElement}
+     * which can be decrypted by all recipients, as well as by ourselves.
+     *
+     * Note: DO NOT use this method in the context of instant messaging, as XEP-0374 forbids that.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
+     * @param element plaintext {@link CryptElement} which will be encrypted.
+     * @param recipients {@link Set} of {@link BareJid} of recipients, which will be able to decrypt the message.
+     * @return {@link OpenPgpElement} which contains the encrypted, Base64 encoded {@link CryptElement}.
+     * @throws Exception
+     */
+    OpenPgpElement encrypt(CryptElement element, Set<BareJid> recipients) throws Exception;
 
+    /**
+     * Decrypt an incoming {@link OpenPgpElement} which must contain a {@link CryptElement}.
+     * The resulting {@link OpenPgpMessage} will contain the decrypted {@link CryptElement}.
+     *
+     * Note: DO NOT use this method in the context of instant messaging, as XEP-0374 forbids that.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
+     * @param element {@link OpenPgpElement} which contains the encrypted {@link CryptElement}.
+     * @return {@link OpenPgpMessage} which contains the decrypted {@link CryptElement}.
+     * @throws Exception
+     */
+    OpenPgpMessage decrypt(OpenPgpElement element) throws Exception;
+
+    /**
+     * Create a {@link PubkeyElement} which contains our exported OpenPGP public key.
+     * The element can for example be published.
+     *
+     * @return {@link PubkeyElement} containing our public key.
+     * @throws CorruptedOpenPgpKeyException if our public key can for some reason not be serialized.
+     */
     PubkeyElement createPubkeyElement() throws CorruptedOpenPgpKeyException;
 
-    void processPubkeyElement(PubkeyElement element, BareJid from) throws CorruptedOpenPgpKeyException;
+    /**
+     * Process an incoming {@link PubkeyElement} of a contact or ourselves.
+     * That typically includes importing/updating the key.
+     *
+     * @param element {@link PubkeyElement} which presumably contains the public key of the {@code owner}.
+     * @param owner owner of the OpenPGP public key contained in the {@link PubkeyElement}.
+     * @throws CorruptedOpenPgpKeyException if the key found in the {@link PubkeyElement}
+     * can not be deserialized or imported.
+     */
+    void processPubkeyElement(PubkeyElement element, BareJid owner) throws CorruptedOpenPgpKeyException;
 
-    void processPublicKeysListElement(PublicKeysListElement listElement, BareJid from) throws Exception;
+    /**
+     * Process an incoming update to the OpenPGP metadata node.
+     * That typically includes fetching announced keys of which we don't have a local copy yet,
+     * as well as marking keys which are missing from the list as inactive.
+     *
+     * @param listElement {@link PublicKeysListElement} which contains a list of the keys of {@code owner}.
+     * @param owner {@link BareJid} of the owner of the announced public keys.
+     * @throws Exception
+     */
+    void processPublicKeysListElement(PublicKeysListElement listElement, BareJid owner) throws Exception;
 
     /**
      * Return the OpenPGP v4-fingerprint of our key in hexadecimal upper case.

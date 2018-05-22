@@ -39,7 +39,8 @@ public class OpenPgpMessage {
 
     private OpenPgpContentElement openPgpContentElement;
 
-    public OpenPgpMessage(String content) {
+    public OpenPgpMessage(State state, String content) {
+        this.state = state;
         this.element = content;
     }
 
@@ -65,5 +66,10 @@ public class OpenPgpMessage {
         } else {
             state = State.crypt;
         }
+    }
+
+    public State getState() throws IOException, XmlPullParserException {
+        ensureOpenPgpContentElementSet();
+        return state;
     }
 }

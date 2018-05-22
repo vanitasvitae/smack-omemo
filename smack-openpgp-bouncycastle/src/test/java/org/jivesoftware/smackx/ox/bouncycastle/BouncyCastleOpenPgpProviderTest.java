@@ -61,7 +61,7 @@ public class BouncyCastleOpenPgpProviderTest extends SmackTestSuite {
                 Collections.<ExtensionElement>singletonList(
                         new Message.Body("en", "How do you know I’m mad?")));
         OpenPgpElement encrypted = aliceProvider.signAndEncrypt(
-                signcryptElement.toInputStream(),
+                signcryptElement,
                 Collections.singleton(cheshire));
 
         // Decrypt the message as the cheshire cat

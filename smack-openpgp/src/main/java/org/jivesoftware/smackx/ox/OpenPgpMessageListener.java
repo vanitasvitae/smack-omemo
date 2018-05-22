@@ -23,9 +23,28 @@ import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jxmpp.jid.BareJid;
 
 public interface OpenPgpMessageListener {
+
+    /**
+     * This method gets called whenever we received and successfully decrypted/verified an encrypted, signed message.
+     *
+     * @param from sender/signer of the message.
+     * @param signcryptElement decrypted and verified {@link SigncryptElement}.
+     */
     void signcryptElementReceived(BareJid from, SigncryptElement signcryptElement);
 
+    /**
+     * This method gets called whenever we received and successfully verified a signed message.
+     *
+     * @param from sender/signer of the message.
+     * @param signElement verified {@link SignElement}.
+     */
     void signElementReceived(BareJid from, SignElement signElement);
 
+    /**
+     * This method gets called whenever we received and successfully decrypted an encrypted message.
+     *
+     * @param from sender of the message.
+     * @param cryptElement decrypted {@link CryptElement}.
+     */
     void cryptElementReceived(BareJid from, CryptElement cryptElement);
 }
