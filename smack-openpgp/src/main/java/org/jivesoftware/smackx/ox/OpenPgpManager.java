@@ -31,6 +31,7 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.ox.callback.AskForBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.DisplayBackupCodeCallback;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
@@ -294,6 +295,20 @@ public final class OpenPgpManager extends Manager {
 
         secretKeyNode.publish(new PayloadItem<>(secretKeyElement));
         callback.displayBackupCode(password);
+    }
+
+    public void fetchSecretKey(AskForBackupCodeCallback callback)
+            throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException, CorruptedOpenPgpKeyException {
+        PubSubManager pm = PubSubManager.getInstance(connection());
+        LeafNode secretKeyNode = pm.getOrCreateLeafNode(PEP_NODE_SECRET_KEY);
+        List<PayloadItem<SecretkeyElement>> list = secretKeyNode.getItems(1);
+        if (list.size() == 0) {
+            LOGGER.log(Level.INFO, "No secret key published!");
+            return;
+        }
+        SecretkeyElement secretkeyElement = list.get(0).getPayload();
+        provider.restoreSecretKeyElement(secretkeyElement, callback.askForBackupCode());
     }
 
     /**

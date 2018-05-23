@@ -154,4 +154,6 @@ public interface OpenPgpProvider {
     String getFingerprint() throws CorruptedOpenPgpKeyException;
 
     SecretkeyElement createSecretkeyElement(String password) throws CorruptedOpenPgpKeyException;
+
+    void restoreSecretKeyElement(SecretkeyElement secretkeyElement, String password) throws CorruptedOpenPgpKeyException;
 }

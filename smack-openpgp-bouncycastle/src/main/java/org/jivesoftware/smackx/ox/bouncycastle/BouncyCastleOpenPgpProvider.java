@@ -42,6 +42,7 @@ import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
+import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PGPHashAlgorithms;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PGPSymmetricEncryptionAlgorithms;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PublicKeySize;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeyringConfigCallbacks;
@@ -52,13 +53,16 @@ import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.Keyring
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
@@ -67,8 +71,8 @@ import org.jxmpp.jid.BareJid;
 public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
 
     private final BareJid ourJid;
-    private final InMemoryKeyring ourKeys;
-    private final Long ourKeyId;
+    private InMemoryKeyring ourKeys;
+    private Long ourKeyId;
     private final Map<BareJid, InMemoryKeyring> theirKeys = new HashMap<>();
 
     public BouncyCastleOpenPgpProvider(BareJid ourJid) throws IOException, PGPException, NoSuchAlgorithmException {
@@ -144,6 +148,44 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
     @Override
     public void processPublicKeysListElement(PublicKeysListElement listElement, BareJid owner) throws Exception {
 
+    }
+
+    @Override
+    public void restoreSecretKeyElement(SecretkeyElement secretkeyElement, String password)
+            throws CorruptedOpenPgpKeyException {
+        byte[] encoded = Base64.decode(secretkeyElement.getB64Data());
+
+        try {
+            PGPDigestCalculatorProvider calculatorProvider = new JcaPGPDigestCalculatorProviderBuilder()
+                    .setProvider(BouncyGPG.getProvider())
+                    .build();
+
+            InMemoryKeyring keyring = KeyringConfigs.forGpgExportedKeys(
+                    KeyringConfigCallbacks.withPassword(password));
+            keyring.addSecretKey(encoded);
+            for (PGPSecretKeyRing r : keyring.getSecretKeyRings()) {
+                PGPSecretKey s = r.getSecretKey();
+                PGPPrivateKey privateKey = s.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder(calculatorProvider).build(password.toCharArray()));
+                PGPPublicKey publicKey = s.getPublicKey();
+                PGPSecretKey secretKey = new PGPSecretKey(
+                        privateKey,
+                        publicKey,
+                        calculatorProvider.get(PGPHashAlgorithms.SHA1.getAlgorithmId()),
+                        true,
+                        null);
+
+                InMemoryKeyring newKeyring = KeyringConfigs.forGpgExportedKeys(
+                        KeyringConfigCallbacks.withUnprotectedKeys());
+
+                newKeyring.addSecretKey(secretKey.getEncoded());
+                newKeyring.addPublicKey(secretKey.getPublicKey().getEncoded());
+
+                ourKeys = newKeyring;
+                ourKeyId = secretKey.getKeyID();
+            }
+        } catch (PGPException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
