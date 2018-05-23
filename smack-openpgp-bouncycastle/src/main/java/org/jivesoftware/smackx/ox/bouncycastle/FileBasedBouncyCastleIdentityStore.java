@@ -54,7 +54,7 @@ public class FileBasedBouncyCastleIdentityStore implements BouncyCastleIdentityS
     }
 
     @Override
-    public void storePubkeyList(BareJid jid, PublicKeysListElement list) throws IOException {
+    public void storeActivePubkeyList(BareJid jid, PublicKeysListElement list) throws IOException {
         File contactsDir = contactsDir(jid);
         File destination = new File(contactsDir, "pubkey_list");
         DataOutputStream dataOut = new DataOutputStream(new FileOutputStream(destination));
@@ -69,7 +69,7 @@ public class FileBasedBouncyCastleIdentityStore implements BouncyCastleIdentityS
     }
 
     @Override
-    public PublicKeysListElement loadPubkeyList(BareJid jid) throws IOException {
+    public PublicKeysListElement loadActivePubkeyList(BareJid jid) throws IOException {
         File contactsDir = contactsDir(jid);
         File source = new File(contactsDir, "pubkey_list");
         if (!source.exists()) {

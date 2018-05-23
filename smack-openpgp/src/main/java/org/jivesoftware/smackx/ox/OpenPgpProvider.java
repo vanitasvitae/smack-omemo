@@ -22,6 +22,7 @@ import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
+import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
@@ -151,4 +152,6 @@ public interface OpenPgpProvider {
      * @throws CorruptedOpenPgpKeyException if for some reason the fingerprint cannot be derived from the key pair.
      */
     String getFingerprint() throws CorruptedOpenPgpKeyException;
+
+    SecretkeyElement createSecretkeyElement(String password) throws CorruptedOpenPgpKeyException;
 }

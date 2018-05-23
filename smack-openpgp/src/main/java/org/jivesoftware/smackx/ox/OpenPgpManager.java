@@ -16,6 +16,7 @@
  */
 package org.jivesoftware.smackx.ox;
 
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,10 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.ox.callback.DisplayBackupCodeCallback;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
+import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 import org.jivesoftware.smackx.pep.PEPListener;
 import org.jivesoftware.smackx.pep.PEPManager;
@@ -56,6 +59,11 @@ public final class OpenPgpManager extends Manager {
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#announcing-pubkey-list">XEP-0373 §4.2</a>
      */
     public static final String PEP_NODE_PUBLIC_KEYS = "urn:xmpp:openpgp:0:public-keys";
+
+    /**
+     * Name of the OX secret key node.
+     */
+    public static final String PEP_NODE_SECRET_KEY = "urn:xmpp:openpgp:0:secret-key";
 
     /**
      * Feature to be announced using the {@link ServiceDiscoveryManager} to subscribe to the OX metadata node.
@@ -272,12 +280,20 @@ public final class OpenPgpManager extends Manager {
     /**
      * TODO: Implement and document.
      */
-    public void depositSecretKey() {
+    public void depositSecretKey(DisplayBackupCodeCallback callback)
+            throws CorruptedOpenPgpKeyException, InterruptedException, PubSubException.NotALeafNodeException,
+            XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
         ensureProviderIsSet();
-        // Create key backup by appending serialized unencrypted secret keys.
-        // Encrypt the backup using a random generated password
-        // Publish the backup to the secret key node (whitelist protected)
-        // Display the backup key to the user
+
+        String password = generateBackupPassword();
+        SecretkeyElement secretKeyElement = provider.createSecretkeyElement(password);
+
+        PubSubManager pm = PubSubManager.getInstance(connection());
+        LeafNode secretKeyNode = pm.getOrCreateLeafNode(PEP_NODE_SECRET_KEY);
+        PubSubHelper.whitelist(secretKeyNode);
+
+        secretKeyNode.publish(new PayloadItem<>(secretKeyElement));
+        callback.displayBackupCode(password);
     }
 
     /**
@@ -349,4 +365,32 @@ public final class OpenPgpManager extends Manager {
             }
         }
     };
+
+    /**
+     * Generate a secure backup code.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#sect-idm140425111347232">XEP-0373 §5.3</a>
+     * @return backup code
+     */
+    private String generateBackupPassword() {
+        final String alphabet = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
+        SecureRandom random = new SecureRandom();
+        StringBuilder code = new StringBuilder();
+
+        // 6 blocks
+        for (int i = 0; i < 6; i++) {
+
+            // of 4 chars
+            for (int j = 0; j < 4; j++) {
+                char c = alphabet.charAt(random.nextInt(alphabet.length()));
+                code.append(c);
+            }
+
+            // dash after every block except the last one
+            if (i != 5) {
+                code.append('-');
+            }
+        }
+        return code.toString();
+    }
 }

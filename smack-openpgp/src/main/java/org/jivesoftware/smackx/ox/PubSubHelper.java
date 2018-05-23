@@ -21,16 +21,18 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.pubsub.AccessModel;
 import org.jivesoftware.smackx.pubsub.ConfigureForm;
 import org.jivesoftware.smackx.pubsub.LeafNode;
+import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 public class PubSubHelper {
 
     public static void whitelist(LeafNode node)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException {
-        ConfigureForm config = node.getNodeConfiguration();
-        if (config.getAccessModel() != AccessModel.whitelist) {
-            config.setAccessModel(AccessModel.whitelist);
-            node.sendConfigurationForm(config);
+        ConfigureForm old = node.getNodeConfiguration();
+        if (old.getAccessModel() != AccessModel.whitelist) {
+            ConfigureForm _new = new ConfigureForm(DataForm.Type.submit);
+            _new.setAccessModel(AccessModel.whitelist);
+            node.sendConfigurationForm(_new);
         }
     }
 

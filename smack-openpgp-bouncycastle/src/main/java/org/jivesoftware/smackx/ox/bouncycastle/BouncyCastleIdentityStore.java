@@ -27,9 +27,9 @@ import org.jxmpp.jid.BareJid;
 
 public interface BouncyCastleIdentityStore {
 
-    void storePubkeyList(BareJid jid, PublicKeysListElement list) throws FileNotFoundException, IOException;
+    void storeActivePubkeyList(BareJid jid, PublicKeysListElement list) throws FileNotFoundException, IOException;
 
-    PublicKeysListElement loadPubkeyList(BareJid jid) throws FileNotFoundException, IOException;
+    PublicKeysListElement loadActivePubkeyList(BareJid jid) throws FileNotFoundException, IOException;
 
     void storePublicKeys(BareJid jid, PGPPublicKeyRingCollection keys);
 

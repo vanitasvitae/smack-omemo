@@ -66,11 +66,11 @@ public class FileBasedBouncyCastleIdentityStoreTest extends SmackTestSuite {
 
         FileBasedBouncyCastleIdentityStore store = new FileBasedBouncyCastleIdentityStore(storePath);
 
-        PublicKeysListElement shouldBeNull = store.loadPubkeyList(jid);
+        PublicKeysListElement shouldBeNull = store.loadActivePubkeyList(jid);
         assertNull(shouldBeNull);
-        store.storePubkeyList(jid, list);
+        store.storeActivePubkeyList(jid, list);
 
-        PublicKeysListElement retrieved = store.loadPubkeyList(jid);
+        PublicKeysListElement retrieved = store.loadActivePubkeyList(jid);
         assertEquals(list.getMetadata(), retrieved.getMetadata());
     }
 

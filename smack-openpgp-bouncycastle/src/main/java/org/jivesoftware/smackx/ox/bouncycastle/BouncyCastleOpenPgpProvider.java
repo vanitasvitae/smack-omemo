@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.OpenPgpMessage;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
@@ -35,22 +36,30 @@ import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
+import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
+import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PGPSymmetricEncryptionAlgorithms;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PublicKeySize;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeyringConfigCallbacks;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.XmppKeySelectionStrategy;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.InMemoryKeyring;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.KeyringConfig;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.KeyringConfigs;
+import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
+import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
@@ -78,6 +87,38 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
             PubkeyElement.PubkeyDataElement dataElement = new PubkeyElement.PubkeyDataElement(
                     Base64.encode(pubKey.getEncoded()));
             return new PubkeyElement(dataElement, new Date());
+        } catch (PGPException | IOException e) {
+            throw new CorruptedOpenPgpKeyException(e);
+        }
+    }
+
+    @Override
+    public SecretkeyElement createSecretkeyElement(String password) throws CorruptedOpenPgpKeyException {
+        try {
+            // Our unencrypted secret key
+            PGPSecretKey secretKey = ourKeys.getSecretKeyRings().getSecretKey(ourKeyId);
+
+            PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
+                    .setProvider(BouncyGPG.getProvider())
+                    .build()
+                    .get(HashAlgorithmTags.SHA1);
+
+            PBESecretKeyEncryptor encryptor = new JcePBESecretKeyEncryptorBuilder(
+                    PGPSymmetricEncryptionAlgorithms.AES_256.getAlgorithmId())
+                    .setProvider(BouncyGPG.getProvider())
+                    .build(password.toCharArray());
+
+            PGPSecretKey encrypted = new PGPSecretKey(
+                    secretKey.extractPrivateKey(null),
+                    secretKey.getPublicKey(),
+                    calculator,
+                    true,
+                    encryptor);
+
+            byte[] base64 = Base64.encode(encrypted.getEncoded());
+
+            return new SecretkeyElement(base64);
+
         } catch (PGPException | IOException e) {
             throw new CorruptedOpenPgpKeyException(e);
         }
@@ -159,6 +200,9 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
 
     @Override
     public OpenPgpElement sign(SignElement element) throws Exception {
+
+        throw new SmackException.FeatureNotSupportedException("Feature not implemented for now.");
+        /*
         InMemoryKeyring signingConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
 
         // Add our secret keys to signing config
@@ -170,16 +214,19 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         // TODO: Implement
 
         return null;
+        */
     }
 
     @Override
     public OpenPgpMessage verify(OpenPgpElement element, BareJid sender) throws Exception {
         // TODO: Implement
-        return null;
+        throw new SmackException.FeatureNotSupportedException("Feature not implemented for now.");
     }
 
     @Override
     public OpenPgpMessage decrypt(OpenPgpElement element) throws Exception {
+        throw new SmackException.FeatureNotSupportedException("Feature not implemented for now.");
+        /*
         InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
 
         // Add our secret keys to decryption config
@@ -201,10 +248,13 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         Streams.pipeAll(decrypted, decryptedOut);
 
         return new OpenPgpMessage(OpenPgpMessage.State.crypt, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
+        */
     }
 
     @Override
     public OpenPgpElement encrypt(CryptElement element, Set<BareJid> recipients) throws Exception {
+        throw new SmackException.FeatureNotSupportedException("Feature not implemented for now.");
+        /*
         if (recipients.isEmpty()) {
             throw new IllegalArgumentException("Set of recipients must not be empty");
         }
@@ -249,6 +299,7 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         String base64 = Base64.encodeToString(encryptedOut.toByteArray());
 
         return new OpenPgpElement(base64);
+        */
     }
 
     @Override
