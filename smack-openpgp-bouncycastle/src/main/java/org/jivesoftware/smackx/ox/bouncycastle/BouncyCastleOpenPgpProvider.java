@@ -77,11 +77,6 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
 
     public BouncyCastleOpenPgpProvider(BareJid ourJid) throws IOException, PGPException, NoSuchAlgorithmException {
         this.ourJid = ourJid;
-        PGPSecretKeyRing ourKey = generateKey(ourJid).generateSecretKeyRing();
-        ourKeyId = ourKey.getPublicKey().getKeyID();
-        ourKeys = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
-        ourKeys.addSecretKey(ourKey.getSecretKey().getEncoded());
-        ourKeys.addPublicKey(ourKey.getPublicKey().getEncoded());
     }
 
     @Override
@@ -177,14 +172,20 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
                 InMemoryKeyring newKeyring = KeyringConfigs.forGpgExportedKeys(
                         KeyringConfigCallbacks.withUnprotectedKeys());
 
-                newKeyring.addSecretKey(secretKey.getEncoded());
                 newKeyring.addPublicKey(secretKey.getPublicKey().getEncoded());
+                newKeyring.addSecretKey(secretKey.getEncoded());
 
                 ourKeys = newKeyring;
                 ourKeyId = secretKey.getKeyID();
+
+                InMemoryKeyring theirKeyRing = KeyringConfigs.forGpgExportedKeys(
+                        KeyringConfigCallbacks.withUnprotectedKeys());
+                theirKeyRing.addPublicKey(secretKey.getPublicKey().getEncoded());
+
+                theirKeys.put(ourJid, theirKeyRing);
             }
         } catch (PGPException | IOException e) {
-            e.printStackTrace();
+            throw new CorruptedOpenPgpKeyException(e);
         }
     }
 
@@ -358,8 +359,9 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
             decryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
         }
 
-        ByteArrayInputStream encryptedIn = new ByteArrayInputStream(
-                element.getEncryptedBase64MessageContent().getBytes(Charset.forName("UTF-8")));
+        byte[] b64decoded = Base64.decode(element.getEncryptedBase64MessageContent());
+
+        ByteArrayInputStream encryptedIn = new ByteArrayInputStream(b64decoded);
 
         InputStream decrypted = BouncyGPG.decryptAndVerifyStream()
                 .withConfig(decryptionConfig)
@@ -381,6 +383,19 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
                     .calculateFingerprint(ourKeys.getPublicKeyRings().getPublicKey(ourKeyId)
                             .getPublicKeyPacket())), Charset.forName("UTF-8")).toUpperCase();
         } catch (IOException | PGPException e) {
+            throw new CorruptedOpenPgpKeyException(e);
+        }
+    }
+
+    @Override
+    public void createAndUseKey() throws CorruptedOpenPgpKeyException, NoSuchAlgorithmException {
+        try {
+            PGPSecretKeyRing ourKey = generateKey(ourJid).generateSecretKeyRing();
+            ourKeyId = ourKey.getPublicKey().getKeyID();
+            ourKeys = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
+            ourKeys.addSecretKey(ourKey.getSecretKey().getEncoded());
+            ourKeys.addPublicKey(ourKey.getPublicKey().getEncoded());
+        } catch (PGPException | IOException e) {
             throw new CorruptedOpenPgpKeyException(e);
         }
     }

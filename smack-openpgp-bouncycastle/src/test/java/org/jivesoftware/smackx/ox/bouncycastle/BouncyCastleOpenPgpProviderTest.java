@@ -49,6 +49,9 @@ public class BouncyCastleOpenPgpProviderTest extends SmackTestSuite {
         BouncyCastleOpenPgpProvider aliceProvider = new BouncyCastleOpenPgpProvider(alice);
         BouncyCastleOpenPgpProvider cheshireProvider = new BouncyCastleOpenPgpProvider(cheshire);
 
+        aliceProvider.createAndUseKey();
+        cheshireProvider.createAndUseKey();
+
         // dry exchange keys
         PubkeyElement aliceKeys = aliceProvider.createPubkeyElement();
         PubkeyElement cheshireKeys = cheshireProvider.createPubkeyElement();

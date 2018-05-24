@@ -16,6 +16,7 @@
  */
 package org.jivesoftware.smackx.ox;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
 import org.jivesoftware.smackx.ox.element.CryptElement;
@@ -156,4 +157,6 @@ public interface OpenPgpProvider {
     SecretkeyElement createSecretkeyElement(String password) throws CorruptedOpenPgpKeyException;
 
     void restoreSecretKeyElement(SecretkeyElement secretkeyElement, String password) throws CorruptedOpenPgpKeyException;
+
+    void createAndUseKey() throws CorruptedOpenPgpKeyException, NoSuchAlgorithmException;
 }
