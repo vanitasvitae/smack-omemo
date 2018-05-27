@@ -44,6 +44,11 @@ import org.jxmpp.util.XmppDateTime;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+/**
+ * Abstract {@link ExtensionElementProvider} implementation for the also abstract
+ * {@link OpenPgpContentElement}.
+ * @param <O> Specialized subclass of {@link OpenPgpContentElement}.
+ */
 public abstract class OpenPgpContentElementProvider<O extends OpenPgpContentElement> extends ExtensionElementProvider<O> {
 
     private static final Logger LOGGER = Logger.getLogger(OpenPgpContentElementProvider.class.getName());

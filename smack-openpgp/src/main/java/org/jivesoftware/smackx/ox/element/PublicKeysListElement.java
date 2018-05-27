@@ -25,15 +25,16 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smack.util.XmlStringBuilder;
+import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
 public final class PublicKeysListElement implements ExtensionElement {
 
     public static final String NAMESPACE = OpenPgpElement.NAMESPACE;
     public static final String ELEMENT = "public-keys-list";
 
-    private final Map<String, PubkeyMetadataElement> metadata;
+    private final Map<OpenPgpV4Fingerprint, PubkeyMetadataElement> metadata;
 
-    private PublicKeysListElement(TreeMap<String, PubkeyMetadataElement> metadata) {
+    private PublicKeysListElement(TreeMap<OpenPgpV4Fingerprint, PubkeyMetadataElement> metadata) {
         this.metadata = Collections.unmodifiableMap(metadata);
     }
 
@@ -41,7 +42,7 @@ public final class PublicKeysListElement implements ExtensionElement {
         return new Builder();
     }
 
-    public TreeMap<String, PubkeyMetadataElement> getMetadata() {
+    public TreeMap<OpenPgpV4Fingerprint, PubkeyMetadataElement> getMetadata() {
         return new TreeMap<>(metadata);
     }
 
@@ -67,7 +68,7 @@ public final class PublicKeysListElement implements ExtensionElement {
 
     public static final class Builder {
 
-        private final TreeMap<String, PubkeyMetadataElement> metadata = new TreeMap<>();
+        private final TreeMap<OpenPgpV4Fingerprint, PubkeyMetadataElement> metadata = new TreeMap<>();
 
         private Builder() {
             // Empty
@@ -89,10 +90,10 @@ public final class PublicKeysListElement implements ExtensionElement {
         public static final String ATTR_V4_FINGERPRINT = "v4-fingerprint";
         public static final String ATTR_DATE = "date";
 
-        private final String v4_fingerprint;
+        private final OpenPgpV4Fingerprint v4_fingerprint;
         private final Date date;
 
-        public PubkeyMetadataElement(String v4_fingerprint, Date date) {
+        public PubkeyMetadataElement(OpenPgpV4Fingerprint v4_fingerprint, Date date) {
             this.v4_fingerprint = Objects.requireNonNull(v4_fingerprint);
             this.date = Objects.requireNonNull(date);
 
@@ -101,7 +102,7 @@ public final class PublicKeysListElement implements ExtensionElement {
             }
         }
 
-        public String getV4Fingerprint() {
+        public OpenPgpV4Fingerprint getV4Fingerprint() {
             return v4_fingerprint;
         }
 

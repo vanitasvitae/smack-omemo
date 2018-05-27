@@ -27,6 +27,9 @@ import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jxmpp.util.XmppDateTime;
 import org.xmlpull.v1.XmlPullParser;
 
+/**
+ * {@link ExtensionElementProvider} implementation for the {@link PubkeyElement}.
+ */
 public class PubkeyElementProvider extends ExtensionElementProvider<PubkeyElement> {
 
     public static final PubkeyElementProvider TEST_INSTANCE = new PubkeyElementProvider();

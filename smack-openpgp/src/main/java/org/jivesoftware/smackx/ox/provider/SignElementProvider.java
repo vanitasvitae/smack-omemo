@@ -23,6 +23,9 @@ import org.jivesoftware.smackx.ox.element.SignElement;
 
 import org.xmlpull.v1.XmlPullParser;
 
+/**
+ * {@link org.jivesoftware.smack.provider.ExtensionElementProvider} implementation for the {@link SignElement}.
+ */
 public class SignElementProvider extends OpenPgpContentElementProvider<SignElement> {
 
     private static final Logger LOGGER = Logger.getLogger(SigncryptElementProvider.class.getName());

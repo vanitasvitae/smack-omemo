@@ -21,6 +21,9 @@ import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 
 import org.xmlpull.v1.XmlPullParser;
 
+/**
+ * {@link ExtensionElementProvider} implementation for the {@link OpenPgpElement}.
+ */
 public class OpenPgpElementProvider extends ExtensionElementProvider<OpenPgpElement> {
 
     public static final OpenPgpElementProvider TEST_INSTANCE = new OpenPgpElementProvider();

@@ -20,6 +20,9 @@ import org.jivesoftware.smackx.ox.element.SigncryptElement;
 
 import org.xmlpull.v1.XmlPullParser;
 
+/**
+ * {@link org.jivesoftware.smack.provider.ExtensionElementProvider} implementation for the {@link SigncryptElement}.
+ */
 public class SigncryptElementProvider extends OpenPgpContentElementProvider<SigncryptElement> {
 
     public static final SigncryptElementProvider TEST_INSTANCE = new SigncryptElementProvider();

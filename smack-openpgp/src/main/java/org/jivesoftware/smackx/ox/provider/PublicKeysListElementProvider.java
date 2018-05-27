@@ -22,6 +22,7 @@ import static org.xmlpull.v1.XmlPullParser.START_TAG;
 import java.util.Date;
 
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
+import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 
 import org.jxmpp.util.XmppDateTime;
@@ -49,8 +50,9 @@ public final class PublicKeysListElementProvider extends ExtensionElementProvide
                                 PublicKeysListElement.PubkeyMetadataElement.ATTR_V4_FINGERPRINT);
                         String dt = parser.getAttributeValue(null,
                                 PublicKeysListElement.PubkeyMetadataElement.ATTR_DATE);
+                        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(finger);
                         Date date = XmppDateTime.parseXEP0082Date(dt);
-                        builder.addMetadata(new PublicKeysListElement.PubkeyMetadataElement(finger, date));
+                        builder.addMetadata(new PublicKeysListElement.PubkeyMetadataElement(fingerprint, date));
                     }
                     break;
 

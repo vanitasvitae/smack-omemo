@@ -20,6 +20,9 @@ import org.jivesoftware.smackx.ox.element.CryptElement;
 
 import org.xmlpull.v1.XmlPullParser;
 
+/**
+ * {@link org.jivesoftware.smack.provider.ExtensionElementProvider} implementation for the {@link CryptElement}.
+ */
 public class CryptElementProvider extends OpenPgpContentElementProvider<CryptElement> {
 
     public static final CryptElementProvider TEST_INSTANCE = new CryptElementProvider();

@@ -17,20 +17,19 @@
 package org.jivesoftware.smackx.ox;
 
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Set;
 
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
-import org.jivesoftware.smackx.ox.element.PubkeyElement;
-import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
-import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
-import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
+import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
+import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 
 import org.jxmpp.jid.BareJid;
 
-public interface OpenPgpProvider {
+public interface OpenPgpProvider extends OpenPgpStore {
 
     /**
      * Sign and encrypt a {@link SigncryptElement} element for usage within the context of instant messaging.
@@ -41,11 +40,19 @@ public interface OpenPgpProvider {
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#signcrypt">XEP-0373 §3</a>
      * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
      * @param element {@link SigncryptElement} which contains the content of the message as plaintext.
-     * @param recipients {@link Set} of {@link BareJid} of recipients.
+     * @param signingKey {@link OpenPgpV4Fingerprint} of the signing key.
+     * @param encryptionKeys {@link Set} containing all {@link OpenPgpV4Fingerprint}s of keys which will
+     *                                  be able to decrypt the message.
      * @return encrypted {@link OpenPgpElement} which contains the encrypted, encoded message.
-     * @throws Exception
+     * @throws MissingOpenPgpKeyPairException if the OpenPGP key pair with the given {@link OpenPgpV4Fingerprint}
+     *                                        is not available.
+     * @throws MissingOpenPgpKeyPairException if any of the OpenPGP public keys whose {@link OpenPgpV4Fingerprint}
+     *                                        is listed in {@code encryptionKeys} is not available.
      */
-    OpenPgpElement signAndEncrypt(SigncryptElement element, Set<BareJid> recipients) throws Exception;
+    OpenPgpElement signAndEncrypt(SigncryptElement element,
+                                  OpenPgpV4Fingerprint signingKey,
+                                  Set<OpenPgpV4Fingerprint> encryptionKeys)
+            throws MissingOpenPgpKeyPairException, MissingOpenPgpPublicKeyException;
 
     /**
      * Decrypt an incoming {@link OpenPgpElement} which must contain a {@link SigncryptElement} and verify
@@ -53,110 +60,94 @@ public interface OpenPgpProvider {
      *
      * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
      * @param element {@link OpenPgpElement} which contains an encrypted and signed {@link SigncryptElement}.
-     * @param sender {@link BareJid} of the user which sent the message. This is also the user who signed the message.
+     * @param sendersKeys {@link Set} of the senders {@link OpenPgpV4Fingerprint}s.
+     *                               It is required, that one of those keys was used for signing the message.
      * @return decrypted {@link OpenPgpMessage} which contains the decrypted {@link SigncryptElement}.
-     * @throws Exception
+     * @throws MissingOpenPgpKeyPairException if we have no OpenPGP key pair to decrypt the message.
+     * @throws MissingOpenPgpPublicKeyException if we do not have the public OpenPGP key of the sender to
+     *                                          verify the signature on the message.
      */
-    OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception;
+    OpenPgpMessage decryptAndVerify(OpenPgpElement element, Set<OpenPgpV4Fingerprint> sendersKeys)
+            throws MissingOpenPgpKeyPairException, MissingOpenPgpPublicKeyException;
 
     /**
      * Sign a {@link SignElement} and pack it inside a {@link OpenPgpElement}.
      * The resulting {@link OpenPgpElement} contains the {@link SignElement} signed and base64 encoded.
-     *
+     * <br>
      * Note: DO NOT use this method in the context of instant messaging, as XEP-0374 forbids that.
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#exchange">XEP-0373 §3.1</a>
      * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
      * @param element {@link SignElement} which will be signed.
+     * @param singingKeyFingerprint {@link OpenPgpV4Fingerprint} of the key that is used for signing.
      * @return {@link OpenPgpElement} which contains the signed, Base64 encoded {@link SignElement}.
-     * @throws Exception
+     * @throws MissingOpenPgpKeyPairException if we don't have the key pair for the
+     *                                        {@link OpenPgpV4Fingerprint} available.
      */
-    OpenPgpElement sign(SignElement element) throws Exception;
+    OpenPgpElement sign(SignElement element, OpenPgpV4Fingerprint singingKeyFingerprint)
+            throws MissingOpenPgpKeyPairException;
 
     /**
      * Verify the signature on an incoming {@link OpenPgpElement} which must contain a {@link SignElement}.
-     *
+     * <br>
      * Note: DO NOT use this method in the context of instant messaging, as XEP-0374 forbids that.
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#exchange">XEP-0373 §3.1</a>
      * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
      * @param element incoming {@link OpenPgpElement} which must contain a signed {@link SignElement}.
-     * @param sender {@link BareJid} of the sender which also signed the message.
+     * @param singingKeyFingerprints {@link Set} of the senders key {@link OpenPgpV4Fingerprint}s.
+     *                                          It is required that one of those keys was used to sign
+     *                                          the message.
      * @return {@link OpenPgpMessage} which contains the decoded {@link SignElement}.
-     * @throws Exception
+     * @throws MissingOpenPgpPublicKeyException if we don't have the signers public key which signed
+     *                                          the message available.
      */
-    OpenPgpMessage verify(OpenPgpElement element, BareJid sender) throws Exception;
+    OpenPgpMessage verify(OpenPgpElement element, Set<OpenPgpV4Fingerprint> singingKeyFingerprints)
+            throws MissingOpenPgpPublicKeyException;
 
     /**
      * Encrypt a {@link CryptElement} and pack it inside a {@link OpenPgpElement}.
      * The resulting {@link OpenPgpElement} contains the encrypted and Base64 encoded {@link CryptElement}
      * which can be decrypted by all recipients, as well as by ourselves.
-     *
+     * <br>
      * Note: DO NOT use this method in the context of instant messaging, as XEP-0374 forbids that.
      *
      * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
      * @param element plaintext {@link CryptElement} which will be encrypted.
-     * @param recipients {@link Set} of {@link BareJid} of recipients, which will be able to decrypt the message.
+     * @param encryptionKeyFingerprints {@link Set} of {@link OpenPgpV4Fingerprint}s of the keys which
+     *                                  are used for encryption.
      * @return {@link OpenPgpElement} which contains the encrypted, Base64 encoded {@link CryptElement}.
-     * @throws Exception
+     * @throws MissingOpenPgpPublicKeyException if any of the OpenPGP public keys whose
+     *                                          {@link OpenPgpV4Fingerprint} is listed in {@code encryptionKeys}
+     *                                          is not available.
      */
-    OpenPgpElement encrypt(CryptElement element, Set<BareJid> recipients) throws Exception;
+    OpenPgpElement encrypt(CryptElement element, Set<OpenPgpV4Fingerprint> encryptionKeyFingerprints)
+            throws MissingOpenPgpPublicKeyException;
 
     /**
      * Decrypt an incoming {@link OpenPgpElement} which must contain a {@link CryptElement}.
      * The resulting {@link OpenPgpMessage} will contain the decrypted {@link CryptElement}.
-     *
+     * <br>
      * Note: DO NOT use this method in the context of instant messaging, as XEP-0374 forbids that.
      *
      * @see <a href="https://xmpp.org/extensions/xep-0374.html#openpgp-secured-im">XEP-0374 §2.1</a>
      * @param element {@link OpenPgpElement} which contains the encrypted {@link CryptElement}.
      * @return {@link OpenPgpMessage} which contains the decrypted {@link CryptElement}.
-     * @throws Exception
+     * @throws MissingOpenPgpKeyPairException if we don't have an OpenPGP key pair available that to decrypt
+     *                                        the message.
      */
-    OpenPgpMessage decrypt(OpenPgpElement element) throws Exception;
+    OpenPgpMessage decrypt(OpenPgpElement element)
+            throws MissingOpenPgpKeyPairException;
 
     /**
-     * Create a {@link PubkeyElement} which contains our exported OpenPGP public key.
-     * The element can for example be published.
+     * Create a fresh OpenPGP key pair with the {@link BareJid} of the user prefixed by "xmpp:" as user-id
+     * (example: {@code "xmpp:juliet@capulet.lit"}).
+     * Store the key pair in persistent storage and return the public keys {@link OpenPgpV4Fingerprint}.
      *
-     * @return {@link PubkeyElement} containing our public key.
-     * @throws CorruptedOpenPgpKeyException if our public key can for some reason not be serialized.
+     * @throws NoSuchAlgorithmException if a Hash algorithm is not available
+     * @throws NoSuchProviderException id no suitable cryptographic provider (for example BouncyCastleProvider)
+     *                                 is registered.
      */
-    PubkeyElement createPubkeyElement() throws CorruptedOpenPgpKeyException;
-
-    /**
-     * Process an incoming {@link PubkeyElement} of a contact or ourselves.
-     * That typically includes importing/updating the key.
-     *
-     * @param element {@link PubkeyElement} which presumably contains the public key of the {@code owner}.
-     * @param owner owner of the OpenPGP public key contained in the {@link PubkeyElement}.
-     * @throws CorruptedOpenPgpKeyException if the key found in the {@link PubkeyElement}
-     * can not be deserialized or imported.
-     */
-    void processPubkeyElement(PubkeyElement element, BareJid owner) throws CorruptedOpenPgpKeyException;
-
-    /**
-     * Process an incoming update to the OpenPGP metadata node.
-     * That typically includes fetching announced keys of which we don't have a local copy yet,
-     * as well as marking keys which are missing from the list as inactive.
-     *
-     * @param listElement {@link PublicKeysListElement} which contains a list of the keys of {@code owner}.
-     * @param owner {@link BareJid} of the owner of the announced public keys.
-     * @throws Exception
-     */
-    void processPublicKeysListElement(PublicKeysListElement listElement, BareJid owner) throws Exception;
-
-    /**
-     * Return the OpenPGP v4-fingerprint of our key in hexadecimal upper case.
-     *
-     * @return fingerprint
-     * @throws CorruptedOpenPgpKeyException if for some reason the fingerprint cannot be derived from the key pair.
-     */
-    String getFingerprint() throws CorruptedOpenPgpKeyException;
-
-    SecretkeyElement createSecretkeyElement(String password) throws CorruptedOpenPgpKeyException;
-
-    void restoreSecretKeyElement(SecretkeyElement secretkeyElement, String password) throws CorruptedOpenPgpKeyException;
-
-    void createAndUseKey() throws CorruptedOpenPgpKeyException, NoSuchAlgorithmException;
+    OpenPgpV4Fingerprint createOpenPgpKeyPair()
+            throws NoSuchAlgorithmException, NoSuchProviderException;
 }

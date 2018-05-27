@@ -23,6 +23,9 @@ import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 
 import org.xmlpull.v1.XmlPullParser;
 
+/**
+ * {@link ExtensionElementProvider} implementation for the {@link SecretkeyElement}.
+ */
 public class SecretkeyElementProvider extends ExtensionElementProvider<SecretkeyElement> {
 
     public static final SecretkeyElementProvider TEST_INSTANCE = new SecretkeyElementProvider();

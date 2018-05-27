@@ -21,12 +21,12 @@ import static junit.framework.TestCase.assertTrue;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PublicKeyType;
 import org.bouncycastle.openpgp.PGPSecretKey;
-import org.junit.Test;
+import org.junit.Ignore;
 import org.jxmpp.jid.impl.JidCreate;
 
 public class KeyGenerationTest {
 
-    @Test
+    @Ignore
     public void createSecretKey() throws Exception {
         PGPSecretKey secretKey = BouncyCastleOpenPgpProvider
                 .generateKey(JidCreate.bareFrom("alice@wonderland.lit"))

@@ -51,10 +51,10 @@ public class PublicKeysListElementTest extends SmackTestSuite {
         Date date2 = XmppDateTime.parseDate("1953-05-16T12:00:00.000+00:00");
         PublicKeysListElement.PubkeyMetadataElement child1 =
                 new PublicKeysListElement.PubkeyMetadataElement(
-                        "1357B01865B2503C18453D208CAC2A9678548E35", date1);
+                        new OpenPgpV4Fingerprint("1357B01865B2503C18453D208CAC2A9678548E35"), date1);
         PublicKeysListElement.PubkeyMetadataElement child2 =
                 new PublicKeysListElement.PubkeyMetadataElement(
-                        "67819B343B2AB70DED9320872C6464AF2A8E4C02", date2);
+                        new OpenPgpV4Fingerprint("67819B343B2AB70DED9320872C6464AF2A8E4C02"), date2);
 
         PublicKeysListElement element = PublicKeysListElement.builder()
                 .addMetadata(child1)
@@ -72,22 +72,16 @@ public class PublicKeysListElementTest extends SmackTestSuite {
     @Test
     public void listBuilderRefusesDuplicatesTest() {
         PublicKeysListElement.Builder builder = PublicKeysListElement.builder();
-        String fp40 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN";
+        String fp40 = "49545320414c4c2041424f555420444120484558";
         Date oneDate = new Date(12337883234L);
         Date otherDate = new Date(8888348384L);
 
         // Check if size of metadata is one after insert.
-        builder.addMetadata(new PublicKeysListElement.PubkeyMetadataElement(fp40, oneDate));
+        builder.addMetadata(new PublicKeysListElement.PubkeyMetadataElement(new OpenPgpV4Fingerprint(fp40), oneDate));
         assertEquals(builder.build().getMetadata().size(), 1);
 
         // Check if size is still one after inserting element with same fp.
-        builder.addMetadata(new PublicKeysListElement.PubkeyMetadataElement(fp40, otherDate));
+        builder.addMetadata(new PublicKeysListElement.PubkeyMetadataElement(new OpenPgpV4Fingerprint(fp40), otherDate));
         assertEquals(builder.build().getMetadata().size(), 1);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void metadataFingerprintLengthTest() {
-        PublicKeysListElement.PubkeyMetadataElement element =
-                new PublicKeysListElement.PubkeyMetadataElement("thisIsNotTheCorrectLength", new Date());
     }
 }

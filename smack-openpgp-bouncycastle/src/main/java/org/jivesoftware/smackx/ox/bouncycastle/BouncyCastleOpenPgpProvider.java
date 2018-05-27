@@ -16,22 +16,22 @@
  */
 package org.jivesoftware.smackx.ox.bouncycastle;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
-import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.OpenPgpMessage;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
+import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+import org.jivesoftware.smackx.ox.Util;
+import org.jivesoftware.smackx.ox.callback.SecretKeyRestoreSelectionCallback;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
@@ -40,49 +40,41 @@ import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
+import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
+import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PGPHashAlgorithms;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PGPSymmetricEncryptionAlgorithms;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PublicKeySize;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeyringConfigCallbacks;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.XmppKeySelectionStrategy;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.InMemoryKeyring;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.KeyringConfig;
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.KeyringConfigs;
-import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
-import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
-import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.bouncycastle.util.encoders.Hex;
-import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
 
 public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
 
-    private final BareJid ourJid;
-    private InMemoryKeyring ourKeys;
-    private Long ourKeyId;
-    private final Map<BareJid, InMemoryKeyring> theirKeys = new HashMap<>();
+    private static final Logger LOGGER = Logger.getLogger(BouncyCastleOpenPgpProvider.class.getName());
 
-    public BouncyCastleOpenPgpProvider(BareJid ourJid) throws IOException, PGPException, NoSuchAlgorithmException {
+    private final BareJid ourJid;
+    private OpenPgpV4Fingerprint primaryKeyPairFingerprint;
+    private InMemoryKeyring keyring;
+
+    private final Map<BareJid, Set<OpenPgpV4Fingerprint>> contactsFingerprints = new HashMap<>();
+
+    public BouncyCastleOpenPgpProvider(BareJid ourJid) {
         this.ourJid = ourJid;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public PubkeyElement createPubkeyElement() throws CorruptedOpenPgpKeyException {
+    public PubkeyElement createPubkeyElement(OpenPgpV4Fingerprint keyFingerprint)
+            throws MissingOpenPgpPublicKeyException, CorruptedOpenPgpKeyException {
+        // TODO: throw missing key exception
         try {
-            PGPPublicKey pubKey = ourKeys.getPublicKeyRings().getPublicKey(ourKeyId);
+            PGPPublicKey pubKey = keyring.getPublicKeyRings().getPublicKey(Util.keyIdFromFingerprint(keyFingerprint));
             PubkeyElement.PubkeyDataElement dataElement = new PubkeyElement.PubkeyDataElement(
                     Base64.encode(pubKey.getEncoded()));
             return new PubkeyElement(dataElement, new Date());
@@ -91,20 +83,29 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public SecretkeyElement createSecretkeyElement(String password) throws CorruptedOpenPgpKeyException {
+    public SecretkeyElement createSecretkeyElement(Set<OpenPgpV4Fingerprint> fingerprints, String password) throws MissingOpenPgpKeyPairException, CorruptedOpenPgpKeyException {
+        /*
         try {
             // Our unencrypted secret key
-            PGPSecretKey secretKey = ourKeys.getSecretKeyRings().getSecretKey(ourKeyId);
+            PGPSecretKey secretKey;
+            try {
+                secretKey = ourKeys.getSecretKeyRings().getSecretKey(ourKeyId);
+            } catch (NullPointerException e) {
+                throw new MissingOpenPgpKeyPairException(ourJid);
+            }
 
             PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
-                    .setProvider(BouncyGPG.getProvider())
+                    .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                     .build()
                     .get(HashAlgorithmTags.SHA1);
 
             PBESecretKeyEncryptor encryptor = new JcePBESecretKeyEncryptorBuilder(
                     PGPSymmetricEncryptionAlgorithms.AES_256.getAlgorithmId())
-                    .setProvider(BouncyGPG.getProvider())
+                    .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                     .build(password.toCharArray());
 
             PGPSecretKey encrypted = new PGPSecretKey(
@@ -121,10 +122,16 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         } catch (PGPException | IOException e) {
             throw new CorruptedOpenPgpKeyException(e);
         }
+        */
+        return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void processPubkeyElement(PubkeyElement element, BareJid owner) throws CorruptedOpenPgpKeyException {
+    public void storePublicKey(BareJid owner, OpenPgpV4Fingerprint fingerprint, PubkeyElement element) throws CorruptedOpenPgpKeyException {
+        /*
         byte[] decoded = Base64.decode(element.getDataElement().getB64Data());
 
         try {
@@ -138,21 +145,49 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         } catch (IOException | PGPException e) {
             throw new CorruptedOpenPgpKeyException(e);
         }
+        */
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void processPublicKeysListElement(PublicKeysListElement listElement, BareJid owner) throws Exception {
-
+    public void storePublicKeysList(XMPPConnection connection, PublicKeysListElement listElement, BareJid owner) {
+        /*
+        InMemoryKeyring contactsKeys = theirKeys.get(owner);
+        for (OpenPgpV4Fingerprint fingerprint : listElement.getMetadata().keySet()) {
+            byte[] asBytes = fingerprint.toString().getBytes(Charset.forName("UTF-8"));
+            try {
+                if (contactsKeys.getPublicKeyRings().getPublicKey(asBytes) == null) {
+                    try {
+                        PubkeyElement pubkey = PubSubDelegate.fetchPubkey(connection, owner, fingerprint);
+                        storePublicKey(pubkey, owner);
+                    } catch (PubSubException.NotAPubSubNodeException | PubSubException.NotALeafNodeException |
+                            XMPPException.XMPPErrorException e) {
+                        LOGGER.log(Level.WARNING, "Could not fetch public key " + fingerprint + " of " + owner + ".", e);
+                    } catch (CorruptedOpenPgpKeyException e) {
+                        LOGGER.log(Level.WARNING, "Key " + fingerprint + " of " + owner + " is corrupted and cannot be imported.", e);
+                    }
+                }
+            } catch (PGPException | IOException e) {
+                throw new CorruptedOpenPgpKeyException(e);
+            }
+        }
+        */
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void restoreSecretKeyElement(SecretkeyElement secretkeyElement, String password)
+    public void restoreSecretKeyBackup(SecretkeyElement secretkeyElement, String password, SecretKeyRestoreSelectionCallback callback)
             throws CorruptedOpenPgpKeyException {
+        /*
         byte[] encoded = Base64.decode(secretkeyElement.getB64Data());
 
         try {
             PGPDigestCalculatorProvider calculatorProvider = new JcaPGPDigestCalculatorProviderBuilder()
-                    .setProvider(BouncyGPG.getProvider())
+                    .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                     .build();
 
             InMemoryKeyring keyring = KeyringConfigs.forGpgExportedKeys(
@@ -187,12 +222,48 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         } catch (PGPException | IOException e) {
             throw new CorruptedOpenPgpKeyException(e);
         }
+        */
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OpenPgpV4Fingerprint primaryOpenPgpKeyPairFingerprint() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<OpenPgpV4Fingerprint> availableOpenPgpKeyPairFingerprints() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set<OpenPgpV4Fingerprint> announcedOpenPgpKeyFingerprints(BareJid contact) {
+        return null;
     }
 
     @Override
-    public OpenPgpElement signAndEncrypt(SigncryptElement element, Set<BareJid> recipients)
-            throws Exception {
-        if (recipients.isEmpty()) {
+    public Set<OpenPgpV4Fingerprint> availableOpenPgpKeysFingerprints(BareJid contact) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OpenPgpElement signAndEncrypt(SigncryptElement element,
+                                         OpenPgpV4Fingerprint signingKey,
+                                         Set<OpenPgpV4Fingerprint> encryptionKeys)
+            throws MissingOpenPgpKeyPairException, MissingOpenPgpPublicKeyException {
+        /*
+        if (encryptionKeys.isEmpty()) {
             throw new IllegalArgumentException("Set of recipients must not be empty");
         }
 
@@ -229,7 +300,7 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
                 .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
                 .withOxAlgorithms()
                 .toRecipients(recipientUIDs)
-                .andSignWith("xmpp:" + ourJid.toString())
+                .andSignWith(ourKeyId)
                 .binaryOutput()
                 .andWriteTo(encryptedOut);
 
@@ -239,114 +310,17 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         String base64 = Base64.encodeToString(encryptedOut.toByteArray());
 
         return new OpenPgpElement(base64);
-    }
-
-    @Override
-    public OpenPgpElement sign(SignElement element) throws Exception {
-
-        throw new SmackException.FeatureNotSupportedException("Feature not implemented for now.");
-        /*
-        InMemoryKeyring signingConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
-
-        // Add our secret keys to signing config
-        for (PGPSecretKeyRing s : ourKeys.getSecretKeyRings()) {
-            signingConfig.addSecretKey(s.getSecretKey().getEncoded());
-        }
-
-        InputStream inputStream = element.toInputStream();
-        // TODO: Implement
-
+        */
         return null;
-        */
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public OpenPgpMessage verify(OpenPgpElement element, BareJid sender) throws Exception {
-        // TODO: Implement
-        throw new SmackException.FeatureNotSupportedException("Feature not implemented for now.");
-    }
-
-    @Override
-    public OpenPgpMessage decrypt(OpenPgpElement element) throws Exception {
-        throw new SmackException.FeatureNotSupportedException("Feature not implemented for now.");
+    public OpenPgpMessage decryptAndVerify(OpenPgpElement element, Set<OpenPgpV4Fingerprint> possibleSigningKeys)
+            throws MissingOpenPgpPublicKeyException, MissingOpenPgpKeyPairException {
         /*
-        InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
-
-        // Add our secret keys to decryption config
-        for (PGPSecretKeyRing s : ourKeys.getSecretKeyRings()) {
-            decryptionConfig.addSecretKey(s.getSecretKey().getEncoded());
-        }
-
-        ByteArrayInputStream encryptedIn = new ByteArrayInputStream(
-                element.getEncryptedBase64MessageContent().getBytes(Charset.forName("UTF-8")));
-
-        InputStream decrypted = BouncyGPG.decryptAndVerifyStream()
-                .withConfig(decryptionConfig)
-                .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
-                .andIgnoreSignatures()
-                .fromEncryptedInputStream(encryptedIn);
-
-        ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();
-
-        Streams.pipeAll(decrypted, decryptedOut);
-
-        return new OpenPgpMessage(OpenPgpMessage.State.crypt, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
-        */
-    }
-
-    @Override
-    public OpenPgpElement encrypt(CryptElement element, Set<BareJid> recipients) throws Exception {
-        throw new SmackException.FeatureNotSupportedException("Feature not implemented for now.");
-        /*
-        if (recipients.isEmpty()) {
-            throw new IllegalArgumentException("Set of recipients must not be empty");
-        }
-
-        InMemoryKeyring encryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
-
-        // Add all recipients public keys to encryption config
-        for (BareJid recipient : recipients) {
-            KeyringConfig c = theirKeys.get(recipient);
-            for (PGPPublicKeyRing p : c.getPublicKeyRings()) {
-                encryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
-            }
-        }
-
-        // Add our public keys to encryption config
-        for (PGPPublicKeyRing p : ourKeys.getPublicKeyRings()) {
-            encryptionConfig.addPublicKey(p.getPublicKey().getEncoded());
-        }
-
-        String[] recipientUIDs = new String[recipients.size() + 1];
-        int pos = 0;
-        for (BareJid b : recipients) {
-            recipientUIDs[pos++] = "xmpp:" + b.toString();
-        }
-        recipientUIDs[pos] = "xmpp:" + ourJid.toString();
-
-        InputStream inputStream = element.toInputStream();
-        ByteArrayOutputStream encryptedOut = new ByteArrayOutputStream();
-
-        OutputStream encryptor = BouncyGPG.encryptToStream()
-                .withConfig(encryptionConfig)
-                .withKeySelectionStrategy(new XmppKeySelectionStrategy(new Date()))
-                .withOxAlgorithms()
-                .toRecipients(recipientUIDs)
-                .andDoNotSign()
-                .binaryOutput()
-                .andWriteTo(encryptedOut);
-
-        Streams.pipeAll(inputStream, encryptor);
-        encryptor.close();
-
-        String base64 = Base64.encodeToString(encryptedOut.toByteArray());
-
-        return new OpenPgpElement(base64);
-        */
-    }
-
-    @Override
-    public OpenPgpMessage decryptAndVerify(OpenPgpElement element, BareJid sender) throws Exception {
         InMemoryKeyring decryptionConfig = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
 
         // Add our secret keys to decryption config
@@ -374,33 +348,60 @@ public class BouncyCastleOpenPgpProvider implements OpenPgpProvider {
         Streams.pipeAll(decrypted, decryptedOut);
 
         return new OpenPgpMessage(OpenPgpMessage.State.signcrypt, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
+        */
+        return null;
     }
 
     @Override
-    public String getFingerprint() throws CorruptedOpenPgpKeyException {
-        try {
-            return new String(Hex.encode(ourKeys.getKeyFingerPrintCalculator()
-                    .calculateFingerprint(ourKeys.getPublicKeyRings().getPublicKey(ourKeyId)
-                            .getPublicKeyPacket())), Charset.forName("UTF-8")).toUpperCase();
-        } catch (IOException | PGPException e) {
-            throw new CorruptedOpenPgpKeyException(e);
-        }
+    public OpenPgpElement sign(SignElement element, OpenPgpV4Fingerprint singingKeyFingerprint)
+            throws MissingOpenPgpKeyPairException {
+        return null;
     }
 
     @Override
-    public void createAndUseKey() throws CorruptedOpenPgpKeyException, NoSuchAlgorithmException {
+    public OpenPgpMessage verify(OpenPgpElement element, Set<OpenPgpV4Fingerprint> singingKeyFingerprints)
+            throws MissingOpenPgpPublicKeyException {
+        return null;
+    }
+
+    @Override
+    public OpenPgpElement encrypt(CryptElement element, Set<OpenPgpV4Fingerprint> encryptionKeyFingerprints)
+            throws MissingOpenPgpPublicKeyException {
+        return null;
+    }
+
+    @Override
+    public OpenPgpMessage decrypt(OpenPgpElement element) throws MissingOpenPgpKeyPairException {
+        return null;
+    }
+
+    public static OpenPgpV4Fingerprint getFingerprint(PGPPublicKey publicKey) {
+        byte[] hex = Hex.encode(publicKey.getFingerprint());
+        return new OpenPgpV4Fingerprint(hex);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OpenPgpV4Fingerprint createOpenPgpKeyPair()
+            throws NoSuchAlgorithmException, NoSuchProviderException {
+        /*
         try {
             PGPSecretKeyRing ourKey = generateKey(ourJid).generateSecretKeyRing();
-            ourKeyId = ourKey.getPublicKey().getKeyID();
+            primaryKeyPairFingerprint = getFingerprint(ourKey.getPublicKey());
             ourKeys = KeyringConfigs.forGpgExportedKeys(KeyringConfigCallbacks.withUnprotectedKeys());
             ourKeys.addSecretKey(ourKey.getSecretKey().getEncoded());
             ourKeys.addPublicKey(ourKey.getPublicKey().getEncoded());
         } catch (PGPException | IOException e) {
             throw new CorruptedOpenPgpKeyException(e);
         }
+        */
+        return null;
     }
 
-    public static PGPKeyRingGenerator generateKey(BareJid owner) throws NoSuchAlgorithmException, PGPException {
+    public static PGPKeyRingGenerator generateKey(BareJid owner)
+            throws NoSuchAlgorithmException, PGPException, NoSuchProviderException {
         PGPKeyRingGenerator generator = BouncyGPG.createKeyPair()
                 .withRSAKeys()
                 .ofSize(PublicKeySize.RSA._2048)
