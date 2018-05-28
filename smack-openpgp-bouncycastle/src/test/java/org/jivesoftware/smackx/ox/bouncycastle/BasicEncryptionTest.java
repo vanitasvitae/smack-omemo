@@ -116,8 +116,8 @@ public class BasicEncryptionTest extends SmackTestSuite {
             throws IOException, PGPException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
         final String alice = "alice@wonderland.lit";
         final String bob = "bob@builder.tv";
-        PGPKeyRingGenerator g1 = BouncyCastleOpenPgpProvider.generateKey(JidCreate.bareFrom(alice));
-        PGPKeyRingGenerator g2 = BouncyCastleOpenPgpProvider.generateKey(JidCreate.bareFrom(bob));
+        PGPKeyRingGenerator g1 = BCOpenPgpProvider.generateKey(JidCreate.bareFrom(alice));
+        PGPKeyRingGenerator g2 = BCOpenPgpProvider.generateKey(JidCreate.bareFrom(bob));
         PGPSecretKey s1 = g1.generateSecretKeyRing().getSecretKey();
         PGPSecretKey s2 = g2.generateSecretKeyRing().getSecretKey();
         PGPPublicKey p1 = g1.generatePublicKeyRing().getPublicKey();

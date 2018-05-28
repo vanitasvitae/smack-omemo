@@ -16,13 +16,25 @@
  */
 package org.jivesoftware.smackx.ox.bouncycastle;
 
-import java.security.Security;
+import static junit.framework.TestCase.assertTrue;
+import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
 
+import java.security.Security;
+import java.util.Collections;
+
+import org.jivesoftware.smack.packet.ExtensionElement;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
+import org.jivesoftware.smackx.ox.OpenPgpMessage;
+import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
+import org.jivesoftware.smackx.ox.element.OpenPgpElement;
+import org.jivesoftware.smackx.ox.element.PubkeyElement;
+import org.jivesoftware.smackx.ox.element.SigncryptElement;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Ignore;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 
 public class BouncyCastleOpenPgpProviderTest extends SmackTestSuite {
@@ -34,18 +46,18 @@ public class BouncyCastleOpenPgpProviderTest extends SmackTestSuite {
         // Create providers for alice and the cat
         BareJid alice = JidCreate.bareFrom("alice@wonderland.lit");
         BareJid cheshire = JidCreate.bareFrom("cheshire@wonderland.lit");
-        BouncyCastleOpenPgpProvider aliceProvider = new BouncyCastleOpenPgpProvider(alice);
-        BouncyCastleOpenPgpProvider cheshireProvider = new BouncyCastleOpenPgpProvider(cheshire);
+        BCOpenPgpProvider aliceProvider = new BCOpenPgpProvider(alice);
+        BCOpenPgpProvider cheshireProvider = new BCOpenPgpProvider(cheshire);
 
-        aliceProvider.createAndUseKey();
-        cheshireProvider.createAndUseKey();
+        aliceProvider.createOpenPgpKeyPair();
+        cheshireProvider.createOpenPgpKeyPair();
 
         // dry exchange keys
-        /*
-        PubkeyElement aliceKeys = aliceProvider.createPubkeyElement();
-        PubkeyElement cheshireKeys = cheshireProvider.createPubkeyElement();
-        aliceProvider.storePublicKey(cheshireKeys, cheshire);
-        cheshireProvider.storePublicKey(aliceKeys, alice);
+
+        PubkeyElement aliceKeys = aliceProvider.createPubkeyElement(aliceProvider.primaryOpenPgpKeyPairFingerprint());
+        PubkeyElement cheshireKeys = cheshireProvider.createPubkeyElement(cheshireProvider.primaryOpenPgpKeyPairFingerprint());
+        aliceProvider.storePublicKey(cheshire, cheshireProvider.primaryOpenPgpKeyPairFingerprint(), cheshireKeys);
+        cheshireProvider.storePublicKey(alice, aliceProvider.primaryOpenPgpKeyPairFingerprint(), aliceKeys);
 
         // Create signed and encrypted message from alice to the cheshire cat
         SigncryptElement signcryptElement = new SigncryptElement(
@@ -54,14 +66,14 @@ public class BouncyCastleOpenPgpProviderTest extends SmackTestSuite {
                         new Message.Body("en", "How do you know I’m mad?")));
         OpenPgpElement encrypted = aliceProvider.signAndEncrypt(
                 signcryptElement,
-                Collections.singleton(cheshire));
+                aliceProvider.primaryOpenPgpKeyPairFingerprint(),
+                Collections.singleton(cheshireProvider.primaryOpenPgpKeyPairFingerprint()));
 
         // Decrypt the message as the cheshire cat
-        OpenPgpMessage decrypted = cheshireProvider.decryptAndVerify(encrypted, alice);
+        OpenPgpMessage decrypted = cheshireProvider.decryptAndVerify(encrypted, Collections.singleton(aliceProvider.primaryOpenPgpKeyPairFingerprint()));
         OpenPgpContentElement content = decrypted.getOpenPgpContentElement();
 
         assertTrue(content instanceof SigncryptElement);
         assertXMLEqual(signcryptElement.toXML(null).toString(), content.toXML(null).toString());
-        */
     }
 }

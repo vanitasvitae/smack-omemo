@@ -43,7 +43,7 @@ public class BouncyCastle_OpenPgpV4FingerprintTest extends SmackTestSuite {
         keyringJuliet.addPublicKey(TestKeys.JULIET_PUB.getBytes(UTF8));
         PGPPublicKey publicKey = keyringJuliet.getPublicKeyRings().iterator().next().getPublicKey();
 
-        OpenPgpV4Fingerprint fp = BouncyCastleOpenPgpProvider.getFingerprint(publicKey);
+        OpenPgpV4Fingerprint fp = BCOpenPgpProvider.getFingerprint(publicKey);
         assertEquals(publicKey.getKeyID(), Util.keyIdFromFingerprint(fp));
     }
 }

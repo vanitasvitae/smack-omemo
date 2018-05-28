@@ -16,8 +16,6 @@
  */
 package org.jivesoftware.smackx.ox;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.Set;
 
 import org.jivesoftware.smackx.ox.element.CryptElement;
@@ -26,8 +24,6 @@ import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
-
-import org.jxmpp.jid.BareJid;
 
 public interface OpenPgpProvider extends OpenPgpStore {
 
@@ -138,16 +134,4 @@ public interface OpenPgpProvider extends OpenPgpStore {
      */
     OpenPgpMessage decrypt(OpenPgpElement element)
             throws MissingOpenPgpKeyPairException;
-
-    /**
-     * Create a fresh OpenPGP key pair with the {@link BareJid} of the user prefixed by "xmpp:" as user-id
-     * (example: {@code "xmpp:juliet@capulet.lit"}).
-     * Store the key pair in persistent storage and return the public keys {@link OpenPgpV4Fingerprint}.
-     *
-     * @throws NoSuchAlgorithmException if a Hash algorithm is not available
-     * @throws NoSuchProviderException id no suitable cryptographic provider (for example BouncyCastleProvider)
-     *                                 is registered.
-     */
-    OpenPgpV4Fingerprint createOpenPgpKeyPair()
-            throws NoSuchAlgorithmException, NoSuchProviderException;
 }

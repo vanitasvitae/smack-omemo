@@ -1,8 +1,9 @@
 package org.jivesoftware.smackx.ox;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Set;
 
-import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smackx.ox.callback.SecretKeyRestoreSelectionCallback;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
@@ -41,7 +42,7 @@ public interface OpenPgpStore {
      * <br>
      * Note: Those are the keys announced in the latest received metadata update.
      * This returns a {@link Set} which might be different from the result of
-     * {@link #availableOpenPgpKeysFingerprints(BareJid)}.
+     * {@link #availableOpenPgpPublicKeysFingerprints(BareJid)}.
      * Messages should be encrypted to the intersection of both sets.
      *
      * @param contact contact.
@@ -54,13 +55,14 @@ public interface OpenPgpStore {
      * contact, which we have locally available.
      * <br>
      * Note: This returns a {@link Set} that might be different from the result of
-     * {@link #availableOpenPgpKeysFingerprints(BareJid)}.
+     * {@link #availableOpenPgpPublicKeysFingerprints(BareJid)}.
      * Messages should be encrypted to the intersection of both sets.
      *
      * @param contact contact.
      * @return list of contacts locally available public keys.
      */
-    Set<OpenPgpV4Fingerprint> availableOpenPgpKeysFingerprints(BareJid contact);
+    Set<OpenPgpV4Fingerprint> availableOpenPgpPublicKeysFingerprints(BareJid contact)
+            throws CorruptedOpenPgpKeyException;
 
     /**
      * Store incoming update to the OpenPGP metadata node in persistent storage.
@@ -68,12 +70,21 @@ public interface OpenPgpStore {
      * @param connection authenticated {@link XMPPConnection} of the user.
      * @param listElement {@link PublicKeysListElement} which contains a list of the keys of {@code owner}.
      * @param owner {@link BareJid} of the owner of the announced public keys.
-     * @throws CorruptedOpenPgpKeyException
-     * @throws InterruptedException
-     * @throws SmackException.NotConnectedException
-     * @throws SmackException.NoResponseException
      */
     void storePublicKeysList(XMPPConnection connection, PublicKeysListElement listElement, BareJid owner);
+
+    /**
+     * Create a fresh OpenPGP key pair with the {@link BareJid} of the user prefixed by "xmpp:" as user-id
+     * (example: {@code "xmpp:juliet@capulet.lit"}).
+     * Store the key pair in persistent storage and return the public keys {@link OpenPgpV4Fingerprint}.
+     *
+     * @throws NoSuchAlgorithmException if a Hash algorithm is not available
+     * @throws NoSuchProviderException id no suitable cryptographic provider (for example BouncyCastleProvider)
+     *                                 is registered.
+     * @throws CorruptedOpenPgpKeyException if the generated key cannot be added to the keyring for some reason.
+     */
+    OpenPgpV4Fingerprint createOpenPgpKeyPair()
+            throws NoSuchAlgorithmException, NoSuchProviderException, CorruptedOpenPgpKeyException;
 
     /**
      * Create a {@link PubkeyElement} which contains our exported OpenPGP public key.
