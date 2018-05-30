@@ -45,8 +45,8 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 /**
- * Abstract {@link ExtensionElementProvider} implementation for the also abstract
- * {@link OpenPgpContentElement}.
+ * Abstract {@link ExtensionElementProvider} implementation for the also abstract {@link OpenPgpContentElement}.
+ *
  * @param <O> Specialized subclass of {@link OpenPgpContentElement}.
  */
 public abstract class OpenPgpContentElementProvider<O extends OpenPgpContentElement> extends ExtensionElementProvider<O> {
@@ -64,12 +64,13 @@ public abstract class OpenPgpContentElementProvider<O extends OpenPgpContentElem
         try {
             switch (parser.getName()) {
                 case SigncryptElement.ELEMENT:
-                    return SigncryptElementProvider.TEST_INSTANCE.parse(parser);
+                    return SigncryptElementProvider.INSTANCE.parse(parser);
                 case SignElement.ELEMENT:
-                    return SignElementProvider.TEST_INSTANCE.parse(parser);
+                    return SignElementProvider.INSTANCE.parse(parser);
                 case CryptElement.ELEMENT:
-                    return CryptElementProvider.TEST_INSTANCE.parse(parser);
-                default: return null;
+                    return CryptElementProvider.INSTANCE.parse(parser);
+                default: throw new XmlPullParserException("Expected <crypt/>, <sign/> or <signcrypt/> element, " +
+                        "but got neither of them.");
             }
         } catch (Exception e) {
             throw new XmlPullParserException(e.getMessage());

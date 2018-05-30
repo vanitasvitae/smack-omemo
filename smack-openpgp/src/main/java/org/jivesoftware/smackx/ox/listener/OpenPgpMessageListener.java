@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox;
+package org.jivesoftware.smackx.ox.listener;
 
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
@@ -22,7 +22,7 @@ import org.jivesoftware.smackx.ox.element.SigncryptElement;
 
 import org.jxmpp.jid.BareJid;
 
-public interface OpenPgpMessageListener {
+interface OpenPgpMessageListener {
 
     /**
      * This method gets called whenever we received and successfully decrypted/verified an encrypted, signed message.

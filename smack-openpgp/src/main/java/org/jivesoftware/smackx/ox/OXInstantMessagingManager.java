@@ -16,24 +16,42 @@
  */
 package org.jivesoftware.smackx.ox;
 
-import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.Manager;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.packet.ExtensionElement;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
 
-public class OXInstantMessagingManager extends Manager {
+/**
+ * Entry point of Smacks API for XEP-0374: OpenPGP for XMPP: Instant Messaging.
+ *
+ * @see <a href="https://xmpp.org/extensions/xep-0374.html">
+ *     XEP-0374: OpenPGP for XMPP: Instant Messaging</a>
+ */
+public final class OXInstantMessagingManager extends Manager {
+
+    public static final String NAMESPACE_0 = "urn:xmpp:openpgp:im:0";
+
+    private static final Logger LOGGER = Logger.getLogger(OXInstantMessagingManager.class.getName());
 
     private static final Map<XMPPConnection, OXInstantMessagingManager> INSTANCES = new WeakHashMap<>();
     private final OpenPgpManager openPgpManager;
+    private final ChatManager chatManager;
 
     private OXInstantMessagingManager(XMPPConnection connection) {
         super(connection);
         this.openPgpManager = OpenPgpManager.getInstanceFor(connection);
+        this.chatManager = ChatManager.getInstanceFor(connection);
     }
 
     public static OXInstantMessagingManager getInstanceFor(XMPPConnection connection) {
@@ -45,7 +63,51 @@ public class OXInstantMessagingManager extends Manager {
         return manager;
     }
 
-    public void send(List<ExtensionElement> messageContent, BareJid recipient) {
+    /**
+     * Determine, whether a contact announces support for XEP-0374: OpenPGP for XMPP: Instant Messaging.
+     *
+     * @param jid {@link BareJid} of the contact in question.
+     * @return true if contact announces support, otherwise false.
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException.NotConnectedException
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
+     */
+    public boolean contactSupportsOxInstantMessaging(BareJid jid)
+            throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
+            SmackException.NoResponseException {
+        return ServiceDiscoveryManager.getInstanceFor(connection()).supportsFeature(jid, NAMESPACE_0);
+    }
+
+    /**
+     * Start an encrypted chat with {@code jid}.
+     * The chat is encrypted with OpenPGP for XMPP: Instant Messaging (XEP-0374).
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0374.html">XEP-0374: OpenPGP for XMPP: Instant Messaging</a>
+     * @param jid {@link BareJid} of the contact.
+     * @return {@link OpenPgpEncryptedChat} with the contact.
+     * @throws SmackOpenPgpException if something happens while gathering fingerprints.
+     * @throws InterruptedException
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException.NotConnectedException
+     * @throws SmackException.NoResponseException
+     * @throws SmackException.FeatureNotSupportedException if the contact does not announce support for XEP-0374.
+     */
+    public OpenPgpEncryptedChat chatWith(EntityBareJid jid)
+            throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException,
+            SmackException.FeatureNotSupportedException {
+        if (!contactSupportsOxInstantMessaging(jid)) {
+            throw new SmackException.FeatureNotSupportedException(NAMESPACE_0, jid);
+        }
+
+        OpenPgpFingerprints theirKeys = openPgpManager.determineContactsKeys(jid);
+        OpenPgpFingerprints ourKeys = openPgpManager.determineContactsKeys(connection().getUser().asBareJid());
+        Chat chat = chatManager.chatWith(jid);
+        return new OpenPgpEncryptedChat(openPgpManager.getOpenPgpProvider(), chat, ourKeys, theirKeys);
+    }
+
+    public void addOpenPgpEncryptedMessageListener() {
 
     }
 }

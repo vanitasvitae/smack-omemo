@@ -25,7 +25,7 @@ import org.xmlpull.v1.XmlPullParser;
  */
 public class SigncryptElementProvider extends OpenPgpContentElementProvider<SigncryptElement> {
 
-    public static final SigncryptElementProvider TEST_INSTANCE = new SigncryptElementProvider();
+    public static final SigncryptElementProvider INSTANCE = new SigncryptElementProvider();
 
     @Override
     public SigncryptElement parse(XmlPullParser parser, int initialDepth) throws Exception {

@@ -104,7 +104,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertXMLEqual(expected, element.toXML(null).toString());
 
         XmlPullParser parser = TestUtils.getParser(expected);
-        SignElement parsed = SignElementProvider.TEST_INSTANCE.parse(parser);
+        SignElement parsed = SignElementProvider.INSTANCE.parse(parser);
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
@@ -134,7 +134,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertXMLEqual(expected, element.toXML(null).toString());
 
         XmlPullParser parser = TestUtils.getParser(expected);
-        CryptElement parsed = CryptElementProvider.TEST_INSTANCE.parse(parser);
+        CryptElement parsed = CryptElementProvider.INSTANCE.parse(parser);
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
@@ -164,7 +164,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertXMLEqual(expected, element.toXML(null).toString());
 
         XmlPullParser parser = TestUtils.getParser(expected);
-        SigncryptElement parsed = SigncryptElementProvider.TEST_INSTANCE.parse(parser);
+        SigncryptElement parsed = SigncryptElementProvider.INSTANCE.parse(parser);
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());

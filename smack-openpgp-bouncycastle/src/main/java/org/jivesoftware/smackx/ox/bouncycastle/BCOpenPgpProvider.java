@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright 2018 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.ox.bouncycastle;
 
 import java.io.ByteArrayInputStream;
@@ -24,10 +40,10 @@ import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
-import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
+import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.BouncyGPG;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PublicKeySize;
@@ -38,19 +54,16 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class BCOpenPgpProvider implements OpenPgpProvider {
 
     private final BareJid user;
-    private OpenPgpV4Fingerprint primaryKeyPair;
 
     private BCOpenPgpStore store;
 
 
     public BCOpenPgpProvider(BareJid user) {
         this.user = user;
-        this.primaryKeyPair = null;
     }
 
     public void setStore(BCOpenPgpStore store) {
@@ -59,7 +72,7 @@ public class BCOpenPgpProvider implements OpenPgpProvider {
 
     @Override
     public OpenPgpV4Fingerprint primaryOpenPgpKeyPairFingerprint() {
-        return primaryKeyPair;
+        return store.primaryOpenPgpKeyPairFingerprint();
     }
 
     @Override
@@ -141,35 +154,36 @@ public class BCOpenPgpProvider implements OpenPgpProvider {
     @Override
     public OpenPgpElement sign(SignElement element, OpenPgpV4Fingerprint singingKeyFingerprint)
             throws MissingOpenPgpKeyPairException {
-        throw new NotImplementedException();
+        throw new AssertionError("Feature not implemented!");
     }
 
     @Override
     public OpenPgpMessage verify(OpenPgpElement element, Set<OpenPgpV4Fingerprint> singingKeyFingerprints)
             throws MissingOpenPgpPublicKeyException {
-        throw new NotImplementedException();
+        throw new AssertionError("Feature not implemented!");
     }
 
     @Override
     public OpenPgpElement encrypt(CryptElement element, Set<OpenPgpV4Fingerprint> encryptionKeyFingerprints)
             throws MissingOpenPgpPublicKeyException {
-        throw new NotImplementedException();
+        throw new AssertionError("Feature not implemented!");
     }
 
     @Override
-    public OpenPgpMessage decrypt(OpenPgpElement element) throws MissingOpenPgpKeyPairException {
-        throw new NotImplementedException();
+    public OpenPgpMessage decrypt(OpenPgpElement element)
+            throws MissingOpenPgpKeyPairException {
+        throw new AssertionError("Feature not implemented!");
     }
 
     @Override
     public PubkeyElement createPubkeyElement(OpenPgpV4Fingerprint fingerprint)
-            throws MissingOpenPgpPublicKeyException, CorruptedOpenPgpKeyException {
+            throws MissingOpenPgpPublicKeyException, SmackOpenPgpException {
         return store.createPubkeyElement(fingerprint);
     }
 
     @Override
     public void storePublicKey(BareJid owner, OpenPgpV4Fingerprint fingerprint, PubkeyElement element)
-            throws CorruptedOpenPgpKeyException {
+            throws SmackOpenPgpException {
         store.storePublicKey(owner, fingerprint, element);
     }
 
@@ -180,25 +194,25 @@ public class BCOpenPgpProvider implements OpenPgpProvider {
 
     @Override
     public OpenPgpV4Fingerprint createOpenPgpKeyPair()
-            throws NoSuchAlgorithmException, NoSuchProviderException, CorruptedOpenPgpKeyException {
+            throws NoSuchAlgorithmException, NoSuchProviderException, SmackOpenPgpException {
         return store.createOpenPgpKeyPair();
     }
 
     @Override
     public SecretkeyElement createSecretkeyElement(Set<OpenPgpV4Fingerprint> fingerprints, String password)
-            throws MissingOpenPgpKeyPairException, CorruptedOpenPgpKeyException {
+            throws MissingOpenPgpKeyPairException, SmackOpenPgpException {
         return store.createSecretkeyElement(fingerprints, password);
     }
 
     @Override
     public Set<OpenPgpV4Fingerprint> availableOpenPgpPublicKeysFingerprints(BareJid contact)
-            throws CorruptedOpenPgpKeyException {
+            throws SmackOpenPgpException {
         return store.availableOpenPgpPublicKeysFingerprints(contact);
     }
 
     @Override
     public void restoreSecretKeyBackup(SecretkeyElement secretkeyElement, String password, SecretKeyRestoreSelectionCallback callback)
-            throws CorruptedOpenPgpKeyException, InvalidBackupCodeException {
+            throws SmackOpenPgpException, InvalidBackupCodeException {
         store.restoreSecretKeyBackup(secretkeyElement, password, callback);
     }
 

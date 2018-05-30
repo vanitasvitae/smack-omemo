@@ -28,7 +28,6 @@ import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
-import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 import org.jivesoftware.smackx.pubsub.AccessModel;
 import org.jivesoftware.smackx.pubsub.ConfigureForm;
 import org.jivesoftware.smackx.pubsub.Item;
@@ -91,8 +90,6 @@ public class PubSubDelegate {
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#annoucning-pubkey">XEP-0373 §4.1</a>
      *
-     * @throws CorruptedOpenPgpKeyException if our OpenPGP key is corrupted and for that reason cannot
-     * be serialized.
      * @throws InterruptedException
      * @throws PubSubException.NotALeafNodeException
      * @throws XMPPException.XMPPErrorException
@@ -100,7 +97,7 @@ public class PubSubDelegate {
      * @throws SmackException.NoResponseException
      */
     public static void publishPublicKey(XMPPConnection connection, PubkeyElement pubkeyElement, OpenPgpV4Fingerprint fingerprint)
-            throws CorruptedOpenPgpKeyException, InterruptedException, PubSubException.NotALeafNodeException,
+            throws InterruptedException, PubSubException.NotALeafNodeException,
             XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
 
         String keyNodeName = PEP_NODE_PUBLIC_KEY(fingerprint);

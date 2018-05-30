@@ -29,7 +29,7 @@ import org.xmlpull.v1.XmlPullParser;
 public class SignElementProvider extends OpenPgpContentElementProvider<SignElement> {
 
     private static final Logger LOGGER = Logger.getLogger(SigncryptElementProvider.class.getName());
-    public static final SignElementProvider TEST_INSTANCE = new SignElementProvider();
+    public static final SignElementProvider INSTANCE = new SignElementProvider();
 
     @Override
     public SignElement parse(XmlPullParser parser, int initialDepth) throws Exception {

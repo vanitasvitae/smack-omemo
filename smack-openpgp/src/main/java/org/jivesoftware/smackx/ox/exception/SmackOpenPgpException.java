@@ -16,15 +16,15 @@
  */
 package org.jivesoftware.smackx.ox.exception;
 
-public class CorruptedOpenPgpKeyException extends Exception {
+public class SmackOpenPgpException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
-    public CorruptedOpenPgpKeyException() {
-        super();
+    public SmackOpenPgpException(Throwable cause) {
+        super(cause);
     }
 
-    public CorruptedOpenPgpKeyException(Exception cause) {
-        super(cause);
+    public SmackOpenPgpException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

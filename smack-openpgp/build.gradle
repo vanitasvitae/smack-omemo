@@ -6,6 +6,7 @@ Smack API for XEP-0373: OpenPGP for XMPP."""
 dependencies {
 	compile project(':smack-core')
 	compile project(':smack-extensions')
+	compile project(':smack-experimental')
 	testCompile project(path: ":smack-core", configuration: "testRuntime")
 	testCompile project(path: ":smack-core", configuration: "archives")
 }

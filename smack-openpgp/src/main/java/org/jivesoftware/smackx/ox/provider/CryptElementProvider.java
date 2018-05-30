@@ -25,7 +25,7 @@ import org.xmlpull.v1.XmlPullParser;
  */
 public class CryptElementProvider extends OpenPgpContentElementProvider<CryptElement> {
 
-    public static final CryptElementProvider TEST_INSTANCE = new CryptElementProvider();
+    public static final CryptElementProvider INSTANCE = new CryptElementProvider();
 
     @Override
     public CryptElement parse(XmlPullParser parser, int initialDepth)

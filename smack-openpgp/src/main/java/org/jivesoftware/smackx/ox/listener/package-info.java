@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2015 Florian Schmaus
+ * Copyright 2017 Florian Schmaus.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
- * Smacks implementation of XEP-0199: XMPP Ping.
+ * Listeners for XEP-0373: OpenPGP for XMPP.
  */
-package org.jivesoftware.smackx.ping;
+package org.jivesoftware.smackx.ox.listener;

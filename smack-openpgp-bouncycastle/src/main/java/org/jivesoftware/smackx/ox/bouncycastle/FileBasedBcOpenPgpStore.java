@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright 2018 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.ox.bouncycastle;
 
 import java.io.BufferedOutputStream;
@@ -31,10 +47,10 @@ import org.jivesoftware.smackx.ox.callback.SecretKeyRestoreSelectionCallback;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
-import org.jivesoftware.smackx.ox.exception.CorruptedOpenPgpKeyException;
 import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
+import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PGPHashAlgorithms;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.algorithms.PGPSymmetricEncryptionAlgorithms;
@@ -156,7 +172,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
 
     @Override
     public Set<OpenPgpV4Fingerprint> availableOpenPgpPublicKeysFingerprints(BareJid contact)
-            throws CorruptedOpenPgpKeyException {
+            throws SmackOpenPgpException {
         Set<OpenPgpV4Fingerprint> availableKeys = new HashSet<>();
         try {
             Iterator<PGPPublicKeyRing> ringIterator = keyringConfig.getPublicKeyRings().getKeyRings("xmpp:" + contact.toString());
@@ -171,7 +187,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
                 }
             }
         } catch (PGPException | IOException e) {
-            throw new CorruptedOpenPgpKeyException(e);
+            throw new SmackOpenPgpException(e);
         }
         return availableKeys;
     }
@@ -208,7 +224,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
 
     @Override
     public PubkeyElement createPubkeyElement(OpenPgpV4Fingerprint fingerprint)
-            throws MissingOpenPgpPublicKeyException, CorruptedOpenPgpKeyException {
+            throws MissingOpenPgpPublicKeyException, SmackOpenPgpException {
         try {
             PGPPublicKey publicKey = keyringConfig.getPublicKeyRings().getPublicKey(Util.keyIdFromFingerprint(fingerprint));
             if (publicKey == null) {
@@ -217,19 +233,19 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
             byte[] base64 = Base64.encode(publicKey.getEncoded());
             return new PubkeyElement(new PubkeyElement.PubkeyDataElement(base64), new Date());
         } catch (PGPException | IOException e) {
-            throw new CorruptedOpenPgpKeyException(e);
+            throw new SmackOpenPgpException(e);
         }
     }
 
     @Override
     public void storePublicKey(BareJid owner, OpenPgpV4Fingerprint fingerprint, PubkeyElement element)
-            throws CorruptedOpenPgpKeyException {
+            throws SmackOpenPgpException {
         byte[] base64decoded = Base64.decode(element.getDataElement().getB64Data());
         try {
             keyringConfig.addPublicKey(base64decoded);
             writePublicKeysToFile(keyringConfig, publicKeyringPath());
         } catch (PGPException | IOException e) {
-            throw new CorruptedOpenPgpKeyException(e);
+            throw new SmackOpenPgpException(e);
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARNING, "Public Key with ID " + fingerprint.toString() + " of " +
                     owner + " is already in memory. Skip.");
@@ -238,7 +254,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
 
     @Override
     public SecretkeyElement createSecretkeyElement(Set<OpenPgpV4Fingerprint> fingerprints, String password)
-            throws MissingOpenPgpKeyPairException, CorruptedOpenPgpKeyException {
+            throws MissingOpenPgpKeyPairException, SmackOpenPgpException {
 
         PGPDigestCalculator calculator;
         try {
@@ -281,13 +297,13 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
             return new SecretkeyElement(Base64.encode(buffer.toByteArray()));
 
         } catch (PGPException | IOException e) {
-            throw new CorruptedOpenPgpKeyException(e);
+            throw new SmackOpenPgpException(e);
         }
     }
 
     @Override
     public void restoreSecretKeyBackup(SecretkeyElement secretkeyElement, String password, SecretKeyRestoreSelectionCallback callback)
-            throws CorruptedOpenPgpKeyException, InvalidBackupCodeException {
+            throws SmackOpenPgpException, InvalidBackupCodeException {
         byte[] base64Decoded = Base64.decode(secretkeyElement.getB64Data());
 
         try {
@@ -332,13 +348,13 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
                 writePrivateKeysToFile(keyringConfig, secretKeyringPath());
             }
         } catch (PGPException | IOException e) {
-            throw new CorruptedOpenPgpKeyException(e);
+            throw new SmackOpenPgpException(e);
         }
     }
 
     @Override
     public OpenPgpV4Fingerprint createOpenPgpKeyPair()
-            throws NoSuchAlgorithmException, NoSuchProviderException, CorruptedOpenPgpKeyException {
+            throws NoSuchAlgorithmException, NoSuchProviderException, SmackOpenPgpException {
         try {
             PGPSecretKeyRing ourKey = BCOpenPgpProvider.generateKey(user).generateSecretKeyRing();
             keyringConfig.addSecretKey(ourKey.getSecretKey().getEncoded());
@@ -346,7 +362,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
             primaryKeyFingerprint = BCOpenPgpProvider.getFingerprint(ourKey.getPublicKey());
             return primaryKeyFingerprint;
         } catch (PGPException | IOException e) {
-            throw new CorruptedOpenPgpKeyException(e);
+            throw new SmackOpenPgpException(e);
         }
     }
 
@@ -359,7 +375,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
     }
 
     private File contactsPath() {
-        return new File(basePath, "users");
+        return new File(basePath, user.toString() + "/users");
     }
 
     private File contactsPath(BareJid contact) {

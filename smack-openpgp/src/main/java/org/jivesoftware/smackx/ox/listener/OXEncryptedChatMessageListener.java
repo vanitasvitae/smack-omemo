@@ -14,13 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.bouncycastle;
+package org.jivesoftware.smackx.ox.listener;
 
-import org.jivesoftware.smackx.ox.OpenPgpStore;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smackx.ox.OpenPgpEncryptedChat;
+import org.jivesoftware.smackx.ox.element.SigncryptElement;
 
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.KeyringConfig;
+import org.jxmpp.jid.EntityBareJid;
 
-public interface BCOpenPgpStore extends OpenPgpStore {
+public interface OXEncryptedChatMessageListener {
 
-    KeyringConfig getKeyringConfig();
+    void newIncomingEncryptedMessage(EntityBareJid from,
+                                     Message originalMessage,
+                                     SigncryptElement decryptedPayload,
+                                     OpenPgpEncryptedChat chat);
 }

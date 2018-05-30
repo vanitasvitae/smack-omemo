@@ -18,18 +18,32 @@ package org.jivesoftware.smackx.ox;
 
 import java.io.IOException;
 
+import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
+import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.provider.OpenPgpContentElementProvider;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+/**
+ * This class embodies a decrypted {@link OpenPgpElement}.
+ */
 public class OpenPgpMessage {
 
     public enum State {
+        /**
+         * Represents a {@link SigncryptElement}.
+         */
         signcrypt,
+        /**
+         * Represents a {@link SignElement}.
+         */
         sign,
+        /**
+         * Represents a {@link CryptElement}.
+         */
         crypt,
         ;
     }
@@ -39,11 +53,26 @@ public class OpenPgpMessage {
 
     private OpenPgpContentElement openPgpContentElement;
 
+    /**
+     * Constructor.
+     *
+     * @param state state of the content element.
+     * @param content XML representation of the decrypted {@link OpenPgpContentElement}.
+     */
     public OpenPgpMessage(State state, String content) {
         this.state = state;
         this.element = content;
     }
 
+    /**
+     * Return the decrypted {@link OpenPgpContentElement} of this message.
+     * To determine, whether the element is a {@link SignElement}, {@link CryptElement} or {@link SigncryptElement},
+     * please consult {@link #getState()}.
+     *
+     * @return {@link OpenPgpContentElement}
+     * @throws XmlPullParserException if the parser encounters an error.
+     * @throws IOException if the parser encounters an error.
+     */
     public OpenPgpContentElement getOpenPgpContentElement() throws XmlPullParserException, IOException {
         ensureOpenPgpContentElementSet();
 
@@ -59,15 +88,27 @@ public class OpenPgpMessage {
             return;
         }
 
+        // Determine the state of the content element.
         if (openPgpContentElement instanceof SigncryptElement) {
             state = State.signcrypt;
         } else if (openPgpContentElement instanceof SignElement) {
             state = State.sign;
-        } else {
+        } else if (openPgpContentElement instanceof CryptElement) {
             state = State.crypt;
+        } else {
+            throw new AssertionError("OpenPgpContentElement is neither a SignElement, " +
+                    "CryptElement nor a SignCryptElement.");
         }
     }
 
+    /**
+     * Return the state of the message. This value determines, whether the message was a {@link SignElement},
+     * {@link CryptElement} or {@link SigncryptElement}.
+     *
+     * @return state of the content element.
+     * @throws IOException if the parser encounters an error.
+     * @throws XmlPullParserException if the parser encounters and error.
+     */
     public State getState() throws IOException, XmlPullParserException {
         ensureOpenPgpContentElementSet();
         return state;
