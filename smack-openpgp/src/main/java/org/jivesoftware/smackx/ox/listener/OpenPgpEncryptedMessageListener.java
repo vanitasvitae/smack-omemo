@@ -22,7 +22,7 @@ import org.jivesoftware.smackx.ox.element.SigncryptElement;
 
 import org.jxmpp.jid.EntityBareJid;
 
-public interface OXEncryptedChatMessageListener {
+public interface OpenPgpEncryptedMessageListener {
 
     void newIncomingEncryptedMessage(EntityBareJid from,
                                      Message originalMessage,

@@ -108,7 +108,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
-        assertEquals(element.getPayload(), parsed.getPayload());
+        assertEquals(element.getExtensions(), parsed.getExtensions());
     }
 
     @Test
@@ -138,7 +138,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
-        assertEquals(element.getPayload(), parsed.getPayload());
+        assertEquals(element.getExtensions(), parsed.getExtensions());
     }
 
     @Test
@@ -168,7 +168,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
-        assertEquals(element.getPayload(), parsed.getPayload());
+        assertEquals(element.getExtensions(), parsed.getExtensions());
     }
 
 

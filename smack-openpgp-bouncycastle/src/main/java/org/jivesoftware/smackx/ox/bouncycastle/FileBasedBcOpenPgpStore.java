@@ -127,7 +127,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
                 }
             }
         } catch (IOException | PGPException e) {
-            LOGGER.log(Level.SEVERE, "Error going through available key pair.", e);
+            LOGGER.log(Level.SEVERE, "Error going through available key pairs.", e);
         }
         return availableKeyPairs;
     }
