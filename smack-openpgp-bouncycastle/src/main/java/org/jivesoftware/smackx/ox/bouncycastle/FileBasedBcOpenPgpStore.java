@@ -346,6 +346,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
                 }
                 primaryKeyFingerprint = selectedKey;
                 writePrivateKeysToFile(keyringConfig, secretKeyringPath());
+                writePublicKeysToFile(keyring, publicKeyringPath());
             }
         } catch (PGPException | IOException e) {
             throw new SmackOpenPgpException(e);
@@ -359,6 +360,8 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
             PGPSecretKeyRing ourKey = BCOpenPgpProvider.generateKey(user).generateSecretKeyRing();
             keyringConfig.addSecretKey(ourKey.getSecretKey().getEncoded());
             keyringConfig.addPublicKey(ourKey.getPublicKey().getEncoded());
+            writePrivateKeysToFile(keyringConfig, secretKeyringPath());
+            writePublicKeysToFile(keyringConfig, publicKeyringPath());
             primaryKeyFingerprint = BCOpenPgpProvider.getFingerprint(ourKey.getPublicKey());
             return primaryKeyFingerprint;
         } catch (PGPException | IOException e) {
@@ -456,7 +459,8 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
             BufferedOutputStream bufferedStream = new BufferedOutputStream(outputStream);
 
             bufferedStream.write(bytes);
-            outputStream.close();
+            bufferedStream.flush();
+            bufferedStream.close();
         } catch (IOException e) {
             if (outputStream != null) {
                 outputStream.close();

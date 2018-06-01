@@ -143,10 +143,7 @@ public class BCOpenPgpProvider implements OpenPgpProvider {
             Streams.pipeAll(decrypted, decryptedOut);
 
             return new OpenPgpMessage(OpenPgpMessage.State.signcrypt, new String(decryptedOut.toByteArray(), Charset.forName("UTF-8")));
-        } catch (IOException e) {
-            // TODO: Hm...
-            return null;
-        } catch (NoSuchProviderException e) {
+        } catch (IOException | NoSuchProviderException e) {
             throw new AssertionError(e);
         }
     }

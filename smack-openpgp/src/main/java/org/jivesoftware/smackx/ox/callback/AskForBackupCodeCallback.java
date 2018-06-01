@@ -17,5 +17,15 @@
 package org.jivesoftware.smackx.ox.callback;
 
 public interface AskForBackupCodeCallback {
+
+    /**
+     * This callback is used to ask the user to provide a backup code.
+     * The backup code must follow the format described in XEP-0373 §5.3
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#sect-idm139662753819792">
+     *     XEP-0373 §5.3 about the format of the backup code</a>
+     *
+     * @return backup code provided by the user.
+     */
     String askForBackupCode();
 }

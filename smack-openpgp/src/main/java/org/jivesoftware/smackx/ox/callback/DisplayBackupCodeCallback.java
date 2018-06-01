@@ -17,5 +17,16 @@
 package org.jivesoftware.smackx.ox.callback;
 
 public interface DisplayBackupCodeCallback {
+
+    /**
+     * This method is used to provide a client access to the generated backup code.
+     * The client can then go ahead and display the code to the user.
+     * The backup code follows the format described in XEP-0373 §5.3
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#sect-idm139662753819792">
+     *     XEP-0373 §5.3 about the format of the backup code</a>
+     *
+     *  @param backupCode
+     */
     void displayBackupCode(String backupCode);
 }

@@ -79,6 +79,11 @@ public final class OXInstantMessagingManager extends Manager {
         return manager;
     }
 
+    public void announceSupportForOxInstantMessaging() {
+        ServiceDiscoveryManager.getInstanceFor(connection())
+                .addFeature(NAMESPACE_0);
+    }
+
     /**
      * Determine, whether a contact announces support for XEP-0374: OpenPGP for XMPP: Instant Messaging.
      *

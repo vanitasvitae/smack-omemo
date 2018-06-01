@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
@@ -54,7 +55,7 @@ public class OpenPgpEncryptedChat {
     }
 
     public void send(Message message, List<ExtensionElement> payload)
-            throws MissingOpenPgpKeyPairException {
+            throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException {
         Set<OpenPgpV4Fingerprint> encryptionFingerprints = new HashSet<>(contactsFingerprints.getActiveKeys());
         encryptionFingerprints.addAll(ourFingerprints.getActiveKeys());
 
@@ -81,10 +82,12 @@ public class OpenPgpEncryptedChat {
                 ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.openpgpV0));
         StoreHint.set(message);
         message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
+
+        chat.send(message);
     }
 
     public void send(Message message, CharSequence body)
-            throws MissingOpenPgpKeyPairException {
+            throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException {
         List<ExtensionElement> payload = new ArrayList<>();
         payload.add(new Message.Body(null, body.toString()));
         send(message, payload);
