@@ -18,6 +18,8 @@ package org.jivesoftware.smackx.ox;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 
 import org.jivesoftware.smack.XMPPConnection;
@@ -53,18 +55,18 @@ public interface OpenPgpStore {
     Set<OpenPgpV4Fingerprint> availableOpenPgpKeyPairFingerprints();
 
     /**
-     * Return a {@link Set} containing the {@link OpenPgpV4Fingerprint}s of all currently announced OpenPGP
-     * public keys of a contact.
+     * Return a {@link Map} containing the {@link OpenPgpV4Fingerprint}s of all currently announced OpenPGP
+     * public keys of a contact along with the dates of their latest update.
      * <br>
      * Note: Those are the keys announced in the latest received metadata update.
-     * This returns a {@link Set} which might be different from the result of
+     * This returns a {@link Map} which might contain different {@link OpenPgpV4Fingerprint}s than the result of
      * {@link #availableOpenPgpPublicKeysFingerprints(BareJid)}.
      * Messages should be encrypted to the intersection of both sets.
      *
      * @param contact contact.
-     * @return list of contacts last announced public keys.
+     * @return map of contacts last announced public keys and their update dates.
      */
-    Set<OpenPgpV4Fingerprint> announcedOpenPgpKeyFingerprints(BareJid contact);
+    Map<OpenPgpV4Fingerprint, Date> announcedOpenPgpKeyFingerprints(BareJid contact);
 
     /**
      * Return a {@link Set} containing the {@link OpenPgpV4Fingerprint}s of all OpenPGP public keys of a
@@ -95,6 +97,7 @@ public interface OpenPgpStore {
      * (example: {@code "xmpp:juliet@capulet.lit"}).
      * Store the key pair in persistent storage and return the public keys {@link OpenPgpV4Fingerprint}.
      *
+     * @return {@link OpenPgpV4Fingerprint} of the generated key pair.
      * @throws NoSuchAlgorithmException if a Hash algorithm is not available
      * @throws NoSuchProviderException id no suitable cryptographic provider (for example BouncyCastleProvider)
      *                                 is registered.
@@ -121,11 +124,21 @@ public interface OpenPgpStore {
      * @param owner owner of the OpenPGP public key contained in the {@link PubkeyElement}.
      * @param fingerprint {@link OpenPgpV4Fingerprint} of the key.
      * @param element {@link PubkeyElement} which presumably contains the public key of the {@code owner}.
+     * @param currentMetadataDate {@link Date} which is currently found in the metadata node for this key.
      * @throws SmackOpenPgpException if the key found in the {@link PubkeyElement}
      * can not be deserialized or imported.
      */
-    void storePublicKey(BareJid owner, OpenPgpV4Fingerprint fingerprint, PubkeyElement element)
+    void storePublicKey(BareJid owner, OpenPgpV4Fingerprint fingerprint, PubkeyElement element, Date currentMetadataDate)
             throws SmackOpenPgpException;
+
+    /**
+     * Return the {@link Date} of the last time on which the key has been fetched from PubSub.
+     *
+     * @param owner owner of the key
+     * @param fingerprint fingerprint of the key.
+     * @return {@link Date} or {@code null} if no record found.
+     */
+    Date getPubkeysLatestUpdateDate(BareJid owner, OpenPgpV4Fingerprint fingerprint);
 
     /**
      * Create an encrypted backup of our secret keys.

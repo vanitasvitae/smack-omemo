@@ -23,13 +23,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +77,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBu
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.util.XmppDateTime;
 
 public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
 
@@ -133,8 +137,8 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
     }
 
     @Override
-    public Set<OpenPgpV4Fingerprint> announcedOpenPgpKeyFingerprints(BareJid contact) {
-        Set<OpenPgpV4Fingerprint> announcedKeys = new HashSet<>();
+    public Map<OpenPgpV4Fingerprint, Date> announcedOpenPgpKeyFingerprints(BareJid contact) {
+        Map<OpenPgpV4Fingerprint, Date> announcedKeys = new HashMap<>();
         File listPath = contactsList(contact);
         if (listPath.exists() && listPath.isFile()) {
             BufferedReader reader = null;
@@ -149,12 +153,25 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
                         continue;
                     }
 
+                    String[] split = line.split(" ");
+
+                    OpenPgpV4Fingerprint fingerprint;
+                    Date date = null;
                     try {
-                        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(line);
-                        announcedKeys.add(fingerprint);
+                        fingerprint = new OpenPgpV4Fingerprint(split[0]);
                     } catch (IllegalArgumentException e) {
                         LOGGER.log(Level.INFO, "Skip malformed fingerprint " + line + " of " + contact.toString());
+                        continue;
                     }
+
+                    try {
+                        if (split.length > 1)
+                            date = XmppDateTime.parseXEP0082Date(split[1]);
+                    }
+                    catch (ParseException e) {
+                        LOGGER.log(Level.WARNING, "Could not parse date", e);
+                    }
+                    announcedKeys.put(fingerprint, date);
                 }
                 reader.close();
             } catch (IOException e) {
@@ -204,8 +221,11 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
                     writer = new BufferedWriter(new OutputStreamWriter(
                             new FileOutputStream(listPath), "UTF8"));
 
-                    for (OpenPgpV4Fingerprint fingerprint : listElement.getMetadata().keySet()) {
-                        writer.write(fingerprint.toString());
+                    for (PublicKeysListElement.PubkeyMetadataElement entry : listElement.getMetadata().values()) {
+                        OpenPgpV4Fingerprint fingerprint = entry.getV4Fingerprint();
+                        Date date = entry.getDate();
+                        String line = fingerprint.toString() + (date != null ? date : "");
+                        writer.write(line);
                         writer.newLine();
                     }
 
@@ -238,7 +258,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
     }
 
     @Override
-    public void storePublicKey(BareJid owner, OpenPgpV4Fingerprint fingerprint, PubkeyElement element)
+    public void storePublicKey(BareJid owner, OpenPgpV4Fingerprint fingerprint, PubkeyElement element, Date latestMetadataDate)
             throws SmackOpenPgpException {
         byte[] base64decoded = Base64.decode(element.getDataElement().getB64Data());
         try {
@@ -249,6 +269,13 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARNING, "Public Key with ID " + fingerprint.toString() + " of " +
                     owner + " is already in memory. Skip.");
+            return;
+        }
+
+        try {
+            writeDateToFile(publicKeyUpdateDatePath(owner, fingerprint), latestMetadataDate);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not store update date for " + fingerprint.toString(), e);
         }
     }
 
@@ -280,7 +307,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
                         .getSecretKey(Util.keyIdFromFingerprint(fingerprint));
 
                 if (secretKey == null) {
-                    // TODO: Close streams
+                    buffer.close();
                     throw new MissingOpenPgpKeyPairException(user);
                 }
 
@@ -303,7 +330,7 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
 
     @Override
     public void restoreSecretKeyBackup(SecretkeyElement secretkeyElement, String password, SecretKeyRestoreSelectionCallback callback)
-            throws SmackOpenPgpException, InvalidBackupCodeException {
+            throws SmackOpenPgpException, InvalidBackupCodeException { // TODO: Figure out InvalidBackupCodeException
         byte[] base64Decoded = Base64.decode(secretkeyElement.getB64Data());
 
         try {
@@ -369,6 +396,11 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
         }
     }
 
+    @Override
+    public Date getPubkeysLatestUpdateDate(BareJid owner, OpenPgpV4Fingerprint fingerprint) {
+        return readDateFromFile(publicKeyUpdateDatePath(owner, fingerprint));
+    }
+
     private File secretKeyringPath() {
         return new File(contactsPath(user), "secring.skr");
     }
@@ -387,6 +419,66 @@ public class FileBasedBcOpenPgpStore implements BCOpenPgpStore {
 
     private File contactsList(BareJid contact) {
         return new File(contactsPath(contact), "metadata.list");
+    }
+
+    private File publicKeyUpdateDatePath(BareJid owner, OpenPgpV4Fingerprint fingerprint) {
+        return new File(contactsPath(owner), fingerprint.toString() + "-update.date");
+    }
+
+    private static void writeDateToFile(File file, Date date) throws IOException {
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            file.createNewFile();
+        }
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(file), "UTF8"));
+            writer.write(XmppDateTime.formatXEP0082Date(date));
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            if (writer != null) {
+                writer.close();
+            }
+            throw e;
+        }
+    }
+
+    private static Date readDateFromFile(File file) {
+        if (!file.exists()) {
+            return null;
+        }
+
+        BufferedReader reader = null;
+        Date result = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(file), "UTF8"));
+            String line = reader.readLine();
+            if (!line.isEmpty()) {
+                result = XmppDateTime.parseXEP0082Date(line);
+            }
+            reader.close();
+            reader = null;
+        } catch (UnsupportedEncodingException | FileNotFoundException e) {
+            throw new AssertionError(e);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Exception while reading date.", e);
+        } catch (ParseException e) {
+            LOGGER.log(Level.WARNING, "Could not parse date", e);
+            result = null;
+        }
+
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Could not close reader.", e);
+            }
+        }
+        return result;
     }
 
     private static void addPublicKeysFromFile(InMemoryKeyring keyring,
