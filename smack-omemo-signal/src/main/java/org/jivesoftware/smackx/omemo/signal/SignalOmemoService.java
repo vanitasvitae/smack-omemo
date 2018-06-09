@@ -48,8 +48,8 @@ import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 @SuppressWarnings("unused")
 public final class SignalOmemoService
         extends OmemoService<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-        SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
-{
+        SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> {
+
     private static SignalOmemoService INSTANCE;
     private static boolean LICENSE_ACKNOWLEDGED = false;
 
@@ -57,8 +57,8 @@ public final class SignalOmemoService
     protected SignalOmemoRatchet instantiateOmemoRatchet(
             OmemoManager manager,
             OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-                    SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> store)
-    {
+                    SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> store) {
+
         return new SignalOmemoRatchet(manager, getOmemoStoreBackend());
     }
 
@@ -95,8 +95,8 @@ public final class SignalOmemoService
     protected void processBundle(OmemoManager omemoManager,
                                  PreKeyBundle contactsBundle,
                                  OmemoDevice contactsDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
+
         SignalOmemoStoreConnector connector = new SignalOmemoStoreConnector(omemoManager, getOmemoStoreBackend());
         SessionBuilder builder = new SessionBuilder(connector, connector, connector, connector,
                 SignalOmemoStoreConnector.asAddress(contactsDevice));

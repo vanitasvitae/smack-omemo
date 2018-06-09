@@ -62,8 +62,7 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
 
     @Override
     public T_IdKeyPair loadOmemoIdentityKeyPair(OmemoDevice userDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
         File identityKeyPairPath = hierarchy.getIdentityKeyPairPath(userDevice);
         return keyUtil().identityKeyPairFromBytes(readBytes(identityKeyPairPath));
     }
@@ -84,8 +83,7 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
 
     @Override
     public T_IdKey loadOmemoIdentityKey(OmemoDevice userDevice, OmemoDevice contactsDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
         File identityKeyPath = hierarchy.getContactsIdentityKeyPath(userDevice, contactsDevice);
         byte[] bytes = readBytes(identityKeyPath);
         return bytes != null ? keyUtil().identityKeyFromBytes(bytes) : null;

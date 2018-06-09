@@ -77,8 +77,8 @@ public abstract class OmemoStoreTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey
 
     @Test
     public void storeLoadRemoveOmemoIdentityKeyPair()
-            throws IOException, CorruptedOmemoKeyException
-    {
+            throws IOException, CorruptedOmemoKeyException {
+
         T_IdKeyPair before = store.generateOmemoIdentityKeyPair();
 
         assertNull(store.loadOmemoIdentityKeyPair(alice));
@@ -106,8 +106,8 @@ public abstract class OmemoStoreTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey
 
     @Test
     public void storeLoadRemoveOmemoIdentityKey()
-            throws IOException, CorruptedOmemoKeyException
-    {
+            throws IOException, CorruptedOmemoKeyException {
+
         // Create IdentityKeys and get bytes
         T_IdKey keyA1 = store.keyUtil().identityKeyFromPair(store.generateOmemoIdentityKeyPair());
         T_IdKey keyB1 = store.keyUtil().identityKeyFromPair(store.generateOmemoIdentityKeyPair());
@@ -172,8 +172,8 @@ public abstract class OmemoStoreTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey
 
     @Test
     public void storeLoadRemoveOmemoPreKeys()
-            throws IOException, InterruptedException
-    {
+            throws IOException, InterruptedException {
+
         TreeMap<Integer, T_PreKey> before = store.generateOmemoPreKeys(1, 10);
         assertEquals("The store must have no prekeys before this test.", 0, store.loadOmemoPreKeys(alice).size());
 
@@ -210,8 +210,8 @@ public abstract class OmemoStoreTest<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey
 
     @Test
     public void storeLoadRemoveOmemoSignedPreKeys()
-            throws IOException, CorruptedOmemoKeyException
-    {
+            throws IOException, CorruptedOmemoKeyException {
+
         TreeMap<Integer, T_SigPreKey> before = store.loadOmemoSignedPreKeys(alice);
         assertEquals("At this stage, there must be no signed prekeys in the store.", 0, before.size());
 

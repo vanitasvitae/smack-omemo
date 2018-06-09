@@ -57,16 +57,15 @@ import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 
 public class SignalOmemoRatchet
         extends OmemoRatchet<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord, SessionRecord,
-                SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
-{
+                SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> {
+
     private static final Logger LOGGER = Logger.getLogger(OmemoRatchet.class.getName());
     private final SignalOmemoStoreConnector storeConnector;
 
     SignalOmemoRatchet(OmemoManager omemoManager,
                               OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
                                              SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle,
-                                             SessionCipher> store)
-    {
+                                             SessionCipher> store) {
         super(omemoManager, store);
         this.storeConnector = new SignalOmemoStoreConnector(omemoManager, store);
     }
@@ -74,8 +73,8 @@ public class SignalOmemoRatchet
     @Override
     public byte[] doubleRatchetDecrypt(OmemoDevice sender, byte[] encryptedKey)
             throws CorruptedOmemoKeyException, NoRawSessionException, CryptoFailedException,
-            UntrustedOmemoIdentityException
-    {
+            UntrustedOmemoIdentityException {
+
         SessionCipher cipher = getCipher(sender);
         byte[] decryptedKey;
 

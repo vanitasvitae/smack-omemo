@@ -47,8 +47,8 @@ import org.whispersystems.libsignal.util.KeyHelper;
  * @author Paul Schaub
  */
 public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
-        SessionRecord, ECPublicKey, PreKeyBundle>
-{
+        SessionRecord, ECPublicKey, PreKeyBundle> {
+
     @Override
     public IdentityKeyPair generateOmemoIdentityKeyPair() {
         return KeyHelper.generateIdentityKeyPair();
@@ -66,8 +66,7 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
 
     @Override
     public SignedPreKeyRecord generateOmemoSignedPreKey(IdentityKeyPair identityKeyPair, int currentPreKeyId)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
         try {
             return KeyHelper.generateSignedPreKey(identityKeyPair, currentPreKeyId);
         } catch (InvalidKeyException e) {
@@ -140,8 +139,7 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
 
     @Override
     public PreKeyBundle bundleFromOmemoBundle(OmemoBundleElement bundle, OmemoDevice contact, int preKeyId)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
         return new PreKeyBundle(0,
                 contact.getDeviceId(),
                 preKeyId,

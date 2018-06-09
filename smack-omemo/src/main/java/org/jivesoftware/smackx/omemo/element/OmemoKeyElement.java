@@ -68,7 +68,7 @@ public class OmemoKeyElement implements NamedElement {
     }
 
     @Override
-    public CharSequence toXML() {
+    public CharSequence toXML(String enclosingNamespace) {
         XmlStringBuilder sb = new XmlStringBuilder(this);
 
         if (isPreKey()) {

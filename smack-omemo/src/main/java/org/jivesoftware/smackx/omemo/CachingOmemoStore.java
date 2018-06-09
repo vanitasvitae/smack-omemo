@@ -47,8 +47,7 @@ import org.jxmpp.jid.BareJid;
  * @param <T_Ciph>
  */
 public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-        extends OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph>
-{
+        extends OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> {
 
     private final HashMap<OmemoDevice, KeyCache<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess>> caches = new HashMap<>();
     private final OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Sess, T_Addr, T_ECPub, T_Bundle, T_Ciph> persistent;
@@ -81,8 +80,7 @@ public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Se
 
     @Override
     public T_IdKeyPair loadOmemoIdentityKeyPair(OmemoDevice userDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
         T_IdKeyPair pair = getCache(userDevice).identityKeyPair;
 
         if (pair == null && persistent != null) {
@@ -113,8 +111,7 @@ public class CachingOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_Se
 
     @Override
     public T_IdKey loadOmemoIdentityKey(OmemoDevice userDevice, OmemoDevice contactsDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
         T_IdKey idKey = getCache(userDevice).identityKeys.get(contactsDevice);
 
         if (idKey == null && persistent != null) {

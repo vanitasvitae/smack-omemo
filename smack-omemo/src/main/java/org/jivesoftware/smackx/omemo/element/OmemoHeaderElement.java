@@ -66,7 +66,7 @@ public abstract class OmemoHeaderElement implements NamedElement {
     }
 
     @Override
-    public CharSequence toXML() {
+    public CharSequence toXML(String enclosingNamespace) {
         XmlStringBuilder sb = new XmlStringBuilder(this);
         sb.attribute(ATTR_SID, getSid()).rightAngleBracket();
 

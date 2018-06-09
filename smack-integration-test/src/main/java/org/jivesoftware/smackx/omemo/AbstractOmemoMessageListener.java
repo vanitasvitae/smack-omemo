@@ -43,7 +43,7 @@ public class AbstractOmemoMessageListener implements OmemoMessageListener {
     private static class SyncPointListener extends AbstractOmemoMessageListener {
         protected final ResultSyncPoint<?,?> syncPoint;
 
-        public SyncPointListener(ResultSyncPoint<?,?> syncPoint) {
+        SyncPointListener(ResultSyncPoint<?,?> syncPoint) {
             this.syncPoint = syncPoint;
         }
 

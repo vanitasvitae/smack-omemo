@@ -45,20 +45,17 @@ public class LegacySignalOmemoKeyUtilTest extends SmackTestSuite {
     private final SignalOmemoKeyUtil keyUtil = new SignalOmemoKeyUtil();
 
     @Test
-    public void omemoIdentityKeyPairSerializationTest() {
+    public void omemoIdentityKeyPairSerializationTest() throws CorruptedOmemoKeyException {
         IdentityKeyPair ikp = keyUtil.generateOmemoIdentityKeyPair();
         byte[] bytes = keyUtil.identityKeyPairToBytes(ikp);
         assertNotNull("serialized identityKeyPair must not be null.",
                 bytes);
         assertNotSame("serialized identityKeyPair must not be of length 0.",
                 0, bytes.length);
-        try {
-            IdentityKeyPair ikp2 = keyUtil.identityKeyPairFromBytes(bytes);
-            assertTrue("Deserialized IdentityKeyPairs PublicKey must equal the originals one.",
-                    ikp.getPublicKey().equals(ikp2.getPublicKey()));
-        } catch (CorruptedOmemoKeyException e) {
-            fail("Caught exception while deserializing IdentityKeyPair.");
-        }
+
+        IdentityKeyPair ikp2 = keyUtil.identityKeyPairFromBytes(bytes);
+        assertTrue("Deserialized IdentityKeyPairs PublicKey must equal the originals one.",
+                ikp.getPublicKey().equals(ikp2.getPublicKey()));
     }
 
     @Test

@@ -133,8 +133,8 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws IllegalStateException when our IdentityKeyPair is null.
      */
     void changeSignedPreKey(OmemoDevice userDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
+
         T_IdKeyPair idKeyPair = loadOmemoIdentityKeyPair(userDevice);
         if (idKeyPair == null) {
             throw new IllegalStateException("Our IdentityKeyPair is null.");
@@ -182,8 +182,8 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws CorruptedOmemoKeyException when a key could not be loaded
      */
     OmemoBundleElement_VAxolotl packOmemoBundle(OmemoDevice userDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
+
         int currentSignedPreKeyId = loadCurrentOmemoSignedPreKeyId(userDevice);
         T_SigPreKey currentSignedPreKey = loadOmemoSignedPreKeys(userDevice).get(currentSignedPreKeyId);
 
@@ -202,8 +202,8 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws CorruptedOmemoKeyException
      */
     public void replenishKeys(OmemoDevice userDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
+
         T_IdKeyPair identityKeyPair = loadOmemoIdentityKeyPair(userDevice);
         if (identityKeyPair == null) {
             identityKeyPair = generateOmemoIdentityKeyPair();
@@ -433,8 +433,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws CorruptedOmemoKeyException when something goes wrong
      */
     public T_SigPreKey generateOmemoSignedPreKey(T_IdKeyPair identityKeyPair, int signedPreKeyId)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
         return keyUtil().generateOmemoSignedPreKey(identityKeyPair, signedPreKeyId);
     }
 
@@ -561,8 +560,8 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @throws CorruptedOmemoKeyException if the identityKey of userDevice is corrupted.
      */
     public OmemoFingerprint getFingerprint(OmemoDevice userDevice)
-            throws CorruptedOmemoKeyException
-    {
+            throws CorruptedOmemoKeyException {
+
         T_IdKeyPair keyPair = loadOmemoIdentityKeyPair(userDevice);
         if (keyPair == null) {
             return null;
@@ -582,6 +581,7 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      */
     public OmemoFingerprint getFingerprint(OmemoDevice userDevice, OmemoDevice contactsDevice)
             throws CorruptedOmemoKeyException, NoIdentityKeyException {
+
         T_IdKey identityKey = loadOmemoIdentityKey(userDevice, contactsDevice);
         if (identityKey == null) {
             throw new NoIdentityKeyException(contactsDevice);

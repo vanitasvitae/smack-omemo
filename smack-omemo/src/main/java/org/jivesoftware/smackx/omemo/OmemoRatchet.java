@@ -154,8 +154,7 @@ public abstract class OmemoRatchet<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
      * @throws CryptoFailedException if decryption using AES key fails.
      */
     static String decryptMessageElement(OmemoElement element, CipherAndAuthTag cipherAndAuthTag)
-            throws CryptoFailedException
-    {
+            throws CryptoFailedException {
         if (!element.isMessageElement()) {
             throw new IllegalArgumentException("decryptMessageElement cannot decrypt OmemoElement which is no MessageElement!");
         }

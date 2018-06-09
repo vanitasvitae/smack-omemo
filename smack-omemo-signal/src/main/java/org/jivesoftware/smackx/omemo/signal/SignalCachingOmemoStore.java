@@ -39,8 +39,7 @@ import org.whispersystems.libsignal.state.SignedPreKeyRecord;
  * excessive storage access, or it can be used standalone as an ephemeral store, which doesn't persist its contents.
  */
 public class SignalCachingOmemoStore extends CachingOmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord,
-        SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher>
-{
+        SignedPreKeyRecord, SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> {
 
     /**
      * Create a new SignalCachingOmemoStore as a caching layer around a persisting OmemoStore
@@ -48,8 +47,7 @@ public class SignalCachingOmemoStore extends CachingOmemoStore<IdentityKeyPair, 
      * @param wrappedStore other store implementation that gets wrapped
      */
     public SignalCachingOmemoStore(OmemoStore<IdentityKeyPair, IdentityKey, PreKeyRecord, SignedPreKeyRecord,
-            SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> wrappedStore)
-    {
+            SessionRecord, SignalProtocolAddress, ECPublicKey, PreKeyBundle, SessionCipher> wrappedStore) {
         super(wrappedStore);
     }
 

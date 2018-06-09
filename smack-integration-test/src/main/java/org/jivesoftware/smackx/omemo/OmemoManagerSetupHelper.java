@@ -60,8 +60,7 @@ public class OmemoManagerSetupHelper {
                                              final XMPPConnection target,
                                              String targetNick,
                                              String[] targetGroups)
-            throws Exception
-    {
+            throws Exception {
         final SimpleResultSyncPoint subscribed = new SimpleResultSyncPoint();
 
         Roster subscriberRoster = Roster.getInstanceFor(subscriber);
@@ -194,16 +193,14 @@ public class OmemoManagerSetupHelper {
                 pm.getLeafNode(OmemoConstants.PEP_NODE_BUNDLE_FROM_DEVICE_ID(id)).deleteAllItems();
             } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException |
                     PubSubException.NotALeafNodeException | XMPPException.XMPPErrorException |
-                    PubSubException.NotAPubSubNodeException e)
-            {
+                    PubSubException.NotAPubSubNodeException e) {
                 // Silent
             }
 
             try {
                 pm.deleteNode(OmemoConstants.PEP_NODE_BUNDLE_FROM_DEVICE_ID(id));
             } catch (SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException
-                    | XMPPException.XMPPErrorException e)
-            {
+                    | XMPPException.XMPPErrorException e) {
                 // Silent
             }
         }
@@ -212,16 +209,14 @@ public class OmemoManagerSetupHelper {
             pm.getLeafNode(OmemoConstants.PEP_NODE_DEVICE_LIST).deleteAllItems();
         } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException |
                 PubSubException.NotALeafNodeException | XMPPException.XMPPErrorException |
-                PubSubException.NotAPubSubNodeException e)
-        {
+                PubSubException.NotAPubSubNodeException e) {
             // Silent
         }
 
         try {
             pm.deleteNode(OmemoConstants.PEP_NODE_DEVICE_LIST);
         } catch (SmackException.NoResponseException | InterruptedException | SmackException.NotConnectedException |
-                XMPPException.XMPPErrorException e)
-        {
+                XMPPException.XMPPErrorException e) {
             // Silent
         }
     }
@@ -232,8 +227,7 @@ public class OmemoManagerSetupHelper {
             try {
                 roster.removeEntry(r);
             } catch (InterruptedException | SmackException.NoResponseException | SmackException.NotConnectedException |
-                    XMPPException.XMPPErrorException | SmackException.NotLoggedInException e)
-            {
+                    XMPPException.XMPPErrorException | SmackException.NotLoggedInException e) {
                 // Silent
             }
         }
