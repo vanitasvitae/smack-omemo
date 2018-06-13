@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2018 Paul Schaub.
+ * Copyright 2017 Florian Schmaus.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.bouncycastle;
-
-import org.jivesoftware.smackx.ox.OpenPgpStore;
-
-import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.KeyringConfig;
-
-public interface BCOpenPgpStore extends OpenPgpStore {
-
-    KeyringConfig getKeyringConfig();
-}
+/**
+ * Providers for XEP-0373: OpenPGP for XMPP using Bouncycastle.
+ */
+package org.jivesoftware.smackx.ox.bouncycastle.selection_strategy;

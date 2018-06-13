@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox;
+package org.jivesoftware.smackx.ox.util;
 
 import java.util.Date;
 import java.util.List;
@@ -25,6 +25,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
@@ -72,7 +73,19 @@ public class PubSubDelegate {
         return PEP_NODE_PUBLIC_KEYS + ":" + id;
     }
 
-
+    /**
+     * Query the access model of {@code node}. If it is different from {@code accessModel}, change the access model
+     * of the node to {@code accessModel}.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0060.html#accessmodels">XEP-0060 §4.5 - Node Access Models</a>
+     *
+     * @param node {@link LeafNode} whose PubSub access model we want to change
+     * @param accessModel new access model.
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException.NotConnectedException
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
+     */
     public static void changeAccessModelIfNecessary(LeafNode node, AccessModel accessModel)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException {

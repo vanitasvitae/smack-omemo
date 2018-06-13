@@ -16,19 +16,11 @@
  */
 package org.jivesoftware.smackx.ox;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smackx.ox.callback.SecretKeyRestoreSelectionCallback;
-import org.jivesoftware.smackx.ox.element.PubkeyElement;
-import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
-import org.jivesoftware.smackx.ox.element.SecretkeyElement;
-import org.jivesoftware.smackx.ox.element.SigncryptElement;
-import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
+import org.jivesoftware.smack.util.MultiMap;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
@@ -45,123 +37,105 @@ public interface OpenPgpStore {
      *
      * @return fingerprint of the primary OpenPGP key pair.
      */
-    OpenPgpV4Fingerprint primaryOpenPgpKeyPairFingerprint();
+    OpenPgpV4Fingerprint getPrimaryOpenPgpKeyPairFingerprint();
 
     /**
-     * Return a {@link Set} containing the {@link OpenPgpV4Fingerprint} of all available OpenPGP key pairs.
+     * Set the {@link OpenPgpV4Fingerprint} of the primary OpenPGP key pair.
+     * If multiple key pairs are available, only the primary key pair is used for signing.
      *
-     * @return set of fingerprints of available OpenPGP key pairs.
+     * @param fingerprint {@link OpenPgpV4Fingerprint} of the new primary key pair.
      */
-    Set<OpenPgpV4Fingerprint> availableOpenPgpKeyPairFingerprints();
+    void setPrimaryOpenPgpKeyPairFingerprint(OpenPgpV4Fingerprint fingerprint);
+
+    /**
+     * Return a {@link Set} containing the {@link OpenPgpV4Fingerprint}s of the master keys of all available
+     * OpenPGP key pairs.
+     *
+     * @return set of fingerprints of available OpenPGP key pairs master keys.
+     */
+    Set<OpenPgpV4Fingerprint> getAvailableKeyPairFingerprints();
+
+    /**
+     * Return a {@link Map} containing the {@link OpenPgpV4Fingerprint}s of all OpenPGP public keys of a
+     * contact, which we have locally available, as well as the date, those keys had been published on.
+     * <br>
+     * Note: This returns a {@link Map} that might be different from the result of
+     * {@link #getAvailableKeysFingerprints(BareJid)} (BareJid)}.
+     * Messages should be encrypted to the intersection of both key sets.
+     *
+     * @param contact contact.
+     * @return list of contacts locally available public keys.
+     *
+     * @throws SmackOpenPgpException if something goes wrong
+     */
+    Map<OpenPgpV4Fingerprint, Date> getAvailableKeysFingerprints(BareJid contact)
+            throws SmackOpenPgpException;
 
     /**
      * Return a {@link Map} containing the {@link OpenPgpV4Fingerprint}s of all currently announced OpenPGP
-     * public keys of a contact along with the dates of their latest update.
+     * public keys of a contact along with the dates of their latest revision.
      * <br>
      * Note: Those are the keys announced in the latest received metadata update.
      * This returns a {@link Map} which might contain different {@link OpenPgpV4Fingerprint}s than the result of
-     * {@link #availableOpenPgpPublicKeysFingerprints(BareJid)}.
-     * Messages should be encrypted to the intersection of both sets.
+     * {@link #getAvailableKeysFingerprints(BareJid)} (BareJid)}.
+     * Messages should be encrypted to the intersection of both key sets.
      *
      * @param contact contact.
      * @return map of contacts last announced public keys and their update dates.
      */
-    Map<OpenPgpV4Fingerprint, Date> announcedOpenPgpKeyFingerprints(BareJid contact);
+    Map<OpenPgpV4Fingerprint, Date> getAnnouncedKeysFingerprints(BareJid contact);
 
     /**
-     * Return a {@link Set} containing the {@link OpenPgpV4Fingerprint}s of all OpenPGP public keys of a
-     * contact, which we have locally available.
-     * <br>
-     * Note: This returns a {@link Set} that might be different from the result of
-     * {@link #availableOpenPgpPublicKeysFingerprints(BareJid)}.
-     * Messages should be encrypted to the intersection of both sets.
+     * Store a {@Map} of a contacts fingerprints and publication dates in persistent storage.
      *
-     * @param contact contact.
-     * @return list of contacts locally available public keys.
-     * @throws SmackOpenPgpException if something goes wrong
+     * @param contact {@link BareJid} of the owner of the announced public keys.
+     * @param fingerprints {@link Map} which contains a list of the keys of {@code owner}.
      */
-    Set<OpenPgpV4Fingerprint> availableOpenPgpPublicKeysFingerprints(BareJid contact)
-            throws SmackOpenPgpException;
+    void setAnnouncedKeysFingerprints(BareJid contact, Map<OpenPgpV4Fingerprint, Date> fingerprints);
 
     /**
-     * Store incoming update to the OpenPGP metadata node in persistent storage.
-     *
-     * @param connection authenticated {@link XMPPConnection} of the user.
-     * @param listElement {@link PublicKeysListElement} which contains a list of the keys of {@code owner}.
-     * @param owner {@link BareJid} of the owner of the announced public keys.
-     */
-    void storePublicKeysList(XMPPConnection connection, PublicKeysListElement listElement, BareJid owner);
-
-    /**
-     * Create a fresh OpenPGP key pair with the {@link BareJid} of the user prefixed by "xmpp:" as user-id
-     * (example: {@code "xmpp:juliet@capulet.lit"}).
-     * Store the key pair in persistent storage and return the public keys {@link OpenPgpV4Fingerprint}.
-     *
-     * @return {@link OpenPgpV4Fingerprint} of the generated key pair.
-     * @throws NoSuchAlgorithmException if a Hash algorithm is not available
-     * @throws NoSuchProviderException id no suitable cryptographic provider (for example BouncyCastleProvider)
-     *                                 is registered.
-     * @throws SmackOpenPgpException if the generated key cannot be added to the keyring for some reason.
-     */
-    OpenPgpV4Fingerprint createOpenPgpKeyPair()
-            throws NoSuchAlgorithmException, NoSuchProviderException, SmackOpenPgpException;
-
-    /**
-     * Create a {@link PubkeyElement} which contains our exported OpenPGP public key.
-     * The element can for example be published.
-     *
-     * @return {@link PubkeyElement} containing our public key.
-     * @throws MissingOpenPgpPublicKeyException if we have no OpenPGP key pair.
-     * @throws SmackOpenPgpException if something goes wrong.
-     */
-    PubkeyElement createPubkeyElement(OpenPgpV4Fingerprint fingerprint)
-            throws SmackOpenPgpException, MissingOpenPgpPublicKeyException;
-
-    /**
-     * Process an incoming {@link PubkeyElement} of a contact or ourselves.
-     * That typically includes importing/updating the key.
-     *
-     * @param owner owner of the OpenPGP public key contained in the {@link PubkeyElement}.
-     * @param fingerprint {@link OpenPgpV4Fingerprint} of the key.
-     * @param element {@link PubkeyElement} which presumably contains the public key of the {@code owner}.
-     * @param currentMetadataDate {@link Date} which is currently found in the metadata node for this key.
-     * @throws SmackOpenPgpException if the key found in the {@link PubkeyElement}
-     * can not be deserialized or imported.
-     */
-    void storePublicKey(BareJid owner, OpenPgpV4Fingerprint fingerprint, PubkeyElement element, Date currentMetadataDate)
-            throws SmackOpenPgpException;
-
-    /**
-     * Return the {@link Date} of the last time on which the key has been fetched from PubSub.
+     * Return the {@link Date} of the last revision which was fetched from PubSub.
      *
      * @param owner owner of the key
      * @param fingerprint fingerprint of the key.
      * @return {@link Date} or {@code null} if no record found.
      */
-    Date getPubkeysLatestUpdateDate(BareJid owner, OpenPgpV4Fingerprint fingerprint);
+    Date getPubkeysLastRevision(BareJid owner, OpenPgpV4Fingerprint fingerprint);
 
     /**
-     * Create an encrypted backup of our secret keys.
+     * Set the {@link Date} of the last revision which was fetched from PubSub.
      *
-     * @param fingerprints {@link Set} of IDs of the keys that will be included in the backup.
-     * @param password password that is used to symmetrically encrypt the backup.
-     * @return {@link SigncryptElement} containing the selected encrypted secret keys.
-     * @throws MissingOpenPgpKeyPairException if we don't have an OpenPGP key available.
-     * @throws SmackOpenPgpException if for some reason the key pair cannot be serialized.
+     * @param owner owner of the key
+     * @param fingerprint fingerprint of the key
+     * @param revision {@link Date} of the revision
      */
-    SecretkeyElement createSecretkeyElement(Set<OpenPgpV4Fingerprint> fingerprints, String password)
-            throws MissingOpenPgpKeyPairException, SmackOpenPgpException;
+    void setPubkeysLastRevision(BareJid owner, OpenPgpV4Fingerprint fingerprint, Date revision);
 
     /**
-     * Decrypt a secret key backup and restore the key from it.
+     * Return a {@link MultiMap} which contains contacts and their trusted keys {@link OpenPgpV4Fingerprint}s.
      *
-     * @param secretkeyElement {@link SecretkeyElement} containing the backup.
-     * @param password password to decrypt the backup.
-     * @param callback {@link SecretKeyRestoreSelectionCallback} to let the user decide which key to restore.
-     * @throws SmackOpenPgpException if the selected key is corrupted and cannot be restored or our key ring
-     * is corrupted.
-     * @throws InvalidBackupCodeException if the user provided backup code is invalid.
+     * @return trusted fingerprints.
      */
-    void restoreSecretKeyBackup(SecretkeyElement secretkeyElement, String password, SecretKeyRestoreSelectionCallback callback)
-            throws SmackOpenPgpException, InvalidBackupCodeException;
+    MultiMap<BareJid, OpenPgpV4Fingerprint> getAllContactsTrustedFingerprints();
+
+    /**
+     * Return the byte array representation of {@code owner}s public key ring with fingerprint {@code fingerprint}.
+     *
+     * @param owner owner of the key
+     * @param fingerprint fingerprint of the key
+     * @return byte representation of the public key.
+     */
+    byte[] getPublicKeyBytes(BareJid owner, OpenPgpV4Fingerprint fingerprint)
+            throws MissingOpenPgpPublicKeyException;
+
+    /**
+     * Return the byte array representation of {@code owner}s secret key ring with fingerprint {@code fingerprint}.
+     *
+     * @param owner owner of the key
+     * @param fingerprint fingerprint of the key
+     * @return byte representation of the secret key.
+     */
+    byte[] getSecretKeyBytes(BareJid owner, OpenPgpV4Fingerprint fingerprint)
+            throws MissingOpenPgpKeyPairException;
+
 }

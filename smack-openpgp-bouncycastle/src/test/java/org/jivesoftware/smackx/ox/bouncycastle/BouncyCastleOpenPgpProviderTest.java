@@ -25,7 +25,7 @@ import java.util.Collections;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
-import org.jivesoftware.smackx.ox.OpenPgpMessage;
+import org.jivesoftware.smackx.ox.chat.OpenPgpMessage;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
@@ -54,10 +54,10 @@ public class BouncyCastleOpenPgpProviderTest extends SmackTestSuite {
 
         // dry exchange keys
 
-        PubkeyElement aliceKeys = aliceProvider.createPubkeyElement(aliceProvider.primaryOpenPgpKeyPairFingerprint());
-        PubkeyElement cheshireKeys = cheshireProvider.createPubkeyElement(cheshireProvider.primaryOpenPgpKeyPairFingerprint());
-        aliceProvider.storePublicKey(cheshire, cheshireProvider.primaryOpenPgpKeyPairFingerprint(), cheshireKeys);
-        cheshireProvider.storePublicKey(alice, aliceProvider.primaryOpenPgpKeyPairFingerprint(), aliceKeys);
+        PubkeyElement aliceKeys = aliceProvider.createPubkeyElement(aliceProvider.getPrimaryOpenPgpKeyPairFingerprint());
+        PubkeyElement cheshireKeys = cheshireProvider.createPubkeyElement(cheshireProvider.getPrimaryOpenPgpKeyPairFingerprint());
+        aliceProvider.storePublicKey(cheshire, cheshireProvider.getPrimaryOpenPgpKeyPairFingerprint(), cheshireKeys);
+        cheshireProvider.storePublicKey(alice, aliceProvider.getPrimaryOpenPgpKeyPairFingerprint(), aliceKeys);
 
         // Create signed and encrypted message from alice to the cheshire cat
         SigncryptElement signcryptElement = new SigncryptElement(
@@ -66,11 +66,11 @@ public class BouncyCastleOpenPgpProviderTest extends SmackTestSuite {
                         new Message.Body("en", "How do you know I’m mad?")));
         OpenPgpElement encrypted = aliceProvider.signAndEncrypt(
                 signcryptElement,
-                aliceProvider.primaryOpenPgpKeyPairFingerprint(),
-                Collections.singleton(cheshireProvider.primaryOpenPgpKeyPairFingerprint()));
+                aliceProvider.getPrimaryOpenPgpKeyPairFingerprint(),
+                Collections.singleton(cheshireProvider.getPrimaryOpenPgpKeyPairFingerprint()));
 
         // Decrypt the message as the cheshire cat
-        OpenPgpMessage decrypted = cheshireProvider.decryptAndVerify(encrypted, Collections.singleton(aliceProvider.primaryOpenPgpKeyPairFingerprint()));
+        OpenPgpMessage decrypted = cheshireProvider.decryptAndVerify(encrypted, Collections.singleton(aliceProvider.getPrimaryOpenPgpKeyPairFingerprint()));
         OpenPgpContentElement content = decrypted.getOpenPgpContentElement();
 
         assertTrue(content instanceof SigncryptElement);

@@ -19,6 +19,7 @@ package org.jivesoftware.smackx.ox;
 import java.nio.charset.Charset;
 
 import org.jivesoftware.smack.util.Objects;
+import org.jivesoftware.smackx.ox.util.Util;
 
 /**
  * This class represents an hex encoded, uppercase OpenPGP v4 fingerprint.

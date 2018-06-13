@@ -14,12 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox;
+package org.jivesoftware.smackx.ox.chat;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
 import org.jxmpp.jid.BareJid;
 
@@ -28,6 +30,7 @@ import org.jxmpp.jid.BareJid;
  */
 public class OpenPgpFingerprints {
 
+    private final BareJid jid;
     private final Set<OpenPgpV4Fingerprint> announcedKeys;
     private final Set<OpenPgpV4Fingerprint> availableKeys;
     private final Map<OpenPgpV4Fingerprint, Throwable> unfetchableKeys;
@@ -39,12 +42,22 @@ public class OpenPgpFingerprints {
      * @param availableKeys keys which contain the contacts {@link BareJid} as user ID.
      * @param unfetchableKeys keys that are announced, but cannot be fetched fro PubSub.
      */
-    public OpenPgpFingerprints(Set<OpenPgpV4Fingerprint> announcedKeys,
+    public OpenPgpFingerprints(BareJid jid,
+                               Set<OpenPgpV4Fingerprint> announcedKeys,
                                Set<OpenPgpV4Fingerprint> availableKeys,
                                Map<OpenPgpV4Fingerprint, Throwable> unfetchableKeys) {
+        this.jid = jid;
         this.announcedKeys = Collections.unmodifiableSet(announcedKeys);
         this.availableKeys = Collections.unmodifiableSet(availableKeys);
         this.unfetchableKeys = Collections.unmodifiableMap(unfetchableKeys);
+    }
+
+    /**
+     * Return the {@link BareJid} of the user.
+     * @return jid
+     */
+    public BareJid getJid() {
+        return jid;
     }
 
     /**

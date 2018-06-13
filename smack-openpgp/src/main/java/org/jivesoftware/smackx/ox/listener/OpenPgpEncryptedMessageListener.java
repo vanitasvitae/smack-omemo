@@ -17,7 +17,7 @@
 package org.jivesoftware.smackx.ox.listener;
 
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.ox.OpenPgpEncryptedChat;
+import org.jivesoftware.smackx.ox.chat.OpenPgpEncryptedChat;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 
@@ -36,8 +36,8 @@ public interface OpenPgpEncryptedMessageListener {
      * @param decryptedPayload decrypted {@link SigncryptElement} which is carrying the payload.
      * @param chat {@link OpenPgpEncryptedChat} which is the context of the message.
      */
-    void newIncomingEncryptedMessage(EntityBareJid from,
-                                     Message originalMessage,
-                                     SigncryptElement decryptedPayload,
-                                     OpenPgpEncryptedChat chat);
+    void newIncomingOxMessage(EntityBareJid from,
+                              Message originalMessage,
+                              SigncryptElement decryptedPayload,
+                              OpenPgpEncryptedChat chat);
 }

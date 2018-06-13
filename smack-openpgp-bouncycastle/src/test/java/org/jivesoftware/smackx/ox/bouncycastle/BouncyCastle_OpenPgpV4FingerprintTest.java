@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.TestKeys;
-import org.jivesoftware.smackx.ox.Util;
+import org.jivesoftware.smackx.ox.util.Util;
 
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.callbacks.KeyringConfigCallbacks;
 import name.neuhalfen.projects.crypto.bouncycastle.openpgp.keys.keyrings.InMemoryKeyring;

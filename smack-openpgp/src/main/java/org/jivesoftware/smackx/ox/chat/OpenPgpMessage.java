@@ -14,10 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox;
+package org.jivesoftware.smackx.ox.chat;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.jivesoftware.smack.util.Objects;
+import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
@@ -49,7 +54,7 @@ public class OpenPgpMessage {
     }
 
     private final String element;
-    private State state;
+    private final State state;
 
     private OpenPgpContentElement openPgpContentElement;
 
@@ -60,8 +65,13 @@ public class OpenPgpMessage {
      * @param content XML representation of the decrypted {@link OpenPgpContentElement}.
      */
     public OpenPgpMessage(State state, String content) {
-        this.state = state;
-        this.element = content;
+        this.state = Objects.requireNonNull(state);
+        this.element = Objects.requireNonNull(content);
+    }
+
+    public OpenPgpMessage(byte[] bytes, Metadata metadata) {
+        this.element = new String(Base64.decode(bytes), Charset.forName("UTF-8"));
+        this.state = metadata.getState();
     }
 
     /**
@@ -90,14 +100,17 @@ public class OpenPgpMessage {
 
         // Determine the state of the content element.
         if (openPgpContentElement instanceof SigncryptElement) {
-            state = State.signcrypt;
+            if (state != State.signcrypt) {
+                throw new IllegalStateException("OpenPgpContentElement was signed and encrypted, but is not a SigncryptElement.");
+            }
         } else if (openPgpContentElement instanceof SignElement) {
-            state = State.sign;
+            if (state != State.sign) {
+                throw new IllegalStateException("OpenPgpContentElement was signed and unencrypted, but is not a SignElement.");
+            }
         } else if (openPgpContentElement instanceof CryptElement) {
-            state = State.crypt;
-        } else {
-            throw new AssertionError("OpenPgpContentElement is neither a SignElement, " +
-                    "CryptElement nor a SignCryptElement.");
+            if (state != State.crypt) {
+                throw new IllegalStateException("OpenPgpContentElement was unsigned and encrypted, but is not a CryptElement.");
+            }
         }
     }
 
@@ -112,5 +125,41 @@ public class OpenPgpMessage {
     public State getState() throws IOException, XmlPullParserException {
         ensureOpenPgpContentElementSet();
         return state;
+    }
+
+    public static class Metadata {
+
+        private final Long encryptionKeyId;
+        private final Set<Long> validSignatureIds;
+
+        public Metadata(Long encryptionKeyId, Set<Long> validSignatureIds) {
+            this.encryptionKeyId = encryptionKeyId;
+            this.validSignatureIds = validSignatureIds;
+        }
+
+        public Long getEncryptionKeyId() {
+            return encryptionKeyId;
+        }
+
+        public Set<Long> getValidSignatureIds() {
+            return new HashSet<>(validSignatureIds);
+        }
+
+        public State getState() {
+            if (validSignatureIds.size() != 0) {
+                if (encryptionKeyId != null) {
+                    return State.signcrypt;
+                } else {
+                    return State.sign;
+                }
+            } else {
+                if (encryptionKeyId != null) {
+                    return State.crypt;
+                } else {
+                    throw new IllegalStateException("OpenPGP message appears to be neither encrypted, " +
+                            "nor signed.");
+                }
+            }
+        }
     }
 }

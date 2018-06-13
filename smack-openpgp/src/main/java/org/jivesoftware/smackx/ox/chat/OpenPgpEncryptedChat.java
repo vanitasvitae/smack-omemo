@@ -14,25 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox;
+package org.jivesoftware.smackx.ox.chat;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.util.MultiMap;
+import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
 import org.jivesoftware.smackx.hints.element.StoreHint;
+import org.jivesoftware.smackx.ox.OpenPgpProvider;
+import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
+import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 
+import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.Jid;
 
 public class OpenPgpEncryptedChat {
@@ -49,30 +54,34 @@ public class OpenPgpEncryptedChat {
                                 OpenPgpFingerprints contactsFingerprints) {
         this.cryptoProvider = cryptoProvider;
         this.chat = chat;
-        this.singingKey = cryptoProvider.primaryOpenPgpKeyPairFingerprint();
+        this.singingKey = cryptoProvider.getStore().getPrimaryOpenPgpKeyPairFingerprint();
         this.ourFingerprints = ourFingerprints;
         this.contactsFingerprints = contactsFingerprints;
     }
 
     public void send(Message message, List<ExtensionElement> payload)
-            throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException {
-        Set<OpenPgpV4Fingerprint> encryptionFingerprints = new HashSet<>(contactsFingerprints.getActiveKeys());
-        encryptionFingerprints.addAll(ourFingerprints.getActiveKeys());
+            throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException,
+            SmackOpenPgpException, IOException {
+        MultiMap<BareJid, OpenPgpV4Fingerprint> fingerprints = oursAndRecipientFingerprints();
 
         SigncryptElement preparedPayload = new SigncryptElement(
                 Collections.<Jid>singleton(chat.getXmppAddressOfChatPartner()),
                 payload);
+
         OpenPgpElement encryptedPayload;
+        byte[] encryptedMessage;
 
         // Encrypt the payload
         try {
-            encryptedPayload = cryptoProvider.signAndEncrypt(
+            encryptedMessage = cryptoProvider.signAndEncrypt(
                     preparedPayload,
                     singingKey,
-                    encryptionFingerprints);
+                    fingerprints);
         } catch (MissingOpenPgpPublicKeyException e) {
             throw new AssertionError("Missing OpenPGP public key, even though this should not happen here.", e);
         }
+
+        encryptedPayload = new OpenPgpElement(Base64.encodeToString(encryptedMessage));
 
         // Add encrypted payload to message
         message.addExtension(encryptedPayload);
@@ -87,9 +96,25 @@ public class OpenPgpEncryptedChat {
     }
 
     public void send(Message message, CharSequence body)
-            throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException {
+            throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException,
+            SmackOpenPgpException, IOException {
         List<ExtensionElement> payload = new ArrayList<>();
         payload.add(new Message.Body(null, body.toString()));
         send(message, payload);
+    }
+
+    private MultiMap<BareJid, OpenPgpV4Fingerprint> oursAndRecipientFingerprints() {
+        MultiMap<BareJid, OpenPgpV4Fingerprint> fingerprints = new MultiMap<>();
+        for (OpenPgpV4Fingerprint f : contactsFingerprints.getActiveKeys()) {
+            fingerprints.put(contactsFingerprints.getJid(), f);
+        }
+
+        if (!contactsFingerprints.getJid().equals(ourFingerprints.getJid())) {
+            for (OpenPgpV4Fingerprint f : ourFingerprints.getActiveKeys()) {
+                fingerprints.put(ourFingerprints.getJid(), f);
+            }
+        }
+
+        return fingerprints;
     }
 }

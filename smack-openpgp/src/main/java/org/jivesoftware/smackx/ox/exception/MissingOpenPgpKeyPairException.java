@@ -31,8 +31,9 @@ public class MissingOpenPgpKeyPairException extends Exception {
      * Create a new {@link MissingOpenPgpKeyPairException}.
      *
      * @param owner owner of the missing key pair.
+     * @param e
      */
-    public MissingOpenPgpKeyPairException(BareJid owner) {
+    public MissingOpenPgpKeyPairException(BareJid owner, Throwable e) {
         super("Missing OpenPGP key pair for user " + owner);
         this.owner = owner;
     }

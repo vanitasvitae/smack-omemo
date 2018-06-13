@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.ox;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -32,14 +33,18 @@ import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.ox.chat.OpenPgpEncryptedChat;
+import org.jivesoftware.smackx.ox.chat.OpenPgpFingerprints;
+import org.jivesoftware.smackx.ox.chat.OpenPgpMessage;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
-import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.listener.OpenPgpEncryptedMessageListener;
+import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
@@ -62,6 +67,7 @@ public final class OXInstantMessagingManager extends Manager {
     private final ChatManager chatManager;
 
     private final Set<OpenPgpEncryptedMessageListener> chatMessageListeners = new HashSet<>();
+    private final Map<BareJid, OpenPgpEncryptedChat> chats = new HashMap<>();
 
     private OXInstantMessagingManager(final XMPPConnection connection) {
         super(connection);
@@ -144,23 +150,29 @@ public final class OXInstantMessagingManager extends Manager {
 
                     try {
                         OpenPgpEncryptedChat encryptedChat = chatWith(from);
-                        OpenPgpMessage decrypted = provider.decryptAndVerify(element, provider.availableOpenPgpPublicKeysFingerprints(from.asBareJid()));
-                        OpenPgpContentElement contentElement = decrypted.getOpenPgpContentElement();
-                        if (decrypted.getState() != OpenPgpMessage.State.signcrypt) {
+                        DecryptedBytesAndMetadata decryptedBytes = provider.decrypt(Base64.decode(
+                                element.getEncryptedBase64MessageContent()),
+                                from.asBareJid(),
+                                null);
+
+                        OpenPgpMessage openPgpMessage = new OpenPgpMessage(decryptedBytes.getBytes(),
+                                new OpenPgpMessage.Metadata(decryptedBytes.getDecryptionKey(),
+                                        decryptedBytes.getVerifiedSignatures()));
+
+                        OpenPgpContentElement contentElement = openPgpMessage.getOpenPgpContentElement();
+                        if (openPgpMessage.getState() != OpenPgpMessage.State.signcrypt) {
                             LOGGER.log(Level.WARNING, "Decrypted content is not a signcrypt element. Ignore it.");
                             return;
                         }
 
                         SigncryptElement signcryptElement = (SigncryptElement) contentElement;
                         for (OpenPgpEncryptedMessageListener l : chatMessageListeners) {
-                            l.newIncomingEncryptedMessage(from, message, signcryptElement, encryptedChat);
+                            l.newIncomingOxMessage(from, message, signcryptElement, encryptedChat);
                         }
                     } catch (SmackOpenPgpException e) {
                         LOGGER.log(Level.WARNING, "Could not start chat with " + from, e);
                     } catch (InterruptedException | XMPPException.XMPPErrorException | SmackException.NotConnectedException | SmackException.NoResponseException e) {
                         LOGGER.log(Level.WARNING, "Something went wrong.", e);
-                    } catch (MissingOpenPgpPublicKeyException e) {
-                        LOGGER.log(Level.WARNING, "Could not verify message " + message.getStanzaId() + ": Missing senders public key " + e.getFingerprint().toString(), e);
                     } catch (MissingOpenPgpKeyPairException e) {
                         LOGGER.log(Level.WARNING, "Could not decrypt message " + message.getStanzaId() + ": Missing secret key", e);
                     } catch (XmlPullParserException | IOException e) {
