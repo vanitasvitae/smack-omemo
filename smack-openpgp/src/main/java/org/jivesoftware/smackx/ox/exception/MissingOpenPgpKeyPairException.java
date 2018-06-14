@@ -16,6 +16,8 @@
  */
 package org.jivesoftware.smackx.ox.exception;
 
+import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+
 import org.jxmpp.jid.BareJid;
 
 /**
@@ -26,15 +28,23 @@ public class MissingOpenPgpKeyPairException extends Exception {
     private static final long serialVersionUID = 1L;
 
     private final BareJid owner;
+    private final OpenPgpV4Fingerprint fingerprint;
 
     /**
      * Create a new {@link MissingOpenPgpKeyPairException}.
      *
      * @param owner owner of the missing key pair.
-     * @param e
+     * @param fingerprint fingerprint of the missing key.
      */
-    public MissingOpenPgpKeyPairException(BareJid owner, Throwable e) {
-        super("Missing OpenPGP key pair for user " + owner);
+    public MissingOpenPgpKeyPairException(BareJid owner, OpenPgpV4Fingerprint fingerprint) {
+        super("Missing OpenPGP key pair " + fingerprint.toString() + " for user " + owner);
+        this.owner = owner;
+        this.fingerprint = fingerprint;
+    }
+
+    public MissingOpenPgpKeyPairException(BareJid owner, OpenPgpV4Fingerprint fingerprint, Throwable e) {
+        super("Missing OpenPGP key pair " + fingerprint.toString() + " for user " + owner, e);
+        this.fingerprint = fingerprint;
         this.owner = owner;
     }
 
@@ -46,4 +56,10 @@ public class MissingOpenPgpKeyPairException extends Exception {
     public BareJid getOwner() {
         return owner;
     }
+
+    public OpenPgpV4Fingerprint getFingerprint() {
+        return fingerprint;
+    }
+
+
 }

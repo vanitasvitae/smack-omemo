@@ -27,8 +27,8 @@ public class MissingOpenPgpPublicKeyException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
-    private BareJid user;
-    private OpenPgpV4Fingerprint fingerprint;
+    private final BareJid owner;
+    private final OpenPgpV4Fingerprint fingerprint;
 
     /**
      * Create a new {@link MissingOpenPgpPublicKeyException}.
@@ -37,22 +37,25 @@ public class MissingOpenPgpPublicKeyException extends Exception {
      * @param fingerprint {@link OpenPgpV4Fingerprint} of the missing key.
      */
     public MissingOpenPgpPublicKeyException(BareJid owner, OpenPgpV4Fingerprint fingerprint) {
-        super("Missing public key " + fingerprint.toString() + " for user " + owner + ".");
-        this.user = owner;
+        super("Missing public key " + fingerprint.toString() + " for owner " + owner + ".");
+        this.owner = owner;
         this.fingerprint = fingerprint;
     }
 
-    public MissingOpenPgpPublicKeyException(Throwable e) {
-
+    public MissingOpenPgpPublicKeyException(BareJid owner, OpenPgpV4Fingerprint fingerprint, Throwable e) {
+        super("Missing public key " + fingerprint.toString() + " for owner " + owner + ".", e);
+        this.owner = owner;
+        this.fingerprint = fingerprint;
     }
+
 
     /**
      * Return the {@link BareJid} of the owner of the missing key.
      *
      * @return owner of missing key.
      */
-    public BareJid getUser() {
-        return user;
+    public BareJid getOwner() {
+        return owner;
     }
 
     /**

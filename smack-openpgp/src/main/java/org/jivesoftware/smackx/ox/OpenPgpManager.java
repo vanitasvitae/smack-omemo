@@ -232,14 +232,14 @@ public final class OpenPgpManager extends Manager {
                                         SecretKeyBackupSelectionCallback selectKeyCallback)
             throws InterruptedException, PubSubException.NotALeafNodeException,
             XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException,
-            SmackException.NotLoggedInException {
+            SmackException.NotLoggedInException, SmackOpenPgpException, IOException {
         throwIfNoProviderSet();
         throwIfNotAuthenticated();
 
         BareJid ownJid = connection().getUser().asBareJid();
 
         String backupCode = generateBackupPassword();
-        Set<OpenPgpV4Fingerprint> availableKeyPairs = provider.getStore().getAvailableKeyPairFingerprints();
+        Set<OpenPgpV4Fingerprint> availableKeyPairs = provider.getStore().getAvailableKeyPairFingerprints(ownJid);
         Set<OpenPgpV4Fingerprint> selectedKeyPairs = selectKeyCallback.selectKeysToBackup(availableKeyPairs);
 
         SecretkeyElement secretKey = createSecretkeyElement(ownJid, selectedKeyPairs, backupCode);
@@ -419,7 +419,7 @@ public final class OpenPgpManager extends Manager {
                                               OpenPgpV4Fingerprint fingerprint,
                                               Date date)
             throws MissingOpenPgpPublicKeyException {
-        byte[] keyBytes = provider.getStore().getPublicKeyBytes(owner, fingerprint);
+        byte[] keyBytes = provider.getStore().getPublicKeyRingBytes(owner, fingerprint);
         return createPubkeyElement(keyBytes, date);
     }
 
@@ -429,11 +429,11 @@ public final class OpenPgpManager extends Manager {
 
     private SecretkeyElement createSecretkeyElement(BareJid owner,
                                                     Set<OpenPgpV4Fingerprint> fingerprints,
-                                                    String backupCode) {
+                                                    String backupCode) throws SmackOpenPgpException, IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         for (OpenPgpV4Fingerprint fingerprint : fingerprints) {
             try {
-                byte[] bytes = provider.getStore().getSecretKeyBytes(owner, fingerprint);
+                byte[] bytes = provider.getStore().getSecretKeyRingBytes(owner, fingerprint);
                 buffer.write(bytes);
             } catch (MissingOpenPgpKeyPairException | IOException e) {
                 LOGGER.log(Level.WARNING, "Cannot backup secret key " + Long.toHexString(fingerprint.getKeyId()) + ".", e);
@@ -443,7 +443,8 @@ public final class OpenPgpManager extends Manager {
         return createSecretkeyElement(buffer.toByteArray(), backupCode);
     }
 
-    private SecretkeyElement createSecretkeyElement(byte[] keys, String backupCode) {
+    private SecretkeyElement createSecretkeyElement(byte[] keys, String backupCode)
+            throws SmackOpenPgpException, IOException {
         byte[] encrypted = provider.symmetricallyEncryptWithPassword(keys, backupCode);
         return new SecretkeyElement(Base64.encode(encrypted));
     }

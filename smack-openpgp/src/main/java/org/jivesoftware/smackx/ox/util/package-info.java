@@ -14,27 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * Utility classes for XEP-0373: OpenPGP for XMPP.
+ */
 package org.jivesoftware.smackx.ox.util;
-
-import java.util.Arrays;
-
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
-
-public class KeyBytesAndFingerprint {
-
-    private final byte[] bytes;
-    private final OpenPgpV4Fingerprint fingerprint;
-
-    public KeyBytesAndFingerprint(byte[] bytes, OpenPgpV4Fingerprint fingerprint) {
-        this.bytes = bytes;
-        this.fingerprint = fingerprint;
-    }
-
-    public byte[] getBytes() {
-        return Arrays.copyOf(bytes, bytes.length);
-    }
-
-    public OpenPgpV4Fingerprint getFingerprint() {
-        return fingerprint;
-    }
-}

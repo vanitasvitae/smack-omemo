@@ -49,11 +49,12 @@ public interface OpenPgpStore {
 
     /**
      * Return a {@link Set} containing the {@link OpenPgpV4Fingerprint}s of the master keys of all available
-     * OpenPGP key pairs.
+     * OpenPGP key pairs of {@code owner}.
      *
+     * @param owner owner.
      * @return set of fingerprints of available OpenPGP key pairs master keys.
      */
-    Set<OpenPgpV4Fingerprint> getAvailableKeyPairFingerprints();
+    Set<OpenPgpV4Fingerprint> getAvailableKeyPairFingerprints(BareJid owner) throws SmackOpenPgpException;
 
     /**
      * Return a {@link Map} containing the {@link OpenPgpV4Fingerprint}s of all OpenPGP public keys of a
@@ -86,7 +87,7 @@ public interface OpenPgpStore {
     Map<OpenPgpV4Fingerprint, Date> getAnnouncedKeysFingerprints(BareJid contact);
 
     /**
-     * Store a {@Map} of a contacts fingerprints and publication dates in persistent storage.
+     * Store a {@link Map} of a contacts fingerprints and publication dates in persistent storage.
      *
      * @param contact {@link BareJid} of the owner of the announced public keys.
      * @param fingerprints {@link Map} which contains a list of the keys of {@code owner}.
@@ -94,22 +95,22 @@ public interface OpenPgpStore {
     void setAnnouncedKeysFingerprints(BareJid contact, Map<OpenPgpV4Fingerprint, Date> fingerprints);
 
     /**
-     * Return the {@link Date} of the last revision which was fetched from PubSub.
+     * Return the a {@link Map} of {@link OpenPgpV4Fingerprint}s and the {@link Date}s of when they were last
+     * fetched from PubSub.
      *
-     * @param owner owner of the key
-     * @param fingerprint fingerprint of the key.
-     * @return {@link Date} or {@code null} if no record found.
+     * @param owner owner of the keys
+     * @return {@link Map} of keys last revision dates.
      */
-    Date getPubkeysLastRevision(BareJid owner, OpenPgpV4Fingerprint fingerprint);
+    Map<OpenPgpV4Fingerprint, Date> getPubkeysLastRevisions(BareJid owner);
 
     /**
-     * Set the {@link Date} of the last revision which was fetched from PubSub.
+     * Set the last revision dates of all keys of a contact.
      *
-     * @param owner owner of the key
-     * @param fingerprint fingerprint of the key
-     * @param revision {@link Date} of the revision
+     * @param owner owner of the keys
+     * @param revisionDates {@link Map} of {@link OpenPgpV4Fingerprint}s and the {@link Date}s of when they
+     *                                 were last fetched from PubSub.
      */
-    void setPubkeysLastRevision(BareJid owner, OpenPgpV4Fingerprint fingerprint, Date revision);
+    void setPubkeysLastRevision(BareJid owner, Map<OpenPgpV4Fingerprint, Date> revisionDates);
 
     /**
      * Return a {@link MultiMap} which contains contacts and their trusted keys {@link OpenPgpV4Fingerprint}s.
@@ -125,7 +126,7 @@ public interface OpenPgpStore {
      * @param fingerprint fingerprint of the key
      * @return byte representation of the public key.
      */
-    byte[] getPublicKeyBytes(BareJid owner, OpenPgpV4Fingerprint fingerprint)
+    byte[] getPublicKeyRingBytes(BareJid owner, OpenPgpV4Fingerprint fingerprint)
             throws MissingOpenPgpPublicKeyException;
 
     /**
@@ -135,7 +136,7 @@ public interface OpenPgpStore {
      * @param fingerprint fingerprint of the key
      * @return byte representation of the secret key.
      */
-    byte[] getSecretKeyBytes(BareJid owner, OpenPgpV4Fingerprint fingerprint)
+    byte[] getSecretKeyRingBytes(BareJid owner, OpenPgpV4Fingerprint fingerprint)
             throws MissingOpenPgpKeyPairException;
 
 }

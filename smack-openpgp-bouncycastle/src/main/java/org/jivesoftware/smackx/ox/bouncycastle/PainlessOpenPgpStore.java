@@ -30,11 +30,19 @@ public interface PainlessOpenPgpStore extends OpenPgpStore {
 
     PGPPublicKeyRingCollection getPublicKeyRings(BareJid owner) throws IOException, PGPException;
 
-    PGPSecretKeyRingCollection getSecretKeyRing(BareJid owner) throws IOException, PGPException;
+    PGPSecretKeyRingCollection getSecretKeyRings(BareJid owner) throws IOException, PGPException;
 
     void storePublicKeyRing(BareJid owner, PGPPublicKeyRingCollection publicKeys) throws IOException;
 
     void storeSecretKeyRing(BareJid owner, PGPSecretKeyRingCollection secretKeys) throws IOException;
+
+    byte[] loadPublicKeyRingBytes(BareJid owner);
+
+    byte[] loadSecretKeyRingBytes(BareJid owner);
+
+    void storePublicKeyRingBytes(BareJid owner, byte[] bytes);
+
+    void storeSecretKeyRingBytes(BareJid owner, byte[] bytes);
 
     SecretKeyRingProtector getSecretKeyProtector();
 }
