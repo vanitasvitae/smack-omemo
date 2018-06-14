@@ -317,14 +317,18 @@ public final class OpenPgpManager extends Manager {
                     if (pubkeyElement == null) {
                         continue;
                     }
+
                     processPublicKey(pubkeyElement, jid);
                     available.add(f);
+
                 } catch (PubSubException.NotAPubSubNodeException | PubSubException.NotALeafNodeException e) {
                     LOGGER.log(Level.WARNING, "Could not fetch public key " + f.toString() + " of user " + jid.toString(), e);
                     unfetched.put(f, e);
                 } catch (MissingUserIdOnKeyException e) {
                     LOGGER.log(Level.WARNING, "Key does not contain user-id of " + jid + ". Ignoring the key.", e);
                     unfetched.put(f, e);
+                } catch (IOException e) {
+                    LOGGER.log(Level.WARNING, "Could not import key " + f.toString() + " of user " + jid.toString(), e);
                 }
             }
         }
@@ -382,7 +386,7 @@ public final class OpenPgpManager extends Manager {
      */
 
     private void processPublicKey(PubkeyElement pubkeyElement, BareJid owner)
-            throws MissingUserIdOnKeyException {
+            throws MissingUserIdOnKeyException, IOException, SmackOpenPgpException {
         byte[] base64 = pubkeyElement.getDataElement().getB64Data();
         provider.importPublicKey(owner, Base64.decode(base64));
     }

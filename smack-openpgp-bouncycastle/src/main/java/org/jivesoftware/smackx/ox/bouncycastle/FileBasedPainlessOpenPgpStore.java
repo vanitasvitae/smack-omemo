@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -160,7 +161,7 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
         Set<OpenPgpV4Fingerprint> fingerprints = new HashSet<>();
         try {
             PGPSecretKeyRingCollection secretKeys = getSecretKeyRings(owner);
-            for (PGPSecretKeyRing s : secretKeys) {
+            for (PGPSecretKeyRing s : secretKeys != null ? secretKeys : Collections.<PGPSecretKeyRing>emptySet()) {
                 fingerprints.add(PainlessOpenPgpProvider.getFingerprint(s.getPublicKey()));
             }
         } catch (IOException | PGPException e) {
@@ -176,7 +177,7 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
         try {
             PGPPublicKeyRingCollection publicKeys = getPublicKeyRings(contact);
             Set<OpenPgpV4Fingerprint> fingerprints = new HashSet<>();
-            for (PGPPublicKeyRing ring : publicKeys) {
+            for (PGPPublicKeyRing ring : publicKeys != null ? publicKeys : Collections.<PGPPublicKeyRing>emptySet()) {
                 OpenPgpV4Fingerprint fingerprint = PainlessOpenPgpProvider.getFingerprint(ring.getPublicKey());
                 fingerprints.add(fingerprint);
             }
@@ -252,8 +253,8 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
                     LOGGER.log(Level.WARNING, "Encountered illegal line in file " +
                             file.getAbsolutePath() + ": " + lineNr, e);
                 }
-                reader.close();
             }
+            reader.close();
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Could not read fingerprints and dates from file " + file.getAbsolutePath(), e);
             if (reader != null) {
@@ -379,7 +380,7 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
     }
 
     private File getContactsPath(BareJid owner, boolean create) throws IOException {
-        File path = new File(getContactsPath(create) + owner.toString());
+        File path = new File(getContactsPath(create), owner.toString());
         if (create && !path.exists()) {
             createDirectoryOrThrow(path);
         }

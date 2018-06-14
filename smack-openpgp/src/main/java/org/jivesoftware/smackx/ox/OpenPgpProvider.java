@@ -133,9 +133,11 @@ public interface OpenPgpProvider {
             throws SmackOpenPgpException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, IOException;
 
-    OpenPgpV4Fingerprint importPublicKey(BareJid owner, byte[] bytes) throws MissingUserIdOnKeyException;
+    OpenPgpV4Fingerprint importPublicKey(BareJid owner, byte[] bytes)
+            throws MissingUserIdOnKeyException, IOException, SmackOpenPgpException;
 
-    OpenPgpV4Fingerprint importSecretKey(BareJid owner, byte[] bytes) throws MissingUserIdOnKeyException;
+    OpenPgpV4Fingerprint importSecretKey(BareJid owner, byte[] bytes)
+            throws MissingUserIdOnKeyException, SmackOpenPgpException, IOException;
 
     OpenPgpStore getStore();
 }

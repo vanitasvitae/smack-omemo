@@ -24,12 +24,15 @@ import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.jivesoftware.smack.util.MultiMap;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+import org.jivesoftware.smackx.ox.bouncycastle.selection_strategy.BareJidUserId;
 import org.jivesoftware.smackx.ox.callback.SmackMissingOpenPgpPublicKeyCallback;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
@@ -46,11 +49,14 @@ import de.vanitasvitae.crypto.pgpainless.decryption_verification.DecryptionStrea
 import de.vanitasvitae.crypto.pgpainless.decryption_verification.MissingPublicKeyCallback;
 import de.vanitasvitae.crypto.pgpainless.decryption_verification.PainlessResult;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
+import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
@@ -72,7 +78,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             throws MissingOpenPgpKeyPairException, MissingOpenPgpPublicKeyException, SmackOpenPgpException,
             IOException {
 
-        Set<PGPPublicKeyRing> allRecipientsKeys = getEncryptionKeys(encryptionKeys);
+        PGPPublicKeyRing[] validEncryptionKeys = getEncryptionKeys(encryptionKeys);
         PGPSecretKeyRing signingKeyRing = getSigningKey(signingKey);
 
         InputStream fromPlain = element.toInputStream();
@@ -81,7 +87,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         try {
             encryptor = PGPainless.createEncryptor()
                     .onOutputStream(encrypted)
-                    .toRecipients((PGPPublicKeyRing[]) allRecipientsKeys.toArray())
+                    .toRecipients(validEncryptionKeys)
                     .usingSecureAlgorithms()
                     .signWith(store.getSecretKeyProtector(), signingKeyRing)
                     .noArmor();
@@ -129,7 +135,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
     @Override
     public byte[] encrypt(CryptElement element, MultiMap<BareJid, OpenPgpV4Fingerprint> encryptionKeyFingerprints)
             throws MissingOpenPgpPublicKeyException, IOException, SmackOpenPgpException {
-        Set<PGPPublicKeyRing> allRecipientsKeys = getEncryptionKeys(encryptionKeyFingerprints);
+        PGPPublicKeyRing[] allRecipientsKeys = getEncryptionKeys(encryptionKeyFingerprints);
 
         InputStream fromPlain = element.toInputStream();
         ByteArrayOutputStream encrypted = new ByteArrayOutputStream();
@@ -137,7 +143,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         try {
             encryptor = PGPainless.createEncryptor()
                     .onOutputStream(encrypted)
-                    .toRecipients((PGPPublicKeyRing[]) allRecipientsKeys.toArray())
+                    .toRecipients(allRecipientsKeys)
                     .usingSecureAlgorithms()
                     .doNotSign()
                     .noArmor();
@@ -210,7 +216,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         return store;
     }
 
-    private Set<PGPPublicKeyRing> getEncryptionKeys(MultiMap<BareJid, OpenPgpV4Fingerprint> encryptionKeys)
+    private PGPPublicKeyRing[] getEncryptionKeys(MultiMap<BareJid, OpenPgpV4Fingerprint> encryptionKeys)
             throws IOException, SmackOpenPgpException {
         Set<PGPPublicKeyRing> allRecipientsKeys = new HashSet<>();
 
@@ -227,7 +233,13 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             }
         }
 
-        return allRecipientsKeys;
+        PGPPublicKeyRing[] allEncryptionKeys = new PGPPublicKeyRing[allRecipientsKeys.size()];
+        Iterator<PGPPublicKeyRing> iterator = allRecipientsKeys.iterator();
+        for (int i = 0; i < allEncryptionKeys.length; i++) {
+            allEncryptionKeys[i] = iterator.next();
+        }
+
+        return allEncryptionKeys;
     }
 
     private PGPSecretKeyRing getSigningKey(OpenPgpV4Fingerprint signingKey)
@@ -256,13 +268,66 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
     }
 
     @Override
-    public OpenPgpV4Fingerprint importPublicKey(BareJid owner, byte[] bytes) throws MissingUserIdOnKeyException {
-        return null;
+    public OpenPgpV4Fingerprint importPublicKey(BareJid owner, byte[] bytes)
+            throws MissingUserIdOnKeyException, IOException, SmackOpenPgpException {
+        PGPPublicKeyRing publicKeys = new PGPPublicKeyRing(bytes, new BcKeyFingerprintCalculator());
+        return importPublicKey(owner, publicKeys);
+    }
+
+    public OpenPgpV4Fingerprint importPublicKey(BareJid owner, PGPPublicKeyRing ring)
+            throws SmackOpenPgpException, IOException, MissingUserIdOnKeyException {
+        if (!new BareJidUserId.PubRingSelectionStrategy().accept(owner, ring)) {
+            throw new MissingUserIdOnKeyException(owner, ring.getPublicKey().getKeyID());
+        }
+        try {
+            PGPPublicKeyRingCollection publicKeyRings = getStore().getPublicKeyRings(owner);
+            if (publicKeyRings == null) {
+                publicKeyRings = new PGPPublicKeyRingCollection(Collections.singleton(ring));
+            } else {
+                publicKeyRings = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRings, ring);
+            }
+            getStore().storePublicKeyRing(owner, publicKeyRings);
+        } catch (PGPException e) {
+            throw new SmackOpenPgpException(e);
+        }
+        return getFingerprint(ring.getPublicKey());
     }
 
     @Override
-    public OpenPgpV4Fingerprint importSecretKey(BareJid owner, byte[] bytes) throws MissingUserIdOnKeyException {
-        return null;
+    public OpenPgpV4Fingerprint importSecretKey(BareJid owner, byte[] bytes)
+            throws MissingUserIdOnKeyException, SmackOpenPgpException, IOException {
+        PGPSecretKeyRing secretKeys;
+        try {
+            secretKeys = new PGPSecretKeyRing(bytes, new BcKeyFingerprintCalculator());
+        } catch (PGPException | IOException e) {
+            throw new SmackOpenPgpException("Could not deserialize PGP secret key of " + owner.toString(), e);
+        }
+
+        if (!new BareJidUserId.SecRingSelectionStrategy().accept(owner, secretKeys)) {
+            throw new MissingUserIdOnKeyException(owner, secretKeys.getPublicKey().getKeyID());
+        }
+
+        PGPSecretKeyRingCollection secretKeyRings;
+        try {
+            secretKeyRings = getStore().getSecretKeyRings(owner);
+        } catch (PGPException | IOException e) {
+            throw new SmackOpenPgpException("Could not load secret key ring of " + owner.toString(), e);
+        }
+        if (secretKeyRings == null) {
+            try {
+                secretKeyRings = new PGPSecretKeyRingCollection(Collections.singleton(secretKeys));
+            } catch (IOException | PGPException e) {
+                throw new SmackOpenPgpException("Could not create SecretKeyRingCollection from SecretKeyRing.", e);
+            }
+        } else {
+            secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, secretKeys);
+        }
+        getStore().storeSecretKeyRing(owner, secretKeyRings);
+
+        PGPPublicKeyRing publicKeys = BCUtil.publicKeyRingFromSecretKeyRing(secretKeys);
+        importPublicKey(owner, publicKeys);
+
+        return getFingerprint(publicKeys.getPublicKey());
     }
 
     public static OpenPgpV4Fingerprint getFingerprint(PGPPublicKey publicKey) {

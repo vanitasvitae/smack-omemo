@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
@@ -205,7 +206,15 @@ public class PubSubDelegate {
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException {
         PubSubManager pm = PubSubManager.getInstance(connection, connection.getUser().asBareJid());
-        pm.deleteNode(PEP_NODE_PUBLIC_KEYS);
+        try {
+            pm.deleteNode(PEP_NODE_PUBLIC_KEYS);
+        } catch (XMPPException.XMPPErrorException e) {
+            if (e.getXMPPError().getCondition() == StanzaError.Condition.item_not_found) {
+                LOGGER.log(Level.FINE, "Node does not exist. No need to delete it.");
+            } else {
+                throw e;
+            }
+        }
     }
 
     /**

@@ -66,6 +66,9 @@ public abstract class AbstractPainlessOpenPgpStore implements PainlessOpenPgpSto
         }
 
         byte[] bytes = loadPublicKeyRingBytes(owner);
+        if (bytes == null) {
+            return null;
+        }
         keyRing = new PGPPublicKeyRingCollection(bytes, fingerprintCalculator);
 
         publicKeyRings.put(owner, keyRing);
@@ -81,6 +84,9 @@ public abstract class AbstractPainlessOpenPgpStore implements PainlessOpenPgpSto
         }
 
         byte[] bytes = loadSecretKeyRingBytes(owner);
+        if (bytes == null) {
+            return null;
+        }
         keyRing = new PGPSecretKeyRingCollection(bytes, fingerprintCalculator);
 
         secretKeyRings.put(owner, keyRing);
