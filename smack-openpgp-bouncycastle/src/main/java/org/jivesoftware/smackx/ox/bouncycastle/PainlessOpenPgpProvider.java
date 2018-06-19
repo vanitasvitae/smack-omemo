@@ -239,12 +239,11 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             }
         }
 
-        return decryptImpl(bytes, secretKeyRings, protector, trustedKeyIds, trustedKeys);
+        return decryptImpl(bytes, secretKeyRings, protector, trustedKeys);
     }
 
     DecryptedBytesAndMetadata decryptImpl(byte[] bytes, PGPSecretKeyRingCollection decryptionKeys,
                                           SecretKeyRingProtector protector,
-                                          Set<Long> trustedKeyIds,
                                           Set<PGPPublicKeyRing> verificationKeys)
             throws SmackOpenPgpException, IOException {
 
@@ -255,7 +254,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             fromEncrypted = PGPainless.createDecryptor()
                     .onInputStream(encryptedBytes)
                     .decryptWith(decryptionKeys, protector)
-                    .verifyWith(trustedKeyIds, verificationKeys)
+                    .verifyWith(verificationKeys)
                     .ignoreMissingPublicKeys()
                     .build();
         } catch (IOException | PGPException e) {

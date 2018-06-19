@@ -53,6 +53,8 @@ public interface OpenPgpStore {
      *
      * @param owner owner.
      * @return set of fingerprints of available OpenPGP key pairs master keys.
+     *
+     * @throws SmackOpenPgpException
      */
     Set<OpenPgpV4Fingerprint> getAvailableKeyPairFingerprints(BareJid owner) throws SmackOpenPgpException;
 

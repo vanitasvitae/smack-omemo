@@ -78,10 +78,12 @@ public final class OXInstantMessagingManager extends Manager {
 
     public static OXInstantMessagingManager getInstanceFor(XMPPConnection connection) {
         OXInstantMessagingManager manager = INSTANCES.get(connection);
+
         if (manager == null) {
             manager = new OXInstantMessagingManager(connection);
             INSTANCES.put(connection, manager);
         }
+
         return manager;
     }
 
@@ -123,10 +125,17 @@ public final class OXInstantMessagingManager extends Manager {
             throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
 
-        OpenPgpFingerprints theirKeys = openPgpManager.determineContactsKeys(jid);
-        OpenPgpFingerprints ourKeys = openPgpManager.determineContactsKeys(connection().getUser().asBareJid());
-        Chat chat = chatManager.chatWith(jid);
-        return new OpenPgpEncryptedChat(openPgpManager.getOpenPgpProvider(), chat, ourKeys, theirKeys);
+        OpenPgpEncryptedChat encryptedChat = chats.get(jid);
+
+        if (encryptedChat == null) {
+            OpenPgpFingerprints theirKeys = openPgpManager.determineContactsKeys(jid);
+            OpenPgpFingerprints ourKeys = openPgpManager.determineContactsKeys(connection().getUser().asBareJid());
+            Chat chat = chatManager.chatWith(jid);
+            encryptedChat = new OpenPgpEncryptedChat(openPgpManager.getOpenPgpProvider(), chat, ourKeys, theirKeys);
+            chats.put(jid, encryptedChat);
+        }
+
+        return encryptedChat;
     }
 
     public boolean addOpenPgpEncryptedMessageListener(OpenPgpEncryptedMessageListener listener) {
