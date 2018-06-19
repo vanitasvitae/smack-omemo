@@ -147,13 +147,11 @@ public final class OXInstantMessagingManager extends Manager {
                     }
 
                     OpenPgpProvider provider = openPgpManager.getOpenPgpProvider();
+                    byte[] decoded = Base64.decode(element.getEncryptedBase64MessageContent());
 
                     try {
                         OpenPgpEncryptedChat encryptedChat = chatWith(from);
-                        DecryptedBytesAndMetadata decryptedBytes = provider.decrypt(Base64.decode(
-                                element.getEncryptedBase64MessageContent()),
-                                from.asBareJid(),
-                                null);
+                        DecryptedBytesAndMetadata decryptedBytes = provider.decrypt(decoded, from.asBareJid(), null);
 
                         OpenPgpMessage openPgpMessage = new OpenPgpMessage(decryptedBytes.getBytes(),
                                 new OpenPgpMessage.Metadata(decryptedBytes.getDecryptionKey(),

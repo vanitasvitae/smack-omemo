@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.jivesoftware.smack.util.Objects;
-import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
@@ -70,7 +69,7 @@ public class OpenPgpMessage {
     }
 
     public OpenPgpMessage(byte[] bytes, Metadata metadata) {
-        this.element = new String(Base64.decode(bytes), Charset.forName("UTF-8"));
+        this.element = new String(bytes, Charset.forName("UTF-8"));
         this.state = metadata.getState();
     }
 

@@ -24,10 +24,14 @@ import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smack.util.MultiMap;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
@@ -45,9 +49,10 @@ import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 
 import de.vanitasvitae.crypto.pgpainless.PGPainless;
+import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.decryption_verification.DecryptionStream;
-import de.vanitasvitae.crypto.pgpainless.decryption_verification.MissingPublicKeyCallback;
 import de.vanitasvitae.crypto.pgpainless.decryption_verification.PainlessResult;
+import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
 import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.openpgp.PGPException;
@@ -62,6 +67,8 @@ import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
 
 public class PainlessOpenPgpProvider implements OpenPgpProvider {
+
+    private static final Logger LOGGER = Logger.getLogger(PainlessOpenPgpProvider.class.getName());
 
     private final PainlessOpenPgpStore store;
     private final BareJid owner;
@@ -78,28 +85,62 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             throws MissingOpenPgpKeyPairException, MissingOpenPgpPublicKeyException, SmackOpenPgpException,
             IOException {
 
-        PGPPublicKeyRing[] validEncryptionKeys = getEncryptionKeys(encryptionKeys);
-        PGPSecretKeyRing signingKeyRing = getSigningKey(signingKey);
+        PGPSecretKeyRing secretKeyRing;
+        SecretKeyRingProtector protector = getStore().getSecretKeyProtector();
 
-        InputStream fromPlain = element.toInputStream();
-        ByteArrayOutputStream encrypted = new ByteArrayOutputStream();
-        OutputStream encryptor;
         try {
-            encryptor = PGPainless.createEncryptor()
-                    .onOutputStream(encrypted)
-                    .toRecipients(validEncryptionKeys)
-                    .usingSecureAlgorithms()
-                    .signWith(store.getSecretKeyProtector(), signingKeyRing)
-                    .noArmor();
+            secretKeyRing = getStore().getSecretKeyRings(owner).getSecretKeyRing(signingKey.getKeyId());
         } catch (PGPException e) {
+            LOGGER.log(Level.INFO, "Could not get secret key with id " + Long.toHexString(signingKey.getKeyId()), e);
+            throw new MissingOpenPgpKeyPairException(owner, signingKey, e);
+        }
+
+        MultiMap<BareJid, PGPPublicKeyRing> publicKeyRingMultiMap = new MultiMap<>();
+        for (BareJid jid : encryptionKeys.keySet()) {
+            try {
+                PGPPublicKeyRingCollection publicKeyRings = getStore().getPublicKeyRings(jid);
+                for (OpenPgpV4Fingerprint f : encryptionKeys.getAll(jid)) {
+                    PGPPublicKeyRing ring = publicKeyRings.getPublicKeyRing(f.getKeyId());
+                    if (ring != null) {
+                        publicKeyRingMultiMap.put(jid, ring);
+                    }
+                }
+            } catch (PGPException e) {
+                LOGGER.log(Level.INFO, "Could get public keys of " + jid.toString());
+                throw new MissingOpenPgpPublicKeyException(owner, encryptionKeys.getFirst(jid));
+            }
+        }
+
+        return signAndEncryptImpl(element, secretKeyRing, protector, publicKeyRingMultiMap);
+    }
+
+    byte[] signAndEncryptImpl(SigncryptElement element,
+                              PGPSecretKeyRing signingKey,
+                              SecretKeyRingProtector secretKeyRingProtector,
+                              MultiMap<BareJid, PGPPublicKeyRing> encryptionKeys)
+            throws SmackOpenPgpException, IOException {
+        InputStream fromPlain = element.toInputStream();
+        ByteArrayOutputStream encryptedBytes = new ByteArrayOutputStream();
+
+        OutputStream toEncrypted;
+        try {
+            toEncrypted = PGPainless.createEncryptor()
+                    .onOutputStream(encryptedBytes)
+                    .toRecipients(new ArrayList<>(encryptionKeys.values()).toArray(new PGPPublicKeyRing[]{}))
+                    .usingSecureAlgorithms()
+                    .signWith(secretKeyRingProtector, signingKey)
+                    .noArmor();
+        } catch (PGPException | IOException e) {
             throw new SmackOpenPgpException(e);
         }
 
-        Streams.pipeAll(fromPlain, encryptor);
-        fromPlain.close();
-        encryptor.close();
+        Streams.pipeAll(fromPlain, toEncrypted);
+        toEncrypted.flush();
+        toEncrypted.close();
 
-        return encrypted.toByteArray();
+        encryptedBytes.close();
+
+        return encryptedBytes.toByteArray();
     }
 
     @Override
@@ -161,31 +202,73 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
     @Override
     public DecryptedBytesAndMetadata decrypt(byte[] bytes, BareJid sender, final SmackMissingOpenPgpPublicKeyCallback missingPublicKeyCallback)
             throws MissingOpenPgpKeyPairException, SmackOpenPgpException, IOException {
-        Set<Long> trustedKeyIds = new HashSet<>();
-        Set<PGPPublicKeyRing> senderKeys = new HashSet<>();
-        InputStream fromEncrypted = new ByteArrayInputStream(bytes);
-        ByteArrayOutputStream toPlain = new ByteArrayOutputStream();
-        DecryptionStream decryptionStream;
-        try {
-            decryptionStream = PGPainless.createDecryptor().onInputStream(fromEncrypted)
-                    .decryptWith(store.getSecretKeyRings(owner), store.getSecretKeyProtector())
-                    .verifyWith(trustedKeyIds, senderKeys)
-                    .handleMissingPublicKeysWith(new MissingPublicKeyCallback() {
-                        @Override
-                        public void onMissingPublicKeyEncountered(Long aLong) {
 
-                        }
-                    })
-                    .build();
+        PGPSecretKeyRingCollection secretKeyRings;
+        try {
+            secretKeyRings = getStore().getSecretKeyRings(owner);
         } catch (PGPException e) {
+            LOGGER.log(Level.INFO, "Could not get secret keys of user " + owner);
+            throw new MissingOpenPgpKeyPairException(owner, getStore().getPrimaryOpenPgpKeyPairFingerprint());
+        }
+
+        SecretKeyRingProtector protector = getStore().getSecretKeyProtector();
+
+        List<OpenPgpV4Fingerprint> trustedFingerprints = getStore().getAllContactsTrustedFingerprints().getAll(sender);
+        Set<Long> trustedKeyIds = new HashSet<>();
+        for (OpenPgpV4Fingerprint fingerprint : trustedFingerprints) {
+            trustedKeyIds.add(fingerprint.getKeyId());
+        }
+
+        PGPPublicKeyRingCollection publicKeyRings;
+        try {
+            publicKeyRings = getStore().getPublicKeyRings(sender);
+        } catch (PGPException e) {
+            LOGGER.log(Level.INFO, "Could not get public keys of sender " + sender.toString(), e);
+            if (missingPublicKeyCallback != null) {
+                // TODO: Handle missing key
+            }
             throw new SmackOpenPgpException(e);
         }
-        Streams.pipeAll(decryptionStream, toPlain);
+
+        Iterator<PGPPublicKeyRing> iterator = publicKeyRings.getKeyRings();
+        Set<PGPPublicKeyRing> trustedKeys = new HashSet<>();
+        while (iterator.hasNext()) {
+            PGPPublicKeyRing ring = iterator.next();
+            if (trustedKeyIds.contains(ring.getPublicKey().getKeyID())) {
+                trustedKeys.add(ring);
+            }
+        }
+
+        return decryptImpl(bytes, secretKeyRings, protector, trustedKeyIds, trustedKeys);
+    }
+
+    DecryptedBytesAndMetadata decryptImpl(byte[] bytes, PGPSecretKeyRingCollection decryptionKeys,
+                                          SecretKeyRingProtector protector,
+                                          Set<Long> trustedKeyIds,
+                                          Set<PGPPublicKeyRing> verificationKeys)
+            throws SmackOpenPgpException, IOException {
+
+        InputStream encryptedBytes = new ByteArrayInputStream(bytes);
+        ByteArrayOutputStream toPlain = new ByteArrayOutputStream();
+        DecryptionStream fromEncrypted;
+        try {
+            fromEncrypted = PGPainless.createDecryptor()
+                    .onInputStream(encryptedBytes)
+                    .decryptWith(decryptionKeys, protector)
+                    .verifyWith(trustedKeyIds, verificationKeys)
+                    .ignoreMissingPublicKeys()
+                    .build();
+        } catch (IOException | PGPException e) {
+            throw new SmackOpenPgpException(e);
+        }
+
+        Streams.pipeAll(fromEncrypted, toPlain);
+
         fromEncrypted.close();
-        decryptionStream.close();
+        toPlain.flush();
+        toPlain.close();
 
-        PainlessResult result = decryptionStream.getResult();
-
+        PainlessResult result = fromEncrypted.getResult();
         return new DecryptedBytesAndMetadata(toPlain.toByteArray(),
                 result.getVerifiedSignatureKeyIds(),
                 result.getDecryptionKeyId());
@@ -195,7 +278,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
     public byte[] symmetricallyEncryptWithPassword(byte[] bytes, String password)
             throws SmackOpenPgpException, IOException {
         try {
-            return PGPainless.encryptWithPassword(bytes, password.toCharArray());
+            return PGPainless.encryptWithPassword(bytes, password.toCharArray(), SymmetricKeyAlgorithm.AES_256);
         } catch (PGPException e) {
             throw new SmackOpenPgpException(e);
         }
