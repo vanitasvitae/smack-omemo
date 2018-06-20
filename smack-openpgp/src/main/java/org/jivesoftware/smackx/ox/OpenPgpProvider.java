@@ -117,7 +117,7 @@ public interface OpenPgpProvider {
      *                                        the message.
      */
     DecryptedBytesAndMetadata decrypt(byte[] bytes, BareJid sender, SmackMissingOpenPgpPublicKeyCallback missingPublicKeyCallback)
-            throws MissingOpenPgpKeyPairException, SmackOpenPgpException, IOException;
+            throws MissingOpenPgpKeyPairException, SmackOpenPgpException;
 
     byte[] symmetricallyEncryptWithPassword(byte[] bytes, String password) throws SmackOpenPgpException, IOException;
 

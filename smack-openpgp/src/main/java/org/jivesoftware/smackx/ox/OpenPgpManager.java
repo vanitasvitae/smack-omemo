@@ -29,6 +29,7 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -39,6 +40,9 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.Async;
 import org.jivesoftware.smack.util.stringencoder.Base64;
@@ -47,15 +51,24 @@ import org.jivesoftware.smackx.ox.callback.AskForBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.DisplayBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.SecretKeyBackupSelectionCallback;
 import org.jivesoftware.smackx.ox.callback.SecretKeyRestoreSelectionCallback;
+import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
 import org.jivesoftware.smackx.ox.chat.OpenPgpFingerprints;
+import org.jivesoftware.smackx.ox.element.CryptElement;
+import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
+import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
+import org.jivesoftware.smackx.ox.element.SignElement;
+import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
+import org.jivesoftware.smackx.ox.listener.internal.CryptElementReceivedListener;
+import org.jivesoftware.smackx.ox.listener.internal.SignElementReceivedListener;
+import org.jivesoftware.smackx.ox.listener.internal.SigncryptElementReceivedListener;
 import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
 import org.jivesoftware.smackx.pep.PEPListener;
@@ -69,6 +82,7 @@ import org.jivesoftware.smackx.pubsub.PubSubManager;
 
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.xmlpull.v1.XmlPullParserException;
 
 public final class OpenPgpManager extends Manager {
 
@@ -84,6 +98,12 @@ public final class OpenPgpManager extends Manager {
      */
     private OpenPgpProvider provider;
 
+    private final Map<BareJid, OpenPgpContact> openPgpCapableContacts = new HashMap<>();
+
+    private final Set<SigncryptElementReceivedListener> signcryptElementReceivedListeners = new HashSet<>();
+    private final Set<SignElementReceivedListener> signElementReceivedListeners = new HashSet<>();
+    private final Set<CryptElementReceivedListener> cryptElementReceivedListeners = new HashSet<>();
+
     /**
      * Private constructor to avoid instantiation without putting the object into {@code INSTANCES}.
      *
@@ -91,6 +111,7 @@ public final class OpenPgpManager extends Manager {
      */
     private OpenPgpManager(XMPPConnection connection) {
         super(connection);
+        ChatManager.getInstanceFor(connection).addIncomingListener(incomingOpenPgpMessageListener);
     }
 
     /**
@@ -154,16 +175,7 @@ public final class OpenPgpManager extends Manager {
         OpenPgpV4Fingerprint primaryFingerprint = getOurFingerprint();
 
         if (primaryFingerprint == null) {
-
-            KeyBytesAndFingerprint bytesAndFingerprint = provider.generateOpenPgpKeyPair(ourJid);
-            primaryFingerprint = bytesAndFingerprint.getFingerprint();
-
-            // This should never throw, since we set our jid literally one line above this comment.
-            try {
-                provider.importSecretKey(ourJid, bytesAndFingerprint.getBytes());
-            } catch (MissingUserIdOnKeyException e) {
-                throw new AssertionError(e);
-            }
+            primaryFingerprint = generateAndImportKeyPair(ourJid);
         }
 
         // Create <pubkey/> element
@@ -183,6 +195,22 @@ public final class OpenPgpManager extends Manager {
                 .addFeature(PEP_NODE_PUBLIC_KEYS_NOTIFY);
     }
 
+    public OpenPgpV4Fingerprint generateAndImportKeyPair(BareJid ourJid)
+            throws NoSuchAlgorithmException, IOException, InvalidAlgorithmParameterException, NoSuchProviderException,
+            SmackOpenPgpException {
+        KeyBytesAndFingerprint bytesAndFingerprint = provider.generateOpenPgpKeyPair(ourJid);
+        OpenPgpV4Fingerprint fingerprint = bytesAndFingerprint.getFingerprint();
+
+        // This should never throw, since we set our jid literally one line above this comment.
+        try {
+            provider.importSecretKey(ourJid, bytesAndFingerprint.getBytes());
+        } catch (MissingUserIdOnKeyException e) {
+            throw new AssertionError(e);
+        }
+
+        return fingerprint;
+    }
+
     /**
      * Return the upper-case hex encoded OpenPGP v4 fingerprint of our key pair.
      *
@@ -192,6 +220,38 @@ public final class OpenPgpManager extends Manager {
         throwIfNoProviderSet();
         return provider.getStore().getPrimaryOpenPgpKeyPairFingerprint();
     }
+
+    /**
+     * Return an OpenPGP capable contact.
+     * This object can be used as an entry point to OpenPGP related API.
+     *
+     * @param jid {@link BareJid} of the contact.
+     * @return {@link OpenPgpContact}.
+     * @throws SmackOpenPgpException if something happens while gathering fingerprints.
+     * @throws InterruptedException
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException.NotConnectedException
+     * @throws SmackException.NoResponseException
+     */
+    public OpenPgpContact getOpenPgpContact(EntityBareJid jid)
+            throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException,
+            SmackException.NotConnectedException, SmackException.NoResponseException,
+            SmackException.NotLoggedInException {
+        throwIfNotAuthenticated();
+
+        OpenPgpContact openPgpContact = openPgpCapableContacts.get(jid);
+
+        if (openPgpContact == null) {
+            OpenPgpFingerprints theirKeys = determineContactsKeys(jid);
+            OpenPgpFingerprints ourKeys = determineContactsKeys(connection().getUser().asBareJid());
+            Chat chat = ChatManager.getInstanceFor(connection()).chatWith(jid);
+            openPgpContact = new OpenPgpContact(getOpenPgpProvider(), chat, ourKeys, theirKeys);
+            openPgpCapableContacts.put(jid, openPgpContact);
+        }
+
+        return openPgpContact;
+    }
+
 
     /**
      * Determine, if we can sync secret keys using private PEP nodes as described in the XEP.
@@ -304,7 +364,7 @@ public final class OpenPgpManager extends Manager {
      * @throws SmackException.NotConnectedException
      * @throws SmackException.NoResponseException
      */
-    public OpenPgpFingerprints determineContactsKeys(BareJid jid)
+    private OpenPgpFingerprints determineContactsKeys(BareJid jid)
             throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
         Set<OpenPgpV4Fingerprint> announced = provider.getStore().getAnnouncedKeysFingerprints(jid).keySet();
@@ -381,6 +441,60 @@ public final class OpenPgpManager extends Manager {
         }
     };
 
+    private final IncomingChatMessageListener incomingOpenPgpMessageListener =
+            new IncomingChatMessageListener() {
+                @Override
+                public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
+                    OpenPgpElement element = message.getExtension(OpenPgpElement.ELEMENT, OpenPgpElement.NAMESPACE);
+                    if (element == null) {
+                        // Message does not contain an OpenPgpElement -> discard
+                        return;
+                    }
+
+                    OpenPgpContact contact;
+                    try {
+                        contact = getOpenPgpContact(from);
+                    } catch (SmackOpenPgpException | InterruptedException | XMPPException.XMPPErrorException |
+                            SmackException.NotLoggedInException | SmackException.NotConnectedException |
+                            SmackException.NoResponseException e) {
+                        LOGGER.log(Level.WARNING, "Could not begin encrypted chat with " + from, e);
+                        return;
+                    }
+
+                    OpenPgpContentElement contentElement = null;
+                    try {
+                        contentElement = contact.receive(element);
+                    } catch (SmackOpenPgpException e) {
+                        LOGGER.log(Level.WARNING, "Could not decrypt incoming OpenPGP encrypted message", e);
+                    } catch (XmlPullParserException | IOException e) {
+                        LOGGER.log(Level.WARNING, "Invalid XML content of incoming OpenPGP encrypted message", e);
+                    } catch (MissingOpenPgpKeyPairException e) {
+                        LOGGER.log(Level.WARNING, "Could not decrypt incoming OpenPGP encrypted message due to missing secret key", e);
+                    }
+
+                    if (contentElement instanceof SigncryptElement) {
+                        for (SigncryptElementReceivedListener l : signcryptElementReceivedListeners) {
+                            l.signcryptElementReceived(contact, message, (SigncryptElement) contentElement);
+                        }
+                        return;
+                    }
+
+                    if (contentElement instanceof SignElement) {
+                        for (SignElementReceivedListener l : signElementReceivedListeners) {
+                            l.signElementReceived(contact, message, (SignElement) contentElement);
+                        }
+                        return;
+                    }
+
+                    if (contentElement instanceof CryptElement) {
+                        for (CryptElementReceivedListener l : cryptElementReceivedListeners) {
+                            l.cryptElementReceived(contact, message, (CryptElement) contentElement);
+                        }
+                        return;
+                    }
+                }
+            };
+
     /*
     Private stuff.
      */
@@ -451,6 +565,30 @@ public final class OpenPgpManager extends Manager {
             throws SmackOpenPgpException, IOException {
         byte[] encrypted = provider.symmetricallyEncryptWithPassword(keys, backupCode);
         return new SecretkeyElement(Base64.encode(encrypted));
+    }
+
+    void addSigncryptReceivedListener(SigncryptElementReceivedListener listener) {
+        signcryptElementReceivedListeners.add(listener);
+    }
+
+    void removeSigncryptElementReceivedListener(SigncryptElementReceivedListener listener) {
+        signcryptElementReceivedListeners.remove(listener);
+    }
+
+    void addSignElementReceivedListener(SignElementReceivedListener listener) {
+        signElementReceivedListeners.add(listener);
+    }
+
+    void removeSignElementReceivedListener(SignElementReceivedListener listener) {
+        signElementReceivedListeners.remove(listener);
+    }
+
+    void addCryptElementReceivedListener(CryptElementReceivedListener listener) {
+        cryptElementReceivedListeners.add(listener);
+    }
+
+    void removeCryptElementReceivedListener(CryptElementReceivedListener listener) {
+        cryptElementReceivedListeners.remove(listener);
     }
 
     /**

@@ -126,7 +126,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         try {
             toEncrypted = PGPainless.createEncryptor()
                     .onOutputStream(encryptedBytes)
-                    .toRecipients(new ArrayList<>(encryptionKeys.values()).toArray(new PGPPublicKeyRing[]{}))
+                    .toRecipients(new ArrayList<>(encryptionKeys.values()).toArray(new PGPPublicKeyRing[] {}))
                     .usingSecureAlgorithms()
                     .signWith(secretKeyRingProtector, signingKey)
                     .noArmor();
@@ -201,12 +201,12 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
 
     @Override
     public DecryptedBytesAndMetadata decrypt(byte[] bytes, BareJid sender, final SmackMissingOpenPgpPublicKeyCallback missingPublicKeyCallback)
-            throws MissingOpenPgpKeyPairException, SmackOpenPgpException, IOException {
+            throws MissingOpenPgpKeyPairException, SmackOpenPgpException {
 
         PGPSecretKeyRingCollection secretKeyRings;
         try {
             secretKeyRings = getStore().getSecretKeyRings(owner);
-        } catch (PGPException e) {
+        } catch (PGPException | IOException e) {
             LOGGER.log(Level.INFO, "Could not get secret keys of user " + owner);
             throw new MissingOpenPgpKeyPairException(owner, getStore().getPrimaryOpenPgpKeyPairFingerprint());
         }
@@ -222,7 +222,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         PGPPublicKeyRingCollection publicKeyRings;
         try {
             publicKeyRings = getStore().getPublicKeyRings(sender);
-        } catch (PGPException e) {
+        } catch (PGPException | IOException e) {
             LOGGER.log(Level.INFO, "Could not get public keys of sender " + sender.toString(), e);
             if (missingPublicKeyCallback != null) {
                 // TODO: Handle missing key
@@ -239,7 +239,11 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             }
         }
 
-        return decryptImpl(bytes, secretKeyRings, protector, trustedKeys);
+        try {
+            return decryptImpl(bytes, secretKeyRings, protector, trustedKeys);
+        } catch (IOException e) {
+            throw new SmackOpenPgpException(e);
+        }
     }
 
     DecryptedBytesAndMetadata decryptImpl(byte[] bytes, PGPSecretKeyRingCollection decryptionKeys,

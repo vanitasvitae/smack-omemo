@@ -31,16 +31,20 @@ import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
 import org.jivesoftware.smackx.hints.element.StoreHint;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
+import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
+import org.xmlpull.v1.XmlPullParserException;
 
-public class OpenPgpEncryptedChat {
+public class OpenPgpContact {
 
     private final Chat chat;
     private final OpenPgpFingerprints contactsFingerprints;
@@ -48,15 +52,23 @@ public class OpenPgpEncryptedChat {
     private final OpenPgpProvider cryptoProvider;
     private final OpenPgpV4Fingerprint singingKey;
 
-    public OpenPgpEncryptedChat(OpenPgpProvider cryptoProvider,
-                                Chat chat,
-                                OpenPgpFingerprints ourFingerprints,
-                                OpenPgpFingerprints contactsFingerprints) {
+    public OpenPgpContact(OpenPgpProvider cryptoProvider,
+                          Chat chat,
+                          OpenPgpFingerprints ourFingerprints,
+                          OpenPgpFingerprints contactsFingerprints) {
         this.cryptoProvider = cryptoProvider;
         this.chat = chat;
         this.singingKey = cryptoProvider.getStore().getPrimaryOpenPgpKeyPairFingerprint();
         this.ourFingerprints = ourFingerprints;
         this.contactsFingerprints = contactsFingerprints;
+    }
+
+    public EntityBareJid getJidOfChatPartner() {
+        return chat.getXmppAddressOfChatPartner();
+    }
+
+    public OpenPgpFingerprints getContactsFingerprints() {
+        return contactsFingerprints;
     }
 
     public void send(Message message, List<ExtensionElement> payload)
@@ -101,6 +113,19 @@ public class OpenPgpEncryptedChat {
         List<ExtensionElement> payload = new ArrayList<>();
         payload.add(new Message.Body(null, body.toString()));
         send(message, payload);
+    }
+
+    public OpenPgpContentElement receive(OpenPgpElement element)
+            throws XmlPullParserException, MissingOpenPgpKeyPairException, SmackOpenPgpException, IOException {
+        byte[] decoded = Base64.decode(element.getEncryptedBase64MessageContent());
+
+        DecryptedBytesAndMetadata decryptedBytes = cryptoProvider.decrypt(decoded, getJidOfChatPartner(), null);
+
+        OpenPgpMessage openPgpMessage = new OpenPgpMessage(decryptedBytes.getBytes(),
+                new OpenPgpMessage.Metadata(decryptedBytes.getDecryptionKey(),
+                        decryptedBytes.getVerifiedSignatures()));
+
+        return openPgpMessage.getOpenPgpContentElement();
     }
 
     private MultiMap<BareJid, OpenPgpV4Fingerprint> oursAndRecipientFingerprints() {

@@ -17,13 +17,11 @@
 package org.jivesoftware.smackx.ox.listener;
 
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.ox.chat.OpenPgpEncryptedChat;
+import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 
-import org.jxmpp.jid.EntityBareJid;
-
-public interface OpenPgpEncryptedMessageListener {
+public interface OxMessageListener {
 
     /**
      * This method gets invoked, whenever an OX-IM encrypted message gets received.
@@ -31,13 +29,11 @@ public interface OpenPgpEncryptedMessageListener {
      * @see <a href="https://xmpp.org/extensions/xep-0374.html">
      *     XEP-0374: OpenPGP for XMPP: Instant Messaging (OX-IM)</a>
      *
-     * @param from sender of the message.
+     * @param contact {@link OpenPgpContact} which sent the message.
      * @param originalMessage the received message that is carrying the encrypted {@link OpenPgpElement}.
      * @param decryptedPayload decrypted {@link SigncryptElement} which is carrying the payload.
-     * @param chat {@link OpenPgpEncryptedChat} which is the context of the message.
      */
-    void newIncomingOxMessage(EntityBareJid from,
+    void newIncomingOxMessage(OpenPgpContact contact,
                               Message originalMessage,
-                              SigncryptElement decryptedPayload,
-                              OpenPgpEncryptedChat chat);
+                              SigncryptElement decryptedPayload);
 }
