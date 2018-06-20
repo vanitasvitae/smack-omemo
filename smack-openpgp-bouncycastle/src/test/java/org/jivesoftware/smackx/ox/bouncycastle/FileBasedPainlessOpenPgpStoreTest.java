@@ -39,37 +39,28 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.stringprep.XmppStringprepException;
+import org.jxmpp.jid.JidTestUtil;
 
 public class FileBasedPainlessOpenPgpStoreTest extends OxTestSuite {
 
-    private static final File basePath;
-    private static final BareJid alice;
-    private static final BareJid bob;
+    private final File basePath;
+    private final BareJid alice;
+    private final BareJid bob;
 
     private FileBasedPainlessOpenPgpStore store;
 
-    static {
-        String userHome = System.getProperty("user.home");
-        if (userHome != null) {
-            File f = new File(userHome);
-            basePath = new File(f, ".config/smack-integration-test/ox/painless_ox_store");
-        } else {
-            basePath = new File("painless_ox_store");
-        }
-
-        try {
-            alice = JidCreate.bareFrom("alice@wonderland.lit");
-            bob = JidCreate.bareFrom("bob@builder.tv");
-        } catch (XmppStringprepException e) {
-            throw new AssertionError(e);
-        }
+    public FileBasedPainlessOpenPgpStoreTest() {
+        super();
+        this.basePath = FileUtils.getTempDir("ox-filebased-store-test");
+        this.alice = JidTestUtil.BARE_JID_1;
+        this.bob = JidTestUtil.BARE_JID_2;
     }
 
+    @After
     @Before
     public void deleteStore() {
         FileUtils.deleteDirectory(basePath);

@@ -75,7 +75,7 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
             inputStream.close();
             bytes = buffer.toByteArray();
         } catch (FileNotFoundException e) {
-            LOGGER.log(Level.INFO, "Pubring of user " + owner.toString() + " does not exist.");
+            LOGGER.log(Level.FINE, "Pubring of user " + owner.toString() + " does not exist.");
             return null;
         } catch (IOException e) {
             if (inputStream != null) {
@@ -101,7 +101,7 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
             inputStream.close();
             bytes = buffer.toByteArray();
         } catch (FileNotFoundException e) {
-            LOGGER.log(Level.INFO, "Secring of user " + owner.toString() + " does not exist.");
+            LOGGER.log(Level.FINE, "Secring of user " + owner.toString() + " does not exist.");
             return null;
         } catch (IOException e) {
             if (inputStream != null) {
@@ -190,7 +190,7 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
             }
 
         } catch (PGPException | IOException e) {
-            LOGGER.log(Level.WARNING, "Could not read public keys of contact " + contact.toString(), e);
+            throw new SmackOpenPgpException("Could not read public keys of contact " + contact.toString(), e);
         }
         return availableFingerprints;
     }
@@ -298,7 +298,7 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
         try {
             File contactsDir = getContactsPath(false);
             if (!contactsDir.exists()) {
-                LOGGER.log(Level.INFO, "Contacts directory does not exists yet.");
+                LOGGER.log(Level.FINE, "Contacts directory does not exists yet.");
                 return trustedFingerprints;
             }
 
@@ -418,7 +418,6 @@ public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore 
         }
         return file;
     }
-
 
     private static void createDirectoryOrThrow(File dir) throws IOException {
         if (!dir.mkdirs()) {

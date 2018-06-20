@@ -24,6 +24,7 @@ import java.security.NoSuchProviderException;
 import java.util.Collections;
 import java.util.Date;
 
+import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
@@ -33,23 +34,22 @@ import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import org.bouncycastle.openpgp.PGPException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.JidTestUtil;
 
 public class DryOxEncryptionTest extends OxTestSuite {
 
-    private static File getTempDir(String suffix) {
-        String temp = System.getProperty("java.io.tmpdir");
-        if (temp == null) {
-            temp = "tmp";
-        }
+    private final File alicePath = FileUtils.getTempDir("ox-alice");
+    private final File bobPath = FileUtils.getTempDir("ox-bob");
 
-        if (suffix == null) {
-            return new File(temp);
-        } else {
-            return new File(temp, suffix);
-        }
+    @Before
+    @After
+    public void deletePath() {
+        FileUtils.deleteDirectory(alicePath);
+        FileUtils.deleteDirectory(bobPath);
     }
 
     @Test
@@ -59,8 +59,6 @@ public class DryOxEncryptionTest extends OxTestSuite {
         BareJid alice = JidTestUtil.BARE_JID_1;
         BareJid bob = JidTestUtil.BARE_JID_2;
 
-        File alicePath = getTempDir("ox-alice");
-        File bobPath = getTempDir("ox-bob");
         FileBasedPainlessOpenPgpStore aliceStore = new FileBasedPainlessOpenPgpStore(alicePath, new UnprotectedKeysProtector());
         FileBasedPainlessOpenPgpStore bobStore = new FileBasedPainlessOpenPgpStore(bobPath, new UnprotectedKeysProtector());
 
@@ -85,7 +83,5 @@ public class DryOxEncryptionTest extends OxTestSuite {
 
         aliceStore.setAnnouncedKeysFingerprints(bob, Collections.singletonMap(bobKey.getFingerprint(), new Date()));
         bobStore.setAnnouncedKeysFingerprints(alice, Collections.singletonMap(aliceKey.getFingerprint(), new Date()));
-
-
     }
 }

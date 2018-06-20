@@ -244,8 +244,7 @@ public final class OpenPgpManager extends Manager {
         if (openPgpContact == null) {
             OpenPgpFingerprints theirKeys = determineContactsKeys(jid);
             OpenPgpFingerprints ourKeys = determineContactsKeys(connection().getUser().asBareJid());
-            Chat chat = ChatManager.getInstanceFor(connection()).chatWith(jid);
-            openPgpContact = new OpenPgpContact(getOpenPgpProvider(), chat, ourKeys, theirKeys);
+            openPgpContact = new OpenPgpContact(getOpenPgpProvider(), jid, ourKeys, theirKeys);
             openPgpCapableContacts.put(jid, openPgpContact);
         }
 

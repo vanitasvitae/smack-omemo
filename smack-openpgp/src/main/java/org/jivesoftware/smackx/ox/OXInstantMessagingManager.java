@@ -99,7 +99,7 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
     public boolean contactSupportsOxInstantMessaging(OpenPgpContact contact)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException {
-        return contactSupportsOxInstantMessaging(contact.getJidOfChatPartner().asBareJid());
+        return contactSupportsOxInstantMessaging(contact.getJid());
     }
 
     public boolean addOxMessageListener(OxMessageListener listener) {

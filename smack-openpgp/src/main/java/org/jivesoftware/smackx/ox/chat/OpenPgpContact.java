@@ -22,7 +22,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.MultiMap;
@@ -40,44 +41,79 @@ import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 
 import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.xmlpull.v1.XmlPullParserException;
 
 public class OpenPgpContact {
 
-    private final Chat chat;
+    private final BareJid jid;
     private final OpenPgpFingerprints contactsFingerprints;
     private final OpenPgpFingerprints ourFingerprints;
     private final OpenPgpProvider cryptoProvider;
     private final OpenPgpV4Fingerprint singingKey;
 
     public OpenPgpContact(OpenPgpProvider cryptoProvider,
-                          Chat chat,
+                          BareJid jid,
                           OpenPgpFingerprints ourFingerprints,
                           OpenPgpFingerprints contactsFingerprints) {
         this.cryptoProvider = cryptoProvider;
-        this.chat = chat;
+        this.jid = jid;
         this.singingKey = cryptoProvider.getStore().getPrimaryOpenPgpKeyPairFingerprint();
         this.ourFingerprints = ourFingerprints;
         this.contactsFingerprints = contactsFingerprints;
     }
 
-    public EntityBareJid getJidOfChatPartner() {
-        return chat.getXmppAddressOfChatPartner();
+    public BareJid getJid() {
+        return jid;
     }
 
-    public OpenPgpFingerprints getContactsFingerprints() {
+    public OpenPgpFingerprints getFingerprints() {
         return contactsFingerprints;
     }
 
-    public void send(Message message, List<ExtensionElement> payload)
+    public void addSignedEncryptedPayloadTo(Message message, List<ExtensionElement> payload)
+            throws IOException, SmackOpenPgpException, MissingOpenPgpKeyPairException {
+        MultiMap<BareJid, OpenPgpV4Fingerprint> fingerprints = oursAndRecipientFingerprints();
+
+        SigncryptElement preparedPayload = new SigncryptElement(
+                Collections.<Jid>singleton(getJid()),
+                payload);
+
+        OpenPgpElement encryptedPayload;
+        byte[] encryptedBytes;
+
+        // Encrypt the payload
+        try {
+            encryptedBytes = cryptoProvider.signAndEncrypt(
+                    preparedPayload,
+                    singingKey,
+                    fingerprints);
+        } catch (MissingOpenPgpPublicKeyException e) {
+            throw new AssertionError("Missing OpenPGP public key, even though this should not happen here.", e);
+        }
+
+        encryptedPayload = new OpenPgpElement(Base64.encodeToString(encryptedBytes));
+
+        // Add encrypted payload to message
+        message.addExtension(encryptedPayload);
+
+        // Add additional information to the message
+        // STOPSHIP: 20.06.18 BELOW
+        // TODO: Check if message already contains EME element.
+        message.addExtension(new ExplicitMessageEncryptionElement(
+                ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.openpgpV0));
+        StoreHint.set(message);
+        message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
+
+    }
+
+    public void send(XMPPConnection connection, Message message, List<ExtensionElement> payload)
             throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException,
             SmackOpenPgpException, IOException {
         MultiMap<BareJid, OpenPgpV4Fingerprint> fingerprints = oursAndRecipientFingerprints();
 
         SigncryptElement preparedPayload = new SigncryptElement(
-                Collections.<Jid>singleton(chat.getXmppAddressOfChatPartner()),
+                Collections.<Jid>singleton(getJid()),
                 payload);
 
         OpenPgpElement encryptedPayload;
@@ -104,22 +140,22 @@ public class OpenPgpContact {
         StoreHint.set(message);
         message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
 
-        chat.send(message);
+        ChatManager.getInstanceFor(connection).chatWith(getJid().asEntityBareJidIfPossible()).send(message);
     }
 
-    public void send(Message message, CharSequence body)
+    public void send(XMPPConnection connection, Message message, CharSequence body)
             throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException,
             SmackOpenPgpException, IOException {
         List<ExtensionElement> payload = new ArrayList<>();
         payload.add(new Message.Body(null, body.toString()));
-        send(message, payload);
+        send(connection, message, payload);
     }
 
     public OpenPgpContentElement receive(OpenPgpElement element)
             throws XmlPullParserException, MissingOpenPgpKeyPairException, SmackOpenPgpException, IOException {
         byte[] decoded = Base64.decode(element.getEncryptedBase64MessageContent());
 
-        DecryptedBytesAndMetadata decryptedBytes = cryptoProvider.decrypt(decoded, getJidOfChatPartner(), null);
+        DecryptedBytesAndMetadata decryptedBytes = cryptoProvider.decrypt(decoded, getJid(), null);
 
         OpenPgpMessage openPgpMessage = new OpenPgpMessage(decryptedBytes.getBytes(),
                 new OpenPgpMessage.Metadata(decryptedBytes.getDecryptionKey(),
