@@ -58,7 +58,7 @@ public class OpenPgpContact {
                           OpenPgpFingerprints contactsFingerprints) {
         this.cryptoProvider = cryptoProvider;
         this.jid = jid;
-        this.singingKey = ourFingerprints.getActiveKeys().iterator().next();
+        this.singingKey = cryptoProvider.getStore().getPrimaryOpenPgpKeyPairFingerprint();
         this.ourFingerprints = ourFingerprints;
         this.contactsFingerprints = contactsFingerprints;
     }
