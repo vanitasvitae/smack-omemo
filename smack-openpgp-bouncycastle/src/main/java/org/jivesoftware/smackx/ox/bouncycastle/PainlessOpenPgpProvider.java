@@ -385,15 +385,17 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
     @Override
     public OpenPgpV4Fingerprint importSecretKey(BareJid owner, byte[] bytes)
             throws MissingUserIdOnKeyException, SmackOpenPgpException, IOException {
-        PGPSecretKeyRing secretKeys;
+        PGPSecretKeyRing importSecretKeys;
         try {
-            secretKeys = new PGPSecretKeyRing(bytes, new BcKeyFingerprintCalculator());
+            importSecretKeys = new PGPSecretKeyRing(bytes, new BcKeyFingerprintCalculator());
         } catch (PGPException | IOException e) {
             throw new SmackOpenPgpException("Could not deserialize PGP secret key of " + owner.toString(), e);
         }
 
-        if (!new BareJidUserId.SecRingSelectionStrategy().accept(owner, secretKeys)) {
-            throw new MissingUserIdOnKeyException(owner, secretKeys.getPublicKey().getKeyID());
+        store.setPrimaryOpenPgpKeyPairFingerprint(getFingerprint(importSecretKeys.getPublicKey()));
+
+        if (!new BareJidUserId.SecRingSelectionStrategy().accept(owner, importSecretKeys)) {
+            throw new MissingUserIdOnKeyException(owner, importSecretKeys.getPublicKey().getKeyID());
         }
 
         PGPSecretKeyRingCollection secretKeyRings;
@@ -404,21 +406,21 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         }
         if (secretKeyRings == null) {
             try {
-                secretKeyRings = new PGPSecretKeyRingCollection(Collections.singleton(secretKeys));
+                secretKeyRings = new PGPSecretKeyRingCollection(Collections.singleton(importSecretKeys));
             } catch (IOException | PGPException e) {
                 throw new SmackOpenPgpException("Could not create SecretKeyRingCollection from SecretKeyRing.", e);
             }
         } else {
             try {
-                secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, secretKeys);
+                secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, importSecretKeys);
             } catch (IllegalArgumentException e) {
-                LOGGER.log(Level.INFO, "Skip key " + Long.toHexString(secretKeys.getPublicKey().getKeyID()) +
+                LOGGER.log(Level.INFO, "Skip key " + Long.toHexString(importSecretKeys.getPublicKey().getKeyID()) +
                         " as it is already part of the key ring.");
             }
         }
         getStore().storeSecretKeyRing(owner, secretKeyRings);
 
-        PGPPublicKeyRing publicKeys = BCUtil.publicKeyRingFromSecretKeyRing(secretKeys);
+        PGPPublicKeyRing publicKeys = BCUtil.publicKeyRingFromSecretKeyRing(importSecretKeys);
         importPublicKey(owner, publicKeys);
 
         return getFingerprint(publicKeys.getPublicKey());
