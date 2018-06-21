@@ -409,7 +409,12 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
                 throw new SmackOpenPgpException("Could not create SecretKeyRingCollection from SecretKeyRing.", e);
             }
         } else {
-            secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, secretKeys);
+            try {
+                secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, secretKeys);
+            } catch (IllegalArgumentException e) {
+                LOGGER.log(Level.INFO, "Skip key " + Long.toHexString(secretKeys.getPublicKey().getKeyID()) +
+                        " as it is already part of the key ring.");
+            }
         }
         getStore().storeSecretKeyRing(owner, secretKeyRings);
 

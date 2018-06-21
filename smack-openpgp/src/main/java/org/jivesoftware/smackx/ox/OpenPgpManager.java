@@ -339,7 +339,7 @@ public final class OpenPgpManager extends Manager {
                                              SecretKeyRestoreSelectionCallback selectionCallback)
             throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException, SmackOpenPgpException,
-            InvalidBackupCodeException, SmackException.NotLoggedInException {
+            InvalidBackupCodeException, SmackException.NotLoggedInException, IOException, MissingUserIdOnKeyException {
         throwIfNoProviderSet();
         throwIfNotAuthenticated();
         SecretkeyElement backup = PubSubDelegate.fetchSecretKey(connection());
@@ -348,7 +348,8 @@ public final class OpenPgpManager extends Manager {
             return;
         }
         byte[] encrypted = Base64.decode(backup.getB64Data());
-        // provider.restoreSecretKeyBackup(backup, codeCallback.askForBackupCode(), selectionCallback);
+        byte[] decrypted = provider.symmetricallyDecryptWithPassword(encrypted, codeCallback.askForBackupCode());
+        provider.importSecretKey(connection().getUser().asBareJid(), decrypted);
         // TODO: catch InvalidBackupCodeException in order to prevent re-fetching the backup on next try.
     }
 
