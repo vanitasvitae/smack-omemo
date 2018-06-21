@@ -89,7 +89,10 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         SecretKeyRingProtector protector = getStore().getSecretKeyProtector();
 
         try {
-            secretKeyRing = getStore().getSecretKeyRings(owner).getSecretKeyRing(signingKey.getKeyId());
+            secretKeyRing = getStore()
+                    .getSecretKeyRings(owner)
+                    .getSecretKeyRing(
+                            signingKey.getKeyId());
         } catch (PGPException e) {
             LOGGER.log(Level.INFO, "Could not get secret key with id " + Long.toHexString(signingKey.getKeyId()), e);
             throw new MissingOpenPgpKeyPairException(owner, signingKey, e);

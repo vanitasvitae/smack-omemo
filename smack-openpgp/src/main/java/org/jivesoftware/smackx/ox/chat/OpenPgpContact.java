@@ -58,7 +58,7 @@ public class OpenPgpContact {
                           OpenPgpFingerprints contactsFingerprints) {
         this.cryptoProvider = cryptoProvider;
         this.jid = jid;
-        this.singingKey = cryptoProvider.getStore().getPrimaryOpenPgpKeyPairFingerprint();
+        this.singingKey = ourFingerprints.getActiveKeys().iterator().next();
         this.ourFingerprints = ourFingerprints;
         this.contactsFingerprints = contactsFingerprints;
     }
@@ -71,7 +71,7 @@ public class OpenPgpContact {
         return contactsFingerprints;
     }
 
-    public void addSignedEncryptedPayloadTo(Message message, List<ExtensionElement> payload)
+    public OpenPgpElement encryptAndSign(List<ExtensionElement> payload)
             throws IOException, SmackOpenPgpException, MissingOpenPgpKeyPairException {
         MultiMap<BareJid, OpenPgpV4Fingerprint> fingerprints = oursAndRecipientFingerprints();
 
@@ -79,7 +79,6 @@ public class OpenPgpContact {
                 Collections.<Jid>singleton(getJid()),
                 payload);
 
-        OpenPgpElement encryptedPayload;
         byte[] encryptedBytes;
 
         // Encrypt the payload
@@ -92,9 +91,14 @@ public class OpenPgpContact {
             throw new AssertionError("Missing OpenPGP public key, even though this should not happen here.", e);
         }
 
-        encryptedPayload = new OpenPgpElement(Base64.encodeToString(encryptedBytes));
+        return new OpenPgpElement(Base64.encodeToString(encryptedBytes));
+    }
+
+    public void addSignedEncryptedPayloadTo(Message message, List<ExtensionElement> payload)
+            throws IOException, SmackOpenPgpException, MissingOpenPgpKeyPairException {
 
         // Add encrypted payload to message
+        OpenPgpElement encryptedPayload = encryptAndSign(payload);
         message.addExtension(encryptedPayload);
 
         // Add additional information to the message
