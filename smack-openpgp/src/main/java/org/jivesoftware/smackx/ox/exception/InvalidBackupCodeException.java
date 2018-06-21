@@ -22,4 +22,8 @@ package org.jivesoftware.smackx.ox.exception;
 public class InvalidBackupCodeException extends Exception {
 
     private static final long serialVersionUID = 1L;
+
+    public InvalidBackupCodeException(String message, Throwable e) {
+        super(message, e);
+    }
 }

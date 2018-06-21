@@ -21,12 +21,10 @@ import static org.jivesoftware.smackx.ox.util.PubSubDelegate.PEP_NODE_PUBLIC_KEY
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.fetchPubkey;
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.publishPublicKey;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,6 +63,7 @@ import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
+import org.jivesoftware.smackx.ox.exception.NoBackupFoundException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.listener.internal.CryptElementReceivedListener;
 import org.jivesoftware.smackx.ox.listener.internal.SignElementReceivedListener;
@@ -297,11 +296,11 @@ public final class OpenPgpManager extends Manager {
 
         BareJid ownJid = connection().getUser().asBareJid();
 
-        String backupCode = generateBackupPassword();
+        String backupCode = SecretKeyBackupHelper.generateBackupPassword();
         Set<OpenPgpV4Fingerprint> availableKeyPairs = provider.getStore().getAvailableKeyPairFingerprints(ownJid);
         Set<OpenPgpV4Fingerprint> selectedKeyPairs = selectKeyCallback.selectKeysToBackup(availableKeyPairs);
 
-        SecretkeyElement secretKey = createSecretkeyElement(ownJid, selectedKeyPairs, backupCode);
+        SecretkeyElement secretKey = SecretKeyBackupHelper.createSecretkeyElement(provider, ownJid, selectedKeyPairs, backupCode);
 
         PubSubDelegate.depositSecretKey(connection(), secretKey);
         displayCodeCallback.displayBackupCode(backupCode);
@@ -339,18 +338,19 @@ public final class OpenPgpManager extends Manager {
                                              SecretKeyRestoreSelectionCallback selectionCallback)
             throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException, SmackOpenPgpException,
-            InvalidBackupCodeException, SmackException.NotLoggedInException, IOException, MissingUserIdOnKeyException {
+            InvalidBackupCodeException, SmackException.NotLoggedInException, IOException, MissingUserIdOnKeyException,
+            NoBackupFoundException {
         throwIfNoProviderSet();
         throwIfNotAuthenticated();
         SecretkeyElement backup = PubSubDelegate.fetchSecretKey(connection());
         if (backup == null) {
-            // TODO
-            return;
+            throw new NoBackupFoundException();
         }
-        byte[] encrypted = Base64.decode(backup.getB64Data());
-        byte[] decrypted = provider.symmetricallyDecryptWithPassword(encrypted, codeCallback.askForBackupCode());
-        provider.importSecretKey(connection().getUser().asBareJid(), decrypted);
-        // TODO: catch InvalidBackupCodeException in order to prevent re-fetching the backup on next try.
+
+        String backupCode = codeCallback.askForBackupCode();
+
+        OpenPgpV4Fingerprint fingerprint = SecretKeyBackupHelper.restoreSecretKeyBackup(provider, backup, backupCode);
+        provider.getStore().setPrimaryOpenPgpKeyPairFingerprint(fingerprint);
     }
 
     /**
@@ -505,34 +505,6 @@ public final class OpenPgpManager extends Manager {
         provider.importPublicKey(owner, Base64.decode(base64));
     }
 
-    /**
-     * Generate a secure backup code.
-     *
-     * @see <a href="https://xmpp.org/extensions/xep-0373.html#sect-idm140425111347232">XEP-0373 §5.3</a>
-     * @return backup code
-     */
-    private static String generateBackupPassword() {
-        final String alphabet = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
-        SecureRandom random = new SecureRandom();
-        StringBuilder code = new StringBuilder();
-
-        // 6 blocks
-        for (int i = 0; i < 6; i++) {
-
-            // of 4 chars
-            for (int j = 0; j < 4; j++) {
-                char c = alphabet.charAt(random.nextInt(alphabet.length()));
-                code.append(c);
-            }
-
-            // dash after every block except the last one
-            if (i != 5) {
-                code.append('-');
-            }
-        }
-        return code.toString();
-    }
-
     private PubkeyElement createPubkeyElement(BareJid owner,
                                               OpenPgpV4Fingerprint fingerprint,
                                               Date date)
@@ -543,28 +515,6 @@ public final class OpenPgpManager extends Manager {
 
     private static PubkeyElement createPubkeyElement(byte[] bytes, Date date) {
         return new PubkeyElement(new PubkeyElement.PubkeyDataElement(Base64.encode(bytes)), date);
-    }
-
-    private SecretkeyElement createSecretkeyElement(BareJid owner,
-                                                    Set<OpenPgpV4Fingerprint> fingerprints,
-                                                    String backupCode) throws SmackOpenPgpException, IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        for (OpenPgpV4Fingerprint fingerprint : fingerprints) {
-            try {
-                byte[] bytes = provider.getStore().getSecretKeyRingBytes(owner, fingerprint);
-                buffer.write(bytes);
-            } catch (MissingOpenPgpKeyPairException | IOException e) {
-                LOGGER.log(Level.WARNING, "Cannot backup secret key " + Long.toHexString(fingerprint.getKeyId()) + ".", e);
-            }
-
-        }
-        return createSecretkeyElement(buffer.toByteArray(), backupCode);
-    }
-
-    private SecretkeyElement createSecretkeyElement(byte[] keys, String backupCode)
-            throws SmackOpenPgpException, IOException {
-        byte[] encrypted = provider.symmetricallyEncryptWithPassword(keys, backupCode);
-        return new SecretkeyElement(Base64.encode(encrypted));
     }
 
     void addSigncryptReceivedListener(SigncryptElementReceivedListener listener) {

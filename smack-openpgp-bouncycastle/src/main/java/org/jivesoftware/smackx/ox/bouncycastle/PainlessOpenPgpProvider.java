@@ -373,7 +373,12 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             if (publicKeyRings == null) {
                 publicKeyRings = new PGPPublicKeyRingCollection(Collections.singleton(ring));
             } else {
-                publicKeyRings = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRings, ring);
+                try {
+                    publicKeyRings = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRings, ring);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.log(Level.INFO, "Skip key " + Long.toHexString(ring.getPublicKey().getKeyID()) +
+                    " as it is already in the public key ring.");
+                }
             }
             getStore().storePublicKeyRing(owner, publicKeyRings);
         } catch (PGPException e) {
@@ -391,8 +396,6 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         } catch (PGPException | IOException e) {
             throw new SmackOpenPgpException("Could not deserialize PGP secret key of " + owner.toString(), e);
         }
-
-        store.setPrimaryOpenPgpKeyPairFingerprint(getFingerprint(importSecretKeys.getPublicKey()));
 
         if (!new BareJidUserId.SecRingSelectionStrategy().accept(owner, importSecretKeys)) {
             throw new MissingUserIdOnKeyException(owner, importSecretKeys.getPublicKey().getKeyID());
@@ -424,6 +427,12 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         importPublicKey(owner, publicKeys);
 
         return getFingerprint(publicKeys.getPublicKey());
+    }
+
+    @Override
+    public OpenPgpV4Fingerprint importSecretKey(byte[] bytes)
+            throws MissingUserIdOnKeyException, SmackOpenPgpException, IOException {
+        return importSecretKey(owner, bytes);
     }
 
     public static OpenPgpV4Fingerprint getFingerprint(PGPPublicKey publicKey) {

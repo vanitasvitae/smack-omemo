@@ -139,5 +139,8 @@ public interface OpenPgpProvider {
     OpenPgpV4Fingerprint importSecretKey(BareJid owner, byte[] bytes)
             throws MissingUserIdOnKeyException, SmackOpenPgpException, IOException;
 
+    OpenPgpV4Fingerprint importSecretKey(byte[] bytes)
+            throws MissingUserIdOnKeyException, SmackOpenPgpException, IOException;
+
     OpenPgpStore getStore();
 }
