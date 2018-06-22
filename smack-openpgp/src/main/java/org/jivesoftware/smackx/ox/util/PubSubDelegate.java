@@ -120,6 +120,7 @@ public class PubSubDelegate {
         // Check if key available at data node
         // If not, publish key to data node
         LeafNode keyNode = pm.getOrCreateLeafNode(keyNodeName);
+        changeAccessModelIfNecessary(keyNode, AccessModel.open);
         List<Item> items = keyNode.getItems(1);
         if (items.isEmpty()) {
             LOGGER.log(Level.FINE, "Node " + keyNodeName + " is empty. Publish.");
