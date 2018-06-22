@@ -413,33 +413,45 @@ public final class OpenPgpManager extends Manager {
                         PayloadItem<?> payload = (PayloadItem) items.getItems().get(0);
                         PublicKeysListElement listElement = (PublicKeysListElement) payload.getPayload();
 
-                        Map<OpenPgpV4Fingerprint, Date> announcedKeys = new HashMap<>();
-                        for (OpenPgpV4Fingerprint f : listElement.getMetadata().keySet()) {
-                            PublicKeysListElement.PubkeyMetadataElement meta = listElement.getMetadata().get(f);
-                            announcedKeys.put(meta.getV4Fingerprint(), meta.getDate());
-                        }
-
-                        provider.getStore().setAnnouncedKeysFingerprints(contact, announcedKeys);
-
-                        Set<OpenPgpV4Fingerprint> missingKeys = listElement.getMetadata().keySet();
-                        try {
-                            missingKeys.removeAll(provider.getStore().getAvailableKeysFingerprints(contact).keySet());
-                            for (OpenPgpV4Fingerprint missing : missingKeys) {
-                                try {
-                                    PubkeyElement pubkeyElement = fetchPubkey(connection(), contact, missing);
-                                    processPublicKey(pubkeyElement, contact);
-                                } catch (Exception e) {
-                                    LOGGER.log(Level.WARNING, "Error fetching missing OpenPGP key " + missing.toString(), e);
-                                }
-                            }
-                        } catch (Exception e) {
-                            LOGGER.log(Level.WARNING, "Error processing OpenPGP metadata update from " + contact + ".", e);
-                        }
+                        processPublicKeysListElement(from, listElement);
                     }
                 }, "ProcessOXMetadata");
             }
         }
     };
+
+    public void requestMetadataUpdate(BareJid contact)
+            throws InterruptedException, PubSubException.NotALeafNodeException, SmackException.NoResponseException,
+            SmackException.NotConnectedException, XMPPException.XMPPErrorException,
+            PubSubException.NotAPubSubNodeException {
+        PublicKeysListElement metadata = PubSubDelegate.fetchPubkeysList(connection(), contact);
+        processPublicKeysListElement(contact, metadata);
+    }
+
+    private void processPublicKeysListElement(BareJid contact, PublicKeysListElement listElement) {
+        Map<OpenPgpV4Fingerprint, Date> announcedKeys = new HashMap<>();
+        for (OpenPgpV4Fingerprint f : listElement.getMetadata().keySet()) {
+            PublicKeysListElement.PubkeyMetadataElement meta = listElement.getMetadata().get(f);
+            announcedKeys.put(meta.getV4Fingerprint(), meta.getDate());
+        }
+
+        provider.getStore().setAnnouncedKeysFingerprints(contact, announcedKeys);
+
+        Set<OpenPgpV4Fingerprint> missingKeys = listElement.getMetadata().keySet();
+        try {
+            missingKeys.removeAll(provider.getStore().getAvailableKeysFingerprints(contact).keySet());
+            for (OpenPgpV4Fingerprint missing : missingKeys) {
+                try {
+                    PubkeyElement pubkeyElement = fetchPubkey(connection(), contact, missing);
+                    processPublicKey(pubkeyElement, contact);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Error fetching missing OpenPGP key " + missing.toString(), e);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error processing OpenPGP metadata update from " + contact + ".", e);
+        }
+    }
 
     private final IncomingChatMessageListener incomingOpenPgpMessageListener =
             new IncomingChatMessageListener() {

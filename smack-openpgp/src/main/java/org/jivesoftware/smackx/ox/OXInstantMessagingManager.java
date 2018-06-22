@@ -16,7 +16,10 @@
  */
 package org.jivesoftware.smackx.ox;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -25,10 +28,15 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
+import org.jivesoftware.smackx.hints.element.StoreHint;
 import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
+import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
+import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.listener.OxMessageListener;
 import org.jivesoftware.smackx.ox.listener.internal.SigncryptElementReceivedListener;
 
@@ -115,5 +123,21 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
         for (OxMessageListener listener : oxMessageListeners) {
             listener.newIncomingOxMessage(contact, originalMessage, signcryptElement);
         }
+    }
+
+    public void sendOxMessage(OpenPgpContact contact, CharSequence body)
+            throws InterruptedException, MissingOpenPgpKeyPairException, IOException,
+            SmackException.NotConnectedException, SmackOpenPgpException {
+        Message message = new Message(contact.getJid());
+        List<ExtensionElement> payload = new ArrayList<>();
+        payload.add(new Message.Body(null, body.toString()));
+
+        // Add additional information to the message
+        message.addExtension(new ExplicitMessageEncryptionElement(
+                ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.openpgpV0));
+        StoreHint.set(message);
+        message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
+
+        contact.send(connection(), message, payload);
     }
 }

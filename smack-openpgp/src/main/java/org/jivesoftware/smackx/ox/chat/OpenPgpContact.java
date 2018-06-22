@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.ox.chat;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -138,21 +137,7 @@ public class OpenPgpContact {
         // Add encrypted payload to message
         message.addExtension(encryptedPayload);
 
-        // Add additional information to the message
-        message.addExtension(new ExplicitMessageEncryptionElement(
-                ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.openpgpV0));
-        StoreHint.set(message);
-        message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
-
         ChatManager.getInstanceFor(connection).chatWith(getJid().asEntityBareJidIfPossible()).send(message);
-    }
-
-    public void send(XMPPConnection connection, Message message, CharSequence body)
-            throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException,
-            SmackOpenPgpException, IOException {
-        List<ExtensionElement> payload = new ArrayList<>();
-        payload.add(new Message.Body(null, body.toString()));
-        send(connection, message, payload);
     }
 
     public OpenPgpContentElement receive(OpenPgpElement element)
