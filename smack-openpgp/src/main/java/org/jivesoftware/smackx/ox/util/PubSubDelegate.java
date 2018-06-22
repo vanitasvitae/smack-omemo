@@ -26,6 +26,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.ox.OpenPgpManager;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
@@ -54,8 +55,10 @@ public class PubSubDelegate {
 
     /**
      * Name of the OX secret key node.
+     * TODO: Update once my PR gets merged.
+     * @see <a href="https://github.com/xsf/xeps/pull/669">xsf/xeps#669</a>
      */
-    public static final String PEP_NODE_SECRET_KEY = "urn:xmpp:openpgp:0:secret-key";
+    public static final String PEP_NODE_SECRET_KEY = "urn:xmpp:openpgp:secret-key:0";
 
     /**
      * Feature to be announced using the {@link ServiceDiscoveryManager} to subscribe to the OX metadata node.
@@ -131,6 +134,7 @@ public class PubSubDelegate {
 
         // Fetch IDs from metadata node
         LeafNode metadataNode = pm.getOrCreateLeafNode(PEP_NODE_PUBLIC_KEYS);
+        changeAccessModelIfNecessary(metadataNode, AccessModel.open);
         List<PayloadItem<PublicKeysListElement>> metadataItems = metadataNode.getItems(1);
 
         PublicKeysListElement.Builder builder = PublicKeysListElement.builder();
@@ -275,12 +279,29 @@ public class PubSubDelegate {
     }
 
     /**
-     * TODO: Implement and document.
+     * Publishes a {@link SecretkeyElement} to the secret key node.
+     * The node will be configured to use the whitelist access model to prevent access from subscribers.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#synchro-pep">
+     *     XEP-0373 §5. Synchronizing the Secret Key with a Private PEP Node</a>
+     *
+     * @param connection {@link XMPPConnection} of the user
+     * @param element a {@link SecretkeyElement} containing the encrypted secret key of the user
+     * @throws InterruptedException if the connection gets interrupted.
+     * @throws PubSubException.NotALeafNodeException if something is wrong with the PubSub node
+     * @throws XMPPException.XMPPErrorException in case of an protocol related error
+     * @throws SmackException.NotConnectedException if we are not connected
+     * @throws SmackException.NoResponseException /watch?v=0peBq89ZTrc
+     * @throws SmackException.NotLoggedInException if we are not logged in
+     * @throws SmackException.FeatureNotSupportedException if the Server doesn't support the whitelist access model
      */
     public static void depositSecretKey(XMPPConnection connection, SecretkeyElement element)
             throws InterruptedException, PubSubException.NotALeafNodeException,
-            XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException {
-
+            XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException,
+            SmackException.NotLoggedInException, SmackException.FeatureNotSupportedException {
+        if (!OpenPgpManager.getInstanceFor(connection).serverSupportsSecretKeyBackups()) {
+            throw new SmackException.FeatureNotSupportedException("http://jabber.org/protocol/pubsub#access-whitelist");
+        }
         PubSubManager pm = PubSubManager.getInstance(connection);
         LeafNode secretKeyNode = pm.getOrCreateLeafNode(PEP_NODE_SECRET_KEY);
         PubSubDelegate.changeAccessModelIfNecessary(secretKeyNode, AccessModel.whitelist);
@@ -288,6 +309,20 @@ public class PubSubDelegate {
         secretKeyNode.publish(new PayloadItem<>(element));
     }
 
+    /**
+     * Fetch the latest {@link SecretkeyElement} from the private backup node.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#synchro-pep">
+     *      XEP-0373 §5. Synchronizing the Secret Key with a Private PEP Node</a>
+     *
+     * @param connection {@link XMPPConnection} of the user.
+     * @return the secret key node or null, if it doesn't exist.
+     * @throws InterruptedException if the connection gets interrupted
+     * @throws PubSubException.NotALeafNodeException if there is an issue with the PubSub node
+     * @throws XMPPException.XMPPErrorException if there is an XMPP protocol related issue
+     * @throws SmackException.NotConnectedException if we are not connected
+     * @throws SmackException.NoResponseException /watch?v=7U0FzQzJzyI
+     */
     public static SecretkeyElement fetchSecretKey(XMPPConnection connection)
             throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException {
@@ -302,6 +337,15 @@ public class PubSubDelegate {
         return secretkeyElement;
     }
 
+    /**
+     * Delete the private backup node.
+     *
+     * @param connection {@link XMPPConnection} of the user.
+     * @throws XMPPException.XMPPErrorException if there is an XMPP protocol related issue
+     * @throws SmackException.NotConnectedException if we are not connected
+     * @throws InterruptedException if the connection gets interrupted
+     * @throws SmackException.NoResponseException if the server sends no response
+     */
     public static void deleteSecretKeyNode(XMPPConnection connection)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException {
