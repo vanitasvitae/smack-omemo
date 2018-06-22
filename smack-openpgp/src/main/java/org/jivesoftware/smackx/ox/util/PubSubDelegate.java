@@ -219,6 +219,31 @@ public class PubSubDelegate {
     }
 
     /**
+     * Delete the public key node of the key with fingerprint {@code fingerprint}.
+     *
+     * @param connection
+     * @param fingerprint
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException.NotConnectedException
+     * @throws InterruptedException
+     * @throws SmackException.NoResponseException
+     */
+    public static void deletePublicKeyNode(XMPPConnection connection, OpenPgpV4Fingerprint fingerprint)
+            throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
+            SmackException.NoResponseException {
+        PubSubManager pm = PubSubManager.getInstance(connection, connection.getUser().asBareJid());
+        try {
+            pm.deleteNode(PEP_NODE_PUBLIC_KEY(fingerprint));
+        } catch (XMPPException.XMPPErrorException e) {
+            if (e.getXMPPError().getCondition() == StanzaError.Condition.item_not_found) {
+                LOGGER.log(Level.FINE, "Node does not exist. No need to delete it.");
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    /**
      * Fetch the OpenPGP public key of a {@code contact}, identified by its OpenPGP {@code v4_fingerprint}.
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#discover-pubkey">XEP-0373 §4.3</a>
