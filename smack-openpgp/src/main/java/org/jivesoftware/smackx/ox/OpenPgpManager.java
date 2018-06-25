@@ -77,9 +77,11 @@ import org.jivesoftware.smackx.pubsub.ItemsExtension;
 import org.jivesoftware.smackx.pubsub.LeafNode;
 import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.PubSubException;
+import org.jivesoftware.smackx.pubsub.PubSubFeature;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
 
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -257,20 +259,19 @@ public final class OpenPgpManager extends Manager {
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#synchro-pep">XEP-0373 §5</a>
      *
+     * @param connection
+     * @param server Servers {@link DomainBareJid}
      * @return true, if the server supports secret key backups, otherwise false.
      * @throws XMPPException.XMPPErrorException
      * @throws SmackException.NotConnectedException
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
      */
-    public boolean serverSupportsSecretKeyBackups()
+    public static boolean serverSupportsSecretKeyBackups(XMPPConnection connection, DomainBareJid server)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
             SmackException.NoResponseException, SmackException.NotLoggedInException {
-        throwIfNotAuthenticated();
-        boolean pep = PEPManager.getInstanceFor(connection()).isSupported();
-        boolean whitelist = PubSubManager.getInstance(connection(), connection().getUser().asBareJid())
-                .getSupportedFeatures().containsFeature("http://jabber.org/protocol/pubsub#access-whitelist");
-        return pep && whitelist;
+        return PubSubManager.getInstance(connection, server).getSupportedFeatures()
+                .containsFeature(PubSubFeature.access_whitelist.getFeatureName());
     }
 
     /**
@@ -290,7 +291,8 @@ public final class OpenPgpManager extends Manager {
                                         SecretKeyBackupSelectionCallback selectKeyCallback)
             throws InterruptedException, PubSubException.NotALeafNodeException,
             XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException,
-            SmackException.NotLoggedInException, SmackOpenPgpException, IOException {
+            SmackException.NotLoggedInException, SmackOpenPgpException, IOException,
+            SmackException.FeatureNotSupportedException {
         throwIfNoProviderSet();
         throwIfNotAuthenticated();
 
@@ -334,7 +336,7 @@ public final class OpenPgpManager extends Manager {
      * @throws SmackOpenPgpException if something goes wrong while restoring the secret key.
      * @throws InvalidBackupCodeException if the user-provided backup code is invalid.
      */
-    public void restoreSecretKeyServerBackup(AskForBackupCodeCallback codeCallback,
+    public OpenPgpV4Fingerprint restoreSecretKeyServerBackup(AskForBackupCodeCallback codeCallback,
                                              SecretKeyRestoreSelectionCallback selectionCallback)
             throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException, SmackOpenPgpException,
@@ -350,7 +352,7 @@ public final class OpenPgpManager extends Manager {
         String backupCode = codeCallback.askForBackupCode();
 
         OpenPgpV4Fingerprint fingerprint = SecretKeyBackupHelper.restoreSecretKeyBackup(provider, backup, backupCode);
-        provider.getStore().setPrimaryOpenPgpKeyPairFingerprint(fingerprint);
+        return fingerprint;
     }
 
     /**

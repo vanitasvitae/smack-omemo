@@ -16,12 +16,17 @@
  */
 package org.jivesoftware.smackx.openpgp;
 
+import static junit.framework.TestCase.assertTrue;
+
 import java.io.File;
+import java.util.logging.Level;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.util.FileUtils;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.ox.OXInstantMessagingManager;
 import org.jivesoftware.smackx.ox.OpenPgpManager;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
@@ -43,8 +48,8 @@ import org.junit.BeforeClass;
 
 public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgpIntegrationTest {
 
-    private static final File aliceStorePath = FileUtils.getTempDir("basic_ox_messaging_test_alice");
-    private static final File bobStorePath = FileUtils.getTempDir("basic_ox_messaging_test_bob");
+    private static final File aliceStorePath = FileUtils.getTempDir("basic_ox_messaging_test_alice_" + StringUtils.randomString(10));
+    private static final File bobStorePath = FileUtils.getTempDir("basic_ox_messaging_test_bob_" + StringUtils.randomString(10));
 
     private OpenPgpV4Fingerprint aliceFingerprint = null;
     private OpenPgpV4Fingerprint bobFingerprint = null;
@@ -66,8 +71,19 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
     public void basicInstantMessagingTest()
             throws Exception {
 
+        LOGGER.log(Level.INFO, aliceStorePath.getAbsolutePath() + " " + bobStorePath.getAbsolutePath());
+
         final SimpleResultSyncPoint bobReceivedMessage = new SimpleResultSyncPoint();
         final String body = "Writing integration tests is an annoying task, but it has to be done, so lets do it!!!";
+
+        Roster aliceRoster = Roster.getInstanceFor(aliceConnection);
+        Roster bobRoster = Roster.getInstanceFor(bobConnection);
+
+        aliceRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
+        bobRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
+
+        aliceRoster.createEntry(bob, "Bob", null);
+        bobRoster.createEntry(alice, "Alice", null);
 
         FileBasedPainlessOpenPgpStore aliceStore = new FileBasedPainlessOpenPgpStore(aliceStorePath, new UnprotectedKeysProtector());
         FileBasedPainlessOpenPgpStore bobStore = new FileBasedPainlessOpenPgpStore(bobStorePath, new UnprotectedKeysProtector());
@@ -95,19 +111,25 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         aliceOpenPgp.setOpenPgpProvider(aliceProvider);
         bobOpenPgp.setOpenPgpProvider(bobProvider);
 
-        aliceOpenPgp.generateAndImportKeyPair(alice);
-        bobOpenPgp.generateAndImportKeyPair(bob);
+        aliceFingerprint = aliceOpenPgp.generateAndImportKeyPair(alice);
+        bobFingerprint = bobOpenPgp.generateAndImportKeyPair(bob);
 
-        aliceFingerprint = aliceOpenPgp.getOurFingerprint();
-        bobFingerprint = bobOpenPgp.getOurFingerprint();
+        aliceStore.setPrimaryOpenPgpKeyPairFingerprint(aliceFingerprint);
+        bobStore.setPrimaryOpenPgpKeyPairFingerprint(bobFingerprint);
 
         aliceOpenPgp.announceSupportAndPublish();
         bobOpenPgp.announceSupportAndPublish();
 
+        LOGGER.log(Level.INFO, "Request metadata of bob");
         aliceOpenPgp.requestMetadataUpdate(bob);
+        LOGGER.log(Level.INFO, "Request metadata of alice");
         bobOpenPgp.requestMetadataUpdate(alice);
 
         OpenPgpContact bobForAlice = aliceOpenPgp.getOpenPgpContact(bob.asEntityBareJidIfPossible());
+        OpenPgpContact aliceForBob = bobOpenPgp.getOpenPgpContact(alice.asEntityBareJidIfPossible());
+
+        assertTrue(bobForAlice.getFingerprints().getActiveKeys().contains(bobFingerprint));
+        assertTrue(aliceForBob.getFingerprints().getActiveKeys().contains(aliceFingerprint));
 
         aliceInstantMessaging.sendOxMessage(bobForAlice, body);
 

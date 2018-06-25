@@ -30,7 +30,7 @@ import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.TestNotPossibleException;
 import org.jxmpp.jid.BareJid;
 
-public class AbstractOpenPgpIntegrationTest extends AbstractSmackIntegrationTest {
+public abstract class AbstractOpenPgpIntegrationTest extends AbstractSmackIntegrationTest {
 
     protected final XMPPConnection aliceConnection;
     protected final XMPPConnection bobConnection;

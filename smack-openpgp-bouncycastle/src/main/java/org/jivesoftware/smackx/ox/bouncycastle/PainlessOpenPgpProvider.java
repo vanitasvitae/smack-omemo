@@ -360,6 +360,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
     public OpenPgpV4Fingerprint importPublicKey(BareJid owner, byte[] bytes)
             throws MissingUserIdOnKeyException, IOException, SmackOpenPgpException {
         PGPPublicKeyRing publicKeys = new PGPPublicKeyRing(bytes, new BcKeyFingerprintCalculator());
+        // LOGGER.log(Level.INFO, "Importing key " + Long.toHexString(publicKeys.getPublicKey().getKeyID()));
         return importPublicKey(owner, publicKeys);
     }
 

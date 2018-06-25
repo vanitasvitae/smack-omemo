@@ -299,7 +299,7 @@ public class PubSubDelegate {
             throws InterruptedException, PubSubException.NotALeafNodeException,
             XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException,
             SmackException.NotLoggedInException, SmackException.FeatureNotSupportedException {
-        if (!OpenPgpManager.getInstanceFor(connection).serverSupportsSecretKeyBackups()) {
+        if (!OpenPgpManager.serverSupportsSecretKeyBackups(connection, connection.getXMPPServiceDomain())) {
             throw new SmackException.FeatureNotSupportedException("http://jabber.org/protocol/pubsub#access-whitelist");
         }
         PubSubManager pm = PubSubManager.getInstance(connection);
