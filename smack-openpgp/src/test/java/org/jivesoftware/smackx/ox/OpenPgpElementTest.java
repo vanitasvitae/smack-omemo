@@ -169,6 +169,8 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
         assertEquals(element.getExtensions(), parsed.getExtensions());
+        assertEquals(payload.get(0), element.getExtension(Message.Body.NAMESPACE));
+        assertEquals(payload.get(0), element.getExtension(Message.Body.ELEMENT, Message.Body.NAMESPACE));
     }
 
 

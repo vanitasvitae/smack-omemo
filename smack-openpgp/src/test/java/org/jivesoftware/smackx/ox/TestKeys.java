@@ -16,7 +16,27 @@
  */
 package org.jivesoftware.smackx.ox;
 
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
+
 public class TestKeys {
+
+    public TestKeys() {
+
+    }
+
+    public static final BareJid JULIET_JID;
+    public static final BareJid ROMEO_JID;
+
+    static {
+        try {
+            JULIET_JID = JidCreate.bareFrom("juliet@capulet.lit");
+            ROMEO_JID = JidCreate.bareFrom("romeo@montague.lit");
+        } catch (XmppStringprepException e) {
+            throw new AssertionError(e);
+        }
+    }
 
     public static final String JULIET_UID = "xmpp:juliet@capulet.lit";
 

@@ -22,6 +22,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -36,6 +37,7 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+import org.jivesoftware.smackx.ox.TestKeys;
 import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
 import org.jivesoftware.smackx.ox.chat.OpenPgpFingerprints;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
@@ -46,31 +48,31 @@ import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
-import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
+import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.JidTestUtil;
 import org.xmlpull.v1.XmlPullParserException;
 
 
 public class DryOxEncryptionTest extends OxTestSuite {
 
     private static final Logger LOGGER = Logger.getLogger(DryOxEncryptionTest.class.getName());
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
-    private static final File alicePath = FileUtils.getTempDir("ox-alice");
-    private static final File bobPath = FileUtils.getTempDir("ox-bob");
+    private static final File julietPath = FileUtils.getTempDir("ox-juliet");
+    private static final File romeoPath = FileUtils.getTempDir("ox-romeo");
 
     @BeforeClass
     @AfterClass
     public static void deletePath() {
-        LOGGER.log(Level.INFO, "Delete paths " + alicePath.getAbsolutePath() + " " + bobPath.getAbsolutePath());
-        FileUtils.deleteDirectory(alicePath);
-        FileUtils.deleteDirectory(bobPath);
+        LOGGER.log(Level.INFO, "Delete paths " + julietPath.getAbsolutePath() + " " + romeoPath.getAbsolutePath());
+        FileUtils.deleteDirectory(julietPath);
+        FileUtils.deleteDirectory(romeoPath);
     }
 
     @Test
@@ -78,64 +80,65 @@ public class DryOxEncryptionTest extends OxTestSuite {
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException, SmackOpenPgpException, MissingUserIdOnKeyException, MissingOpenPgpPublicKeyException,
             MissingOpenPgpKeyPairException, XmlPullParserException {
-        BareJid alice = JidTestUtil.BARE_JID_1;
-        BareJid bob = JidTestUtil.BARE_JID_2;
+        BareJid juliet = TestKeys.JULIET_JID;
+        BareJid romemo = TestKeys.ROMEO_JID;
 
-        FileBasedPainlessOpenPgpStore aliceStore = new FileBasedPainlessOpenPgpStore(alicePath, new UnprotectedKeysProtector());
-        FileBasedPainlessOpenPgpStore bobStore = new FileBasedPainlessOpenPgpStore(bobPath, new UnprotectedKeysProtector());
+        FileBasedPainlessOpenPgpStore julietStore = new FileBasedPainlessOpenPgpStore(julietPath, new UnprotectedKeysProtector());
+        FileBasedPainlessOpenPgpStore romeoStore = new FileBasedPainlessOpenPgpStore(romeoPath, new UnprotectedKeysProtector());
 
-        PainlessOpenPgpProvider aliceProvider = new PainlessOpenPgpProvider(alice, aliceStore);
-        PainlessOpenPgpProvider bobProvider = new PainlessOpenPgpProvider(bob, bobStore);
+        PainlessOpenPgpProvider julietProvider = new PainlessOpenPgpProvider(juliet, julietStore);
+        PainlessOpenPgpProvider romeoProvider = new PainlessOpenPgpProvider(romemo, romeoStore);
 
-        KeyBytesAndFingerprint aliceKey = aliceProvider.generateOpenPgpKeyPair(alice);
-        KeyBytesAndFingerprint bobKey = bobProvider.generateOpenPgpKeyPair(bob);
+        OpenPgpV4Fingerprint julietFinger = julietProvider.importSecretKey(juliet,
+                BCUtil.getDecodedBytes(TestKeys.JULIET_PRIV.getBytes(UTF8)));
+        OpenPgpV4Fingerprint romeoFinger = romeoProvider.importSecretKey(romemo,
+                BCUtil.getDecodedBytes(TestKeys.ROMEO_PRIV.getBytes(UTF8)));
 
-        aliceProvider.importSecretKey(alice, aliceKey.getBytes());
-        bobProvider.importSecretKey(bob, bobKey.getBytes());
+        julietStore.setPrimaryOpenPgpKeyPairFingerprint(julietFinger);
+        romeoStore.setPrimaryOpenPgpKeyPairFingerprint(romeoFinger);
 
-        aliceStore.setPrimaryOpenPgpKeyPairFingerprint(aliceKey.getFingerprint());
-        bobStore.setPrimaryOpenPgpKeyPairFingerprint(bobKey.getFingerprint());
+        byte[] julietPubBytes = julietStore.getPublicKeyRingBytes(juliet, julietFinger);
+        byte[] romeoPubBytes = romeoStore.getPublicKeyRingBytes(romemo, romeoFinger);
 
-        byte[] alicePubBytes = aliceStore.getPublicKeyRingBytes(alice, aliceKey.getFingerprint());
-        byte[] bobPubBytes = bobStore.getPublicKeyRingBytes(bob, bobKey.getFingerprint());
+        assertNotNull(julietPubBytes);
+        assertNotNull(romeoPubBytes);
+        assertTrue(julietPubBytes.length != 0);
+        assertTrue(romeoPubBytes.length != 0);
 
-        assertNotNull(alicePubBytes);
-        assertNotNull(bobPubBytes);
-        assertTrue(alicePubBytes.length != 0);
-        assertTrue(bobPubBytes.length != 0);
-
-        PubkeyElement alicePub = new PubkeyElement(new PubkeyElement.PubkeyDataElement(
-                Base64.encode(aliceStore.getPublicKeyRingBytes(alice, aliceKey.getFingerprint()))),
+        PubkeyElement julietPub = new PubkeyElement(new PubkeyElement.PubkeyDataElement(
+                Base64.encode(julietStore.getPublicKeyRingBytes(juliet, julietFinger))),
                 new Date());
-        PubkeyElement bobPub = new PubkeyElement(new PubkeyElement.PubkeyDataElement(
-                Base64.encode(bobStore.getPublicKeyRingBytes(bob, bobKey.getFingerprint()))),
+        PubkeyElement romeoPub = new PubkeyElement(new PubkeyElement.PubkeyDataElement(
+                Base64.encode(romeoStore.getPublicKeyRingBytes(romemo, romeoFinger))),
                 new Date());
 
-        aliceProvider.importPublicKey(bob, Base64.decode(bobPub.getDataElement().getB64Data()));
-        bobProvider.importPublicKey(alice, Base64.decode(alicePub.getDataElement().getB64Data()));
+        julietProvider.importPublicKey(romemo, Base64.decode(romeoPub.getDataElement().getB64Data()));
+        romeoProvider.importPublicKey(juliet, Base64.decode(julietPub.getDataElement().getB64Data()));
 
-        aliceStore.setAnnouncedKeysFingerprints(bob, Collections.singletonMap(bobKey.getFingerprint(), new Date()));
-        bobStore.setAnnouncedKeysFingerprints(alice, Collections.singletonMap(aliceKey.getFingerprint(), new Date()));
+        julietStore.setAnnouncedKeysFingerprints(romemo, Collections.singletonMap(romeoFinger, new Date()));
+        romeoStore.setAnnouncedKeysFingerprints(juliet, Collections.singletonMap(julietFinger, new Date()));
 
-        OpenPgpFingerprints aliceFingerprints = new OpenPgpFingerprints(alice,
-                Collections.singleton(aliceKey.getFingerprint()),
-                Collections.singleton(aliceKey.getFingerprint()),
+        OpenPgpFingerprints julietFingerprints = new OpenPgpFingerprints(juliet,
+                Collections.singleton(julietFinger),
+                Collections.singleton(julietFinger),
                 new HashMap<OpenPgpV4Fingerprint, Throwable>());
-        OpenPgpFingerprints bobFingerprints = new OpenPgpFingerprints(bob,
-                Collections.singleton(bobKey.getFingerprint()),
-                Collections.singleton(bobKey.getFingerprint()),
+        OpenPgpFingerprints romeoFingerprints = new OpenPgpFingerprints(romemo,
+                Collections.singleton(romeoFinger),
+                Collections.singleton(romeoFinger),
                 new HashMap<OpenPgpV4Fingerprint, Throwable>());
 
-        OpenPgpContact aliceForBob = new OpenPgpContact(bobProvider, alice, bobFingerprints, aliceFingerprints);
-        OpenPgpContact bobForAlice = new OpenPgpContact(aliceProvider, bob, aliceFingerprints, bobFingerprints);
+        OpenPgpContact julietForRomeo = new OpenPgpContact(romeoProvider, juliet, romeoFingerprints, julietFingerprints);
+        OpenPgpContact romeoForJuliet = new OpenPgpContact(julietProvider, romemo, julietFingerprints, romeoFingerprints);
 
         String bodyText = "Finden wir eine Kompromisslösung – machen wir es so, wie ich es sage.";
         List<ExtensionElement> payload = Collections.<ExtensionElement>singletonList(new Message.Body("de",
                         bodyText));
 
-        OpenPgpElement encrypted = bobForAlice.encryptAndSign(payload);
+        OpenPgpElement encrypted = romeoForJuliet.encryptAndSign(payload);
 
-        OpenPgpContentElement decrypted = aliceForBob.receive(encrypted);
+        LOGGER.log(Level.INFO, encrypted.toXML(null).toString());
+
+        OpenPgpContentElement decrypted = julietForRomeo.receive(encrypted);
         assertTrue(decrypted instanceof SigncryptElement);
 
         assertEquals(1, decrypted.getExtensions().size());
