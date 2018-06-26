@@ -35,7 +35,6 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.FileUtils;
-import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
 import org.jivesoftware.smackx.ox.chat.OpenPgpFingerprints;
@@ -50,12 +49,14 @@ import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
+import org.bouncycastle.util.encoders.Base64;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.JidTestUtil;
 import org.xmlpull.v1.XmlPullParserException;
+
 
 public class DryOxEncryptionTest extends OxTestSuite {
 
@@ -91,6 +92,9 @@ public class DryOxEncryptionTest extends OxTestSuite {
 
         aliceProvider.importSecretKey(alice, aliceKey.getBytes());
         bobProvider.importSecretKey(bob, bobKey.getBytes());
+
+        aliceStore.setPrimaryOpenPgpKeyPairFingerprint(aliceKey.getFingerprint());
+        bobStore.setPrimaryOpenPgpKeyPairFingerprint(bobKey.getFingerprint());
 
         byte[] alicePubBytes = aliceStore.getPublicKeyRingBytes(alice, aliceKey.getFingerprint());
         byte[] bobPubBytes = bobStore.getPublicKeyRingBytes(bob, bobKey.getFingerprint());

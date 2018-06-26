@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright 2018 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.ox.bouncycastle;
 
 import static junit.framework.TestCase.assertEquals;
@@ -13,7 +29,6 @@ import java.util.Collections;
 
 import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
-import org.jivesoftware.smackx.ox.SecretKeyBackupHelper;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
@@ -21,6 +36,7 @@ import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
+import org.jivesoftware.smackx.ox.util.SecretKeyBackupHelper;
 
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import org.junit.AfterClass;

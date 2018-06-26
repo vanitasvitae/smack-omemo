@@ -70,6 +70,7 @@ import org.jivesoftware.smackx.ox.listener.internal.SignElementReceivedListener;
 import org.jivesoftware.smackx.ox.listener.internal.SigncryptElementReceivedListener;
 import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
+import org.jivesoftware.smackx.ox.util.SecretKeyBackupHelper;
 import org.jivesoftware.smackx.pep.PEPListener;
 import org.jivesoftware.smackx.pep.PEPManager;
 import org.jivesoftware.smackx.pubsub.EventElement;

@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
 import org.jxmpp.jid.BareJid;
@@ -47,9 +48,12 @@ public class OpenPgpFingerprints {
                                Set<OpenPgpV4Fingerprint> availableKeys,
                                Map<OpenPgpV4Fingerprint, Throwable> unfetchableKeys) {
         this.jid = jid;
-        this.announcedKeys = Collections.unmodifiableSet(announcedKeys);
-        this.availableKeys = Collections.unmodifiableSet(availableKeys);
-        this.unfetchableKeys = Collections.unmodifiableMap(unfetchableKeys);
+        this.announcedKeys = Collections.unmodifiableSet(Objects.requireNonNull(announcedKeys,
+                "Set of announced keys MUST NOT be null."));
+        this.availableKeys = Collections.unmodifiableSet(Objects.requireNonNull(availableKeys,
+                "Set of available keys MUST NOT be null."));
+        this.unfetchableKeys = Collections.unmodifiableMap(Objects.requireNonNull(unfetchableKeys,
+                "Map of unfetchable keys MUST NOT be null."));
     }
 
     /**
