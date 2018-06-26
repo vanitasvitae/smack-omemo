@@ -78,10 +78,8 @@ import org.jivesoftware.smackx.pubsub.LeafNode;
 import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jivesoftware.smackx.pubsub.PubSubFeature;
-import org.jivesoftware.smackx.pubsub.PubSubManager;
 
 import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -260,18 +258,17 @@ public final class OpenPgpManager extends Manager {
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#synchro-pep">XEP-0373 §5</a>
      *
      * @param connection
-     * @param server Servers {@link DomainBareJid}
      * @return true, if the server supports secret key backups, otherwise false.
      * @throws XMPPException.XMPPErrorException
      * @throws SmackException.NotConnectedException
      * @throws InterruptedException
      * @throws SmackException.NoResponseException
      */
-    public static boolean serverSupportsSecretKeyBackups(XMPPConnection connection, DomainBareJid server)
+    public static boolean serverSupportsSecretKeyBackups(XMPPConnection connection)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
-            SmackException.NoResponseException, SmackException.NotLoggedInException {
-        return PubSubManager.getInstance(connection, server).getSupportedFeatures()
-                .containsFeature(PubSubFeature.access_whitelist.getFeatureName());
+            SmackException.NoResponseException {
+        return ServiceDiscoveryManager.getInstanceFor(connection)
+                .serverSupportsFeature(PubSubFeature.access_whitelist.toString());
     }
 
     /**

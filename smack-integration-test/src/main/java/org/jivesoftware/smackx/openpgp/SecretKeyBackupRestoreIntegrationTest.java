@@ -50,7 +50,7 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
             throws XMPPException.XMPPErrorException, TestNotPossibleException, SmackException.NotConnectedException,
             InterruptedException, SmackException.NoResponseException, SmackException.NotLoggedInException {
         super(environment);
-        if (!OpenPgpManager.serverSupportsSecretKeyBackups(aliceConnection, aliceConnection.getXMPPServiceDomain())) {
+        if (!OpenPgpManager.serverSupportsSecretKeyBackups(aliceConnection)) {
             throw new TestNotPossibleException("Server does not support the whitelist access model.");
         }
     }
