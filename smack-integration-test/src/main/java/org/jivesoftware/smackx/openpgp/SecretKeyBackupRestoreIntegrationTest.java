@@ -16,6 +16,9 @@
  */
 package org.jivesoftware.smackx.openpgp;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.io.File;
@@ -64,10 +67,10 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
 
     public SecretKeyBackupRestoreIntegrationTest(SmackIntegrationTestEnvironment environment)
             throws XMPPException.XMPPErrorException, TestNotPossibleException, SmackException.NotConnectedException,
-            InterruptedException, SmackException.NoResponseException, SmackException.NotLoggedInException {
+            InterruptedException, SmackException.NoResponseException {
         super(environment);
         if (!OpenPgpManager.serverSupportsSecretKeyBackups(aliceConnection)) {
-            throw new TestNotPossibleException("Server does not support the whitelist access model.");
+            throw new TestNotPossibleException("Server does not support the 'whitelist' PubSub access model.");
         }
     }
 
@@ -98,8 +101,13 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
         OpenPgpManager openPgpManager = OpenPgpManager.getInstanceFor(aliceConnection);
         openPgpManager.setOpenPgpProvider(beforeProvider);
 
-        beforeStore.setPrimaryOpenPgpKeyPairFingerprint(
-                openPgpManager.generateAndImportKeyPair(alice));
+        assertNull(beforeStore.getPrimaryOpenPgpKeyPairFingerprint());
+
+        OpenPgpV4Fingerprint keyFingerprint = openPgpManager.generateAndImportKeyPair(alice);
+        beforeStore.setPrimaryOpenPgpKeyPairFingerprint(keyFingerprint);
+        assertEquals(keyFingerprint, beforeStore.getPrimaryOpenPgpKeyPairFingerprint());
+
+        assertTrue(beforeStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
 
         openPgpManager.backupSecretKeyToServer(new DisplayBackupCodeCallback() {
             @Override
@@ -117,6 +125,9 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
         PainlessOpenPgpProvider afterProvider = new PainlessOpenPgpProvider(alice, afterStore);
         openPgpManager.setOpenPgpProvider(afterProvider);
 
+        assertNull(afterStore.getPrimaryOpenPgpKeyPairFingerprint());
+        assertFalse(afterStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
+
         OpenPgpV4Fingerprint fingerprint = openPgpManager.restoreSecretKeyServerBackup(new AskForBackupCodeCallback() {
             @Override
             public String askForBackupCode() {
@@ -129,8 +140,11 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
             }
         });
 
+        assertTrue(afterStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
+
         afterStore.setPrimaryOpenPgpKeyPairFingerprint(fingerprint);
 
+        assertEquals(keyFingerprint, afterStore.getPrimaryOpenPgpKeyPairFingerprint());
         assertTrue(Arrays.equals(beforeStore.getSecretKeyRings(alice).getEncoded(), afterStore.getSecretKeyRings(alice).getEncoded()));
     }
 }
