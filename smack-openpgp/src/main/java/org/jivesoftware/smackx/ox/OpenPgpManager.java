@@ -22,6 +22,7 @@ import static org.jivesoftware.smackx.ox.util.PubSubDelegate.fetchPubkey;
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.publishPublicKey;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -511,12 +512,33 @@ public final class OpenPgpManager extends Manager {
     Private stuff.
      */
 
+    /**
+     * Process a {@link PubkeyElement}. This includes unpacking the key from the element and importing it.
+     *
+     * @param pubkeyElement {@link PubkeyElement} containing the key
+     * @param owner owner of the key
+     * @throws MissingUserIdOnKeyException if the key does not have an OpenPGP user-id of the form
+     * "xmpp:juliet@capulet.lit" with the owners {@link BareJid}
+     * @throws IOException row, row, row your byte gently down the {@link InputStream}
+     * @throws SmackOpenPgpException if the key cannot be deserialized
+     */
     private void processPublicKey(PubkeyElement pubkeyElement, BareJid owner)
             throws MissingUserIdOnKeyException, IOException, SmackOpenPgpException {
         byte[] base64 = pubkeyElement.getDataElement().getB64Data();
         provider.importPublicKey(owner, Base64.decode(base64));
     }
 
+    /**
+     * Create a {@link PubkeyElement} which contains the OpenPGP public key of {@code owner} which belongs to
+     * the {@link OpenPgpV4Fingerprint} {@code fingerprint}.
+     *
+     * @param owner owner of the public key
+     * @param fingerprint fingerprint of the key
+     * @param date date of creation of the element
+     * @return {@link PubkeyElement} containing the key
+     *
+     * @throws MissingOpenPgpPublicKeyException if the public key notated by the fingerprint cannot be found
+     */
     private PubkeyElement createPubkeyElement(BareJid owner,
                                               OpenPgpV4Fingerprint fingerprint,
                                               Date date)
@@ -525,31 +547,86 @@ public final class OpenPgpManager extends Manager {
         return createPubkeyElement(keyBytes, date);
     }
 
+    /**
+     * Create a {@link PubkeyElement} which contains the given {@code data} base64 encoded.
+     *
+     * @param bytes byte representation of an OpenPGP public key
+     * @param date date of creation of the element
+     * @return {@link PubkeyElement} containing the key
+     */
     private static PubkeyElement createPubkeyElement(byte[] bytes, Date date) {
         return new PubkeyElement(new PubkeyElement.PubkeyDataElement(Base64.encode(bytes)), date);
     }
 
-    void addSigncryptReceivedListener(SigncryptElementReceivedListener listener) {
+    /**
+     * Register a {@link SigncryptElementReceivedListener} on the {@link OpenPgpManager}.
+     * That listener will get informed whenever a {@link SigncryptElement} has been received and successfully decrypted.
+     *
+     * Note: This method is not intended for clients to listen for incoming {@link SigncryptElement}s.
+     * Instead its purpose is to allow easy extension of XEP-0373 for custom OpenPGP profiles such as
+     * OpenPGP for XMPP: Instant Messaging.
+     *
+     * @param listener listener that gets registered
+     */
+    void registerSigncryptReceivedListener(SigncryptElementReceivedListener listener) {
         signcryptElementReceivedListeners.add(listener);
     }
 
-    void removeSigncryptElementReceivedListener(SigncryptElementReceivedListener listener) {
+    /**
+     * Unregister a prior registered {@link SigncryptElementReceivedListener}. That listener will no longer get
+     * informed about incoming decrypted {@link SigncryptElement}s.
+     *
+     * @param listener listener that gets unregistered
+     */
+    void unregisterSigncryptElementReceivedListener(SigncryptElementReceivedListener listener) {
         signcryptElementReceivedListeners.remove(listener);
     }
 
-    void addSignElementReceivedListener(SignElementReceivedListener listener) {
+    /**
+     * Register a {@link SignElementReceivedListener} on the {@link OpenPgpManager}.
+     * That listener will get informed whenever a {@link SignElement} has been received and successfully verified.
+     *
+     * Note: This method is not intended for clients to listen for incoming {@link SignElement}s.
+     * Instead its purpose is to allow easy extension of XEP-0373 for custom OpenPGP profiles such as
+     * OpenPGP for XMPP: Instant Messaging.
+     *
+     * @param listener listener that gets registered
+     */
+    void registerSignElementReceivedListener(SignElementReceivedListener listener) {
         signElementReceivedListeners.add(listener);
     }
 
-    void removeSignElementReceivedListener(SignElementReceivedListener listener) {
+    /**
+     * Unregister a prior registered {@link SignElementReceivedListener}. That listener will no longer get
+     * informed about incoming decrypted {@link SignElement}s.
+     *
+     * @param listener listener that gets unregistered
+     */
+    void unregisterSignElementReceivedListener(SignElementReceivedListener listener) {
         signElementReceivedListeners.remove(listener);
     }
 
-    void addCryptElementReceivedListener(CryptElementReceivedListener listener) {
+    /**
+     * Register a {@link CryptElementReceivedListener} on the {@link OpenPgpManager}.
+     * That listener will get informed whenever a {@link CryptElement} has been received and successfully decrypted.
+     *
+     * Note: This method is not intended for clients to listen for incoming {@link CryptElement}s.
+     * Instead its purpose is to allow easy extension of XEP-0373 for custom OpenPGP profiles such as
+     * OpenPGP for XMPP: Instant Messaging.
+     *
+     * @param listener listener that gets registered
+     */
+    void registerCryptElementReceivedListener(CryptElementReceivedListener listener) {
         cryptElementReceivedListeners.add(listener);
     }
 
-    void removeCryptElementReceivedListener(CryptElementReceivedListener listener) {
+    /**
+     * Unregister a prior registered {@link CryptElementReceivedListener}. That listener will no longer get
+     * informed about incoming decrypted {@link CryptElement}s.
+     *
+     * @param listener listener that gets unregistered
+     */
+    void unregisterCryptElementReceivedListener(CryptElementReceivedListener listener) {
         cryptElementReceivedListeners.remove(listener);
     }
 
@@ -563,6 +640,12 @@ public final class OpenPgpManager extends Manager {
         }
     }
 
+    /**
+     * Throw a {@link org.jivesoftware.smack.SmackException.NotLoggedInException} if the {@link XMPPConnection} of this
+     * manager is not authenticated at this point.
+     *
+     * @throws SmackException.NotLoggedInException if we are not authenticated
+     */
     private void throwIfNotAuthenticated() throws SmackException.NotLoggedInException {
         if (!connection().isAuthenticated()) {
             throw new SmackException.NotLoggedInException();

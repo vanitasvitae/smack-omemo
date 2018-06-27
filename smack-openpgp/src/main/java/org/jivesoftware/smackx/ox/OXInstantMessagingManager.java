@@ -58,7 +58,7 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
 
     private OXInstantMessagingManager(final XMPPConnection connection) {
         super(connection);
-        OpenPgpManager.getInstanceFor(connection).addSigncryptReceivedListener(this);
+        OpenPgpManager.getInstanceFor(connection).registerSigncryptReceivedListener(this);
         announceSupportForOxInstantMessaging();
     }
 

@@ -23,9 +23,6 @@ import static junit.framework.TestCase.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -77,8 +74,7 @@ public class DryOxEncryptionTest extends OxTestSuite {
 
     @Test
     public void dryEncryptionTest()
-            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
-            IOException, SmackOpenPgpException, MissingUserIdOnKeyException, MissingOpenPgpPublicKeyException,
+            throws IOException, SmackOpenPgpException, MissingUserIdOnKeyException, MissingOpenPgpPublicKeyException,
             MissingOpenPgpKeyPairException, XmlPullParserException {
         BareJid juliet = TestKeys.JULIET_JID;
         BareJid romemo = TestKeys.ROMEO_JID;
