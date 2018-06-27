@@ -20,6 +20,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -35,16 +36,15 @@ import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
-import org.jivesoftware.smackx.ox.provider.CryptElementProvider;
+import org.jivesoftware.smackx.ox.provider.OpenPgpContentElementProvider;
 import org.jivesoftware.smackx.ox.provider.OpenPgpElementProvider;
-import org.jivesoftware.smackx.ox.provider.SignElementProvider;
-import org.jivesoftware.smackx.ox.provider.SigncryptElementProvider;
 
 import org.junit.Test;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class OpenPgpElementTest extends SmackTestSuite {
 
@@ -74,6 +74,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
 
         XmlPullParser parser = TestUtils.getParser(expected);
         OpenPgpElement parsed = OpenPgpElementProvider.TEST_INSTANCE.parse(parser);
+        assertEquals(element.getEncryptedBase64MessageContent(), parsed.getEncryptedBase64MessageContent());
     }
 
     @Test
@@ -104,7 +105,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertXMLEqual(expected, element.toXML(null).toString());
 
         XmlPullParser parser = TestUtils.getParser(expected);
-        SignElement parsed = SignElementProvider.INSTANCE.parse(parser);
+        SignElement parsed = (SignElement) OpenPgpContentElementProvider.parseOpenPgpContentElement(parser);
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
@@ -134,7 +135,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertXMLEqual(expected, element.toXML(null).toString());
 
         XmlPullParser parser = TestUtils.getParser(expected);
-        CryptElement parsed = CryptElementProvider.INSTANCE.parse(parser);
+        CryptElement parsed = (CryptElement) OpenPgpContentElementProvider.parseOpenPgpContentElement(parser);
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
@@ -164,7 +165,7 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertXMLEqual(expected, element.toXML(null).toString());
 
         XmlPullParser parser = TestUtils.getParser(expected);
-        SigncryptElement parsed = SigncryptElementProvider.INSTANCE.parse(parser);
+        SigncryptElement parsed = (SigncryptElement) OpenPgpContentElementProvider.parseOpenPgpContentElement(parser);
 
         assertEquals(element.getTimestamp(), parsed.getTimestamp());
         assertEquals(element.getTo(), parsed.getTo());
@@ -173,5 +174,12 @@ public class OpenPgpElementTest extends SmackTestSuite {
         assertEquals(payload.get(0), element.getExtension(Message.Body.ELEMENT, Message.Body.NAMESPACE));
     }
 
+    @Test(expected = XmlPullParserException.class)
+    public void openPgpContentElementProvider_invalidElementTest() throws IOException, XmlPullParserException {
+        String invalidElementXML = "<payload>" +
+                "<body xmlns='jabber:client' xml:lang='en'>This is a secret message.</body>" +
+                "</payload>";
+        OpenPgpContentElementProvider.parseOpenPgpContentElement(invalidElementXML);
+    }
 
 }
