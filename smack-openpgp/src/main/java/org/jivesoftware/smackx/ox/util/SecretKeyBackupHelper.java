@@ -20,8 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
@@ -35,8 +33,6 @@ import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jxmpp.jid.BareJid;
 
 public class SecretKeyBackupHelper {
-
-    private static final Logger LOGGER = Logger.getLogger(SecretKeyBackupHelper.class.getName());
 
     /**
      * Generate a secure backup code.
@@ -76,9 +72,8 @@ public class SecretKeyBackupHelper {
                 byte[] bytes = provider.getStore().getSecretKeyRingBytes(owner, fingerprint);
                 buffer.write(bytes);
             } catch (MissingOpenPgpKeyPairException | IOException e) {
-                LOGGER.log(Level.WARNING, "Cannot backup secret key " + Long.toHexString(fingerprint.getKeyId()) + ".", e);
+                throw new SmackOpenPgpException("Cannot backup secret key " + Long.toHexString(fingerprint.getKeyId()) + ".", e);
             }
-
         }
         return createSecretkeyElement(provider, buffer.toByteArray(), backupCode);
     }
