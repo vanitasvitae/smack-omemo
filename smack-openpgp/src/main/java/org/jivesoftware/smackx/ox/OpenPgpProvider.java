@@ -121,6 +121,15 @@ public interface OpenPgpProvider {
 
     byte[] symmetricallyEncryptWithPassword(byte[] bytes, String password) throws SmackOpenPgpException, IOException;
 
+    /**
+     * Decrypt a symmetrically encrypted array of data using the provided password.
+     *
+     * @param bytes symmetrically encrypted data
+     * @param password password for decryption
+     * @return decrypted data
+     * @throws SmackOpenPgpException if the password is incorrect
+     * @throws IOException io is dangerous
+     */
     byte[] symmetricallyDecryptWithPassword(byte[] bytes, String password) throws SmackOpenPgpException, IOException;
 
     /**

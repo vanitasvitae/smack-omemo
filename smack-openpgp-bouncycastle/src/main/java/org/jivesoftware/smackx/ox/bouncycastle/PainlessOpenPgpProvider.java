@@ -149,7 +149,6 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
     @Override
     public byte[] sign(SignElement element, OpenPgpV4Fingerprint signingKeyFingerprint)
             throws MissingOpenPgpKeyPairException, IOException, SmackOpenPgpException {
-        InputStream fromPlain = element.toInputStream();
         PGPSecretKeyRing signingKeyRing;
         try {
             signingKeyRing = store.getSecretKeyRings(owner).getSecretKeyRing(signingKeyFingerprint.getKeyId());
@@ -157,17 +156,23 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             throw new MissingOpenPgpKeyPairException(owner, signingKeyFingerprint, e);
         }
 
+        return signImpl(element, signingKeyRing, store.getSecretKeyProtector());
+    }
+
+    byte[] signImpl(SignElement element, PGPSecretKeyRing signingKey, SecretKeyRingProtector secretKeyRingProtector)
+            throws IOException, SmackOpenPgpException {
         ByteArrayOutputStream toSigned = new ByteArrayOutputStream();
         OutputStream signer;
         try {
             signer = PGPainless.createEncryptor().onOutputStream(toSigned)
                     .doNotEncrypt()
-                    .signWith(store.getSecretKeyProtector(), signingKeyRing)
+                    .signWith(secretKeyRingProtector, signingKey)
                     .noArmor();
         } catch (PGPException e) {
             throw new SmackOpenPgpException(e);
         }
 
+        InputStream fromPlain = element.toInputStream();
         Streams.pipeAll(fromPlain, signer);
 
         fromPlain.close();
@@ -178,16 +183,20 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
 
     @Override
     public byte[] encrypt(CryptElement element, MultiMap<BareJid, OpenPgpV4Fingerprint> encryptionKeyFingerprints)
-            throws MissingOpenPgpPublicKeyException, IOException, SmackOpenPgpException {
+            throws IOException, SmackOpenPgpException {
         PGPPublicKeyRing[] allRecipientsKeys = getEncryptionKeys(encryptionKeyFingerprints);
+        return encryptImpl(element, allRecipientsKeys);
+    }
 
+    byte[] encryptImpl(CryptElement element, PGPPublicKeyRing[] encryptionKeys)
+            throws IOException, SmackOpenPgpException {
         InputStream fromPlain = element.toInputStream();
         ByteArrayOutputStream encrypted = new ByteArrayOutputStream();
         OutputStream encryptor;
         try {
             encryptor = PGPainless.createEncryptor()
                     .onOutputStream(encrypted)
-                    .toRecipients(allRecipientsKeys)
+                    .toRecipients(encryptionKeys)
                     .usingSecureAlgorithms()
                     .doNotSign()
                     .noArmor();
@@ -260,7 +269,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         try {
             fromEncrypted = PGPainless.createDecryptor()
                     .onInputStream(encryptedBytes)
-                    .decryptWith(decryptionKeys, protector)
+                    .decryptWith(protector, decryptionKeys)
                     .verifyWith(verificationKeys)
                     .ignoreMissingPublicKeys()
                     .build();
