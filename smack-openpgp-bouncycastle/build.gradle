@@ -6,7 +6,7 @@ Smack API for OpenPGP using Bouncycastle."""
 dependencies {
 	compile project(':smack-core')
 	compile project(':smack-openpgp')
-	compile 'de.vanitasvitae.crypto:pgpainless:0.1-SNAPSHOT'
+	compile 'org.pgpainless:pgpainless:0.1-SNAPSHOT'
 	testCompile project(path: ":smack-core", configuration: "testRuntime")
 	testCompile project(path: ":smack-core", configuration: "archives")
 	testCompile project(path: ":smack-openpgp", configuration: "testRuntime")
