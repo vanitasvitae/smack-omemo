@@ -46,13 +46,13 @@ import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 
-import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
-import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
+import org.pgpainless.pgpainless.util.BCUtil;
 import org.xmlpull.v1.XmlPullParserException;
 
 

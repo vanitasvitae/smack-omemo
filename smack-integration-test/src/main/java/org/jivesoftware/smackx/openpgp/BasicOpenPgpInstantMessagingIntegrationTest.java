@@ -37,7 +37,6 @@ import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.listener.OxMessageListener;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
 
-import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.TestNotPossibleException;
@@ -45,6 +44,7 @@ import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
 
 public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgpIntegrationTest {
 

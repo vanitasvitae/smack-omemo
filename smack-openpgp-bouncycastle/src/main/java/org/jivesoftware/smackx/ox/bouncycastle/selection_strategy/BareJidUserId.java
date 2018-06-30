@@ -18,11 +18,11 @@ package org.jivesoftware.smackx.ox.bouncycastle.selection_strategy;
 
 import java.util.Iterator;
 
-import de.vanitasvitae.crypto.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
-import de.vanitasvitae.crypto.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
+import org.pgpainless.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
 
 public class BareJidUserId {
 

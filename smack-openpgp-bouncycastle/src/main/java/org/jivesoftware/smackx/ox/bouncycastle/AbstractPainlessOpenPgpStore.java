@@ -22,12 +22,12 @@ import java.util.Map;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
-import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
 
 public abstract class AbstractPainlessOpenPgpStore implements PainlessOpenPgpStore {
 

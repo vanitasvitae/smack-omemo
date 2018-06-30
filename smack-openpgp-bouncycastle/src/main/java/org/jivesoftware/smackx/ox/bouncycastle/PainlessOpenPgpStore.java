@@ -20,11 +20,11 @@ import java.io.IOException;
 
 import org.jivesoftware.smackx.ox.OpenPgpStore;
 
-import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
 
 public interface PainlessOpenPgpStore extends OpenPgpStore {
 

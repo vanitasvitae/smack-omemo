@@ -48,13 +48,6 @@ import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 
-import de.vanitasvitae.crypto.pgpainless.PGPainless;
-import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.decryption_verification.DecryptionStream;
-import de.vanitasvitae.crypto.pgpainless.decryption_verification.PainlessResult;
-import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
-import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
-import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -65,6 +58,13 @@ import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.PGPainless;
+import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.pgpainless.decryption_verification.PainlessResult;
+import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.pgpainless.util.BCUtil;
 
 public class PainlessOpenPgpProvider implements OpenPgpProvider {
 

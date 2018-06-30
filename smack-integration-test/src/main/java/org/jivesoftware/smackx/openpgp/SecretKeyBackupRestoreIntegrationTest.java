@@ -48,7 +48,6 @@ import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
 import org.jivesoftware.smackx.pubsub.PubSubException;
 
-import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
@@ -57,6 +56,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
 
 public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegrationTest {
 

@@ -42,7 +42,6 @@ import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 
-import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -52,6 +51,7 @@ import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.util.XmppDateTime;
+import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
 
 public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore {
 

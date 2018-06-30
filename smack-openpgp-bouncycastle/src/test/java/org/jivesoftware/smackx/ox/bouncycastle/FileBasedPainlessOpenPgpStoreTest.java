@@ -29,10 +29,6 @@ import java.util.Collections;
 
 import org.jivesoftware.smack.util.FileUtils;
 
-import de.vanitasvitae.crypto.pgpainless.PGPainless;
-import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
-import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
-import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -44,6 +40,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.JidTestUtil;
+import org.pgpainless.pgpainless.PGPainless;
+import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
+import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.pgpainless.util.BCUtil;
 
 public class FileBasedPainlessOpenPgpStoreTest extends OxTestSuite {
 

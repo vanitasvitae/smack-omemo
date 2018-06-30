@@ -38,12 +38,12 @@ import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 import org.jivesoftware.smackx.ox.util.SecretKeyBackupHelper;
 
-import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.JidTestUtil;
+import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
 
 public class BackupRestoreTest extends OxTestSuite {
 

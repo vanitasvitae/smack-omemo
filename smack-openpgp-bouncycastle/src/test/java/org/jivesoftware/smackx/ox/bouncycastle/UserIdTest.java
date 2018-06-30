@@ -26,8 +26,6 @@ import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 
-import de.vanitasvitae.crypto.pgpainless.PGPainless;
-import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.After;
@@ -35,6 +33,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.JidTestUtil;
+import org.pgpainless.pgpainless.PGPainless;
+import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
 
 public class UserIdTest extends OxTestSuite {
 

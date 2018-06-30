@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
-import de.vanitasvitae.crypto.pgpainless.PGPainless;
-import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.bouncycastle.openpgp.PGPDataValidationException;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
+import org.pgpainless.pgpainless.PGPainless;
+import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 public class SymmetricEncryptionTest extends OxTestSuite {
 
