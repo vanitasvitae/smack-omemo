@@ -16,8 +16,12 @@
  */
 package org.jivesoftware.smackx.ox.util;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +39,7 @@ import org.jivesoftware.smackx.pubsub.AccessModel;
 import org.jivesoftware.smackx.pubsub.ConfigureForm;
 import org.jivesoftware.smackx.pubsub.Item;
 import org.jivesoftware.smackx.pubsub.LeafNode;
+import org.jivesoftware.smackx.pubsub.Node;
 import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
@@ -157,18 +162,15 @@ public class PubSubDelegate {
      *
      * @return content of our metadata node.
      * @throws InterruptedException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws SmackException.NoResponseException
-     * @throws SmackException.NotConnectedException
+     * @throws SmackException
      * @throws XMPPException.XMPPErrorException
-     * @throws PubSubException.NotAPubSubNodeException
      */
     public static PublicKeysListElement fetchPubkeysList(XMPPConnection connection)
-            throws InterruptedException, PubSubException.NotALeafNodeException, SmackException.NoResponseException,
-            SmackException.NotConnectedException, XMPPException.XMPPErrorException,
-            PubSubException.NotAPubSubNodeException {
+            throws InterruptedException, SmackException,
+            XMPPException.XMPPErrorException {
         return fetchPubkeysList(connection, connection.getUser().asBareJid());
     }
+
 
     /**
      * Consult the public key metadata node of {@code contact} to fetch the list of their published OpenPGP public keys.
@@ -177,19 +179,15 @@ public class PubSubDelegate {
      * @param contact {@link BareJid} of the user we want to fetch the list from.
      * @return content of {@code contact}'s metadata node.
      * @throws InterruptedException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws SmackException.NoResponseException
-     * @throws SmackException.NotConnectedException
+     * @throws SmackException
      * @throws XMPPException.XMPPErrorException
-     * @throws PubSubException.NotAPubSubNodeException
      */
     public static PublicKeysListElement fetchPubkeysList(XMPPConnection connection, BareJid contact)
-            throws InterruptedException, PubSubException.NotALeafNodeException, SmackException.NoResponseException,
-            SmackException.NotConnectedException, XMPPException.XMPPErrorException,
-            PubSubException.NotAPubSubNodeException {
+            throws InterruptedException, SmackException,
+            XMPPException.XMPPErrorException {
         PubSubManager pm = PubSubManager.getInstance(connection, contact);
 
-        LeafNode node = pm.getLeafNode(PEP_NODE_PUBLIC_KEYS);
+        LeafNode node = getOpenLeafNode(pm, PEP_NODE_PUBLIC_KEYS);
         List<PayloadItem<PublicKeysListElement>> list = node.getItems(1);
 
         if (list.isEmpty()) {
@@ -247,6 +245,7 @@ public class PubSubDelegate {
         }
     }
 
+
     /**
      * Fetch the OpenPGP public key of a {@code contact}, identified by its OpenPGP {@code v4_fingerprint}.
      *
@@ -255,20 +254,16 @@ public class PubSubDelegate {
      * @param contact {@link BareJid} of the contact we want to fetch a key from.
      * @param v4_fingerprint upper case, hex encoded v4 fingerprint of the contacts key.
      * @return {@link PubkeyElement} containing the requested public key.
-     * @throws InterruptedException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws SmackException.NoResponseException
-     * @throws SmackException.NotConnectedException
+     *
+     * @throws InterruptedException if we get interrupted.
+     * @throws SmackException in case the node cannot be fetched.
      * @throws XMPPException.XMPPErrorException
-     * @throws PubSubException.NotAPubSubNodeException
      */
     public static PubkeyElement fetchPubkey(XMPPConnection connection, BareJid contact, OpenPgpV4Fingerprint v4_fingerprint)
-            throws InterruptedException, PubSubException.NotALeafNodeException, SmackException.NoResponseException,
-            SmackException.NotConnectedException, XMPPException.XMPPErrorException,
-            PubSubException.NotAPubSubNodeException {
+            throws InterruptedException, SmackException, XMPPException.XMPPErrorException {
         PubSubManager pm = PubSubManager.getInstance(connection, contact);
 
-        LeafNode node = pm.getLeafNode(PEP_NODE_PUBLIC_KEY(v4_fingerprint));
+        LeafNode node = getOpenLeafNode(pm, PEP_NODE_PUBLIC_KEY(v4_fingerprint));
         List<PayloadItem<PubkeyElement>> list = node.getItems(1);
 
         if (list.isEmpty()) {
@@ -351,5 +346,70 @@ public class PubSubDelegate {
             SmackException.NoResponseException {
         PubSubManager pm = PubSubManager.getInstance(connection);
         pm.deleteNode(PEP_NODE_SECRET_KEY);
+    }
+
+    /**
+     * Use reflection magic to get a {@link LeafNode} without doing a disco#info query.
+     * This method is useful for fetching nodes that are configured with the access model 'open', since
+     * some servers that announce support for that access model do not allow disco#info queries from contacts
+     * which are not subscribed to the node owner. Therefore this method fetches the node directly and puts it
+     * into the {@link PubSubManager}s node map.
+     *
+     * @see <a href="https://github.com/processone/ejabberd/issues/2483">Ejabberd bug tracker about the issue</a>
+     *
+     * @param pubSubManager pubsub manager
+     * @param nodeName name of the node
+     * @return leafNode
+     *
+     * @throws SmackException if something goes wrong with reflections.
+     * @throws PubSubException.NotALeafNodeException if the node is already in the nodeMap, but is NOT a LeafNode.
+     */
+    @SuppressWarnings("unchecked")
+    public static LeafNode getOpenLeafNode(PubSubManager pubSubManager, String nodeName)
+            throws SmackException, PubSubException.NotALeafNodeException {
+
+        try {
+
+            // Get access to the PubSubManager's nodeMap
+            Field field = pubSubManager.getClass().getDeclaredField("nodeMap");
+            field.setAccessible(true);
+// CHECKSTYLE:OFF
+            Map<String, Node> nodeMap = (Map) field.get(pubSubManager);
+// CHECKSTYLE:ON
+
+            // Check, if the node already exists
+            Node existingNode = nodeMap.get(nodeName);
+            if (existingNode != null) {
+
+                if (existingNode instanceof LeafNode) {
+                    // We already know that node
+                    return (LeafNode) existingNode;
+
+                } else {
+                    // Throw a new NotALeafNodeException, as the node is not a LeafNode.
+                    // Again use reflections to access the exceptions constructor.
+                    Constructor<PubSubException.NotALeafNodeException> exceptionConstructor =
+                            PubSubException.NotALeafNodeException.class.getDeclaredConstructor(String.class, BareJid.class);
+                    exceptionConstructor.setAccessible(true);
+                    throw exceptionConstructor.newInstance(nodeName, pubSubManager.getServiceJid());
+                }
+            }
+
+            // Node does not exist. Create the node
+            Constructor<LeafNode> constructor;
+            constructor = LeafNode.class.getDeclaredConstructor(PubSubManager.class, String.class);
+            constructor.setAccessible(true);
+            LeafNode node = constructor.newInstance(pubSubManager, nodeName);
+
+            // Add it to the node map
+            nodeMap.put(nodeName, node);
+
+            // And return
+            return node;
+
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException |
+                NoSuchFieldException e) {
+            throw new SmackException("Using reflections to create a LeafNode and put it into PubSubManagers nodeMap failed.", e);
+        }
     }
 }

@@ -101,11 +101,11 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
         OpenPgpManager openPgpManager = OpenPgpManager.getInstanceFor(aliceConnection);
         openPgpManager.setOpenPgpProvider(beforeProvider);
 
-        assertNull(beforeStore.getPrimaryOpenPgpKeyPairFingerprint());
+        assertNull(beforeStore.getSigningKeyPairFingerprint());
 
         OpenPgpV4Fingerprint keyFingerprint = openPgpManager.generateAndImportKeyPair(alice);
-        beforeStore.setPrimaryOpenPgpKeyPairFingerprint(keyFingerprint);
-        assertEquals(keyFingerprint, beforeStore.getPrimaryOpenPgpKeyPairFingerprint());
+        beforeStore.setSigningKeyPairFingerprint(keyFingerprint);
+        assertEquals(keyFingerprint, beforeStore.getSigningKeyPairFingerprint());
 
         assertTrue(beforeStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
 
@@ -125,7 +125,7 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
         PainlessOpenPgpProvider afterProvider = new PainlessOpenPgpProvider(alice, afterStore);
         openPgpManager.setOpenPgpProvider(afterProvider);
 
-        assertNull(afterStore.getPrimaryOpenPgpKeyPairFingerprint());
+        assertNull(afterStore.getSigningKeyPairFingerprint());
         assertFalse(afterStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
 
         OpenPgpV4Fingerprint fingerprint = openPgpManager.restoreSecretKeyServerBackup(new AskForBackupCodeCallback() {
@@ -142,9 +142,9 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
 
         assertTrue(afterStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
 
-        afterStore.setPrimaryOpenPgpKeyPairFingerprint(fingerprint);
+        afterStore.setSigningKeyPairFingerprint(fingerprint);
 
-        assertEquals(keyFingerprint, afterStore.getPrimaryOpenPgpKeyPairFingerprint());
+        assertEquals(keyFingerprint, afterStore.getSigningKeyPairFingerprint());
         assertTrue(Arrays.equals(beforeStore.getSecretKeyRings(alice).getEncoded(), afterStore.getSecretKeyRings(alice).getEncoded()));
     }
 }

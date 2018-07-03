@@ -220,7 +220,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
             secretKeyRings = getStore().getSecretKeyRings(owner);
         } catch (PGPException | IOException e) {
             LOGGER.log(Level.INFO, "Could not get secret keys of user " + owner);
-            throw new MissingOpenPgpKeyPairException(owner, getStore().getPrimaryOpenPgpKeyPairFingerprint());
+            throw new MissingOpenPgpKeyPairException(owner, getStore().getSigningKeyPairFingerprint());
         }
 
         SecretKeyRingProtector protector = getStore().getSecretKeyProtector();

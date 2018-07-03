@@ -90,8 +90,8 @@ public class DryOxEncryptionTest extends OxTestSuite {
         OpenPgpV4Fingerprint romeoFinger = romeoProvider.importSecretKey(romemo,
                 BCUtil.getDecodedBytes(TestKeys.ROMEO_PRIV.getBytes(UTF8)));
 
-        julietStore.setPrimaryOpenPgpKeyPairFingerprint(julietFinger);
-        romeoStore.setPrimaryOpenPgpKeyPairFingerprint(romeoFinger);
+        julietStore.setSigningKeyPairFingerprint(julietFinger);
+        romeoStore.setSigningKeyPairFingerprint(romeoFinger);
 
         byte[] julietPubBytes = julietStore.getPublicKeyRingBytes(juliet, julietFinger);
         byte[] romeoPubBytes = romeoStore.getPublicKeyRingBytes(romemo, romeoFinger);

@@ -39,12 +39,12 @@ public abstract class AbstractPainlessOpenPgpStore implements PainlessOpenPgpSto
     private final SecretKeyRingProtector secretKeyRingProtector;
 
     @Override
-    public OpenPgpV4Fingerprint getPrimaryOpenPgpKeyPairFingerprint() {
+    public OpenPgpV4Fingerprint getSigningKeyPairFingerprint() {
         return primaryKeyFingerprint;
     }
 
     @Override
-    public void setPrimaryOpenPgpKeyPairFingerprint(OpenPgpV4Fingerprint fingerprint) {
+    public void setSigningKeyPairFingerprint(OpenPgpV4Fingerprint fingerprint) {
         this.primaryKeyFingerprint = fingerprint;
     }
 

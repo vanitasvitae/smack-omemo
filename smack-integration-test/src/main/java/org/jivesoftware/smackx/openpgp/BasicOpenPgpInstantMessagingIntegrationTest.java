@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.ox.OXInstantMessagingManager;
@@ -76,15 +75,6 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         final SimpleResultSyncPoint bobReceivedMessage = new SimpleResultSyncPoint();
         final String body = "Writing integration tests is an annoying task, but it has to be done, so lets do it!!!";
 
-        Roster aliceRoster = Roster.getInstanceFor(aliceConnection);
-        Roster bobRoster = Roster.getInstanceFor(bobConnection);
-
-        aliceRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
-        bobRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
-
-        aliceRoster.createEntry(bob, "Bob", null);
-        bobRoster.createEntry(alice, "Alice", null);
-
         FileBasedPainlessOpenPgpStore aliceStore = new FileBasedPainlessOpenPgpStore(aliceStorePath, new UnprotectedKeysProtector());
         FileBasedPainlessOpenPgpStore bobStore = new FileBasedPainlessOpenPgpStore(bobStorePath, new UnprotectedKeysProtector());
 
@@ -114,8 +104,8 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         aliceFingerprint = aliceOpenPgp.generateAndImportKeyPair(alice);
         bobFingerprint = bobOpenPgp.generateAndImportKeyPair(bob);
 
-        aliceStore.setPrimaryOpenPgpKeyPairFingerprint(aliceFingerprint);
-        bobStore.setPrimaryOpenPgpKeyPairFingerprint(bobFingerprint);
+        aliceStore.setSigningKeyPairFingerprint(aliceFingerprint);
+        bobStore.setSigningKeyPairFingerprint(bobFingerprint);
 
         aliceOpenPgp.announceSupportAndPublish();
         bobOpenPgp.announceSupportAndPublish();

@@ -219,7 +219,7 @@ public final class OpenPgpManager extends Manager {
      */
     public OpenPgpV4Fingerprint getOurFingerprint() {
         throwIfNoProviderSet();
-        return provider.getStore().getPrimaryOpenPgpKeyPairFingerprint();
+        return provider.getStore().getSigningKeyPairFingerprint();
     }
 
     /**
@@ -362,12 +362,9 @@ public final class OpenPgpManager extends Manager {
      * @throws SmackOpenPgpException
      * @throws InterruptedException
      * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws SmackException.NoResponseException
      */
     private OpenPgpFingerprints determineContactsKeys(BareJid jid)
-            throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException,
-            SmackException.NotConnectedException, SmackException.NoResponseException {
+            throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException {
         Set<OpenPgpV4Fingerprint> announced = provider.getStore().getAnnouncedKeysFingerprints(jid).keySet();
         Set<OpenPgpV4Fingerprint> available = provider.getStore().getAvailableKeysFingerprints(jid).keySet();
         Map<OpenPgpV4Fingerprint, Throwable> unfetched = new HashMap<>();
@@ -382,7 +379,7 @@ public final class OpenPgpManager extends Manager {
                     processPublicKey(pubkeyElement, jid);
                     available.add(f);
 
-                } catch (PubSubException.NotAPubSubNodeException | PubSubException.NotALeafNodeException e) {
+                } catch (SmackException e) {
                     LOGGER.log(Level.WARNING, "Could not fetch public key " + f.toString() + " of user " + jid.toString(), e);
                     unfetched.put(f, e);
                 } catch (MissingUserIdOnKeyException e) {
@@ -422,9 +419,8 @@ public final class OpenPgpManager extends Manager {
     };
 
     public void requestMetadataUpdate(BareJid contact)
-            throws InterruptedException, PubSubException.NotALeafNodeException, SmackException.NoResponseException,
-            SmackException.NotConnectedException, XMPPException.XMPPErrorException,
-            PubSubException.NotAPubSubNodeException {
+            throws InterruptedException, SmackException,
+            XMPPException.XMPPErrorException {
         PublicKeysListElement metadata = PubSubDelegate.fetchPubkeysList(connection(), contact);
         processPublicKeysListElement(contact, metadata);
     }

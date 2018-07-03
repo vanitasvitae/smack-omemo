@@ -37,7 +37,7 @@ public interface OpenPgpStore {
      *
      * @return fingerprint of the primary OpenPGP key pair.
      */
-    OpenPgpV4Fingerprint getPrimaryOpenPgpKeyPairFingerprint();
+    OpenPgpV4Fingerprint getSigningKeyPairFingerprint();
 
     /**
      * Set the {@link OpenPgpV4Fingerprint} of the primary OpenPGP key pair.
@@ -45,7 +45,7 @@ public interface OpenPgpStore {
      *
      * @param fingerprint {@link OpenPgpV4Fingerprint} of the new primary key pair.
      */
-    void setPrimaryOpenPgpKeyPairFingerprint(OpenPgpV4Fingerprint fingerprint);
+    void setSigningKeyPairFingerprint(OpenPgpV4Fingerprint fingerprint);
 
     /**
      * Return a {@link Set} containing the {@link OpenPgpV4Fingerprint}s of the master keys of all available
@@ -127,6 +127,8 @@ public interface OpenPgpStore {
      * @param owner owner of the key
      * @param fingerprint fingerprint of the key
      * @return byte representation of the public key.
+     *
+     * @throws MissingOpenPgpPublicKeyException if the key does not exist.
      */
     byte[] getPublicKeyRingBytes(BareJid owner, OpenPgpV4Fingerprint fingerprint)
             throws MissingOpenPgpPublicKeyException;
@@ -137,6 +139,8 @@ public interface OpenPgpStore {
      * @param owner owner of the key
      * @param fingerprint fingerprint of the key
      * @return byte representation of the secret key.
+     *
+     * @throws MissingOpenPgpKeyPairException if the secret key doesn't exist.
      */
     byte[] getSecretKeyRingBytes(BareJid owner, OpenPgpV4Fingerprint fingerprint)
             throws MissingOpenPgpKeyPairException;

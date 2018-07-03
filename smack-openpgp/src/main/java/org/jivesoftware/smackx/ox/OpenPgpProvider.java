@@ -64,7 +64,7 @@ public interface OpenPgpProvider {
             throws MissingOpenPgpKeyPairException, MissingOpenPgpPublicKeyException, SmackOpenPgpException, IOException;
 
     /**
-     * Sign a {@link SignElement} with th users signing key.
+     * Sign a {@link SignElement} with the users signing key.
      * The resulting byte array contains the signed byte representation of the {@link SignElement}.
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#exchange">XEP-0373 §3.1</a>
