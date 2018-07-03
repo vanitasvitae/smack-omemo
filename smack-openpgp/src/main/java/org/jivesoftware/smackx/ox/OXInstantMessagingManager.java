@@ -127,7 +127,7 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
 
     public void sendOxMessage(OpenPgpContact contact, CharSequence body)
             throws InterruptedException, MissingOpenPgpKeyPairException, IOException,
-            SmackException.NotConnectedException, SmackOpenPgpException {
+            SmackException.NotConnectedException, SmackOpenPgpException, SmackException.NotLoggedInException {
         Message message = new Message(contact.getJid());
         List<ExtensionElement> payload = new ArrayList<>();
         payload.add(new Message.Body(null, body.toString()));

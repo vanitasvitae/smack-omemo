@@ -18,7 +18,6 @@ package org.jivesoftware.smackx.ox;
 
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.PEP_NODE_PUBLIC_KEYS;
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.PEP_NODE_PUBLIC_KEYS_NOTIFY;
-import static org.jivesoftware.smackx.ox.util.PubSubDelegate.fetchPubkey;
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.publishPublicKey;
 
 import java.io.IOException;
@@ -26,7 +25,6 @@ import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,7 +50,7 @@ import org.jivesoftware.smackx.ox.callback.DisplayBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.SecretKeyBackupSelectionCallback;
 import org.jivesoftware.smackx.ox.callback.SecretKeyRestoreSelectionCallback;
 import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
-import org.jivesoftware.smackx.ox.chat.OpenPgpFingerprints;
+import org.jivesoftware.smackx.ox.chat.OpenPgpSelf;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
@@ -106,6 +104,8 @@ public final class OpenPgpManager extends Manager {
     private final Set<SignElementReceivedListener> signElementReceivedListeners = new HashSet<>();
     private final Set<CryptElementReceivedListener> cryptElementReceivedListeners = new HashSet<>();
 
+    private OpenPgpSelf self;
+
     /**
      * Private constructor to avoid instantiation without putting the object into {@code INSTANCES}.
      *
@@ -139,6 +139,16 @@ public final class OpenPgpManager extends Manager {
      */
     public void setOpenPgpProvider(OpenPgpProvider provider) {
         this.provider = provider;
+    }
+
+    public OpenPgpSelf getOpenPgpSelf() throws SmackException.NotLoggedInException {
+        throwIfNotAuthenticated();
+
+        if (self == null) {
+            self = new OpenPgpSelf(provider, connection().getUser().asBareJid(), connection());
+        }
+
+        return self;
     }
 
     /**
@@ -220,21 +230,13 @@ public final class OpenPgpManager extends Manager {
      *
      * @param jid {@link BareJid} of the contact.
      * @return {@link OpenPgpContact}.
-     * @throws SmackOpenPgpException if something happens while gathering fingerprints.
-     * @throws InterruptedException
-     * @throws XMPPException.XMPPErrorException
      */
-    public OpenPgpContact getOpenPgpContact(EntityBareJid jid)
-            throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException,
-            SmackException.NotLoggedInException {
-        throwIfNotAuthenticated();
+    public OpenPgpContact getOpenPgpContact(EntityBareJid jid) {
 
         OpenPgpContact openPgpContact = openPgpCapableContacts.get(jid);
 
         if (openPgpContact == null) {
-            OpenPgpFingerprints theirKeys = determineContactsKeys(jid);
-            OpenPgpFingerprints ourKeys = determineContactsKeys(connection().getUser().asBareJid());
-            openPgpContact = new OpenPgpContact(provider, jid, ourKeys, theirKeys);
+            openPgpContact = new OpenPgpContact(provider, jid, connection());
             openPgpCapableContacts.put(jid, openPgpContact);
         }
 
@@ -344,45 +346,6 @@ public final class OpenPgpManager extends Manager {
     }
 
     /**
-     * Determine which keys belong to a user and fetch any missing keys.
-     *
-     * @param jid {@link BareJid} of the user in question.
-     * @return {@link OpenPgpFingerprints} object containing the announced, available and unfetchable keys of the user.
-     * @throws SmackOpenPgpException
-     * @throws InterruptedException
-     * @throws XMPPException.XMPPErrorException
-     */
-    private OpenPgpFingerprints determineContactsKeys(BareJid jid)
-            throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException {
-        Set<OpenPgpV4Fingerprint> announced = provider.getStore().getAnnouncedKeysFingerprints(jid).keySet();
-        Set<OpenPgpV4Fingerprint> available = provider.getStore().getAvailableKeysFingerprints(jid).keySet();
-        Map<OpenPgpV4Fingerprint, Throwable> unfetched = new HashMap<>();
-        for (OpenPgpV4Fingerprint f : announced) {
-            if (!available.contains(f)) {
-                try {
-                    PubkeyElement pubkeyElement = PubSubDelegate.fetchPubkey(connection(), jid, f);
-                    if (pubkeyElement == null) {
-                        continue;
-                    }
-
-                    processPublicKey(pubkeyElement, jid);
-                    available.add(f);
-
-                } catch (SmackException e) {
-                    LOGGER.log(Level.WARNING, "Could not fetch public key " + f.toString() + " of user " + jid.toString(), e);
-                    unfetched.put(f, e);
-                } catch (MissingUserIdOnKeyException e) {
-                    LOGGER.log(Level.WARNING, "Key does not contain user-id of " + jid + ". Ignoring the key.", e);
-                    unfetched.put(f, e);
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Could not import key " + f.toString() + " of user " + jid.toString(), e);
-                }
-            }
-        }
-        return new OpenPgpFingerprints(jid, announced, available, unfetched);
-    }
-
-    /**
      * {@link PEPListener} that listens for changes to the OX public keys metadata node.
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#pubsub-notifications">XEP-0373 §4.4</a>
@@ -407,52 +370,13 @@ public final class OpenPgpManager extends Manager {
         }
     };
 
-    public void requestMetadataUpdate(BareJid contact)
-            throws InterruptedException, SmackException,
-            XMPPException.XMPPErrorException {
-        PublicKeysListElement metadata = PubSubDelegate.fetchPubkeysList(connection(), contact);
-        processPublicKeysListElement(contact, metadata);
-    }
-
     private void processPublicKeysListElement(BareJid contact, PublicKeysListElement listElement) {
-        Map<OpenPgpV4Fingerprint, Date> announcedKeys = new HashMap<>();
-        for (OpenPgpV4Fingerprint f : listElement.getMetadata().keySet()) {
-            PublicKeysListElement.PubkeyMetadataElement meta = listElement.getMetadata().get(f);
-            announcedKeys.put(meta.getV4Fingerprint(), meta.getDate());
-        }
 
-        provider.getStore().setAnnouncedKeysFingerprints(contact, announcedKeys);
-
-        Set<OpenPgpV4Fingerprint> availableKeys = Collections.emptySet();
+        OpenPgpContact openPgpContact = getOpenPgpContact(contact.asEntityBareJidIfPossible());
         try {
-            availableKeys = new HashSet<>(provider.getStore().getAvailableKeysFingerprints(contact).keySet());
+            openPgpContact.updateKeys(listElement);
         } catch (SmackOpenPgpException e) {
-            LOGGER.log(Level.WARNING, "Could not determine available keys", e);
-        }
-
-        Set<OpenPgpV4Fingerprint> missingKeys = listElement.getMetadata().keySet();
-        Map<OpenPgpV4Fingerprint, Throwable> unfetchable = new HashMap<>();
-        try {
-            missingKeys.removeAll(availableKeys);
-            for (OpenPgpV4Fingerprint missing : missingKeys) {
-                try {
-                    PubkeyElement pubkeyElement = fetchPubkey(connection(), contact, missing);
-                    if (pubkeyElement != null) {
-                        processPublicKey(pubkeyElement, contact);
-                        availableKeys.add(missing);
-                    }
-                } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Error fetching missing OpenPGP key " + missing.toString(), e);
-                    unfetchable.put(missing, e);
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error processing OpenPGP metadata update from " + contact + ".", e);
-        }
-
-        OpenPgpFingerprints fingerprints = new OpenPgpFingerprints(contact, announcedKeys.keySet(), availableKeys, unfetchable);
-        for (OpenPgpContact openPgpContact : openPgpCapableContacts.values()) {
-            openPgpContact.onFingerprintsChanged(contact, fingerprints);
+            LOGGER.log(Level.WARNING, "Could not read key ring of contact " + contact, e);
         }
     }
 
@@ -466,14 +390,7 @@ public final class OpenPgpManager extends Manager {
                         return;
                     }
 
-                    OpenPgpContact contact;
-                    try {
-                        contact = getOpenPgpContact(from);
-                    } catch (SmackOpenPgpException | InterruptedException | XMPPException.XMPPErrorException |
-                            SmackException.NotLoggedInException e) {
-                        LOGGER.log(Level.WARNING, "Could not begin encrypted chat with " + from, e);
-                        return;
-                    }
+                    OpenPgpContact contact = getOpenPgpContact(from);
 
                     OpenPgpContentElement contentElement = null;
                     try {
@@ -505,6 +422,10 @@ public final class OpenPgpManager extends Manager {
                             l.cryptElementReceived(contact, message, (CryptElement) contentElement);
                         }
                         return;
+                    }
+
+                    else {
+                        throw new AssertionError("Invalid element received: " + contentElement.getClass().getName());
                     }
                 }
             };

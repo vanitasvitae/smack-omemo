@@ -142,6 +142,15 @@ public interface OpenPgpProvider {
             throws SmackOpenPgpException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, IOException;
 
+    /**
+     * Import a public key. The bytes are expected to be decoded from base64.
+     * @param owner
+     * @param bytes
+     * @return
+     * @throws MissingUserIdOnKeyException
+     * @throws IOException
+     * @throws SmackOpenPgpException
+     */
     OpenPgpV4Fingerprint importPublicKey(BareJid owner, byte[] bytes)
             throws MissingUserIdOnKeyException, IOException, SmackOpenPgpException;
 

@@ -212,7 +212,7 @@ public class PubSubDelegate {
         try {
             pm.deleteNode(PEP_NODE_PUBLIC_KEYS);
         } catch (XMPPException.XMPPErrorException e) {
-            if (e.getXMPPError().getCondition() == StanzaError.Condition.item_not_found) {
+            if (e.getStanzaError().getCondition() == StanzaError.Condition.item_not_found) {
                 LOGGER.log(Level.FINE, "Node does not exist. No need to delete it.");
             } else {
                 throw e;
@@ -237,7 +237,7 @@ public class PubSubDelegate {
         try {
             pm.deleteNode(PEP_NODE_PUBLIC_KEY(fingerprint));
         } catch (XMPPException.XMPPErrorException e) {
-            if (e.getXMPPError().getCondition() == StanzaError.Condition.item_not_found) {
+            if (e.getStanzaError().getCondition() == StanzaError.Condition.item_not_found) {
                 LOGGER.log(Level.FINE, "Node does not exist. No need to delete it.");
             } else {
                 throw e;

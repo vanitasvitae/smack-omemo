@@ -25,18 +25,19 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jivesoftware.smack.DummyConnection;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.TestKeys;
 import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
-import org.jivesoftware.smackx.ox.chat.OpenPgpFingerprints;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
@@ -75,26 +76,29 @@ public class DryOxEncryptionTest extends OxTestSuite {
     @Test
     public void dryEncryptionTest()
             throws IOException, SmackOpenPgpException, MissingUserIdOnKeyException, MissingOpenPgpPublicKeyException,
-            MissingOpenPgpKeyPairException, XmlPullParserException {
-        BareJid juliet = TestKeys.JULIET_JID;
-        BareJid romemo = TestKeys.ROMEO_JID;
+            MissingOpenPgpKeyPairException, XmlPullParserException, SmackException.NotLoggedInException {
+        BareJid julietJid = TestKeys.JULIET_JID;
+        BareJid romeoJid = TestKeys.ROMEO_JID;
+
+        XMPPConnection julietCon = new DummyConnection();
+        XMPPConnection romeoCon = new DummyConnection();
 
         FileBasedPainlessOpenPgpStore julietStore = new FileBasedPainlessOpenPgpStore(julietPath, new UnprotectedKeysProtector());
         FileBasedPainlessOpenPgpStore romeoStore = new FileBasedPainlessOpenPgpStore(romeoPath, new UnprotectedKeysProtector());
 
-        PainlessOpenPgpProvider julietProvider = new PainlessOpenPgpProvider(juliet, julietStore);
-        PainlessOpenPgpProvider romeoProvider = new PainlessOpenPgpProvider(romemo, romeoStore);
+        PainlessOpenPgpProvider julietProvider = new PainlessOpenPgpProvider(julietJid, julietStore);
+        PainlessOpenPgpProvider romeoProvider = new PainlessOpenPgpProvider(romeoJid, romeoStore);
 
-        OpenPgpV4Fingerprint julietFinger = julietProvider.importSecretKey(juliet,
+        OpenPgpV4Fingerprint julietFinger = julietProvider.importSecretKey(julietJid,
                 BCUtil.getDecodedBytes(TestKeys.JULIET_PRIV.getBytes(UTF8)));
-        OpenPgpV4Fingerprint romeoFinger = romeoProvider.importSecretKey(romemo,
+        OpenPgpV4Fingerprint romeoFinger = romeoProvider.importSecretKey(romeoJid,
                 BCUtil.getDecodedBytes(TestKeys.ROMEO_PRIV.getBytes(UTF8)));
 
         julietStore.setSigningKeyPairFingerprint(julietFinger);
         romeoStore.setSigningKeyPairFingerprint(romeoFinger);
 
-        byte[] julietPubBytes = julietStore.getPublicKeyRingBytes(juliet, julietFinger);
-        byte[] romeoPubBytes = romeoStore.getPublicKeyRingBytes(romemo, romeoFinger);
+        byte[] julietPubBytes = julietStore.getPublicKeyRingBytes(julietJid, julietFinger);
+        byte[] romeoPubBytes = romeoStore.getPublicKeyRingBytes(romeoJid, romeoFinger);
 
         assertNotNull(julietPubBytes);
         assertNotNull(romeoPubBytes);
@@ -102,29 +106,20 @@ public class DryOxEncryptionTest extends OxTestSuite {
         assertTrue(romeoPubBytes.length != 0);
 
         PubkeyElement julietPub = new PubkeyElement(new PubkeyElement.PubkeyDataElement(
-                Base64.encode(julietStore.getPublicKeyRingBytes(juliet, julietFinger))),
+                Base64.encode(julietStore.getPublicKeyRingBytes(julietJid, julietFinger))),
                 new Date());
         PubkeyElement romeoPub = new PubkeyElement(new PubkeyElement.PubkeyDataElement(
-                Base64.encode(romeoStore.getPublicKeyRingBytes(romemo, romeoFinger))),
+                Base64.encode(romeoStore.getPublicKeyRingBytes(romeoJid, romeoFinger))),
                 new Date());
 
-        julietProvider.importPublicKey(romemo, Base64.decode(romeoPub.getDataElement().getB64Data()));
-        romeoProvider.importPublicKey(juliet, Base64.decode(julietPub.getDataElement().getB64Data()));
+        julietProvider.importPublicKey(romeoJid, Base64.decode(romeoPub.getDataElement().getB64Data()));
+        romeoProvider.importPublicKey(julietJid, Base64.decode(julietPub.getDataElement().getB64Data()));
 
-        julietStore.setAnnouncedKeysFingerprints(romemo, Collections.singletonMap(romeoFinger, new Date()));
-        romeoStore.setAnnouncedKeysFingerprints(juliet, Collections.singletonMap(julietFinger, new Date()));
+        julietStore.setAnnouncedKeysFingerprints(romeoJid, Collections.singletonMap(romeoFinger, new Date()));
+        romeoStore.setAnnouncedKeysFingerprints(julietJid, Collections.singletonMap(julietFinger, new Date()));
 
-        OpenPgpFingerprints julietFingerprints = new OpenPgpFingerprints(juliet,
-                Collections.singleton(julietFinger),
-                Collections.singleton(julietFinger),
-                new HashMap<OpenPgpV4Fingerprint, Throwable>());
-        OpenPgpFingerprints romeoFingerprints = new OpenPgpFingerprints(romemo,
-                Collections.singleton(romeoFinger),
-                Collections.singleton(romeoFinger),
-                new HashMap<OpenPgpV4Fingerprint, Throwable>());
-
-        OpenPgpContact julietForRomeo = new OpenPgpContact(romeoProvider, juliet, romeoFingerprints, julietFingerprints);
-        OpenPgpContact romeoForJuliet = new OpenPgpContact(julietProvider, romemo, julietFingerprints, romeoFingerprints);
+        OpenPgpContact julietForRomeo = new OpenPgpContact(romeoProvider, julietJid, romeoCon);
+        OpenPgpContact romeoForJuliet = new OpenPgpContact(julietProvider, romeoJid, julietCon);
 
         String bodyText = "Finden wir eine Kompromisslösung – machen wir es so, wie ich es sage.";
         List<ExtensionElement> payload = Collections.<ExtensionElement>singletonList(new Message.Body("de",
