@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -141,15 +142,6 @@ public final class OpenPgpManager extends Manager {
     }
 
     /**
-     * Return the registered {@link OpenPgpProvider}.
-     *
-     * @return provider.
-     */
-    OpenPgpProvider getOpenPgpProvider() {
-        return provider;
-    }
-
-    /**
      * Generate a fresh OpenPGP key pair, given we don't have one already.
      * Publish the public key to the Public Key Node and update the Public Key Metadata Node with our keys fingerprint.
      * Lastly register a {@link PEPListener} which listens for updates to Public Key Metadata Nodes.
@@ -231,12 +223,9 @@ public final class OpenPgpManager extends Manager {
      * @throws SmackOpenPgpException if something happens while gathering fingerprints.
      * @throws InterruptedException
      * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws SmackException.NoResponseException
      */
     public OpenPgpContact getOpenPgpContact(EntityBareJid jid)
             throws SmackOpenPgpException, InterruptedException, XMPPException.XMPPErrorException,
-            SmackException.NotConnectedException, SmackException.NoResponseException,
             SmackException.NotLoggedInException {
         throwIfNotAuthenticated();
 
@@ -245,7 +234,7 @@ public final class OpenPgpManager extends Manager {
         if (openPgpContact == null) {
             OpenPgpFingerprints theirKeys = determineContactsKeys(jid);
             OpenPgpFingerprints ourKeys = determineContactsKeys(connection().getUser().asBareJid());
-            openPgpContact = new OpenPgpContact(getOpenPgpProvider(), jid, ourKeys, theirKeys);
+            openPgpContact = new OpenPgpContact(provider, jid, ourKeys, theirKeys);
             openPgpCapableContacts.put(jid, openPgpContact);
         }
 
@@ -434,19 +423,36 @@ public final class OpenPgpManager extends Manager {
 
         provider.getStore().setAnnouncedKeysFingerprints(contact, announcedKeys);
 
-        Set<OpenPgpV4Fingerprint> missingKeys = listElement.getMetadata().keySet();
+        Set<OpenPgpV4Fingerprint> availableKeys = Collections.emptySet();
         try {
-            missingKeys.removeAll(provider.getStore().getAvailableKeysFingerprints(contact).keySet());
+            availableKeys = new HashSet<>(provider.getStore().getAvailableKeysFingerprints(contact).keySet());
+        } catch (SmackOpenPgpException e) {
+            LOGGER.log(Level.WARNING, "Could not determine available keys", e);
+        }
+
+        Set<OpenPgpV4Fingerprint> missingKeys = listElement.getMetadata().keySet();
+        Map<OpenPgpV4Fingerprint, Throwable> unfetchable = new HashMap<>();
+        try {
+            missingKeys.removeAll(availableKeys);
             for (OpenPgpV4Fingerprint missing : missingKeys) {
                 try {
                     PubkeyElement pubkeyElement = fetchPubkey(connection(), contact, missing);
-                    processPublicKey(pubkeyElement, contact);
+                    if (pubkeyElement != null) {
+                        processPublicKey(pubkeyElement, contact);
+                        availableKeys.add(missing);
+                    }
                 } catch (Exception e) {
                     LOGGER.log(Level.WARNING, "Error fetching missing OpenPGP key " + missing.toString(), e);
+                    unfetchable.put(missing, e);
                 }
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error processing OpenPGP metadata update from " + contact + ".", e);
+        }
+
+        OpenPgpFingerprints fingerprints = new OpenPgpFingerprints(contact, announcedKeys.keySet(), availableKeys, unfetchable);
+        for (OpenPgpContact openPgpContact : openPgpCapableContacts.values()) {
+            openPgpContact.onFingerprintsChanged(contact, fingerprints);
         }
     }
 
@@ -464,8 +470,7 @@ public final class OpenPgpManager extends Manager {
                     try {
                         contact = getOpenPgpContact(from);
                     } catch (SmackOpenPgpException | InterruptedException | XMPPException.XMPPErrorException |
-                            SmackException.NotLoggedInException | SmackException.NotConnectedException |
-                            SmackException.NoResponseException e) {
+                            SmackException.NotLoggedInException e) {
                         LOGGER.log(Level.WARNING, "Could not begin encrypted chat with " + from, e);
                         return;
                     }

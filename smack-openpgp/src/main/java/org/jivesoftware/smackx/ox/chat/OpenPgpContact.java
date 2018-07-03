@@ -37,17 +37,18 @@ import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
+import org.jivesoftware.smackx.ox.listener.internal.FingerprintsChangedListener;
 import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.Jid;
 import org.xmlpull.v1.XmlPullParserException;
 
-public class OpenPgpContact {
+public class OpenPgpContact implements FingerprintsChangedListener {
 
     private final BareJid jid;
-    private final OpenPgpFingerprints contactsFingerprints;
-    private final OpenPgpFingerprints ourFingerprints;
+    private OpenPgpFingerprints contactsFingerprints;
+    private OpenPgpFingerprints ourFingerprints;
     private final OpenPgpProvider cryptoProvider;
     private final OpenPgpV4Fingerprint singingKey;
 
@@ -166,5 +167,14 @@ public class OpenPgpContact {
         }
 
         return fingerprints;
+    }
+
+    @Override
+    public void onFingerprintsChanged(BareJid contact, OpenPgpFingerprints newFingerprints) {
+        if (ourFingerprints.getJid().equals(contact)) {
+            this.ourFingerprints = newFingerprints;
+        } else if (contactsFingerprints.getJid().equals(contact)) {
+            this.contactsFingerprints = newFingerprints;
+        }
     }
 }
