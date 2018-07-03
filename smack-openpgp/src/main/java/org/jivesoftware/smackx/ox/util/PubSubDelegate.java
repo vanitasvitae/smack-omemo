@@ -373,9 +373,7 @@ public class PubSubDelegate {
             // Get access to the PubSubManager's nodeMap
             Field field = pubSubManager.getClass().getDeclaredField("nodeMap");
             field.setAccessible(true);
-// CHECKSTYLE:OFF
             Map<String, Node> nodeMap = (Map) field.get(pubSubManager);
-// CHECKSTYLE:ON
 
             // Check, if the node already exists
             Node existingNode = nodeMap.get(nodeName);
