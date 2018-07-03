@@ -102,10 +102,11 @@ public class OpenPgpContact implements FingerprintsChangedListener {
         message.addExtension(encryptedPayload);
 
         // Add additional information to the message
-        // STOPSHIP: 20.06.18 BELOW
-        // TODO: Check if message already contains EME element.
-        message.addExtension(new ExplicitMessageEncryptionElement(
-                ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.openpgpV0));
+        if (!ExplicitMessageEncryptionElement.hasProtocol(message,
+                ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.openpgpV0)) {
+            message.addExtension(new ExplicitMessageEncryptionElement(
+                    ExplicitMessageEncryptionElement.ExplicitMessageEncryptionProtocol.openpgpV0));
+        }
         StoreHint.set(message);
         message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
 
