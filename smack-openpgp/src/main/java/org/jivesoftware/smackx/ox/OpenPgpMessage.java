@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.chat;
+package org.jivesoftware.smackx.ox;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -54,23 +54,24 @@ public class OpenPgpMessage {
 
     private final String element;
     private final State state;
+    private final Metadata metadata;
 
     private OpenPgpContentElement openPgpContentElement;
 
     /**
      * Constructor.
      *
-     * @param state state of the content element.
+     * @param metadata Metadata about the encryption
      * @param content XML representation of the decrypted {@link OpenPgpContentElement}.
      */
-    public OpenPgpMessage(State state, String content) {
-        this.state = Objects.requireNonNull(state);
+    public OpenPgpMessage(String content, Metadata metadata) {
+        this.metadata = Objects.requireNonNull(metadata);
+        this.state = Objects.requireNonNull(metadata.getState());
         this.element = Objects.requireNonNull(content);
     }
 
     public OpenPgpMessage(byte[] bytes, Metadata metadata) {
-        this.element = new String(bytes, Charset.forName("UTF-8"));
-        this.state = metadata.getState();
+        this(new String(Objects.requireNonNull(bytes), Charset.forName("UTF-8")), metadata);
     }
 
     /**
@@ -124,6 +125,10 @@ public class OpenPgpMessage {
     public State getState() throws IOException, XmlPullParserException {
         ensureOpenPgpContentElementSet();
         return state;
+    }
+
+    public Metadata getMetadata() {
+        return metadata;
     }
 
     public static class Metadata {

@@ -31,7 +31,7 @@ import org.jivesoftware.smackx.ox.OpenPgpManager;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.bouncycastle.FileBasedPainlessOpenPgpStore;
 import org.jivesoftware.smackx.ox.bouncycastle.PainlessOpenPgpProvider;
-import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
+import org.jivesoftware.smackx.ox.OpenPgpContact;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.listener.OxMessageListener;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
@@ -110,16 +110,11 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         aliceOpenPgp.announceSupportAndPublish();
         bobOpenPgp.announceSupportAndPublish();
 
-        LOGGER.log(Level.INFO, "Request metadata of bob");
-        aliceOpenPgp.requestMetadataUpdate(bob);
-        LOGGER.log(Level.INFO, "Request metadata of alice");
-        bobOpenPgp.requestMetadataUpdate(alice);
-
         OpenPgpContact bobForAlice = aliceOpenPgp.getOpenPgpContact(bob.asEntityBareJidIfPossible());
         OpenPgpContact aliceForBob = bobOpenPgp.getOpenPgpContact(alice.asEntityBareJidIfPossible());
 
-        assertTrue(bobForAlice.getFingerprints().getActiveKeys().contains(bobFingerprint));
-        assertTrue(aliceForBob.getFingerprints().getActiveKeys().contains(aliceFingerprint));
+        assertTrue(bobForAlice.getActiveKeys().contains(bobFingerprint));
+        assertTrue(aliceForBob.getActiveKeys().contains(aliceFingerprint));
 
         aliceInstantMessaging.sendOxMessage(bobForAlice, body);
 

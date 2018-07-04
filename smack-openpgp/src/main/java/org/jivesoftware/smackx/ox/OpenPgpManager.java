@@ -49,8 +49,6 @@ import org.jivesoftware.smackx.ox.callback.AskForBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.DisplayBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.SecretKeyBackupSelectionCallback;
 import org.jivesoftware.smackx.ox.callback.SecretKeyRestoreSelectionCallback;
-import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
-import org.jivesoftware.smackx.ox.chat.OpenPgpSelf;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;

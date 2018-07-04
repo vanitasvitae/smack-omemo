@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.chat;
+package org.jivesoftware.smackx.ox;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -29,16 +29,12 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.MultiMap;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
 import org.jivesoftware.smackx.hints.element.StoreHint;
-import org.jivesoftware.smackx.ox.OpenPgpManager;
-import org.jivesoftware.smackx.ox.OpenPgpProvider;
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
@@ -50,7 +46,6 @@ import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
-
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.Jid;
 import org.xmlpull.v1.XmlPullParserException;
@@ -67,18 +62,41 @@ public class OpenPgpContact {
     private Map<OpenPgpV4Fingerprint, Date> availableKeys = null;
     private final Map<OpenPgpV4Fingerprint, Throwable> unfetchableKeys = new HashMap<>();
 
+    /**
+     * Create a OpenPgpContact.
+     *
+     * @param cryptoProvider {@link OpenPgpProvider}
+     * @param jid {@link BareJid} of the contact
+     * @param connection our authenticated {@link XMPPConnection}
+     */
     public OpenPgpContact(OpenPgpProvider cryptoProvider,
                           BareJid jid,
                           XMPPConnection connection) {
         this.jid = jid;
         this.cryptoProvider = cryptoProvider;
         this.connection = connection;
+
+        try {
+            this.updateKeys();
+        } catch (SmackOpenPgpException | InterruptedException | XMPPException.XMPPErrorException | SmackException e) {
+            LOGGER.log(Level.WARNING, "Initial key update for contact " + getJid() + " failed.", e);
+        }
     }
 
+    /**
+     * Return the {@link BareJid} of the contact.
+     *
+     * @return jid
+     */
     public BareJid getJid() {
         return jid;
     }
 
+    /**
+     * Return a {@link Map} of the announced keys of the contact and their last update dates.
+     *
+     * @return announced keys
+     */
     public Map<OpenPgpV4Fingerprint, Date> getAnnouncedKeys() {
         if (announcedKeys == null) {
             announcedKeys = cryptoProvider.getStore().getAnnouncedKeysFingerprints(getJid());
@@ -86,6 +104,15 @@ public class OpenPgpContact {
         return announcedKeys;
     }
 
+    /**
+     * Return a {@link Map} of all locally available keys of the contact.
+     *
+     * Note: This list might contain keys which are no longer associated to the contact.
+     * For encryption please use {@link #getActiveKeys()} instead.
+     *
+     * @return available keys
+     * @throws SmackOpenPgpException if we cannot read the locally available keys for some reason
+     */
     public Map<OpenPgpV4Fingerprint, Date> getAvailableKeys() throws SmackOpenPgpException {
         if (availableKeys == null) {
             availableKeys = cryptoProvider.getStore().getAvailableKeysFingerprints(getJid());
@@ -93,21 +120,47 @@ public class OpenPgpContact {
         return availableKeys;
     }
 
+    /**
+     * Return a {@link Map} of all the keys which cannot be fetched and the reason why this is.
+     *
+     * @return unfetched keys
+     */
     public Map<OpenPgpV4Fingerprint, Throwable> getUnfetchableKeys() {
         return unfetchableKeys;
     }
 
+    /**
+     * Return a {@link Set} of all active keys of this contact.
+     * Active keys are keys which are announced, not revoked or otherwise invalidated and locally available.
+     *
+     * @return active keys.
+     * @throws SmackOpenPgpException if we cannot access the keys of the contact.
+     */
     public Set<OpenPgpV4Fingerprint> getActiveKeys() throws SmackOpenPgpException {
         Set<OpenPgpV4Fingerprint> fingerprints = getAvailableKeys().keySet();
         fingerprints.retainAll(getAnnouncedKeys().keySet());
         return fingerprints;
     }
 
+    /**
+     * Fetch the metadata node to get a {@link PublicKeysListElement} and update any missing or outdated keys.
+     *
+     * @throws InterruptedException
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException
+     * @throws SmackOpenPgpException
+     */
     public void updateKeys()
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException, SmackOpenPgpException {
         updateKeys(PubSubDelegate.fetchPubkeysList(connection, getJid()));
     }
 
+    /**
+     * Update any missing or outdated keys based on the given {@link PublicKeysListElement}.
+     *
+     * @param metadata
+     * @throws SmackOpenPgpException
+     */
     public void updateKeys(PublicKeysListElement metadata)
             throws SmackOpenPgpException {
         storePublishedDevices(metadata);
@@ -130,6 +183,17 @@ public class OpenPgpContact {
         }
     }
 
+    /**
+     * Update the key identified by the {@code fingerprint}.
+     *
+     * @param fingerprint fingerprint of the key
+     * @throws InterruptedException
+     * @throws XMPPException.XMPPErrorException
+     * @throws SmackException
+     * @throws IOException
+     * @throws MissingUserIdOnKeyException
+     * @throws SmackOpenPgpException
+     */
     public void updateKey(OpenPgpV4Fingerprint fingerprint)
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException, IOException,
             MissingUserIdOnKeyException, SmackOpenPgpException {
@@ -148,6 +212,15 @@ public class OpenPgpContact {
         }
     }
 
+    /**
+     * Import a public key.
+     *
+     * @param data OpenPgp keys byte representation.
+     * @return the fingerprint of the imported key.
+     * @throws SmackOpenPgpException
+     * @throws MissingUserIdOnKeyException
+     * @throws IOException
+     */
     private OpenPgpV4Fingerprint importPublicKey(byte[] data)
             throws SmackOpenPgpException, MissingUserIdOnKeyException, IOException {
         OpenPgpV4Fingerprint fingerprint = cryptoProvider.importPublicKey(getJid(), data);
@@ -155,6 +228,13 @@ public class OpenPgpContact {
         return fingerprint;
     }
 
+    /**
+     * Process an incoming {@link PublicKeysListElement} and store the contained {@link OpenPgpV4Fingerprint}s and
+     * their publication dates in local storage.
+     *
+     * @param element publicKeysListElement
+     * @return {@link Map} with the contents of the element
+     */
     public Map<OpenPgpV4Fingerprint, Date> storePublishedDevices(PublicKeysListElement element) {
         Map<OpenPgpV4Fingerprint, Date> announcedKeys = new HashMap<>();
 
@@ -170,6 +250,14 @@ public class OpenPgpContact {
         return announcedKeys;
     }
 
+    /**
+     * Get all keys to which a message sent to the contact would be encrypted to.
+     * Those are all active keys of the contact as well as our own active keys.
+     *
+     * @return encryption keys
+     * @throws SmackOpenPgpException if we cannot read the contacts keys or our own keys.
+     * @throws SmackException.NotLoggedInException if we are not logged in.
+     */
     private MultiMap<BareJid, OpenPgpV4Fingerprint> getEncryptionKeys()
             throws SmackOpenPgpException, SmackException.NotLoggedInException {
         OpenPgpSelf self = getSelf();
@@ -189,10 +277,28 @@ public class OpenPgpContact {
         return recipientsKeys;
     }
 
+    /**
+     * Get our OpenPgpSelf.
+     * The {@link OpenPgpSelf} contains all our fingerprints.
+     *
+     * @return openPgpSelf
+     * @throws SmackException.NotLoggedInException
+     */
     private OpenPgpSelf getSelf() throws SmackException.NotLoggedInException {
         return OpenPgpManager.getInstanceFor(connection).getOpenPgpSelf();
     }
 
+    /**
+     * Encrypt a message to a contact and ourselves and sign it with our signing key.
+     * The payload will be wrapped in a {@link SigncryptElement} before encryption.
+     *
+     * @param payload the payload we want to encrypt.
+     * @return {@link OpenPgpElement} containing the encrypted, signed {@link SigncryptElement}.
+     * @throws IOException IO is dangerous
+     * @throws SmackOpenPgpException OpenPgp is brittle
+     * @throws MissingOpenPgpKeyPairException if we cannot read our signing key pair
+     * @throws SmackException.NotLoggedInException if we are not logged in.
+     */
     public OpenPgpElement encryptAndSign(List<ExtensionElement> payload)
             throws IOException, SmackOpenPgpException, MissingOpenPgpKeyPairException,
             SmackException.NotLoggedInException {
@@ -218,6 +324,17 @@ public class OpenPgpContact {
         return new OpenPgpElement(Base64.encodeToString(encryptedBytes));
     }
 
+    /**
+     * Create a signed and encrypted {@link SigncryptElement} containing the {@code payload} and append it as a
+     * {@link OpenPgpElement} to the {@code message}.
+     *
+     * @param message {@link Message} which will transport the payload.
+     * @param payload payload that will be encrypted and signed.
+     * @throws IOException IO is dangerous.
+     * @throws SmackOpenPgpException OpenPGP is brittle.
+     * @throws MissingOpenPgpKeyPairException if we cannot access our signing key.
+     * @throws SmackException.NotLoggedInException if we are not logged in.
+     */
     public void addSignedEncryptedPayloadTo(Message message, List<ExtensionElement> payload)
             throws IOException, SmackOpenPgpException, MissingOpenPgpKeyPairException,
             SmackException.NotLoggedInException {
@@ -237,36 +354,16 @@ public class OpenPgpContact {
 
     }
 
-    public void send(XMPPConnection connection, Message message, List<ExtensionElement> payload)
-            throws MissingOpenPgpKeyPairException, SmackException.NotConnectedException, InterruptedException,
-            SmackOpenPgpException, IOException, SmackException.NotLoggedInException {
-        MultiMap<BareJid, OpenPgpV4Fingerprint> fingerprints = getEncryptionKeys();
-
-        SigncryptElement preparedPayload = new SigncryptElement(
-                Collections.<Jid>singleton(getJid()),
-                payload);
-
-        OpenPgpElement encryptedPayload;
-        byte[] encryptedMessage;
-
-        // Encrypt the payload
-        try {
-            encryptedMessage = cryptoProvider.signAndEncrypt(
-                    preparedPayload,
-                    getSelf().getSigningKey(),
-                    fingerprints);
-        } catch (MissingOpenPgpPublicKeyException e) {
-            throw new AssertionError("Missing OpenPGP public key, even though this should not happen here.", e);
-        }
-
-        encryptedPayload = new OpenPgpElement(Base64.encodeToString(encryptedMessage));
-
-        // Add encrypted payload to message
-        message.addExtension(encryptedPayload);
-
-        ChatManager.getInstanceFor(connection).chatWith(getJid().asEntityBareJidIfPossible()).send(message);
-    }
-
+    /**
+     * Process an incoming {@link OpenPgpElement} and return the decrypted and verified {@link OpenPgpContentElement}.
+     * 
+     * @param element possibly encrypted, possibly signed {@link OpenPgpElement}.
+     * @return decrypted {@link OpenPgpContentElement}
+     * @throws XmlPullParserException if the decrypted message does not represent valid XML.
+     * @throws MissingOpenPgpKeyPairException if we are missing the public key counterpart of the key that signed the message.
+     * @throws SmackOpenPgpException if the message cannot be decrypted and or verified.
+     * @throws IOException IO is dangerous
+     */
     public OpenPgpContentElement receive(OpenPgpElement element)
             throws XmlPullParserException, MissingOpenPgpKeyPairException, SmackOpenPgpException, IOException {
         byte[] decoded = Base64.decode(element.getEncryptedBase64MessageContent());

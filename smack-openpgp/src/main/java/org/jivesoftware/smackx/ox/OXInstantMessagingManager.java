@@ -28,18 +28,17 @@ import org.jivesoftware.smack.Manager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
 import org.jivesoftware.smackx.hints.element.StoreHint;
-import org.jivesoftware.smackx.ox.chat.OpenPgpContact;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.listener.OxMessageListener;
 import org.jivesoftware.smackx.ox.listener.internal.SigncryptElementReceivedListener;
-
 import org.jxmpp.jid.BareJid;
 
 /**
@@ -138,6 +137,8 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
         StoreHint.set(message);
         message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
 
-        contact.send(connection(), message, payload);
+        contact.addSignedEncryptedPayloadTo(message, payload);
+
+        ChatManager.getInstanceFor(connection()).chatWith(contact.getJid().asEntityBareJidIfPossible()).send(message);
     }
 }

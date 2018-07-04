@@ -1,8 +1,6 @@
-package org.jivesoftware.smackx.ox.chat;
+package org.jivesoftware.smackx.ox;
 
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smackx.ox.OpenPgpProvider;
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
 import org.jxmpp.jid.BareJid;
 
