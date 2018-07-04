@@ -75,12 +75,6 @@ public class OpenPgpContact {
         this.jid = jid;
         this.cryptoProvider = cryptoProvider;
         this.connection = connection;
-
-        try {
-            this.updateKeys();
-        } catch (SmackOpenPgpException | InterruptedException | XMPPException.XMPPErrorException | SmackException e) {
-            LOGGER.log(Level.WARNING, "Initial key update for contact " + getJid() + " failed.", e);
-        }
     }
 
     /**
@@ -356,7 +350,7 @@ public class OpenPgpContact {
 
     /**
      * Process an incoming {@link OpenPgpElement} and return the decrypted and verified {@link OpenPgpContentElement}.
-     * 
+     *
      * @param element possibly encrypted, possibly signed {@link OpenPgpElement}.
      * @return decrypted {@link OpenPgpContentElement}
      * @throws XmlPullParserException if the decrypted message does not represent valid XML.

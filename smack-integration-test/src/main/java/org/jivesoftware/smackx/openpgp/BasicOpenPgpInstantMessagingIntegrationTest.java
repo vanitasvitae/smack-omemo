@@ -113,6 +113,9 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         OpenPgpContact bobForAlice = aliceOpenPgp.getOpenPgpContact(bob.asEntityBareJidIfPossible());
         OpenPgpContact aliceForBob = bobOpenPgp.getOpenPgpContact(alice.asEntityBareJidIfPossible());
 
+        bobForAlice.updateKeys();
+        aliceForBob.updateKeys();
+
         assertTrue(bobForAlice.getActiveKeys().contains(bobFingerprint));
         assertTrue(aliceForBob.getActiveKeys().contains(aliceFingerprint));
 
