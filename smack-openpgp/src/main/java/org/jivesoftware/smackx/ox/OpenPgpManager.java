@@ -139,6 +139,12 @@ public final class OpenPgpManager extends Manager {
         this.provider = provider;
     }
 
+    /**
+     * Get our OpenPGP self.
+     *
+     * @return self
+     * @throws SmackException.NotLoggedInException if we are not logged in
+     */
     public OpenPgpSelf getOpenPgpSelf() throws SmackException.NotLoggedInException {
         throwIfNotAuthenticated();
 
@@ -157,11 +163,14 @@ public final class OpenPgpManager extends Manager {
      * @throws NoSuchAlgorithmException if we are missing an algorithm to generate a fresh key pair.
      * @throws NoSuchProviderException if we are missing a suitable {@link java.security.Provider}.
      * @throws SmackOpenPgpException if something bad happens during key generation/loading.
-     * @throws InterruptedException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws SmackException.NoResponseException
+     * @throws InterruptedException if the connection gets interrupted.
+     * @throws PubSubException.NotALeafNodeException if one of the PubSub nodes is not a {@link LeafNode}.
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
+     * @throws IOException IO is dangerous.
+     * @throws InvalidAlgorithmParameterException if illegal algorithm parameters are used for key generation.
+     * @throws SmackException.NotLoggedInException if we are not logged in.
      */
     public void announceSupportAndPublish()
             throws NoSuchAlgorithmException, NoSuchProviderException, SmackOpenPgpException,
@@ -196,6 +205,17 @@ public final class OpenPgpManager extends Manager {
                 .addFeature(PEP_NODE_PUBLIC_KEYS_NOTIFY);
     }
 
+    /**
+     * Generate a fresh OpenPGP key pair and import it.
+     *
+     * @param ourJid our {@link BareJid}.
+     * @return {@link OpenPgpV4Fingerprint} of the generated key.
+     * @throws NoSuchAlgorithmException if the JVM doesn't support one of the used algorithms.
+     * @throws IOException IO is dangerous.
+     * @throws InvalidAlgorithmParameterException if the used algorithm parameters are invalid.
+     * @throws NoSuchProviderException if we are missing a cryptographic provider.
+     * @throws SmackOpenPgpException in case of an OpenPGP error.
+     */
     public OpenPgpV4Fingerprint generateAndImportKeyPair(BareJid ourJid)
             throws NoSuchAlgorithmException, IOException, InvalidAlgorithmParameterException, NoSuchProviderException,
             SmackOpenPgpException {
@@ -250,10 +270,10 @@ public final class OpenPgpManager extends Manager {
      *
      * @param connection
      * @return true, if the server supports secret key backups, otherwise false.
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws InterruptedException
-     * @throws SmackException.NoResponseException
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws InterruptedException if the connection is interrupted.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static boolean serverSupportsSecretKeyBackups(XMPPConnection connection)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
@@ -269,11 +289,15 @@ public final class OpenPgpManager extends Manager {
      *
      * @param displayCodeCallback callback, which will receive the backup password used to encrypt the secret key.
      * @param selectKeyCallback callback, which will receive the users choice of which keys will be backed up.
-     * @throws InterruptedException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws SmackException.NoResponseException
+     * @throws InterruptedException if the connection is interrupted.
+     * @throws PubSubException.NotALeafNodeException if the private node is not a {@link LeafNode}.
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
+     * @throws SmackException.NotLoggedInException if we are not logged in.
+     * @throws SmackOpenPgpException in case of an OpenPGP exception.
+     * @throws IOException IO is dangerous.
+     * @throws SmackException.FeatureNotSupportedException if the server doesn't support the PubSub whitelist access model.
      */
     public void backupSecretKeyToServer(DisplayBackupCodeCallback displayCodeCallback,
                                         SecretKeyBackupSelectionCallback selectKeyCallback)
@@ -299,10 +323,11 @@ public final class OpenPgpManager extends Manager {
     /**
      * Delete the private {@link LeafNode} containing our secret key backup.
      *
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws InterruptedException
-     * @throws SmackException.NoResponseException
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws InterruptedException if the connection gets interrupted.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
+     * @throws SmackException.NotLoggedInException if we are not logged in.
      */
     public void deleteSecretKeyServerBackup()
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
@@ -316,11 +341,11 @@ public final class OpenPgpManager extends Manager {
      *
      * @param codeCallback callback for prompting the user to provide the secret backup code.
      * @param selectionCallback callback allowing the user to select a secret key which will be restored.
-     * @throws InterruptedException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws SmackException.NoResponseException
+     * @throws InterruptedException if the connection gets interrupted.
+     * @throws PubSubException.NotALeafNodeException if the private node is not a {@link LeafNode}.
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
      * @throws SmackOpenPgpException if something goes wrong while restoring the secret key.
      * @throws InvalidBackupCodeException if the user-provided backup code is invalid.
      */

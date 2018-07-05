@@ -39,6 +39,7 @@ import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.listener.OxMessageListener;
 import org.jivesoftware.smackx.ox.listener.internal.SigncryptElementReceivedListener;
+
 import org.jxmpp.jid.BareJid;
 
 /**

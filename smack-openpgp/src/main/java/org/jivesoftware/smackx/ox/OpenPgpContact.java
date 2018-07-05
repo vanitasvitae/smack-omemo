@@ -46,6 +46,7 @@ import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
+
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.Jid;
 import org.xmlpull.v1.XmlPullParserException;
@@ -152,8 +153,8 @@ public class OpenPgpContact {
     /**
      * Update any missing or outdated keys based on the given {@link PublicKeysListElement}.
      *
-     * @param metadata
-     * @throws SmackOpenPgpException
+     * @param metadata {@link PublicKeysListElement}
+     * @throws SmackOpenPgpException in case the available keys cannot be fetched
      */
     public void updateKeys(PublicKeysListElement metadata)
             throws SmackOpenPgpException {
@@ -170,7 +171,7 @@ public class OpenPgpContact {
                     unfetchableKeys.remove(fingerprint);
                 } catch (IOException | XMPPException.XMPPErrorException | SmackException | InterruptedException |
                         SmackOpenPgpException | MissingUserIdOnKeyException | NullPointerException e) {
-                    LOGGER.log(Level.WARNING, "Could not update key " + fingerprint + " of " +getJid());
+                    LOGGER.log(Level.WARNING, "Could not update key " + fingerprint + " of " + getJid());
                     unfetchableKeys.put(fingerprint, e);
                 }
             }
