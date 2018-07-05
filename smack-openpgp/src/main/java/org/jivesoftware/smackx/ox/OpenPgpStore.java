@@ -54,7 +54,7 @@ public interface OpenPgpStore {
      * @param owner owner.
      * @return set of fingerprints of available OpenPGP key pairs master keys.
      *
-     * @throws SmackOpenPgpException
+     * @throws SmackOpenPgpException in case of an OpenPGP error
      */
     Set<OpenPgpV4Fingerprint> getAvailableKeyPairFingerprints(BareJid owner) throws SmackOpenPgpException;
 
@@ -62,8 +62,7 @@ public interface OpenPgpStore {
      * Return a {@link Map} containing the {@link OpenPgpV4Fingerprint}s of all OpenPGP public keys of a
      * contact, which we have locally available, as well as the date, those keys had been published on.
      * <br>
-     * Note: This returns a {@link Map} that might be different from the result of
-     * {@link #getAvailableKeysFingerprints(BareJid)} (BareJid)}.
+     * Note: This returns a {@link Map} that might be different from the result of (BareJid)}.
      * Messages should be encrypted to the intersection of both key sets.
      *
      * @param contact contact.

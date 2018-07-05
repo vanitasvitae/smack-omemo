@@ -140,10 +140,10 @@ public class OpenPgpContact {
     /**
      * Fetch the metadata node to get a {@link PublicKeysListElement} and update any missing or outdated keys.
      *
-     * @throws InterruptedException
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException
-     * @throws SmackOpenPgpException
+     * @throws InterruptedException if the connection is interrupted
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
+     * @throws SmackException in case of an error in Smack
+     * @throws SmackOpenPgpException in case of an OpenPGP exception
      */
     public void updateKeys()
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException, SmackOpenPgpException {
@@ -182,12 +182,12 @@ public class OpenPgpContact {
      * Update the key identified by the {@code fingerprint}.
      *
      * @param fingerprint fingerprint of the key
-     * @throws InterruptedException
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException
-     * @throws IOException
-     * @throws MissingUserIdOnKeyException
-     * @throws SmackOpenPgpException
+     * @throws InterruptedException if the connection is interrupted
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
+     * @throws SmackException in case of an exception in Smack
+     * @throws IOException IO is dangerous
+     * @throws MissingUserIdOnKeyException if the key is missing a user id with the contacts jid
+     * @throws SmackOpenPgpException in case of an OpenPGP exception
      */
     public void updateKey(OpenPgpV4Fingerprint fingerprint)
             throws InterruptedException, XMPPException.XMPPErrorException, SmackException, IOException,
@@ -212,9 +212,9 @@ public class OpenPgpContact {
      *
      * @param data OpenPgp keys byte representation.
      * @return the fingerprint of the imported key.
-     * @throws SmackOpenPgpException
-     * @throws MissingUserIdOnKeyException
-     * @throws IOException
+     * @throws SmackOpenPgpException in case of an OpenPGP error
+     * @throws MissingUserIdOnKeyException if the key is missing a user id with the contacts jid
+     * @throws IOException IO is dangerous
      */
     private OpenPgpV4Fingerprint importPublicKey(byte[] data)
             throws SmackOpenPgpException, MissingUserIdOnKeyException, IOException {

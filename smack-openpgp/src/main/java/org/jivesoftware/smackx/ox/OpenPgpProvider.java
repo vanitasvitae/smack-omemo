@@ -55,8 +55,10 @@ public interface OpenPgpProvider {
      *
      * @throws MissingOpenPgpKeyPairException if the OpenPGP key pair with the given {@link OpenPgpV4Fingerprint}
      *                                        is not available.
-     * @throws MissingOpenPgpKeyPairException if any of the OpenPGP public keys whose {@link OpenPgpV4Fingerprint}
+     * @throws MissingOpenPgpPublicKeyException if any of the OpenPGP public keys whose {@link OpenPgpV4Fingerprint}
      *                                        is listed in {@code encryptionKeys} is not available.
+     * @throws SmackOpenPgpException in case of an OpenPGP error
+     * @throws IOException IO is dangerous
      */
     byte[] signAndEncrypt(SigncryptElement element,
                           OpenPgpV4Fingerprint signingKey,
@@ -76,6 +78,8 @@ public interface OpenPgpProvider {
      *
      * @throws MissingOpenPgpKeyPairException if we don't have the key pair for the
      *                                        {@link OpenPgpV4Fingerprint} available.
+     * @throws IOException IO is dangerous
+     * @throws SmackOpenPgpException in case of an OpenPGP error
      */
     byte[] sign(SignElement element, OpenPgpV4Fingerprint singingKeyFingerprint)
             throws MissingOpenPgpKeyPairException, IOException, SmackOpenPgpException;
@@ -97,6 +101,8 @@ public interface OpenPgpProvider {
      * @throws MissingOpenPgpPublicKeyException if any of the OpenPGP public keys whose
      *                                          {@link OpenPgpV4Fingerprint} is listed in {@code encryptionKeys}
      *                                          is not available.
+     * @throws IOException IO is dangerous
+     * @throws SmackOpenPgpException in case of an OpenPGP error
      */
     byte[] encrypt(CryptElement element, MultiMap<BareJid, OpenPgpV4Fingerprint> encryptionKeyFingerprints)
             throws MissingOpenPgpPublicKeyException, IOException, SmackOpenPgpException;
@@ -111,14 +117,25 @@ public interface OpenPgpProvider {
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#exchange">XEP-0373 §3.1</a>
      *
      * @param bytes byte array which contains the encrypted {@link OpenPgpContentElement}.
+     * @param sender sender of the message
+     * @param missingPublicKeyCallback callback to handle missing public keys
      * @return byte array which contains the decrypted {@link OpenPgpContentElement}, as well as metadata.
      *
      * @throws MissingOpenPgpKeyPairException if we don't have an OpenPGP key pair available that to decrypt
      *                                        the message.
+     * @throws SmackOpenPgpException in case of an OpenPGP error
      */
     DecryptedBytesAndMetadata decrypt(byte[] bytes, BareJid sender, SmackMissingOpenPgpPublicKeyCallback missingPublicKeyCallback)
             throws MissingOpenPgpKeyPairException, SmackOpenPgpException;
 
+    /**
+     * Encrypt some data symmetrically using a password.
+     * @param bytes data
+     * @param password password
+     * @return encrypted data
+     * @throws SmackOpenPgpException in case of an OpenPGP error
+     * @throws IOException IO is dangerous
+     */
     byte[] symmetricallyEncryptWithPassword(byte[] bytes, String password) throws SmackOpenPgpException, IOException;
 
     /**
@@ -137,6 +154,11 @@ public interface OpenPgpProvider {
      *
      * @param owner JID of the keys owner.
      * @return byte array representation + {@link OpenPgpV4Fingerprint} of the generated key pair.
+     * @throws SmackOpenPgpException in case of an OpenPGP error
+     * @throws InvalidAlgorithmParameterException if invalid algorithm parameters are used for crypto
+     * @throws NoSuchAlgorithmException if the JVM is lacking support for a used algorithm
+     * @throws NoSuchProviderException if the JVM is missing a security provider
+     * @throws IOException IO is dangerous
      */
     KeyBytesAndFingerprint generateOpenPgpKeyPair(BareJid owner)
             throws SmackOpenPgpException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
@@ -144,21 +166,51 @@ public interface OpenPgpProvider {
 
     /**
      * Import a public key. The bytes are expected to be decoded from base64.
-     * @param owner
-     * @param bytes
-     * @return
-     * @throws MissingUserIdOnKeyException
-     * @throws IOException
-     * @throws SmackOpenPgpException
+     *
+     * @param owner owner of the public key
+     * @param bytes byte representation of the publick key
+     *
+     * @return fingerprint of the imported public key
+     *
+     * @throws MissingUserIdOnKeyException if the key is missing a user id with {@code owner}.
+     * @throws IOException IO is dangerous
+     * @throws SmackOpenPgpException if an OpenPGP error occurs
      */
     OpenPgpV4Fingerprint importPublicKey(BareJid owner, byte[] bytes)
             throws MissingUserIdOnKeyException, IOException, SmackOpenPgpException;
 
+    /**
+     * Import a secret key. The bytes are expected to be decoded from base64.
+     *
+     * @param owner owner of the secret key
+     * @param bytes byte representation of the secret key
+     *
+     * @return fingerprint of the imported secret key
+     *
+     * @throws MissingUserIdOnKeyException if the key is missing a user-id of {@code owner}
+     * @throws SmackOpenPgpException in case of an OpenPGP error
+     * @throws IOException IO is dangerous
+     */
     OpenPgpV4Fingerprint importSecretKey(BareJid owner, byte[] bytes)
             throws MissingUserIdOnKeyException, SmackOpenPgpException, IOException;
 
+    /**
+     * Import a secret key that belong to ourselves.
+     *
+     * @param bytes byte representation of the secret key.
+     *
+     * @return fingerprint of the imported secret key.
+     *
+     * @throws MissingUserIdOnKeyException if the secret key is missing a user-id with our jid
+     * @throws SmackOpenPgpException in case of an OpenPGP error
+     * @throws IOException IO is dangerous
+     */
     OpenPgpV4Fingerprint importSecretKey(byte[] bytes)
             throws MissingUserIdOnKeyException, SmackOpenPgpException, IOException;
 
+    /**
+     * Return the underlying {@link OpenPgpStore}.
+     * @return store
+     */
     OpenPgpStore getStore();
 }

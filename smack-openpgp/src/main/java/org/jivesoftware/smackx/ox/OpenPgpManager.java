@@ -268,7 +268,7 @@ public final class OpenPgpManager extends Manager {
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#synchro-pep">XEP-0373 §5</a>
      *
-     * @param connection
+     * @param connection XMPP connection
      * @return true, if the server supports secret key backups, otherwise false.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
@@ -341,6 +341,9 @@ public final class OpenPgpManager extends Manager {
      *
      * @param codeCallback callback for prompting the user to provide the secret backup code.
      * @param selectionCallback callback allowing the user to select a secret key which will be restored.
+     *
+     * @return fingerprint of the restored secret key
+     *
      * @throws InterruptedException if the connection gets interrupted.
      * @throws PubSubException.NotALeafNodeException if the private node is not a {@link LeafNode}.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
@@ -348,6 +351,10 @@ public final class OpenPgpManager extends Manager {
      * @throws SmackException.NoResponseException if the server doesn't respond.
      * @throws SmackOpenPgpException if something goes wrong while restoring the secret key.
      * @throws InvalidBackupCodeException if the user-provided backup code is invalid.
+     * @throws SmackException.NotLoggedInException if we are not logged in
+     * @throws IOException IO is dangerous
+     * @throws MissingUserIdOnKeyException if the key that is to be imported is missing a user-id with our jid
+     * @throws NoBackupFoundException if no secret key backup has been found
      */
     public OpenPgpV4Fingerprint restoreSecretKeyServerBackup(AskForBackupCodeCallback codeCallback,
                                              SecretKeyRestoreSelectionCallback selectionCallback)

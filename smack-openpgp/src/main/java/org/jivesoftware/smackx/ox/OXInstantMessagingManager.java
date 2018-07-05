@@ -62,6 +62,13 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
         announceSupportForOxInstantMessaging();
     }
 
+    /**
+     * Return an instance of the {@link OXInstantMessagingManager} that belongs to the given {@code connection}.
+     *
+     * @param connection XMPP connection
+     *
+     * @return manager instance
+     */
     public static OXInstantMessagingManager getInstanceFor(XMPPConnection connection) {
         OXInstantMessagingManager manager = INSTANCES.get(connection);
 
@@ -73,6 +80,9 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
         return manager;
     }
 
+    /**
+     * Add the OX:IM namespace as a feature to our disco features.
+     */
     public void announceSupportForOxInstantMessaging() {
         ServiceDiscoveryManager.getInstanceFor(connection())
                 .addFeature(NAMESPACE_0);
@@ -83,10 +93,10 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
      *
      * @param jid {@link BareJid} of the contact in question.
      * @return true if contact announces support, otherwise false.
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws InterruptedException
-     * @throws SmackException.NoResponseException
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
+     * @throws SmackException.NotConnectedException if we are not connected
+     * @throws InterruptedException if the connection gets interrupted
+     * @throws SmackException.NoResponseException if the server doesn't respond
      */
     public boolean contactSupportsOxInstantMessaging(BareJid jid)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
@@ -99,10 +109,10 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
      *
      * @param contact {@link OpenPgpContact} in question.
      * @return true if contact announces support, otherwise false.
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws InterruptedException
-     * @throws SmackException.NoResponseException
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
+     * @throws SmackException.NotConnectedException if we are not connected
+     * @throws InterruptedException if the connection is interrupted
+     * @throws SmackException.NoResponseException if the server doesn't respond
      */
     public boolean contactSupportsOxInstantMessaging(OpenPgpContact contact)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
@@ -110,10 +120,21 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
         return contactSupportsOxInstantMessaging(contact.getJid());
     }
 
+    /**
+     * Add an {@link OxMessageListener}. The listener gets notified about incoming {@link OpenPgpMessage}s which
+     * contained an OX-IM message.
+     * @param listener listener
+     * @return true if the listener gets added, otherwise false.
+     */
     public boolean addOxMessageListener(OxMessageListener listener) {
         return oxMessageListeners.add(listener);
     }
 
+    /**
+     * Remove an {@link OxMessageListener}. The listener will no longer be notified about OX-IM messages.
+     * @param listener listener
+     * @return true, if the listener gets removed, otherwise false
+     */
     public boolean removeOxMessageListener(OxMessageListener listener) {
         return oxMessageListeners.remove(listener);
     }
@@ -125,6 +146,19 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
         }
     }
 
+    /**
+     * Send an OX message to a {@link OpenPgpContact}. The message will be encrypted to all active keys of the contact,
+     * as well as all of our active keys. The message is also signed with our key.
+     *
+     * @param contact contact capable of OpenPGP for XMPP: Instant Messaging.
+     * @param body message body.
+     * @throws InterruptedException if the connection is interrupted
+     * @throws MissingOpenPgpKeyPairException if we cannot access our signing key
+     * @throws IOException IO is dangerous
+     * @throws SmackException.NotConnectedException if we are not connected
+     * @throws SmackOpenPgpException in case of an OpenPGP error
+     * @throws SmackException.NotLoggedInException if we are not logged in
+     */
     public void sendOxMessage(OpenPgpContact contact, CharSequence body)
             throws InterruptedException, MissingOpenPgpKeyPairException, IOException,
             SmackException.NotConnectedException, SmackOpenPgpException, SmackException.NotLoggedInException {

@@ -26,7 +26,7 @@ public interface DisplayBackupCodeCallback {
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#sect-idm139662753819792">
      *     XEP-0373 §5.3 about the format of the backup code</a>
      *
-     *  @param backupCode
+     *  @param backupCode backup code
      */
     void displayBackupCode(String backupCode);
 }

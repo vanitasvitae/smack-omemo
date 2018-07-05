@@ -90,10 +90,10 @@ public class PubSubDelegate {
      *
      * @param node {@link LeafNode} whose PubSub access model we want to change
      * @param accessModel new access model.
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws InterruptedException
-     * @throws SmackException.NoResponseException
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws InterruptedException if the connection is interrupted.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static void changeAccessModelIfNecessary(LeafNode node, AccessModel accessModel)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
@@ -110,13 +110,17 @@ public class PubSubDelegate {
      * Publish the users OpenPGP public key to the public key node if necessary.
      * Also announce the key to other users by updating the metadata node.
      *
+     * @param connection XMPP connection
+     * @param pubkeyElement {@link PubkeyElement} containing the public key
+     * @param fingerprint fingerprint of the public key
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#annoucning-pubkey">XEP-0373 §4.1</a>
      *
-     * @throws InterruptedException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws SmackException.NoResponseException
+     * @throws InterruptedException if the connection gets interrupted.
+     * @throws PubSubException.NotALeafNodeException if either the metadata node or the public key node is not a
+     *                                               {@link LeafNode}.
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static void publishPublicKey(XMPPConnection connection, PubkeyElement pubkeyElement, OpenPgpV4Fingerprint fingerprint)
             throws InterruptedException, PubSubException.NotALeafNodeException,
@@ -160,10 +164,11 @@ public class PubSubDelegate {
      * Consult the public key metadata node and fetch a list of all of our published OpenPGP public keys.
      * TODO: Add @see which points to the (for now missing) respective example in XEP-0373.
      *
+     * @param connection XMPP connection
      * @return content of our metadata node.
-     * @throws InterruptedException
-     * @throws SmackException
-     * @throws XMPPException.XMPPErrorException
+     * @throws InterruptedException if the connection gets interrupted.
+     * @throws SmackException in case of an error in Smack.
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol exception.
      */
     public static PublicKeysListElement fetchPubkeysList(XMPPConnection connection)
             throws InterruptedException, SmackException,
@@ -176,11 +181,12 @@ public class PubSubDelegate {
      * Consult the public key metadata node of {@code contact} to fetch the list of their published OpenPGP public keys.
      * TODO: Add @see which points to the (for now missing) respective example in XEP-0373.
      *
+     * @param connection XMPP connection
      * @param contact {@link BareJid} of the user we want to fetch the list from.
      * @return content of {@code contact}'s metadata node.
-     * @throws InterruptedException
-     * @throws SmackException
-     * @throws XMPPException.XMPPErrorException
+     * @throws InterruptedException if the connection gets interrupted.
+     * @throws SmackException in case of an exception in Smack.
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol exception.
      */
     public static PublicKeysListElement fetchPubkeysList(XMPPConnection connection, BareJid contact)
             throws InterruptedException, SmackException,
@@ -200,10 +206,11 @@ public class PubSubDelegate {
     /**
      * Delete our metadata node.
      *
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws InterruptedException
-     * @throws SmackException.NoResponseException
+     * @param connection XMPP connection
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws InterruptedException if the connection is interrupted.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static void deletePubkeysListNode(XMPPConnection connection)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
@@ -223,12 +230,12 @@ public class PubSubDelegate {
     /**
      * Delete the public key node of the key with fingerprint {@code fingerprint}.
      *
-     * @param connection
-     * @param fingerprint
-     * @throws XMPPException.XMPPErrorException
-     * @throws SmackException.NotConnectedException
-     * @throws InterruptedException
-     * @throws SmackException.NoResponseException
+     * @param connection XMPP connection
+     * @param fingerprint fingerprint of the key we want to delete
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws SmackException.NotConnectedException if we are not connected.
+     * @throws InterruptedException if the connection gets interrupted.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static void deletePublicKeyNode(XMPPConnection connection, OpenPgpV4Fingerprint fingerprint)
             throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException,
@@ -251,13 +258,14 @@ public class PubSubDelegate {
      *
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#discover-pubkey">XEP-0373 §4.3</a>
      *
+     * @param connection XMPP connection
      * @param contact {@link BareJid} of the contact we want to fetch a key from.
      * @param v4_fingerprint upper case, hex encoded v4 fingerprint of the contacts key.
      * @return {@link PubkeyElement} containing the requested public key.
      *
      * @throws InterruptedException if we get interrupted.
      * @throws SmackException in case the node cannot be fetched.
-     * @throws XMPPException.XMPPErrorException
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      */
     public static PubkeyElement fetchPubkey(XMPPConnection connection, BareJid contact, OpenPgpV4Fingerprint v4_fingerprint)
             throws InterruptedException, SmackException, XMPPException.XMPPErrorException {
@@ -287,13 +295,12 @@ public class PubSubDelegate {
      * @throws XMPPException.XMPPErrorException in case of an protocol related error
      * @throws SmackException.NotConnectedException if we are not connected
      * @throws SmackException.NoResponseException /watch?v=0peBq89ZTrc
-     * @throws SmackException.NotLoggedInException if we are not logged in
      * @throws SmackException.FeatureNotSupportedException if the Server doesn't support the whitelist access model
      */
     public static void depositSecretKey(XMPPConnection connection, SecretkeyElement element)
             throws InterruptedException, PubSubException.NotALeafNodeException,
             XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException,
-            SmackException.NotLoggedInException, SmackException.FeatureNotSupportedException {
+            SmackException.FeatureNotSupportedException {
         if (!OpenPgpManager.serverSupportsSecretKeyBackups(connection)) {
             throw new SmackException.FeatureNotSupportedException("http://jabber.org/protocol/pubsub#access-whitelist");
         }
