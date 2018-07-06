@@ -162,7 +162,9 @@ public class PubSubDelegate {
 
     /**
      * Consult the public key metadata node and fetch a list of all of our published OpenPGP public keys.
-     * TODO: Add @see which points to the (for now missing) respective example in XEP-0373.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#discover-pubkey-list">
+     *      XEP-0373 §4.3: Discovering Public Keys of a User</a>
      *
      * @param connection XMPP connection
      * @return content of our metadata node.
@@ -182,7 +184,9 @@ public class PubSubDelegate {
 
     /**
      * Consult the public key metadata node of {@code contact} to fetch the list of their published OpenPGP public keys.
-     * TODO: Add @see which points to the (for now missing) respective example in XEP-0373.
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#discover-pubkey-list">
+     *     XEP-0373 §4.3: Discovering Public Keys of a User</a>
      *
      * @param connection XMPP connection
      * @param contact {@link BareJid} of the user we want to fetch the list from.
