@@ -412,7 +412,12 @@ public class PubSubDelegate {
      * which are not subscribed to the node owner. Therefore this method fetches the node directly and puts it
      * into the {@link PubSubManager}s node map.
      *
+     * Note: Due to the alck of a disco#info query, it might happen, that the node doesn't exist on the server,
+     * even though we add it to the node map.
+     *
      * @see <a href="https://github.com/processone/ejabberd/issues/2483">Ejabberd bug tracker about the issue</a>
+     * @see <a href="https://mail.jabber.org/pipermail/standards/2018-June/035206.html">
+     *     Topic on the standards mailing list</a>
      *
      * @param pubSubManager pubsub manager
      * @param nodeName name of the node
