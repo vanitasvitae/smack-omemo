@@ -167,12 +167,15 @@ public class PubSubDelegate {
      * @param connection XMPP connection
      * @return content of our metadata node.
      * @throws InterruptedException if the thread gets interrupted.
-     * @throws SmackException in case of an error in Smack.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol exception.
+     * @throws PubSubException.NotAPubSubNodeException in case the queried entity is not a PubSub node
+     * @throws PubSubException.NotALeafNodeException in case the queried node is not a {@link LeafNode}
+     * @throws SmackException.NotConnectedException in case we are not connected
+     * @throws SmackException.NoResponseException in case the server doesn't respond
      */
     public static PublicKeysListElement fetchPubkeysList(XMPPConnection connection)
-            throws InterruptedException, SmackException,
-            XMPPException.XMPPErrorException {
+            throws InterruptedException, XMPPException.XMPPErrorException, PubSubException.NotAPubSubNodeException,
+            PubSubException.NotALeafNodeException, SmackException.NotConnectedException, SmackException.NoResponseException {
         return fetchPubkeysList(connection, connection.getUser().asBareJid());
     }
 
@@ -185,15 +188,18 @@ public class PubSubDelegate {
      * @param contact {@link BareJid} of the user we want to fetch the list from.
      * @return content of {@code contact}'s metadata node.
      * @throws InterruptedException if the thread gets interrupted.
-     * @throws SmackException in case of an exception in Smack.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol exception.
+     * @throws SmackException.NoResponseException in case the server doesn't respond
+     * @throws PubSubException.NotALeafNodeException in case the queried node is not a {@link LeafNode}
+     * @throws SmackException.NotConnectedException in case we are not connected
+     * @throws PubSubException.NotAPubSubNodeException in case the queried entity is not a PubSub node
      */
     public static PublicKeysListElement fetchPubkeysList(XMPPConnection connection, BareJid contact)
-            throws InterruptedException, SmackException,
-            XMPPException.XMPPErrorException {
+            throws InterruptedException, XMPPException.XMPPErrorException, SmackException.NoResponseException,
+            PubSubException.NotALeafNodeException, SmackException.NotConnectedException, PubSubException.NotAPubSubNodeException {
         PubSubManager pm = PubSubManager.getInstance(connection, contact);
 
-        LeafNode node = getOpenLeafNode(pm, PEP_NODE_PUBLIC_KEYS);
+        LeafNode node = getLeafNode(pm, PEP_NODE_PUBLIC_KEYS);
         List<PayloadItem<PublicKeysListElement>> list = node.getItems(1);
 
         if (list.isEmpty()) {
@@ -263,15 +269,21 @@ public class PubSubDelegate {
      * @param v4_fingerprint upper case, hex encoded v4 fingerprint of the contacts key.
      * @return {@link PubkeyElement} containing the requested public key.
      *
-     * @throws InterruptedException if the thread gets interrupted.
-     * @throws SmackException in case the node cannot be fetched.
+     * @throws InterruptedException if the thread gets interrupted.A
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws PubSubException.NotAPubSubNodeException in case the targeted entity is not a PubSub node.
+     * @throws PubSubException.NotALeafNodeException in case the fetched node is not a {@link LeafNode}.
+     * @throws SmackException.NotConnectedException in case we are not connected.
+     * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static PubkeyElement fetchPubkey(XMPPConnection connection, BareJid contact, OpenPgpV4Fingerprint v4_fingerprint)
-            throws InterruptedException, SmackException, XMPPException.XMPPErrorException {
+            throws InterruptedException, XMPPException.XMPPErrorException, PubSubException.NotAPubSubNodeException,
+            PubSubException.NotALeafNodeException, SmackException.NotConnectedException, SmackException.NoResponseException {
         PubSubManager pm = PubSubManager.getInstance(connection, contact);
+        String nodeName = PEP_NODE_PUBLIC_KEY(v4_fingerprint);
 
-        LeafNode node = getOpenLeafNode(pm, PEP_NODE_PUBLIC_KEY(v4_fingerprint));
+        LeafNode node = getLeafNode(pm, nodeName);
+
         List<PayloadItem<PubkeyElement>> list = node.getItems(1);
 
         if (list.isEmpty()) {
@@ -279,6 +291,40 @@ public class PubSubDelegate {
         }
 
         return list.get(0).getPayload();
+    }
+
+    /**
+     * Try to get a {@link LeafNode} the traditional way (first query information using disco#info), then query the node.
+     * If that fails, query the node directly.
+     *
+     * @param pm PubSubManager
+     * @param nodeName name of the node
+     * @return node
+     *
+     * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
+     * @throws PubSubException.NotALeafNodeException if the queried node is not a {@link LeafNode}.
+     * @throws InterruptedException in case the thread gets interrupted
+     * @throws PubSubException.NotAPubSubNodeException in case the queried entity is not a PubSub node.
+     * @throws SmackException.NotConnectedException in case the connection is not connected.
+     * @throws SmackException.NoResponseException in case the server doesn't respond.
+     */
+    static LeafNode getLeafNode(PubSubManager pm, String nodeName)
+            throws XMPPException.XMPPErrorException, PubSubException.NotALeafNodeException, InterruptedException,
+            PubSubException.NotAPubSubNodeException, SmackException.NotConnectedException, SmackException.NoResponseException {
+        LeafNode node;
+        try {
+            node = pm.getLeafNode(nodeName);
+        } catch (XMPPException.XMPPErrorException e) {
+            // It might happen, that the server doesn't allow disco#info queries from strangers.
+            // In that case we have to fetch the node directly
+            if (e.getStanzaError().getCondition() == StanzaError.Condition.subscription_required) {
+                node = getOpenLeafNode(pm, nodeName);
+            } else {
+                throw e;
+            }
+        }
+
+        return node;
     }
 
     /**
@@ -368,12 +414,11 @@ public class PubSubDelegate {
      * @param nodeName name of the node
      * @return leafNode
      *
-     * @throws SmackException if something goes wrong with reflections.
-     * @throws PubSubException.NotALeafNodeException if the node is already in the nodeMap, but is NOT a LeafNode.
+     * @throws PubSubException.NotALeafNodeException in case we already have the node cached, but it is not a LeafNode.
      */
     @SuppressWarnings("unchecked")
     public static LeafNode getOpenLeafNode(PubSubManager pubSubManager, String nodeName)
-            throws SmackException, PubSubException.NotALeafNodeException {
+            throws PubSubException.NotALeafNodeException {
 
         try {
 
@@ -414,7 +459,7 @@ public class PubSubDelegate {
 
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException |
                 NoSuchFieldException e) {
-            throw new SmackException("Using reflections to create a LeafNode and put it into PubSubManagers nodeMap failed.", e);
+            throw new AssertionError("Using reflections to create a LeafNode and put it into PubSubManagers nodeMap failed.", e);
         }
     }
 }

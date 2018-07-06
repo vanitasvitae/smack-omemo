@@ -46,6 +46,8 @@ import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
+import org.jivesoftware.smackx.pubsub.LeafNode;
+import org.jivesoftware.smackx.pubsub.PubSubException;
 
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.Jid;
@@ -142,11 +144,16 @@ public class OpenPgpContact {
      *
      * @throws InterruptedException if the thread is interrupted
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
-     * @throws SmackException in case of an error in Smack
      * @throws SmackOpenPgpException in case of an OpenPGP exception
+     * @throws PubSubException.NotAPubSubNodeException in case the metadata node is not a PubSub node
+     * @throws PubSubException.NotALeafNodeException in case the metadata node is not a {@link LeafNode}
+     * @throws SmackException.NotConnectedException in case we are not connected
+     * @throws SmackException.NoResponseException in case the server doesn't respond
      */
     public void updateKeys()
-            throws InterruptedException, XMPPException.XMPPErrorException, SmackException, SmackOpenPgpException {
+            throws InterruptedException, XMPPException.XMPPErrorException, SmackOpenPgpException,
+            PubSubException.NotAPubSubNodeException, PubSubException.NotALeafNodeException,
+            SmackException.NotConnectedException, SmackException.NoResponseException {
         updateKeys(PubSubDelegate.fetchPubkeysList(connection, getJid()));
     }
 
