@@ -140,7 +140,7 @@ public class OpenPgpContact {
     /**
      * Fetch the metadata node to get a {@link PublicKeysListElement} and update any missing or outdated keys.
      *
-     * @throws InterruptedException if the connection is interrupted
+     * @throws InterruptedException if the thread is interrupted
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
      * @throws SmackException in case of an error in Smack
      * @throws SmackOpenPgpException in case of an OpenPGP exception
@@ -182,7 +182,7 @@ public class OpenPgpContact {
      * Update the key identified by the {@code fingerprint}.
      *
      * @param fingerprint fingerprint of the key
-     * @throws InterruptedException if the connection is interrupted
+     * @throws InterruptedException if the thread is interrupted
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
      * @throws SmackException in case of an exception in Smack
      * @throws IOException IO is dangerous

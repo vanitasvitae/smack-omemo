@@ -92,7 +92,7 @@ public class PubSubDelegate {
      * @param accessModel new access model.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
-     * @throws InterruptedException if the connection is interrupted.
+     * @throws InterruptedException if the thread is interrupted.
      * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static void changeAccessModelIfNecessary(LeafNode node, AccessModel accessModel)
@@ -115,7 +115,7 @@ public class PubSubDelegate {
      * @param fingerprint fingerprint of the public key
      * @see <a href="https://xmpp.org/extensions/xep-0373.html#annoucning-pubkey">XEP-0373 §4.1</a>
      *
-     * @throws InterruptedException if the connection gets interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws PubSubException.NotALeafNodeException if either the metadata node or the public key node is not a
      *                                               {@link LeafNode}.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
@@ -166,7 +166,7 @@ public class PubSubDelegate {
      *
      * @param connection XMPP connection
      * @return content of our metadata node.
-     * @throws InterruptedException if the connection gets interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws SmackException in case of an error in Smack.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol exception.
      */
@@ -184,7 +184,7 @@ public class PubSubDelegate {
      * @param connection XMPP connection
      * @param contact {@link BareJid} of the user we want to fetch the list from.
      * @return content of {@code contact}'s metadata node.
-     * @throws InterruptedException if the connection gets interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws SmackException in case of an exception in Smack.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol exception.
      */
@@ -209,7 +209,7 @@ public class PubSubDelegate {
      * @param connection XMPP connection
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
-     * @throws InterruptedException if the connection is interrupted.
+     * @throws InterruptedException if the thread is interrupted.
      * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static void deletePubkeysListNode(XMPPConnection connection)
@@ -234,7 +234,7 @@ public class PubSubDelegate {
      * @param fingerprint fingerprint of the key we want to delete
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
-     * @throws InterruptedException if the connection gets interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static void deletePublicKeyNode(XMPPConnection connection, OpenPgpV4Fingerprint fingerprint)
@@ -263,7 +263,7 @@ public class PubSubDelegate {
      * @param v4_fingerprint upper case, hex encoded v4 fingerprint of the contacts key.
      * @return {@link PubkeyElement} containing the requested public key.
      *
-     * @throws InterruptedException if we get interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws SmackException in case the node cannot be fetched.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      */
@@ -290,7 +290,7 @@ public class PubSubDelegate {
      *
      * @param connection {@link XMPPConnection} of the user
      * @param element a {@link SecretkeyElement} containing the encrypted secret key of the user
-     * @throws InterruptedException if the connection gets interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws PubSubException.NotALeafNodeException if something is wrong with the PubSub node
      * @throws XMPPException.XMPPErrorException in case of an protocol related error
      * @throws SmackException.NotConnectedException if we are not connected
@@ -319,7 +319,7 @@ public class PubSubDelegate {
      *
      * @param connection {@link XMPPConnection} of the user.
      * @return the secret key node or null, if it doesn't exist.
-     * @throws InterruptedException if the connection gets interrupted
+     * @throws InterruptedException if the thread gets interrupted
      * @throws PubSubException.NotALeafNodeException if there is an issue with the PubSub node
      * @throws XMPPException.XMPPErrorException if there is an XMPP protocol related issue
      * @throws SmackException.NotConnectedException if we are not connected
@@ -345,7 +345,7 @@ public class PubSubDelegate {
      * @param connection {@link XMPPConnection} of the user.
      * @throws XMPPException.XMPPErrorException if there is an XMPP protocol related issue
      * @throws SmackException.NotConnectedException if we are not connected
-     * @throws InterruptedException if the connection gets interrupted
+     * @throws InterruptedException if the thread gets interrupted
      * @throws SmackException.NoResponseException if the server sends no response
      */
     public static void deleteSecretKeyNode(XMPPConnection connection)

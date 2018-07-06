@@ -163,7 +163,7 @@ public final class OpenPgpManager extends Manager {
      * @throws NoSuchAlgorithmException if we are missing an algorithm to generate a fresh key pair.
      * @throws NoSuchProviderException if we are missing a suitable {@link java.security.Provider}.
      * @throws SmackOpenPgpException if something bad happens during key generation/loading.
-     * @throws InterruptedException if the connection gets interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws PubSubException.NotALeafNodeException if one of the PubSub nodes is not a {@link LeafNode}.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
@@ -272,7 +272,7 @@ public final class OpenPgpManager extends Manager {
      * @return true, if the server supports secret key backups, otherwise false.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
-     * @throws InterruptedException if the connection is interrupted.
+     * @throws InterruptedException if the thread is interrupted.
      * @throws SmackException.NoResponseException if the server doesn't respond.
      */
     public static boolean serverSupportsSecretKeyBackups(XMPPConnection connection)
@@ -289,7 +289,7 @@ public final class OpenPgpManager extends Manager {
      *
      * @param displayCodeCallback callback, which will receive the backup password used to encrypt the secret key.
      * @param selectKeyCallback callback, which will receive the users choice of which keys will be backed up.
-     * @throws InterruptedException if the connection is interrupted.
+     * @throws InterruptedException if the thread is interrupted.
      * @throws PubSubException.NotALeafNodeException if the private node is not a {@link LeafNode}.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
@@ -325,7 +325,7 @@ public final class OpenPgpManager extends Manager {
      *
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
-     * @throws InterruptedException if the connection gets interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws SmackException.NoResponseException if the server doesn't respond.
      * @throws SmackException.NotLoggedInException if we are not logged in.
      */
@@ -344,7 +344,7 @@ public final class OpenPgpManager extends Manager {
      *
      * @return fingerprint of the restored secret key
      *
-     * @throws InterruptedException if the connection gets interrupted.
+     * @throws InterruptedException if the thread gets interrupted.
      * @throws PubSubException.NotALeafNodeException if the private node is not a {@link LeafNode}.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.

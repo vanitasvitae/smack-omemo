@@ -95,7 +95,7 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
      * @return true if contact announces support, otherwise false.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
      * @throws SmackException.NotConnectedException if we are not connected
-     * @throws InterruptedException if the connection gets interrupted
+     * @throws InterruptedException if the thread gets interrupted
      * @throws SmackException.NoResponseException if the server doesn't respond
      */
     public boolean contactSupportsOxInstantMessaging(BareJid jid)
@@ -111,7 +111,7 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
      * @return true if contact announces support, otherwise false.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error
      * @throws SmackException.NotConnectedException if we are not connected
-     * @throws InterruptedException if the connection is interrupted
+     * @throws InterruptedException if the thread is interrupted
      * @throws SmackException.NoResponseException if the server doesn't respond
      */
     public boolean contactSupportsOxInstantMessaging(OpenPgpContact contact)
@@ -152,7 +152,7 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
      *
      * @param contact contact capable of OpenPGP for XMPP: Instant Messaging.
      * @param body message body.
-     * @throws InterruptedException if the connection is interrupted
+     * @throws InterruptedException if the thread is interrupted
      * @throws MissingOpenPgpKeyPairException if we cannot access our signing key
      * @throws IOException IO is dangerous
      * @throws SmackException.NotConnectedException if we are not connected
