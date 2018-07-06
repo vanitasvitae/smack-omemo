@@ -27,7 +27,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.jxmpp.jid.BareJid;
-import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 
 public abstract class AbstractPainlessOpenPgpStore implements PainlessOpenPgpStore {
 

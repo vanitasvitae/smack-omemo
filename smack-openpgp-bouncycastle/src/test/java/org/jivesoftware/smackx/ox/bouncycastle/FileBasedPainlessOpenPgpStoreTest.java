@@ -41,8 +41,8 @@ import org.junit.Test;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.JidTestUtil;
 import org.pgpainless.pgpainless.PGPainless;
-import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
 import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.pgpainless.util.BCUtil;
 
 public class FileBasedPainlessOpenPgpStoreTest extends OxTestSuite {

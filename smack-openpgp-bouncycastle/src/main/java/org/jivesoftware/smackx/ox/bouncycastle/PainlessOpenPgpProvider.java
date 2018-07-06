@@ -62,8 +62,8 @@ import org.pgpainless.pgpainless.PGPainless;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.pgpainless.decryption_verification.PainlessResult;
-import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
 import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.pgpainless.util.BCUtil;
 
 public class PainlessOpenPgpProvider implements OpenPgpProvider {

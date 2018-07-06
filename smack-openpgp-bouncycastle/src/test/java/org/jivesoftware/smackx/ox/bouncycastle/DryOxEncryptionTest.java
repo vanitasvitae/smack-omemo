@@ -52,7 +52,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jxmpp.jid.BareJid;
-import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
+import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.pgpainless.util.BCUtil;
 import org.xmlpull.v1.XmlPullParserException;
 

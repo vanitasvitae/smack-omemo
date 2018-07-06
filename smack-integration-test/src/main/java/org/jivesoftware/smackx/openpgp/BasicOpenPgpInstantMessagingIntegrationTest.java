@@ -43,7 +43,7 @@ import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
+import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 
 public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgpIntegrationTest {
 

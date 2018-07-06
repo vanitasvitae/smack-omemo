@@ -51,7 +51,7 @@ import org.bouncycastle.util.io.Streams;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.util.XmppDateTime;
-import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class FileBasedPainlessOpenPgpStore extends AbstractPainlessOpenPgpStore {
 

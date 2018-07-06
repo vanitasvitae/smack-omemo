@@ -56,7 +56,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
+import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 
 public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegrationTest {
 
