@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2017 Florian Schmaus.
+ * Copyright 2018 Paul Schaub
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,6 @@
  * limitations under the License.
  */
 /**
- * Providers for XEP-0373: OpenPGP for XMPP using Bouncycastle.
+ * Callback classes Secret key backups.
  */
-package org.jivesoftware.smackx.ox.bouncycastle.selection_strategy;
+package org.jivesoftware.smackx.ox.callback.backup;

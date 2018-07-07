@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2018 Paul Schaub
+ * Copyright 2018 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Callback classes for XEP-0373: OpenPGP for XMPP.
- */
-package org.jivesoftware.smackx.ox.callback;
+package org.jivesoftware.smackx.ox.callback.backup;
+
+public interface AskForBackupCodeCallback {
+
+    /**
+     * This callback is used to ask the user to provide a backup code.
+     * The backup code must follow the format described in XEP-0373 §5.3
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#sect-idm139662753819792">
+     *     XEP-0373 §5.3 about the format of the backup code</a>
+     *
+     * @return backup code provided by the user.
+     */
+    String askForBackupCode();
+}

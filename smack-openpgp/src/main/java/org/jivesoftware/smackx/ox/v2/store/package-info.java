@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2018 Paul Schaub
+ * Copyright 2017 Florian Schmaus.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,6 @@
  * limitations under the License.
  */
 /**
- * Callback classes for XEP-0373: OpenPGP for XMPP.
+ * Second iteration.
  */
-package org.jivesoftware.smackx.ox.callback;
+package org.jivesoftware.smackx.ox.v2.store;

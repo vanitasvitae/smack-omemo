@@ -14,23 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.callback;
+package org.jivesoftware.smackx.ox.callback.backup;
 
 import java.util.Set;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
 /**
- * Callback to let the user decide which key from a backup they want to restore.
+ * Callback to allow the user to decide, which locally available secret keys they want to include in a backup.
  */
-public interface SecretKeyRestoreSelectionCallback {
+public interface SecretKeyBackupSelectionCallback {
 
     /**
-     * Let the user choose, which SecretKey they want to restore as the new primary OpenPGP signing key.
-     * @param availableSecretKeys {@link Set} of {@link OpenPgpV4Fingerprint}s of the keys which are contained
+     * Let the user decide, which secret keys they want to backup.
+     *
+     * @param availableSecretKeys {@link Set} of {@link OpenPgpV4Fingerprint}s of locally available
+     *                                       OpenPGP secret keys.
+     * @return {@link Set} which contains the {@link OpenPgpV4Fingerprint}s the user decided to include
      *                                       in the backup.
-     * @return {@link OpenPgpV4Fingerprint} of the key the user wants to restore as the new primary
-     *                                     signing key.
      */
-    OpenPgpV4Fingerprint selectSecretKeyToRestore(Set<OpenPgpV4Fingerprint> availableSecretKeys);
+    Set<OpenPgpV4Fingerprint> selectKeysToBackup(Set<OpenPgpV4Fingerprint> availableSecretKeys);
 }

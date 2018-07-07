@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2018 Paul Schaub
+ * Copyright 2017 Florian Schmaus, 2018 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Callback classes for XEP-0373: OpenPGP for XMPP.
- */
-package org.jivesoftware.smackx.ox.callback;
+package org.jivesoftware.smackx.ox.v2.store;
+
+import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+
+import org.jxmpp.jid.BareJid;
+
+public interface OpenPgpTrustStore {
+
+    Trust getTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint);
+
+    void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust);
+
+    enum Trust {
+        trusted,
+        untrusted,
+        undecided
+    }
+}

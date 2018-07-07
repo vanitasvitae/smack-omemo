@@ -14,7 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.callback;
+package org.jivesoftware.smackx.ox.callback.backup;
 
-public interface SmackMissingOpenPgpPublicKeyCallback {
+public interface DisplayBackupCodeCallback {
+
+    /**
+     * This method is used to provide a client access to the generated backup code.
+     * The client can then go ahead and display the code to the user.
+     * The backup code follows the format described in XEP-0373 §5.3
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0373.html#sect-idm139662753819792">
+     *     XEP-0373 §5.3 about the format of the backup code</a>
+     *
+     *  @param backupCode backup code
+     */
+    void displayBackupCode(String backupCode);
 }

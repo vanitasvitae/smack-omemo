@@ -36,8 +36,7 @@ import java.util.logging.Logger;
 import org.jivesoftware.smack.util.MultiMap;
 import org.jivesoftware.smackx.ox.OpenPgpProvider;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
-import org.jivesoftware.smackx.ox.bouncycastle.selection_strategy.BareJidUserId;
-import org.jivesoftware.smackx.ox.callback.SmackMissingOpenPgpPublicKeyCallback;
+import org.jivesoftware.smackx.ox.callback.backup.SmackMissingOpenPgpPublicKeyCallback;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
@@ -45,6 +44,7 @@ import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
+import org.jivesoftware.smackx.ox.selection_strategy.BareJidUserId;
 import org.jivesoftware.smackx.ox.util.DecryptedBytesAndMetadata;
 import org.jivesoftware.smackx.ox.util.KeyBytesAndFingerprint;
 

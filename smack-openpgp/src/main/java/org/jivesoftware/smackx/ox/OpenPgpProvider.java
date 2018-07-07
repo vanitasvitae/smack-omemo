@@ -22,7 +22,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
 import org.jivesoftware.smack.util.MultiMap;
-import org.jivesoftware.smackx.ox.callback.SmackMissingOpenPgpPublicKeyCallback;
+import org.jivesoftware.smackx.ox.callback.backup.SmackMissingOpenPgpPublicKeyCallback;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;

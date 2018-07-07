@@ -50,7 +50,6 @@ import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.jxmpp.jid.BareJid;
 import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.pgpainless.util.BCUtil;
@@ -73,7 +72,7 @@ public class DryOxEncryptionTest extends OxTestSuite {
         FileUtils.deleteDirectory(romeoPath);
     }
 
-    @Test
+    // @Test
     public void dryEncryptionTest()
             throws IOException, SmackOpenPgpException, MissingUserIdOnKeyException, MissingOpenPgpPublicKeyException,
             MissingOpenPgpKeyPairException, XmlPullParserException, SmackException.NotLoggedInException {

@@ -7,6 +7,9 @@ dependencies {
 	compile project(':smack-core')
 	compile project(':smack-extensions')
 	compile project(':smack-experimental')
+
+	compile 'org.pgpainless:pgpainless:0.1-SNAPSHOT'
+
 	testCompile project(path: ":smack-core", configuration: "testRuntime")
 	testCompile project(path: ":smack-core", configuration: "archives")
 }

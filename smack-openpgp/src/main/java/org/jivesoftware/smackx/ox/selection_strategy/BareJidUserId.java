@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.bouncycastle.selection_strategy;
+package org.jivesoftware.smackx.ox.selection_strategy;
 
 import java.util.Iterator;
 

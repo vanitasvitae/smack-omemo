@@ -21,6 +21,9 @@ import java.nio.charset.Charset;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smackx.ox.util.Util;
 
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.util.encoders.Hex;
+
 /**
  * This class represents an hex encoded, uppercase OpenPGP v4 fingerprint.
  */
@@ -47,6 +50,10 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
 
     public OpenPgpV4Fingerprint(byte[] bytes) {
         this(new String(bytes, Charset.forName("UTF-8")));
+    }
+
+    public OpenPgpV4Fingerprint(PGPPublicKey key) {
+        this(Hex.encode(key.getFingerprint()));
     }
 
     /**
