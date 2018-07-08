@@ -1,10 +1,11 @@
-package org.jivesoftware.smackx.ox.v2.store;
+package org.jivesoftware.smackx.ox.v2.store.abstr;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+import org.jivesoftware.smackx.ox.v2.store.definition.OpenPgpTrustStore;
 
 import org.jxmpp.jid.BareJid;
 

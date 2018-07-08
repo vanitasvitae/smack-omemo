@@ -19,11 +19,11 @@ package org.jivesoftware.smackx.ox.v2.store.filebased;
 import java.io.File;
 
 import org.jivesoftware.smack.util.Objects;
-import org.jivesoftware.smackx.ox.v2.store.OpenPgpStore;
+import org.jivesoftware.smackx.ox.v2.store.abstr.AbstractOpenPgpStore;
 
 import org.jxmpp.jid.BareJid;
 
-public class FileBasedOpenPgpStore extends OpenPgpStore {
+public class FileBasedOpenPgpStore extends AbstractOpenPgpStore {
 
     public FileBasedOpenPgpStore(File basePath) {
         super(new FileBasedOpenPgpKeyStore(basePath),

@@ -14,20 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.v2.store;
+package org.jivesoftware.smackx.ox.v2.store.abstr;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.Observable;
 
+import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smackx.ox.OpenPgpContact;
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.callback.SecretKeyPassphraseCallback;
-import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
+import org.jivesoftware.smackx.ox.v2.store.definition.OpenPgpKeyStore;
+import org.jivesoftware.smackx.ox.v2.store.definition.OpenPgpMetadataStore;
+import org.jivesoftware.smackx.ox.v2.store.definition.OpenPgpStore;
+import org.jivesoftware.smackx.ox.v2.store.definition.OpenPgpTrustStore;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -37,24 +42,26 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.jxmpp.jid.BareJid;
 import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 
-public abstract class OpenPgpStore implements OpenPgpKeyStore, OpenPgpMetadataStore, OpenPgpTrustStore {
+public abstract class AbstractOpenPgpStore extends Observable implements OpenPgpStore {
 
     protected final OpenPgpKeyStore keyStore;
     protected final OpenPgpMetadataStore metadataStore;
     protected final OpenPgpTrustStore trustStore;
 
     protected SecretKeyPassphraseCallback secretKeyPassphraseCallback;
+    protected SecretKeyRingProtector unlocker;
     protected final Map<BareJid, OpenPgpContact> contacts = new HashMap<>();
 
-    public OpenPgpStore(OpenPgpKeyStore keyStore,
-                        OpenPgpMetadataStore metadataStore,
-                        OpenPgpTrustStore trustStore) {
-        this.keyStore = keyStore;
-        this.metadataStore = metadataStore;
-        this.trustStore = trustStore;
+    protected AbstractOpenPgpStore(OpenPgpKeyStore keyStore,
+                                   OpenPgpMetadataStore metadataStore,
+                                   OpenPgpTrustStore trustStore) {
+        this.keyStore = Objects.requireNonNull(keyStore);
+        this.metadataStore = Objects.requireNonNull(metadataStore);
+        this.trustStore = Objects.requireNonNull(trustStore);
     }
 
-    public OpenPgpContact getContact(BareJid jid) {
+    @Override
+    public OpenPgpContact getOpenPgpContact(BareJid jid) {
         OpenPgpContact contact = contacts.get(jid);
         if (contact != null) {
             return contact;
@@ -64,11 +71,13 @@ public abstract class OpenPgpStore implements OpenPgpKeyStore, OpenPgpMetadataSt
         return null;
     }
 
+    @Override
     public void setKeyRingProtector(SecretKeyRingProtector protector) {
-
+        this.unlocker = protector;
     }
 
-    public void setUnknownSecretKeyPassphraseCallback(SecretKeyPassphraseCallback callback) {
+    @Override
+    public void setSecretKeyPassphraseCallback(SecretKeyPassphraseCallback callback) {
         this.secretKeyPassphraseCallback = callback;
     }
 
@@ -77,28 +86,8 @@ public abstract class OpenPgpStore implements OpenPgpKeyStore, OpenPgpMetadataSt
      */
 
     @Override
-    public PGPPublicKeyRingCollection readPublicKeysOf(BareJid owner) throws IOException, PGPException {
-        return keyStore.readPublicKeysOf(owner);
-    }
-
-    @Override
-    public void writePublicKeysOf(BareJid owner, PGPPublicKeyRingCollection publicKeys) throws IOException {
-        keyStore.writePublicKeysOf(owner, publicKeys);
-    }
-
-    @Override
     public PGPPublicKeyRingCollection getPublicKeysOf(BareJid owner) throws IOException, PGPException {
         return keyStore.getPublicKeysOf(owner);
-    }
-
-    @Override
-    public PGPSecretKeyRingCollection readSecretKeysOf(BareJid owner) throws IOException, PGPException {
-        return keyStore.readSecretKeysOf(owner);
-    }
-
-    @Override
-    public void writeSecretKeysOf(BareJid owner, PGPSecretKeyRingCollection secretKeys) throws IOException {
-        keyStore.writeSecretKeysOf(owner, secretKeys);
     }
 
     @Override
@@ -126,18 +115,13 @@ public abstract class OpenPgpStore implements OpenPgpKeyStore, OpenPgpMetadataSt
      */
 
     @Override
-    public Set<OpenPgpV4Fingerprint> getAnnouncedFingerprintsOf(BareJid contact) throws IOException {
+    public Map<OpenPgpV4Fingerprint, Date> getAnnouncedFingerprintsOf(BareJid contact) throws IOException {
         return metadataStore.getAnnouncedFingerprintsOf(contact);
     }
 
     @Override
-    public Set<OpenPgpV4Fingerprint> readAnnouncedFingerprintsOf(BareJid contact) throws IOException {
-        return metadataStore.readAnnouncedFingerprintsOf(contact);
-    }
-
-    @Override
-    public void writeAnnouncedFingerprintsOf(BareJid contact, PublicKeysListElement metadata) throws IOException {
-        metadataStore.writeAnnouncedFingerprintsOf(contact, metadata);
+    public void setAnnouncedFingerprintsOf(BareJid contact, Map<OpenPgpV4Fingerprint, Date> data) throws IOException {
+        metadataStore.setAnnouncedFingerprintsOf(contact, data);
     }
 
     /*
@@ -145,12 +129,12 @@ public abstract class OpenPgpStore implements OpenPgpKeyStore, OpenPgpMetadataSt
      */
 
     @Override
-    public Trust getTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint) {
+    public Trust getTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException {
         return trustStore.getTrust(owner, fingerprint);
     }
 
     @Override
-    public void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) {
+    public void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) throws IOException {
         trustStore.setTrust(owner, fingerprint, trust);
     }
 }

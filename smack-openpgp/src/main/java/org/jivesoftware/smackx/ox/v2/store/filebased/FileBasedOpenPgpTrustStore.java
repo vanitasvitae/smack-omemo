@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.util.Util;
-import org.jivesoftware.smackx.ox.v2.store.AbstractOpenPgpTrustStore;
+import org.jivesoftware.smackx.ox.v2.store.abstr.AbstractOpenPgpTrustStore;
 
 import org.jxmpp.jid.BareJid;
 

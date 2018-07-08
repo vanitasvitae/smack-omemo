@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.jivesoftware.smack.util.Objects;
-import org.jivesoftware.smackx.ox.v2.store.AbstractOpenPgpKeyStore;
+import org.jivesoftware.smackx.ox.v2.store.abstr.AbstractOpenPgpKeyStore;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;

@@ -16,22 +16,24 @@
  */
 package org.jivesoftware.smackx.ox.v2;
 
+import java.io.IOException;
 import java.util.Collection;
 
-import org.jivesoftware.smackx.ox.OpenPgpContact;
 import org.jivesoftware.smackx.ox.OpenPgpMessage;
 import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 
+import org.bouncycastle.openpgp.PGPException;
+
 public interface OpenPgpProvider {
 
-    OpenPgpElement signAndEncrypt(SigncryptElement element, Collection<OpenPgpContact> recipients);
+    OpenPgpElement signAndEncrypt(SigncryptElement element, OpenPgpSelf self, Collection<OpenPgpContact> recipients) throws IOException, PGPException;
 
-    OpenPgpElement sign(SignElement element);
+    OpenPgpElement sign(SignElement element, OpenPgpSelf self) throws IOException, PGPException;
 
-    OpenPgpElement encrypt(CryptElement element, Collection<OpenPgpContact> recipients);
+    OpenPgpElement encrypt(CryptElement element, OpenPgpSelf self, Collection<OpenPgpContact> recipients) throws IOException, PGPException;
 
-    OpenPgpMessage decryptAndOrVerify(OpenPgpElement element);
+    OpenPgpMessage decryptAndOrVerify(OpenPgpElement element, OpenPgpSelf self, OpenPgpContact sender) throws IOException, PGPException;
 }

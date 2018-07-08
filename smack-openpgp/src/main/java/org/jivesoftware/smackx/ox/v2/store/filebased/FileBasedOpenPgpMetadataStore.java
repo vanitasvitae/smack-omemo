@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.util.Util;
-import org.jivesoftware.smackx.ox.v2.store.AbstractOpenPgpMetadataStore;
+import org.jivesoftware.smackx.ox.v2.store.abstr.AbstractOpenPgpMetadataStore;
 
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.util.XmppDateTime;

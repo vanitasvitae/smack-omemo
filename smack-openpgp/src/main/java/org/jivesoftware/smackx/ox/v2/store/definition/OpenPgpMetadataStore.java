@@ -14,23 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.v2.store;
+package org.jivesoftware.smackx.ox.v2.store.definition;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
 import org.jxmpp.jid.BareJid;
 
-public interface OpenPgpTrustStore {
+public interface OpenPgpMetadataStore {
 
-    Trust getTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException;
+    Map<OpenPgpV4Fingerprint, Date> getAnnouncedFingerprintsOf(BareJid contact) throws IOException;
 
-    void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) throws IOException;
-
-    enum Trust {
-        trusted,
-        untrusted,
-        undecided
-    }
+    void setAnnouncedFingerprintsOf(BareJid contact, Map<OpenPgpV4Fingerprint, Date> data) throws IOException;
 }

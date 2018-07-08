@@ -16,8 +16,12 @@
  */
 package org.jivesoftware.smackx.ox.element;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
+import org.jivesoftware.smackx.ox.util.Util;
 
 public class OpenPgpElement implements ExtensionElement {
 
@@ -29,6 +33,10 @@ public class OpenPgpElement implements ExtensionElement {
 
     public OpenPgpElement(String base64EncodedOpenPgpMessage) {
         this.base64EncodedOpenPgpMessage = base64EncodedOpenPgpMessage;
+    }
+
+    public InputStream toInputStream() {
+        return new ByteArrayInputStream(base64EncodedOpenPgpMessage.getBytes(Util.UTF8));
     }
 
     public String getEncryptedBase64MessageContent() {

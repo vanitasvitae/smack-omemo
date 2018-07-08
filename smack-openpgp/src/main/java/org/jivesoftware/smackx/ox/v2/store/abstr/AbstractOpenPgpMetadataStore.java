@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.v2.store;
+package org.jivesoftware.smackx.ox.v2.store.abstr;
 
 import java.io.IOException;
 import java.util.Date;
@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+import org.jivesoftware.smackx.ox.v2.store.definition.OpenPgpMetadataStore;
 
 import org.jxmpp.jid.BareJid;
 
