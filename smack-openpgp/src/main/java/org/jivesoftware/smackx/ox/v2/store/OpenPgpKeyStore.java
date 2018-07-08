@@ -32,15 +32,9 @@ import org.jxmpp.jid.BareJid;
 
 public interface OpenPgpKeyStore {
 
-    PGPPublicKeyRingCollection readPublicKeysOf(BareJid owner) throws IOException, PGPException;
 
-    void writePublicKeysOf(BareJid owner, PGPPublicKeyRingCollection publicKeys) throws IOException;
 
     PGPPublicKeyRingCollection getPublicKeysOf(BareJid owner) throws IOException, PGPException;
-
-    PGPSecretKeyRingCollection readSecretKeysOf(BareJid owner) throws IOException, PGPException;
-
-    void writeSecretKeysOf(BareJid owner, PGPSecretKeyRingCollection secretKeys) throws IOException;
 
     PGPSecretKeyRingCollection getSecretKeysOf(BareJid owner) throws IOException, PGPException;
 

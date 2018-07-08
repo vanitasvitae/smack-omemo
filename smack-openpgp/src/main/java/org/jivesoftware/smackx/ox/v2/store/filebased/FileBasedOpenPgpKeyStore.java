@@ -21,6 +21,7 @@ import static org.jivesoftware.smackx.ox.util.FileUtils.prepareFileOutputStream;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -48,17 +49,41 @@ public class FileBasedOpenPgpKeyStore extends AbstractOpenPgpKeyStore {
     @Override
     public void writePublicKeysOf(BareJid owner, PGPPublicKeyRingCollection publicKeys) throws IOException {
         File file = getPublicKeyRingPath(owner);
-        OutputStream outputStream = prepareFileOutputStream(file);
-        publicKeys.encode(outputStream);
-        outputStream.close();
+        OutputStream outputStream = null;
+        try {
+            outputStream = prepareFileOutputStream(file);
+            publicKeys.encode(outputStream);
+            outputStream.close();
+        } catch (IOException e) {
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException ignored) {
+                    // Don't care
+                }
+            }
+            throw e;
+        }
     }
 
     @Override
     public void writeSecretKeysOf(BareJid owner, PGPSecretKeyRingCollection secretKeys) throws IOException {
         File file = getSecretKeyRingPath(owner);
-        OutputStream outputStream = prepareFileOutputStream(file);
-        secretKeys.encode(outputStream);
-        outputStream.close();
+        OutputStream outputStream = null;
+        try {
+            outputStream = prepareFileOutputStream(file);
+            secretKeys.encode(outputStream);
+            outputStream.close();
+        } catch (IOException e) {
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException ignored) {
+                    // Don't care
+                }
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -69,7 +94,7 @@ public class FileBasedOpenPgpKeyStore extends AbstractOpenPgpKeyStore {
         FileInputStream inputStream;
         try {
             inputStream = prepareFileInputStream(file);
-        } catch (IOException e) {
+        } catch (FileNotFoundException e) {
             return null;
         }
 
@@ -85,7 +110,7 @@ public class FileBasedOpenPgpKeyStore extends AbstractOpenPgpKeyStore {
         FileInputStream inputStream;
         try {
             inputStream = prepareFileInputStream(file);
-        } catch (IOException e) {
+        } catch (FileNotFoundException e) {
             return null;
         }
 

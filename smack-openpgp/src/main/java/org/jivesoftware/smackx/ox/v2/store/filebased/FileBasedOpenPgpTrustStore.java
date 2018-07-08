@@ -16,18 +16,24 @@
  */
 package org.jivesoftware.smackx.ox.v2.store.filebased;
 
-import static org.jivesoftware.smackx.ox.util.FileUtils.prepareFileInputStream;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
-import org.jivesoftware.smackx.ox.v2.store.OpenPgpTrustStore;
+import org.jivesoftware.smackx.ox.util.Util;
+import org.jivesoftware.smackx.ox.v2.store.AbstractOpenPgpTrustStore;
 
 import org.jxmpp.jid.BareJid;
 
-public class FileBasedOpenPgpTrustStore implements OpenPgpTrustStore {
+public class FileBasedOpenPgpTrustStore extends AbstractOpenPgpTrustStore {
+
+    private static final Logger LOGGER = Logger.getLogger(FileBasedOpenPgpTrustStore.class.getName());
 
     private final File basePath;
 
@@ -40,20 +46,72 @@ public class FileBasedOpenPgpTrustStore implements OpenPgpTrustStore {
     }
 
     @Override
-    public Trust getTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint) {
+    protected Trust readTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException {
         File file = getTrustPath(owner, fingerprint);
+        BufferedReader reader = null;
         try {
-            InputStream inputStream = prepareFileInputStream(file);
-            return Trust.trusted;
+            reader = Files.newBufferedReader(file.toPath(), Util.UTF8);
 
+            Trust trust = null;
+            String line; int lineNr = 0;
+            while ((line = reader.readLine()) != null) {
+                lineNr++;
+                try {
+                    trust = Trust.valueOf(line);
+                    break;
+                } catch (IllegalArgumentException e) {
+                    LOGGER.log(Level.WARNING, "Skipping invalid trust record in line " + lineNr + " of file " +
+                            file.getAbsolutePath());
+                }
+            }
+            reader.close();
+            return trust != null ? trust : Trust.undecided;
         } catch (IOException e) {
-            return Trust.undecided;
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                    // Don't care
+                }
+            }
+
+            if (e instanceof FileNotFoundException) {
+                return Trust.undecided;
+            }
+            throw e;
         }
     }
 
     @Override
-    public void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) {
+    protected void writeTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) throws IOException {
+        File file = getTrustPath(owner, fingerprint);
 
+        if (!file.exists()) {
+            if (!file.createNewFile()) {
+                throw new IOException("Cannot create file " + file.getAbsolutePath());
+            }
+        } else {
+            if (file.isDirectory()) {
+                throw new IOException("File " + file.getAbsolutePath() + " is a directory.");
+            }
+        }
+
+        BufferedWriter writer = null;
+        try {
+            writer = Files.newBufferedWriter(file.toPath(), Util.UTF8);
+            writer.write(trust.toString());
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException ignored) {
+                    // Don't care
+                }
+            }
+            throw e;
+        }
     }
 
     private File getTrustPath(BareJid owner, OpenPgpV4Fingerprint fingerprint) {

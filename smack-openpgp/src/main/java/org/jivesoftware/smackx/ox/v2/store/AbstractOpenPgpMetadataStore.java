@@ -38,4 +38,14 @@ public abstract class AbstractOpenPgpMetadataStore implements OpenPgpMetadataSto
         }
         return fingerprints;
     }
+
+    @Override
+    public void setAnnouncedFingerprintsOf(BareJid contact, Map<OpenPgpV4Fingerprint, Date> data) throws IOException {
+        announcedFingerprints.put(contact, data);
+        writeAnnouncedFingerprintsOf(contact, data);
+    }
+
+    protected abstract Map<OpenPgpV4Fingerprint, Date> readAnnouncedFingerprintsOf(BareJid contact) throws IOException;
+
+    protected abstract void writeAnnouncedFingerprintsOf(BareJid contact, Map<OpenPgpV4Fingerprint, Date> metadata) throws IOException;
 }

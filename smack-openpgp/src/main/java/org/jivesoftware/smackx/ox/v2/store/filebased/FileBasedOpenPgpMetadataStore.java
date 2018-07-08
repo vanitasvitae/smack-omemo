@@ -29,7 +29,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
-import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.util.Util;
 import org.jivesoftware.smackx.ox.v2.store.AbstractOpenPgpMetadataStore;
 
@@ -55,15 +54,10 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
     }
 
     @Override
-    public void writeAnnouncedFingerprintsOf(BareJid contact, PublicKeysListElement metadata)
+    public void writeAnnouncedFingerprintsOf(BareJid contact, Map<OpenPgpV4Fingerprint, Date> metadata)
             throws IOException {
         File destination = getAnnouncedFingerprintsPath(contact);
-        Map<OpenPgpV4Fingerprint, Date> fingerprintDateMap = new HashMap<>();
-        for (OpenPgpV4Fingerprint fingerprint : metadata.getMetadata().keySet()) {
-            fingerprintDateMap.put(fingerprint, metadata.getMetadata().get(fingerprint).getDate());
-        }
-
-        writeFingerprintsAndDates(fingerprintDateMap, destination);
+        writeFingerprintsAndDates(metadata, destination);
     }
 
     private Map<OpenPgpV4Fingerprint, Date> readFingerprintsAndDates(File source) throws IOException {
@@ -120,6 +114,7 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
                         (date != null ? XmppDateTime.formatXEP0082Date(date) : XmppDateTime.formatXEP0082Date(new Date()));
                 writer.write(line);
             }
+            writer.flush();
             writer.close();
         } catch (IOException e) {
             if (writer != null) {

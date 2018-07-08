@@ -16,15 +16,17 @@
  */
 package org.jivesoftware.smackx.ox.v2.store;
 
+import java.io.IOException;
+
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
 import org.jxmpp.jid.BareJid;
 
 public interface OpenPgpTrustStore {
 
-    Trust getTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint);
+    Trust getTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException;
 
-    void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust);
+    void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) throws IOException;
 
     enum Trust {
         trusted,

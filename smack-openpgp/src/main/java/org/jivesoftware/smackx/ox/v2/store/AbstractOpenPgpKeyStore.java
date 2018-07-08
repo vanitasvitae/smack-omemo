@@ -43,6 +43,14 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
     protected Map<BareJid, PGPPublicKeyRingCollection> publicKeys = new HashMap<>();
     protected Map<BareJid, PGPSecretKeyRingCollection> secretKeys = new HashMap<>();
 
+    protected abstract PGPPublicKeyRingCollection readPublicKeysOf(BareJid owner) throws IOException, PGPException;
+
+    protected abstract void writePublicKeysOf(BareJid owner, PGPPublicKeyRingCollection publicKeys) throws IOException;
+
+    protected abstract PGPSecretKeyRingCollection readSecretKeysOf(BareJid owner) throws IOException, PGPException;
+
+    protected abstract void writeSecretKeysOf(BareJid owner, PGPSecretKeyRingCollection secretKeys) throws IOException;
+
     @Override
     public PGPPublicKeyRingCollection getPublicKeysOf(BareJid owner) throws IOException, PGPException {
         PGPPublicKeyRingCollection keys = publicKeys.get(owner);
