@@ -21,12 +21,14 @@ import static junit.framework.TestCase.assertEquals;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class PubSubDelegateTest extends SmackTestSuite {
 
     @Test
-    public void pubkeyNodeNameTest() {
+    public void pubkeyNodeNameTest() throws PGPException {
         OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint("486f7065207520646f6e2068617665204f43640a");
         assertEquals("urn:xmpp:openpgp:0:public-keys:486F7065207520646F6E2068617665204F43640A",
                 PubSubDelegate.PEP_NODE_PUBLIC_KEY(fingerprint));

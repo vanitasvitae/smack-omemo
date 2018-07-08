@@ -16,9 +16,8 @@
  */
 package org.jivesoftware.smackx.ox.exception;
 
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
-
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 /**
  * Exception that gets thrown when an operation is missing an OpenPGP public key.

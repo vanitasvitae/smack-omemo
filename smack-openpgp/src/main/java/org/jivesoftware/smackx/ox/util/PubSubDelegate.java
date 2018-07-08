@@ -31,7 +31,6 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.ox.OpenPgpManager;
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
@@ -46,6 +45,7 @@ import org.jivesoftware.smackx.pubsub.PubSubManager;
 import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class PubSubDelegate {
 

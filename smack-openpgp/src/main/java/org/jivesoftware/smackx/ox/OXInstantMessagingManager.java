@@ -172,7 +172,7 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
         StoreHint.set(message);
         message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
 
-        contact.addSignedEncryptedPayloadTo(message, payload);
+        //contact.addSignedEncryptedPayloadTo(message, payload);
 
         ChatManager.getInstanceFor(connection()).chatWith(contact.getJid().asEntityBareJidIfPossible()).send(message);
     }

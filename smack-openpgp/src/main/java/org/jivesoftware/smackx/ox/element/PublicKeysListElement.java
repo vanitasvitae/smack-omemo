@@ -25,7 +25,8 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smack.util.XmlStringBuilder;
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public final class PublicKeysListElement implements ExtensionElement {
 

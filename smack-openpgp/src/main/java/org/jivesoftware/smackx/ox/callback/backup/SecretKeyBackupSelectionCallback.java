@@ -18,7 +18,7 @@ package org.jivesoftware.smackx.ox.callback.backup;
 
 import java.util.Set;
 
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 /**
  * Callback to allow the user to decide, which locally available secret keys they want to include in a backup.

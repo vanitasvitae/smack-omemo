@@ -14,11 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.callback;
+package org.jivesoftware.smackx.ox.store.definition;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
+
+import org.jxmpp.jid.BareJid;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
-public interface SecretKeyPassphraseCallback {
+public interface OpenPgpMetadataStore {
 
-    char[] onPassphraseNeeded(OpenPgpV4Fingerprint fingerprint);
+    Map<OpenPgpV4Fingerprint, Date> getAnnouncedFingerprintsOf(BareJid contact) throws IOException;
+
+    void setAnnouncedFingerprintsOf(BareJid contact, Map<OpenPgpV4Fingerprint, Date> data) throws IOException;
 }

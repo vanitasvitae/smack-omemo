@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.ox;
 
 import static junit.framework.TestCase.assertEquals;
-
 import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
 
 import java.util.Date;
@@ -27,8 +26,10 @@ import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.provider.PublicKeysListElementProvider;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
 import org.jxmpp.util.XmppDateTime;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.xmlpull.v1.XmlPullParser;
 
 public class PublicKeysListElementTest extends SmackTestSuite {
@@ -70,7 +71,7 @@ public class PublicKeysListElementTest extends SmackTestSuite {
     }
 
     @Test
-    public void listBuilderRefusesDuplicatesTest() {
+    public void listBuilderRefusesDuplicatesTest() throws PGPException {
         PublicKeysListElement.Builder builder = PublicKeysListElement.builder();
         String fp40 = "49545320414c4c2041424f555420444120484558";
         Date oneDate = new Date(12337883234L);

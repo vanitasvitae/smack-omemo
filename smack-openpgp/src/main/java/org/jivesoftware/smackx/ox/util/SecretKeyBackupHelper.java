@@ -16,21 +16,18 @@
  */
 package org.jivesoftware.smackx.ox.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Set;
 
-import org.jivesoftware.smack.util.stringencoder.Base64;
-import org.jivesoftware.smackx.ox.OpenPgpProvider;
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
+import org.jivesoftware.smackx.ox.crypto.OpenPgpProvider;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
-import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class SecretKeyBackupHelper {
 
@@ -66,6 +63,7 @@ public class SecretKeyBackupHelper {
                                                     BareJid owner,
                                                     Set<OpenPgpV4Fingerprint> fingerprints,
                                                     String backupCode) throws SmackOpenPgpException, IOException {
+        /*
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         for (OpenPgpV4Fingerprint fingerprint : fingerprints) {
             try {
@@ -76,18 +74,22 @@ public class SecretKeyBackupHelper {
             }
         }
         return createSecretkeyElement(provider, buffer.toByteArray(), backupCode);
+        */
+        return null;
     }
 
     public static SecretkeyElement createSecretkeyElement(OpenPgpProvider provider,
                                                     byte[] keys,
                                                     String backupCode)
             throws SmackOpenPgpException, IOException {
-        byte[] encrypted = provider.symmetricallyEncryptWithPassword(keys, backupCode);
-        return new SecretkeyElement(Base64.encode(encrypted));
+        // byte[] encrypted = provider.symmetricallyEncryptWithPassword(keys, backupCode);
+        // return new SecretkeyElement(Base64.encode(encrypted));
+        return  null;
     }
 
     public static OpenPgpV4Fingerprint restoreSecretKeyBackup(OpenPgpProvider provider, SecretkeyElement backup, String backupCode)
             throws InvalidBackupCodeException, IOException, MissingUserIdOnKeyException, SmackOpenPgpException {
+        /*
         byte[] encrypted = Base64.decode(backup.getB64Data());
 
         byte[] decrypted;
@@ -98,5 +100,7 @@ public class SecretKeyBackupHelper {
         }
 
         return provider.importSecretKey(decrypted);
+        */
+        return null;
     }
 }

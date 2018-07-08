@@ -29,6 +29,7 @@ import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.provider.OpenPgpContentElementProvider;
 
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.xmlpull.v1.XmlPullParserException;
 
 /**
@@ -133,31 +134,31 @@ public class OpenPgpMessage {
 
     public static class Metadata {
 
-        private final Long encryptionKeyId;
-        private final Set<Long> validSignatureIds;
+        private final OpenPgpV4Fingerprint decryptionFingerprint;
+        private final Set<OpenPgpV4Fingerprint> validSignatureFingerprints;
 
-        public Metadata(Long encryptionKeyId, Set<Long> validSignatureIds) {
-            this.encryptionKeyId = encryptionKeyId;
-            this.validSignatureIds = validSignatureIds;
+        public Metadata(OpenPgpV4Fingerprint decryptionFingerprint, Set<OpenPgpV4Fingerprint> validSignatureFingerprints) {
+            this.decryptionFingerprint = decryptionFingerprint;
+            this.validSignatureFingerprints = validSignatureFingerprints;
         }
 
-        public Long getEncryptionKeyId() {
-            return encryptionKeyId;
+        public OpenPgpV4Fingerprint getDecryptionFingerprint() {
+            return decryptionFingerprint;
         }
 
-        public Set<Long> getValidSignatureIds() {
-            return new HashSet<>(validSignatureIds);
+        public Set<OpenPgpV4Fingerprint> getValidSignatureFingerprints() {
+            return new HashSet<>(validSignatureFingerprints);
         }
 
         public State getState() {
-            if (validSignatureIds.size() != 0) {
-                if (encryptionKeyId != null) {
+            if (validSignatureFingerprints.size() != 0) {
+                if (decryptionFingerprint != null) {
                     return State.signcrypt;
                 } else {
                     return State.sign;
                 }
             } else {
-                if (encryptionKeyId != null) {
+                if (decryptionFingerprint != null) {
                     return State.crypt;
                 } else {
                     throw new IllegalStateException("OpenPGP message appears to be neither encrypted, " +

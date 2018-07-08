@@ -14,11 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox.callback;
+package org.jivesoftware.smackx.ox.store.definition;
 
+import java.io.IOException;
+
+import org.jxmpp.jid.BareJid;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
-public interface SecretKeyPassphraseCallback {
+public interface OpenPgpTrustStore {
 
-    char[] onPassphraseNeeded(OpenPgpV4Fingerprint fingerprint);
+    Trust getTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException;
+
+    void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) throws IOException;
+
+    enum Trust {
+        trusted,
+        untrusted,
+        undecided
+    }
 }

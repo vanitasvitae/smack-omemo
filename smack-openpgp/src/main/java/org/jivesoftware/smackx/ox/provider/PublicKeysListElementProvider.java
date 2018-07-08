@@ -22,10 +22,10 @@ import static org.xmlpull.v1.XmlPullParser.START_TAG;
 import java.util.Date;
 
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 
 import org.jxmpp.util.XmppDateTime;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.xmlpull.v1.XmlPullParser;
 
 public final class PublicKeysListElementProvider extends ExtensionElementProvider<PublicKeysListElement> {
