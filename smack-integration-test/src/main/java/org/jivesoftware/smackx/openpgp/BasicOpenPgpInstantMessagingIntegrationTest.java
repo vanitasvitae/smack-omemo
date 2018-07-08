@@ -16,8 +16,6 @@
  */
 package org.jivesoftware.smackx.openpgp;
 
-import static junit.framework.TestCase.assertTrue;
-
 import java.io.File;
 import java.util.logging.Level;
 
@@ -29,11 +27,10 @@ import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.ox.OXInstantMessagingManager;
 import org.jivesoftware.smackx.ox.OpenPgpContact;
 import org.jivesoftware.smackx.ox.OpenPgpManager;
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
-import org.jivesoftware.smackx.ox.bouncycastle.FileBasedPainlessOpenPgpStore;
-import org.jivesoftware.smackx.ox.bouncycastle.PainlessOpenPgpProvider;
+import org.jivesoftware.smackx.ox.crypto.PainlessOpenPgpProvider;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.listener.OxMessageListener;
+import org.jivesoftware.smackx.ox.store.filebased.FileBasedOpenPgpStore;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
 
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
@@ -43,6 +40,7 @@ import org.igniterealtime.smack.inttest.util.SimpleResultSyncPoint;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 
 public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgpIntegrationTest {
@@ -75,11 +73,13 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         final SimpleResultSyncPoint bobReceivedMessage = new SimpleResultSyncPoint();
         final String body = "Writing integration tests is an annoying task, but it has to be done, so lets do it!!!";
 
-        FileBasedPainlessOpenPgpStore aliceStore = new FileBasedPainlessOpenPgpStore(aliceStorePath, new UnprotectedKeysProtector());
-        FileBasedPainlessOpenPgpStore bobStore = new FileBasedPainlessOpenPgpStore(bobStorePath, new UnprotectedKeysProtector());
+        FileBasedOpenPgpStore aliceStore = new FileBasedOpenPgpStore(aliceStorePath);
+        aliceStore.setKeyRingProtector(new UnprotectedKeysProtector());
+        FileBasedOpenPgpStore bobStore = new FileBasedOpenPgpStore(bobStorePath);
+        bobStore.setKeyRingProtector(new UnprotectedKeysProtector());
 
-        PainlessOpenPgpProvider aliceProvider = new PainlessOpenPgpProvider(alice, aliceStore);
-        PainlessOpenPgpProvider bobProvider = new PainlessOpenPgpProvider(bob, bobStore);
+        PainlessOpenPgpProvider aliceProvider = new PainlessOpenPgpProvider(aliceStore);
+        PainlessOpenPgpProvider bobProvider = new PainlessOpenPgpProvider(bobStore);
 
         OpenPgpManager aliceOpenPgp = OpenPgpManager.getInstanceFor(aliceConnection);
         OpenPgpManager bobOpenPgp = OpenPgpManager.getInstanceFor(bobConnection);
@@ -104,20 +104,13 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         aliceFingerprint = aliceOpenPgp.generateAndImportKeyPair(alice);
         bobFingerprint = bobOpenPgp.generateAndImportKeyPair(bob);
 
-        aliceStore.setSigningKeyPairFingerprint(aliceFingerprint);
-        bobStore.setSigningKeyPairFingerprint(bobFingerprint);
-
         aliceOpenPgp.announceSupportAndPublish();
         bobOpenPgp.announceSupportAndPublish();
 
         OpenPgpContact bobForAlice = aliceOpenPgp.getOpenPgpContact(bob.asEntityBareJidIfPossible());
         OpenPgpContact aliceForBob = bobOpenPgp.getOpenPgpContact(alice.asEntityBareJidIfPossible());
 
-        bobForAlice.updateKeys();
-        aliceForBob.updateKeys();
-
-        assertTrue(bobForAlice.getActiveKeys().contains(bobFingerprint));
-        assertTrue(aliceForBob.getActiveKeys().contains(aliceFingerprint));
+        // TODO: Update keys
 
         aliceInstantMessaging.sendOxMessage(bobForAlice, body);
 

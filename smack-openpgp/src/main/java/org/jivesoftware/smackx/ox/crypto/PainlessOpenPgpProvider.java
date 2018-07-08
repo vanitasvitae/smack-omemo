@@ -1,3 +1,19 @@
+/**
+ *
+ * Copyright 2018 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.jivesoftware.smackx.ox.crypto;
 
 import java.io.ByteArrayOutputStream;
@@ -14,6 +30,7 @@ import org.jivesoftware.smackx.ox.element.CryptElement;
 import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
+import org.jivesoftware.smackx.ox.store.definition.OpenPgpStore;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -24,6 +41,17 @@ import org.pgpainless.pgpainless.decryption_verification.PainlessResult;
 import org.pgpainless.pgpainless.encryption_signing.EncryptionStream;
 
 public class PainlessOpenPgpProvider implements OpenPgpProvider {
+
+    private final OpenPgpStore store;
+
+    public PainlessOpenPgpProvider(OpenPgpStore store) {
+        this.store = store;
+    }
+
+    @Override
+    public OpenPgpStore getStore() {
+        return store;
+    }
 
     @Override
     public OpenPgpElement signAndEncrypt(SigncryptElement element, OpenPgpSelf self, Collection<OpenPgpContact> recipients)

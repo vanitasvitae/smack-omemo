@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2017 Florian Schmaus, 2018 Paul Schaub.
+ * Copyright 2018 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
+import org.jivesoftware.smackx.ox.selection_strategy.BareJidUserId;
 import org.jivesoftware.smackx.ox.store.definition.OpenPgpKeyStore;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -37,12 +41,10 @@ import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
 
 public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
 
-    public AbstractOpenPgpKeyStore() {
+    private static final Logger LOGGER = Logger.getLogger(AbstractOpenPgpKeyStore.class.getName());
 
-    }
-
-    protected Map<BareJid, PGPPublicKeyRingCollection> publicKeys = new HashMap<>();
-    protected Map<BareJid, PGPSecretKeyRingCollection> secretKeys = new HashMap<>();
+    protected Map<BareJid, PGPPublicKeyRingCollection> publicKeyRingCollections = new HashMap<>();
+    protected Map<BareJid, PGPSecretKeyRingCollection> secretKeyRingCollections = new HashMap<>();
 
     protected abstract PGPPublicKeyRingCollection readPublicKeysOf(BareJid owner) throws IOException, PGPException;
 
@@ -54,11 +56,11 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
 
     @Override
     public PGPPublicKeyRingCollection getPublicKeysOf(BareJid owner) throws IOException, PGPException {
-        PGPPublicKeyRingCollection keys = publicKeys.get(owner);
+        PGPPublicKeyRingCollection keys = publicKeyRingCollections.get(owner);
         if (keys == null) {
             keys = readPublicKeysOf(owner);
             if (keys != null) {
-                publicKeys.put(owner, keys);
+                publicKeyRingCollections.put(owner, keys);
             }
         }
         return keys;
@@ -66,14 +68,51 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
 
     @Override
     public PGPSecretKeyRingCollection getSecretKeysOf(BareJid owner) throws IOException, PGPException {
-        PGPSecretKeyRingCollection keys = secretKeys.get(owner);
+        PGPSecretKeyRingCollection keys = secretKeyRingCollections.get(owner);
         if (keys == null) {
             keys = readSecretKeysOf(owner);
             if (keys != null) {
-                secretKeys.put(owner, keys);
+                secretKeyRingCollections.put(owner, keys);
             }
         }
         return keys;
+    }
+
+    @Override
+    public void importSecretKey(BareJid owner, PGPSecretKeyRing secretKeys)
+            throws IOException, PGPException, MissingUserIdOnKeyException {
+
+        if (!new BareJidUserId.SecRingSelectionStrategy().accept(owner, secretKeys)) {
+            throw new MissingUserIdOnKeyException(owner, secretKeys.getPublicKey().getKeyID());
+        }
+
+        PGPSecretKeyRingCollection secretKeyRings = getSecretKeysOf(owner);
+        try {
+            secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, secretKeys);
+        } catch (IllegalArgumentException e) {
+            LOGGER.log(Level.INFO, "Skipping secret key ring " + Long.toHexString(secretKeys.getPublicKey().getKeyID()) +
+                    " as it is already in the key ring of " + owner.toString());
+        }
+        this.secretKeyRingCollections.put(owner, secretKeyRings);
+        writeSecretKeysOf(owner, secretKeyRings);
+    }
+
+    @Override
+    public void importPublicKey(BareJid owner, PGPPublicKeyRing publicKeys) throws IOException, PGPException, MissingUserIdOnKeyException {
+
+        if (!new BareJidUserId.PubRingSelectionStrategy().accept(owner, publicKeys)) {
+            throw new MissingUserIdOnKeyException(owner, publicKeys.getPublicKey().getKeyID());
+        }
+
+        PGPPublicKeyRingCollection publicKeyRings = getPublicKeysOf(owner);
+        try {
+            publicKeyRings = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRings, publicKeys);
+        } catch (IllegalArgumentException e) {
+            LOGGER.log(Level.INFO, "Skipping public key ring " + Long.toHexString(publicKeys.getPublicKey().getKeyID()) +
+                    " as it is already in the key ring of " + owner.toString());
+        }
+        this.publicKeyRingCollections.put(owner, publicKeyRings);
+        writePublicKeysOf(owner, publicKeyRings);
     }
 
     @Override

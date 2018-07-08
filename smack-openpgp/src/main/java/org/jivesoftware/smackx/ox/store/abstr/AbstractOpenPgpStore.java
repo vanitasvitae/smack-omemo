@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2017 Florian Schmaus, 2018 Paul Schaub.
+ * Copyright 2018 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import java.util.Observable;
 import org.jivesoftware.smack.util.Objects;
 import org.jivesoftware.smackx.ox.OpenPgpContact;
 import org.jivesoftware.smackx.ox.callback.SecretKeyPassphraseCallback;
+import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.store.definition.OpenPgpKeyStore;
 import org.jivesoftware.smackx.ox.store.definition.OpenPgpMetadataStore;
 import org.jivesoftware.smackx.ox.store.definition.OpenPgpStore;
@@ -113,6 +114,16 @@ public abstract class AbstractOpenPgpStore extends Observable implements OpenPgp
     @Override
     public PGPSecretKeyRing generateKeyRing(BareJid owner) throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return keyStore.generateKeyRing(owner);
+    }
+
+    @Override
+    public void importSecretKey(BareJid owner, PGPSecretKeyRing secretKeys) throws IOException, PGPException, MissingUserIdOnKeyException {
+        keyStore.importSecretKey(owner, secretKeys);
+    }
+
+    @Override
+    public void importPublicKey(BareJid owner, PGPPublicKeyRing publicKeys) throws IOException, PGPException, MissingUserIdOnKeyException {
+        keyStore.importPublicKey(owner, publicKeys);
     }
 
     /*

@@ -18,6 +18,7 @@ package org.jivesoftware.smackx.ox;
 
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.PEP_NODE_PUBLIC_KEYS;
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.PEP_NODE_PUBLIC_KEYS_NOTIFY;
+import static org.jivesoftware.smackx.ox.util.PubSubDelegate.publishPublicKey;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,16 +51,18 @@ import org.jivesoftware.smackx.ox.callback.backup.SecretKeyBackupSelectionCallba
 import org.jivesoftware.smackx.ox.callback.backup.SecretKeyRestoreSelectionCallback;
 import org.jivesoftware.smackx.ox.crypto.OpenPgpProvider;
 import org.jivesoftware.smackx.ox.element.CryptElement;
+import org.jivesoftware.smackx.ox.element.OpenPgpContentElement;
+import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
+import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingOpenPgpPublicKeyException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.NoBackupFoundException;
-import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.listener.internal.CryptElementReceivedListener;
 import org.jivesoftware.smackx.ox.listener.internal.SignElementReceivedListener;
 import org.jivesoftware.smackx.ox.listener.internal.SigncryptElementReceivedListener;
@@ -75,10 +78,15 @@ import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jivesoftware.smackx.pubsub.PubSubFeature;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.pgpainless.pgpainless.PGPainless;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
+import org.xmlpull.v1.XmlPullParserException;
 
 public final class OpenPgpManager extends Manager {
 
@@ -93,8 +101,6 @@ public final class OpenPgpManager extends Manager {
      * {@link OpenPgpProvider} responsible for processing keys, encrypting and decrypting messages and so on.
      */
     private OpenPgpProvider provider;
-
-    private OpenPgpStore store;
 
     private final Map<BareJid, OpenPgpContact> openPgpCapableContacts = new HashMap<>();
 
@@ -144,6 +150,10 @@ public final class OpenPgpManager extends Manager {
         this.provider = provider;
     }
 
+    OpenPgpProvider getProvider() {
+        return provider;
+    }
+
     /**
      * Get our OpenPGP self.
      *
@@ -151,8 +161,10 @@ public final class OpenPgpManager extends Manager {
      * @throws SmackException.NotLoggedInException if we are not logged in
      */
     public OpenPgpSelf getOpenPgpSelf() throws SmackException.NotLoggedInException {
+        throwIfNoProviderSet();
+
         if (self == null) {
-            self = new OpenPgpSelf(getJidOrThrow(), store);
+            self = new OpenPgpSelf(getJidOrThrow(), provider.getStore());
         }
 
         return self;
@@ -165,7 +177,6 @@ public final class OpenPgpManager extends Manager {
      *
      * @throws NoSuchAlgorithmException if we are missing an algorithm to generate a fresh key pair.
      * @throws NoSuchProviderException if we are missing a suitable {@link java.security.Provider}.
-     * @throws SmackOpenPgpException if something bad happens during key generation/loading.
      * @throws InterruptedException if the thread gets interrupted.
      * @throws PubSubException.NotALeafNodeException if one of the PubSub nodes is not a {@link LeafNode}.
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
@@ -174,33 +185,32 @@ public final class OpenPgpManager extends Manager {
      * @throws IOException IO is dangerous.
      * @throws InvalidAlgorithmParameterException if illegal algorithm parameters are used for key generation.
      * @throws SmackException.NotLoggedInException if we are not logged in.
+     * @throws PGPException if something goes wrong during key loading/generating
      */
     public void announceSupportAndPublish()
-            throws NoSuchAlgorithmException, NoSuchProviderException, SmackOpenPgpException,
-            InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
+            throws NoSuchAlgorithmException, NoSuchProviderException, InterruptedException,
+            PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
             SmackException.NotConnectedException, SmackException.NoResponseException, IOException,
-            InvalidAlgorithmParameterException, SmackException.NotLoggedInException {
+            InvalidAlgorithmParameterException, SmackException.NotLoggedInException, PGPException {
         throwIfNoProviderSet();
         throwIfNotAuthenticated();
 
-        BareJid ourJid = connection().getUser().asBareJid();
+        OpenPgpV4Fingerprint primaryFingerprint = getOurFingerprint();
 
-        // OpenPgpV4Fingerprint primaryFingerprint = getOurFingerprint();
-
-        // if (primaryFingerprint == null) {
-        //    primaryFingerprint = generateAndImportKeyPair(ourJid);
-        // }
+        if (primaryFingerprint == null) {
+            primaryFingerprint = generateAndImportKeyPair(getJidOrThrow());
+        }
 
         // Create <pubkey/> element
         PubkeyElement pubkeyElement;
-        // try {
-            // pubkeyElement = createPubkeyElement(ourJid, primaryFingerprint, new Date());
-        // } catch (MissingOpenPgpPublicKeyException e) {
-        //    throw new AssertionError("Cannot publish our public key, since it is missing (MUST NOT happen!)");
-       // }
+        try {
+            pubkeyElement = createPubkeyElement(getJidOrThrow(), primaryFingerprint, new Date());
+        } catch (MissingOpenPgpPublicKeyException e) {
+            throw new AssertionError("Cannot publish our public key, since it is missing (MUST NOT happen!)");
+        }
 
         // publish it
-        // publishPublicKey(connection(), pubkeyElement, primaryFingerprint);
+        publishPublicKey(connection(), pubkeyElement, primaryFingerprint);
 
         // Subscribe to public key changes
         // PEPManager.getInstanceFor(connection()).addPEPListener(metadataListener);
@@ -216,19 +226,20 @@ public final class OpenPgpManager extends Manager {
      * @throws NoSuchAlgorithmException if the JVM doesn't support one of the used algorithms.
      * @throws InvalidAlgorithmParameterException if the used algorithm parameters are invalid.
      * @throws NoSuchProviderException if we are missing a cryptographic provider.
-     * @throws SmackOpenPgpException in case of an OpenPGP error.
      */
     public OpenPgpV4Fingerprint generateAndImportKeyPair(BareJid ourJid)
             throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException,
-            SmackOpenPgpException, PGPException {
+            PGPException, IOException {
 
+        throwIfNoProviderSet();
+        OpenPgpStore store = provider.getStore();
         PGPSecretKeyRing keyPair = store.generateKeyRing(ourJid);
-        // try {
-            // provider.importSecretKey(ourJid, keyPair);
-        // } catch (MissingUserIdOnKeyException e) {
+        try {
+            store.importSecretKey(ourJid, keyPair);
+        } catch (MissingUserIdOnKeyException e) {
             // This should never throw, since we set our jid literally one line above this comment.
-       //     throw new AssertionError(e);
-       // }
+            throw new AssertionError(e);
+        }
 
         return new OpenPgpV4Fingerprint(keyPair);
     }
@@ -251,7 +262,8 @@ public final class OpenPgpManager extends Manager {
      * @return {@link OpenPgpContact}.
      */
     public OpenPgpContact getOpenPgpContact(EntityBareJid jid) {
-        return store.getOpenPgpContact(jid);
+        throwIfNoProviderSet();
+        return provider.getStore().getOpenPgpContact(jid);
     }
 
 
@@ -288,7 +300,6 @@ public final class OpenPgpManager extends Manager {
      * @throws SmackException.NotConnectedException if we are not connected.
      * @throws SmackException.NoResponseException if the server doesn't respond.
      * @throws SmackException.NotLoggedInException if we are not logged in.
-     * @throws SmackOpenPgpException in case of an OpenPGP exception.
      * @throws IOException IO is dangerous.
      * @throws SmackException.FeatureNotSupportedException if the server doesn't support the PubSub whitelist access model.
      */
@@ -296,21 +307,28 @@ public final class OpenPgpManager extends Manager {
                                         SecretKeyBackupSelectionCallback selectKeyCallback)
             throws InterruptedException, PubSubException.NotALeafNodeException,
             XMPPException.XMPPErrorException, SmackException.NotConnectedException, SmackException.NoResponseException,
-            SmackException.NotLoggedInException, SmackOpenPgpException, IOException,
-            SmackException.FeatureNotSupportedException {
+            SmackException.NotLoggedInException, IOException,
+            SmackException.FeatureNotSupportedException, PGPException, MissingOpenPgpKeyPairException {
         throwIfNoProviderSet();
         throwIfNotAuthenticated();
 
         BareJid ownJid = connection().getUser().asBareJid();
 
         String backupCode = SecretKeyBackupHelper.generateBackupPassword();
-        // Set<OpenPgpV4Fingerprint> availableKeyPairs = provider.getStore().getAvailableKeyPairFingerprints(ownJid);
-        // Set<OpenPgpV4Fingerprint> selectedKeyPairs = selectKeyCallback.selectKeysToBackup(availableKeyPairs);
 
-        // SecretkeyElement secretKey = SecretKeyBackupHelper.createSecretkeyElement(provider, ownJid, selectedKeyPairs, backupCode);
+        PGPSecretKeyRingCollection secretKeyRings = provider.getStore().getSecretKeysOf(ownJid);
 
-        // PubSubDelegate.depositSecretKey(connection(), secretKey);
-        // displayCodeCallback.displayBackupCode(backupCode);
+        Set<OpenPgpV4Fingerprint> availableKeyPairs = new HashSet<>();
+        for (PGPSecretKeyRing ring : secretKeyRings) {
+            availableKeyPairs.add(new OpenPgpV4Fingerprint(ring));
+        }
+
+        Set<OpenPgpV4Fingerprint> selectedKeyPairs = selectKeyCallback.selectKeysToBackup(availableKeyPairs);
+
+        SecretkeyElement secretKey = SecretKeyBackupHelper.createSecretkeyElement(provider, ownJid, selectedKeyPairs, backupCode);
+
+        PubSubDelegate.depositSecretKey(connection(), secretKey);
+        displayCodeCallback.displayBackupCode(backupCode);
     }
 
     /**
@@ -342,7 +360,6 @@ public final class OpenPgpManager extends Manager {
      * @throws XMPPException.XMPPErrorException in case of an XMPP protocol error.
      * @throws SmackException.NotConnectedException if we are not connected.
      * @throws SmackException.NoResponseException if the server doesn't respond.
-     * @throws SmackOpenPgpException if something goes wrong while restoring the secret key.
      * @throws InvalidBackupCodeException if the user-provided backup code is invalid.
      * @throws SmackException.NotLoggedInException if we are not logged in
      * @throws IOException IO is dangerous
@@ -350,11 +367,11 @@ public final class OpenPgpManager extends Manager {
      * @throws NoBackupFoundException if no secret key backup has been found
      */
     public OpenPgpV4Fingerprint restoreSecretKeyServerBackup(AskForBackupCodeCallback codeCallback,
-                                             SecretKeyRestoreSelectionCallback selectionCallback)
+                                                             SecretKeyRestoreSelectionCallback selectionCallback)
             throws InterruptedException, PubSubException.NotALeafNodeException, XMPPException.XMPPErrorException,
-            SmackException.NotConnectedException, SmackException.NoResponseException, SmackOpenPgpException,
+            SmackException.NotConnectedException, SmackException.NoResponseException,
             InvalidBackupCodeException, SmackException.NotLoggedInException, IOException, MissingUserIdOnKeyException,
-            NoBackupFoundException {
+            NoBackupFoundException, PGPException {
         throwIfNoProviderSet();
         throwIfNotAuthenticated();
         SecretkeyElement backup = PubSubDelegate.fetchSecretKey(connection());
@@ -364,8 +381,9 @@ public final class OpenPgpManager extends Manager {
 
         String backupCode = codeCallback.askForBackupCode();
 
-        OpenPgpV4Fingerprint fingerprint = SecretKeyBackupHelper.restoreSecretKeyBackup(provider, backup, backupCode);
-        return fingerprint;
+        PGPSecretKeyRing key = SecretKeyBackupHelper.restoreSecretKeyBackup(backup, backupCode);
+        provider.getStore().importSecretKey(getJidOrThrow(), key);
+        return new OpenPgpV4Fingerprint(key);
     }
 
     /**
@@ -394,21 +412,24 @@ public final class OpenPgpManager extends Manager {
     };
 
     private void processPublicKeysListElement(BareJid contact, PublicKeysListElement listElement) {
-        /*
-        OpenPgpContact openPgpContact = getOpenPgpContact(contact.asEntityBareJidIfPossible());
+
         try {
-            openPgpContact.updateKeys(listElement);
-        } catch (SmackOpenPgpException e) {
-            LOGGER.log(Level.WARNING, "Could not read key ring of contact " + contact, e);
+            PGPPublicKeyRingCollection contactsKeys = provider.getStore().getPublicKeysOf(contact);
+            for (OpenPgpV4Fingerprint fingerprint : listElement.getMetadata().keySet()) {
+                PGPPublicKeyRing key = contactsKeys.getPublicKeyRing(fingerprint.getKeyId());
+                if (key == null) {
+
+                }
+            }
+        } catch (PGPException | IOException e) {
+            LOGGER.log(Level.WARNING, "Could not read public keys of " + contact, e);
         }
-        */
     }
 
     private final IncomingChatMessageListener incomingOpenPgpMessageListener =
             new IncomingChatMessageListener() {
                 @Override
                 public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-                    /*
                     OpenPgpElement element = message.getExtension(OpenPgpElement.ELEMENT, OpenPgpElement.NAMESPACE);
                     if (element == null) {
                         // Message does not contain an OpenPgpElement -> discard
@@ -419,13 +440,11 @@ public final class OpenPgpManager extends Manager {
 
                     OpenPgpContentElement contentElement = null;
                     try {
-                        contentElement = contact.receive(element);
-                    } catch (SmackOpenPgpException e) {
+                        contentElement = provider.decryptAndOrVerify(element, self, contact).getOpenPgpContentElement();
+                    } catch (PGPException e) {
                         LOGGER.log(Level.WARNING, "Could not decrypt incoming OpenPGP encrypted message", e);
                     } catch (XmlPullParserException | IOException e) {
                         LOGGER.log(Level.WARNING, "Invalid XML content of incoming OpenPGP encrypted message", e);
-                    } catch (MissingOpenPgpKeyPairException e) {
-                        LOGGER.log(Level.WARNING, "Could not decrypt incoming OpenPGP encrypted message due to missing secret key", e);
                     }
 
                     if (contentElement instanceof SigncryptElement) {
@@ -452,7 +471,6 @@ public final class OpenPgpManager extends Manager {
                     else {
                         throw new AssertionError("Invalid element received: " + contentElement.getClass().getName());
                     }
-                    */
                 }
             };
 
@@ -468,12 +486,12 @@ public final class OpenPgpManager extends Manager {
      * @throws MissingUserIdOnKeyException if the key does not have an OpenPGP user-id of the form
      * "xmpp:juliet@capulet.lit" with the owners {@link BareJid}
      * @throws IOException row, row, row your byte gently down the {@link InputStream}
-     * @throws SmackOpenPgpException if the key cannot be deserialized
      */
     private void processPublicKey(PubkeyElement pubkeyElement, BareJid owner)
-            throws MissingUserIdOnKeyException, IOException, SmackOpenPgpException {
+            throws MissingUserIdOnKeyException, IOException, PGPException {
         byte[] base64 = pubkeyElement.getDataElement().getB64Data();
-        // provider.importPublicKey(owner, Base64.decode(base64));
+        PGPPublicKeyRing keyRing = PGPainless.readKeyRing().publicKeyRing(Base64.decode(base64));
+        provider.getStore().importPublicKey(owner, keyRing);
     }
 
     /**
@@ -490,10 +508,16 @@ public final class OpenPgpManager extends Manager {
     private PubkeyElement createPubkeyElement(BareJid owner,
                                               OpenPgpV4Fingerprint fingerprint,
                                               Date date)
-            throws MissingOpenPgpPublicKeyException {
-        // byte[] keyBytes = provider.getStore().getPublicKeyRingBytes(owner, fingerprint);
-        // return createPubkeyElement(keyBytes, date);
-        return null;
+            throws MissingOpenPgpPublicKeyException, IOException, PGPException {
+        PGPPublicKeyRingCollection publicKeyRingCollection = provider.getStore().getPublicKeysOf(owner);
+        if (publicKeyRingCollection != null) {
+            PGPPublicKeyRing keys = publicKeyRingCollection.getPublicKeyRing(fingerprint.getKeyId());
+            if (keys != null) {
+                byte[] keyBytes = keys.getEncoded(true);
+                return createPubkeyElement(keyBytes, date);
+            }
+        }
+        throw new MissingOpenPgpPublicKeyException(owner, fingerprint);
     }
 
     /**

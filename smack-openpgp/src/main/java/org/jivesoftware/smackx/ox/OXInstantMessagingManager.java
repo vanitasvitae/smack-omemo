@@ -18,6 +18,7 @@ package org.jivesoftware.smackx.ox;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,13 +35,14 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.eme.element.ExplicitMessageEncryptionElement;
 import org.jivesoftware.smackx.hints.element.StoreHint;
+import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
-import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
-import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
 import org.jivesoftware.smackx.ox.listener.OxMessageListener;
 import org.jivesoftware.smackx.ox.listener.internal.SigncryptElementReceivedListener;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
 
 /**
  * Entry point of Smacks API for XEP-0374: OpenPGP for XMPP: Instant Messaging.
@@ -55,10 +57,12 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
     private static final Map<XMPPConnection, OXInstantMessagingManager> INSTANCES = new WeakHashMap<>();
 
     private final Set<OxMessageListener> oxMessageListeners = new HashSet<>();
+    private final OpenPgpManager openPgpManager;
 
     private OXInstantMessagingManager(final XMPPConnection connection) {
         super(connection);
-        OpenPgpManager.getInstanceFor(connection).registerSigncryptReceivedListener(this);
+        openPgpManager = OpenPgpManager.getInstanceFor(connection);
+        openPgpManager.registerSigncryptReceivedListener(this);
         announceSupportForOxInstantMessaging();
     }
 
@@ -153,15 +157,13 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
      * @param contact contact capable of OpenPGP for XMPP: Instant Messaging.
      * @param body message body.
      * @throws InterruptedException if the thread is interrupted
-     * @throws MissingOpenPgpKeyPairException if we cannot access our signing key
      * @throws IOException IO is dangerous
      * @throws SmackException.NotConnectedException if we are not connected
-     * @throws SmackOpenPgpException in case of an OpenPGP error
      * @throws SmackException.NotLoggedInException if we are not logged in
      */
     public void sendOxMessage(OpenPgpContact contact, CharSequence body)
-            throws InterruptedException, MissingOpenPgpKeyPairException, IOException,
-            SmackException.NotConnectedException, SmackOpenPgpException, SmackException.NotLoggedInException {
+            throws InterruptedException, IOException,
+            SmackException.NotConnectedException, SmackException.NotLoggedInException, PGPException {
         Message message = new Message(contact.getJid());
         List<ExtensionElement> payload = new ArrayList<>();
         payload.add(new Message.Body(null, body.toString()));
@@ -172,7 +174,12 @@ public final class OXInstantMessagingManager extends Manager implements Signcryp
         StoreHint.set(message);
         message.setBody("This message is encrypted using XEP-0374: OpenPGP for XMPP: Instant Messaging.");
 
-        //contact.addSignedEncryptedPayloadTo(message, payload);
+        SigncryptElement signcryptElement = new SigncryptElement(Collections.<Jid>singleton(contact.jid), payload);
+
+        OpenPgpElement encrypted = openPgpManager.getProvider().signAndEncrypt(signcryptElement,
+                openPgpManager.getOpenPgpSelf(), Collections.singleton(contact));
+
+        message.addExtension(encrypted);
 
         ChatManager.getInstanceFor(connection()).chatWith(contact.getJid().asEntityBareJidIfPossible()).send(message);
     }

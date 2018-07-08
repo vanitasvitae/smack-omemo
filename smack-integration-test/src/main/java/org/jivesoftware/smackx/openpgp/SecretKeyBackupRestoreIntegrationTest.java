@@ -18,6 +18,7 @@ package org.jivesoftware.smackx.openpgp;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
@@ -34,21 +35,23 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.ox.OpenPgpManager;
-import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
-import org.jivesoftware.smackx.ox.bouncycastle.FileBasedPainlessOpenPgpStore;
-import org.jivesoftware.smackx.ox.bouncycastle.PainlessOpenPgpProvider;
+import org.jivesoftware.smackx.ox.OpenPgpSelf;
 import org.jivesoftware.smackx.ox.callback.backup.AskForBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.backup.DisplayBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.backup.SecretKeyBackupSelectionCallback;
 import org.jivesoftware.smackx.ox.callback.backup.SecretKeyRestoreSelectionCallback;
+import org.jivesoftware.smackx.ox.crypto.PainlessOpenPgpProvider;
 import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
+import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
 import org.jivesoftware.smackx.ox.exception.NoBackupFoundException;
-import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
+import org.jivesoftware.smackx.ox.store.definition.OpenPgpStore;
+import org.jivesoftware.smackx.ox.store.filebased.FileBasedOpenPgpStore;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
 import org.jivesoftware.smackx.pubsub.PubSubException;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.igniterealtime.smack.inttest.SmackIntegrationTest;
 import org.igniterealtime.smack.inttest.SmackIntegrationTestEnvironment;
 import org.igniterealtime.smack.inttest.TestNotPossibleException;
@@ -56,6 +59,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 
 public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegrationTest {
@@ -90,24 +94,29 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
     }
 
     @SmackIntegrationTest
-    public void test() throws SmackOpenPgpException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
+    public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, IOException, InterruptedException, PubSubException.NotALeafNodeException,
             SmackException.NoResponseException, SmackException.NotConnectedException, XMPPException.XMPPErrorException,
             SmackException.NotLoggedInException, SmackException.FeatureNotSupportedException,
-            MissingUserIdOnKeyException, NoBackupFoundException, InvalidBackupCodeException, PGPException {
+            MissingUserIdOnKeyException, NoBackupFoundException, InvalidBackupCodeException, PGPException, MissingOpenPgpKeyPairException {
 
-        FileBasedPainlessOpenPgpStore beforeStore = new FileBasedPainlessOpenPgpStore(beforePath, new UnprotectedKeysProtector());
-        PainlessOpenPgpProvider beforeProvider = new PainlessOpenPgpProvider(alice, beforeStore);
+        OpenPgpStore beforeStore = new FileBasedOpenPgpStore(beforePath);
+        beforeStore.setKeyRingProtector(new UnprotectedKeysProtector());
+        PainlessOpenPgpProvider beforeProvider = new PainlessOpenPgpProvider(beforeStore);
         OpenPgpManager openPgpManager = OpenPgpManager.getInstanceFor(aliceConnection);
         openPgpManager.setOpenPgpProvider(beforeProvider);
 
-        assertNull(beforeStore.getSigningKeyPairFingerprint());
+        OpenPgpSelf self = openPgpManager.getOpenPgpSelf();
+
+        assertNull(self.getSigningKeyFingerprint());
 
         OpenPgpV4Fingerprint keyFingerprint = openPgpManager.generateAndImportKeyPair(alice);
-        beforeStore.setSigningKeyPairFingerprint(keyFingerprint);
-        assertEquals(keyFingerprint, beforeStore.getSigningKeyPairFingerprint());
+        assertEquals(keyFingerprint, self.getSigningKeyFingerprint());
 
-        assertTrue(beforeStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
+        assertTrue(self.getSecretKeys().contains(keyFingerprint.getKeyId()));
+
+        PGPSecretKeyRing beforeKeys = beforeStore.getSecretKeyRing(alice, keyFingerprint);
+        assertNotNull(beforeKeys);
 
         openPgpManager.backupSecretKeyToServer(new DisplayBackupCodeCallback() {
             @Override
@@ -121,12 +130,15 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
             }
         });
 
-        FileBasedPainlessOpenPgpStore afterStore = new FileBasedPainlessOpenPgpStore(afterPath, new UnprotectedKeysProtector());
-        PainlessOpenPgpProvider afterProvider = new PainlessOpenPgpProvider(alice, afterStore);
+        FileBasedOpenPgpStore afterStore = new FileBasedOpenPgpStore(afterPath);
+        afterStore.setKeyRingProtector(new UnprotectedKeysProtector());
+        PainlessOpenPgpProvider afterProvider = new PainlessOpenPgpProvider(afterStore);
         openPgpManager.setOpenPgpProvider(afterProvider);
 
-        assertNull(afterStore.getSigningKeyPairFingerprint());
-        assertFalse(afterStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
+        self = openPgpManager.getOpenPgpSelf();
+
+        assertNull(self.getSigningKeyFingerprint());
+        assertFalse(self.getSecretKeys().contains(keyFingerprint.getKeyId()));
 
         OpenPgpV4Fingerprint fingerprint = openPgpManager.restoreSecretKeyServerBackup(new AskForBackupCodeCallback() {
             @Override
@@ -140,11 +152,12 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
             }
         });
 
-        assertTrue(afterStore.getAvailableKeyPairFingerprints(alice).contains(keyFingerprint));
+        assertTrue(self.getSecretKeys().contains(keyFingerprint.getKeyId()));
 
-        afterStore.setSigningKeyPairFingerprint(fingerprint);
+        assertEquals(keyFingerprint, self.getSigningKeyFingerprint());
 
-        assertEquals(keyFingerprint, afterStore.getSigningKeyPairFingerprint());
-        assertTrue(Arrays.equals(beforeStore.getSecretKeyRings(alice).getEncoded(), afterStore.getSecretKeyRings(alice).getEncoded()));
+        PGPSecretKeyRing afterKeys = afterStore.getSecretKeyRing(alice, keyFingerprint);
+        assertNotNull(afterKeys);
+        assertTrue(Arrays.equals(beforeKeys.getEncoded(), afterKeys.getEncoded()));
     }
 }

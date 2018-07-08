@@ -468,7 +468,8 @@ public class PubSubDelegate {
 
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException |
                 NoSuchFieldException e) {
-            throw new AssertionError("Using reflections to create a LeafNode and put it into PubSubManagers nodeMap failed.", e);
+            LOGGER.log(Level.SEVERE, "Using reflections to create a LeafNode and put it into PubSubManagers nodeMap failed.", e);
+            throw new AssertionError(e);
         }
     }
 }

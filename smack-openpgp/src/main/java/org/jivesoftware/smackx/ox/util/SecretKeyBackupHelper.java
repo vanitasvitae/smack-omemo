@@ -16,17 +16,22 @@
  */
 package org.jivesoftware.smackx.ox.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Set;
 
+import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.crypto.OpenPgpProvider;
 import org.jivesoftware.smackx.ox.element.SecretkeyElement;
 import org.jivesoftware.smackx.ox.exception.InvalidBackupCodeException;
-import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
-import org.jivesoftware.smackx.ox.exception.SmackOpenPgpException;
+import org.jivesoftware.smackx.ox.exception.MissingOpenPgpKeyPairException;
 
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.jxmpp.jid.BareJid;
+import org.pgpainless.pgpainless.PGPainless;
+import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class SecretKeyBackupHelper {
@@ -62,45 +67,41 @@ public class SecretKeyBackupHelper {
     public static SecretkeyElement createSecretkeyElement(OpenPgpProvider provider,
                                                     BareJid owner,
                                                     Set<OpenPgpV4Fingerprint> fingerprints,
-                                                    String backupCode) throws SmackOpenPgpException, IOException {
-        /*
+                                                    String backupCode) throws PGPException, IOException, MissingOpenPgpKeyPairException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
         for (OpenPgpV4Fingerprint fingerprint : fingerprints) {
-            try {
-                byte[] bytes = provider.getStore().getSecretKeyRingBytes(owner, fingerprint);
+
+                PGPSecretKeyRing key = provider.getStore().getSecretKeyRing(owner, fingerprint);
+                if (key == null) {
+                    throw new MissingOpenPgpKeyPairException(owner, fingerprint);
+                }
+
+                byte[] bytes = key.getEncoded();
                 buffer.write(bytes);
-            } catch (MissingOpenPgpKeyPairException | IOException e) {
-                throw new SmackOpenPgpException("Cannot backup secret key " + Long.toHexString(fingerprint.getKeyId()) + ".", e);
-            }
         }
         return createSecretkeyElement(provider, buffer.toByteArray(), backupCode);
-        */
-        return null;
     }
 
     public static SecretkeyElement createSecretkeyElement(OpenPgpProvider provider,
                                                     byte[] keys,
                                                     String backupCode)
-            throws SmackOpenPgpException, IOException {
-        // byte[] encrypted = provider.symmetricallyEncryptWithPassword(keys, backupCode);
-        // return new SecretkeyElement(Base64.encode(encrypted));
-        return  null;
+            throws PGPException, IOException {
+        byte[] encrypted = PGPainless.encryptWithPassword(keys, backupCode.toCharArray(), SymmetricKeyAlgorithm.AES_256);
+        return new SecretkeyElement(Base64.encode(encrypted));
     }
 
-    public static OpenPgpV4Fingerprint restoreSecretKeyBackup(OpenPgpProvider provider, SecretkeyElement backup, String backupCode)
-            throws InvalidBackupCodeException, IOException, MissingUserIdOnKeyException, SmackOpenPgpException {
-        /*
+    public static PGPSecretKeyRing restoreSecretKeyBackup(SecretkeyElement backup, String backupCode)
+            throws InvalidBackupCodeException, IOException, PGPException {
         byte[] encrypted = Base64.decode(backup.getB64Data());
 
         byte[] decrypted;
         try {
-            decrypted = provider.symmetricallyDecryptWithPassword(encrypted, backupCode);
-        } catch (IOException | SmackOpenPgpException e) {
+            decrypted = PGPainless.decryptWithPassword(encrypted, backupCode.toCharArray());
+        } catch (IOException | PGPException e) {
             throw new InvalidBackupCodeException("Could not decrypt secret key backup. Possibly wrong passphrase?", e);
         }
 
-        return provider.importSecretKey(decrypted);
-        */
-        return null;
+        return PGPainless.readKeyRing().secretKeyRing(decrypted);
     }
 }
