@@ -17,7 +17,8 @@
 package org.jivesoftware.smackx.ox.v2.store;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.Date;
+import java.util.Map;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
@@ -26,9 +27,9 @@ import org.jxmpp.jid.BareJid;
 
 public interface OpenPgpMetadataStore {
 
-    Set<OpenPgpV4Fingerprint> getAnnouncedFingerprintsOf(BareJid contact) throws IOException;
+    Map<OpenPgpV4Fingerprint, Date> getAnnouncedFingerprintsOf(BareJid contact) throws IOException;
 
-    Set<OpenPgpV4Fingerprint> readAnnouncedFingerprintsOf(BareJid contact) throws IOException;
+    Map<OpenPgpV4Fingerprint, Date> readAnnouncedFingerprintsOf(BareJid contact) throws IOException;
 
     void writeAnnouncedFingerprintsOf(BareJid contact, PublicKeysListElement metadata) throws IOException;
 

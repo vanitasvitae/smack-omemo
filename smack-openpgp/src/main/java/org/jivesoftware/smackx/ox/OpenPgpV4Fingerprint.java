@@ -16,10 +16,13 @@
  */
 package org.jivesoftware.smackx.ox;
 
+import javax.xml.bind.DatatypeConverter;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.util.Arrays;
 
 import org.jivesoftware.smack.util.Objects;
-import org.jivesoftware.smackx.ox.util.Util;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.util.encoders.Hex;
@@ -37,22 +40,22 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      *     XEP-0373 §4.1: The OpenPGP Public-Key Data Node about how to obtain the fingerprint</a>
      * @param fingerprint hexadecimal representation of the fingerprint.
      */
-    public OpenPgpV4Fingerprint(String fingerprint) {
+    public OpenPgpV4Fingerprint(String fingerprint) throws ParseException {
         String fp = Objects.requireNonNull(fingerprint)
                 .trim()
                 .toUpperCase();
         if (!isValid(fp)) {
-            throw new IllegalArgumentException("Fingerprint " + fingerprint +
-                    " does not appear to be a valid OpenPGP v4 fingerprint.");
+            throw new ParseException("Fingerprint " + fingerprint +
+                    " does not appear to be a valid OpenPGP v4 fingerprint.", 0);
         }
         this.fingerprint = fp;
     }
 
-    public OpenPgpV4Fingerprint(byte[] bytes) {
+    public OpenPgpV4Fingerprint(byte[] bytes) throws ParseException {
         this(new String(bytes, Charset.forName("UTF-8")));
     }
 
-    public OpenPgpV4Fingerprint(PGPPublicKey key) {
+    public OpenPgpV4Fingerprint(PGPPublicKey key) throws ParseException {
         this(Hex.encode(key.getFingerprint()));
     }
 
@@ -67,14 +70,18 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
 
     /**
      * Return the key id of the OpenPGP public key this {@link OpenPgpV4Fingerprint} belongs to.
-     * This method uses {@link Util#keyIdFromFingerprint(OpenPgpV4Fingerprint)}.
      *
      * @see <a href="https://tools.ietf.org/html/rfc4880#section-12.2">
      *     RFC-4880 §12.2: Key IDs and Fingerprints</a>
      * @return key id
      */
     public long getKeyId() {
-        return Util.keyIdFromFingerprint(this);
+        byte[] bytes = DatatypeConverter.parseHexBinary(this.toString());
+        byte[] lower8Bytes = Arrays.copyOfRange(bytes, 12, 20);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+        byteBuffer.put(lower8Bytes);
+        byteBuffer.flip();
+        return byteBuffer.getLong();
     }
 
     @Override

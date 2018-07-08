@@ -16,24 +16,32 @@
  */
 package org.jivesoftware.smackx.ox.v2.store.filebased;
 
-import static org.jivesoftware.smackx.ox.util.FileUtils.prepareFileInputStream;
-import static org.jivesoftware.smackx.ox.util.FileUtils.prepareFileOutputStream;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
+import java.nio.file.Files;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
+import org.jivesoftware.smackx.ox.util.Util;
 import org.jivesoftware.smackx.ox.v2.store.AbstractOpenPgpMetadataStore;
 
 import org.jxmpp.jid.BareJid;
+import org.jxmpp.util.XmppDateTime;
 
 public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore {
 
-    public static final String METADATA = "announced.list";
+    public static final String ANNOUNCED = "announced.list";
+    public static final String RETRIEVED = "retrieved.list";
+
+    private static final Logger LOGGER = Logger.getLogger(FileBasedOpenPgpMetadataStore.class.getName());
 
     private final File basePath;
 
@@ -42,17 +50,94 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
     }
 
     @Override
-    public Set<OpenPgpV4Fingerprint> readAnnouncedFingerprintsOf(BareJid contact) throws IOException {
-        InputStream inputStream = prepareFileInputStream(getMetadataPath(contact));
-        return null;
+    public Map<OpenPgpV4Fingerprint, Date> readAnnouncedFingerprintsOf(BareJid contact) throws IOException {
+        return readFingerprintsAndDates(getAnnouncedFingerprintsPath(contact));
     }
 
     @Override
-    public void writeAnnouncedFingerprintsOf(BareJid contact, PublicKeysListElement metadata) throws IOException {
-        OutputStream outputStream = prepareFileOutputStream(getMetadataPath(contact));
+    public void writeAnnouncedFingerprintsOf(BareJid contact, PublicKeysListElement metadata)
+            throws IOException {
+        File destination = getAnnouncedFingerprintsPath(contact);
+        Map<OpenPgpV4Fingerprint, Date> fingerprintDateMap = new HashMap<>();
+        for (OpenPgpV4Fingerprint fingerprint : metadata.getMetadata().keySet()) {
+            fingerprintDateMap.put(fingerprint, metadata.getMetadata().get(fingerprint).getDate());
+        }
+
+        writeFingerprintsAndDates(fingerprintDateMap, destination);
     }
 
-    private File getMetadataPath(BareJid contact) {
-        return new File(FileBasedOpenPgpStore.getContactsPath(basePath, contact), METADATA);
+    private Map<OpenPgpV4Fingerprint, Date> readFingerprintsAndDates(File source) throws IOException {
+        BufferedReader reader = null;
+        try {
+            reader = Files.newBufferedReader(source.toPath(), Util.UTF8);
+            Map<OpenPgpV4Fingerprint, Date> fingerprintDateMap = new HashMap<>();
+
+            String line; int lineNr = 0;
+            while ((line = reader.readLine()) != null) {
+                lineNr++;
+
+                line = line.trim();
+                String[] split = line.split(" ");
+                if (split.length != 2) {
+                    LOGGER.log(Level.FINE, "Skipping invalid line " + lineNr + " in file " + source.getAbsolutePath());
+                    continue;
+                }
+
+                try {
+                    OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(split[0]);
+                    Date date = XmppDateTime.parseXEP0082Date(split[1]);
+                    fingerprintDateMap.put(fingerprint, date);
+                } catch (ParseException e) {
+                    LOGGER.log(Level.WARNING, "Error parsing fingerprint/date touple in line " + lineNr +
+                            " of file " + source.getAbsolutePath(), e);
+                }
+            }
+
+            reader.close();
+            return fingerprintDateMap;
+
+        } catch (IOException e) {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                    // Don't care
+                }
+            }
+            throw e;
+        }
+    }
+
+    private void writeFingerprintsAndDates(Map<OpenPgpV4Fingerprint, Date> data, File destination)
+            throws IOException {
+
+        BufferedWriter writer = null;
+        try {
+            writer = Files.newBufferedWriter(destination.toPath(), Util.UTF8);
+            for (OpenPgpV4Fingerprint fingerprint : data.keySet()) {
+                Date date = data.get(fingerprint);
+                String line = fingerprint.toString() + " " +
+                        (date != null ? XmppDateTime.formatXEP0082Date(date) : XmppDateTime.formatXEP0082Date(new Date()));
+                writer.write(line);
+            }
+            writer.close();
+        } catch (IOException e) {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException ignored) {
+                    // Don't care
+                }
+            }
+            throw e;
+        }
+    }
+
+    private File getAnnouncedFingerprintsPath(BareJid contact) {
+        return new File(FileBasedOpenPgpStore.getContactsPath(basePath, contact), ANNOUNCED);
+    }
+
+    private File getRetrievedFingerprintsPath(BareJid contact) {
+        return new File(FileBasedOpenPgpStore.getContactsPath(basePath, contact), RETRIEVED);
     }
 }

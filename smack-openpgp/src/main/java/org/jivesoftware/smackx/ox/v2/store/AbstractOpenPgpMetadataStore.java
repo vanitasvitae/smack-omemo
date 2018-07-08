@@ -17,9 +17,9 @@
 package org.jivesoftware.smackx.ox.v2.store;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.jivesoftware.smackx.ox.OpenPgpV4Fingerprint;
 
@@ -27,11 +27,11 @@ import org.jxmpp.jid.BareJid;
 
 public abstract class AbstractOpenPgpMetadataStore implements OpenPgpMetadataStore {
 
-    private final Map<BareJid, Set<OpenPgpV4Fingerprint>> announcedFingerprints = new HashMap<>();
+    private final Map<BareJid, Map<OpenPgpV4Fingerprint, Date>> announcedFingerprints = new HashMap<>();
 
     @Override
-    public Set<OpenPgpV4Fingerprint> getAnnouncedFingerprintsOf(BareJid contact) throws IOException {
-        Set<OpenPgpV4Fingerprint> fingerprints = announcedFingerprints.get(contact);
+    public Map<OpenPgpV4Fingerprint, Date> getAnnouncedFingerprintsOf(BareJid contact) throws IOException {
+        Map<OpenPgpV4Fingerprint, Date> fingerprints = announcedFingerprints.get(contact);
         if (fingerprints == null) {
             fingerprints = readAnnouncedFingerprintsOf(contact);
             announcedFingerprints.put(contact, fingerprints);
