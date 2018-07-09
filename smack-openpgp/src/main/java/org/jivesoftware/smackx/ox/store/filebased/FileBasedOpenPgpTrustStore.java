@@ -21,11 +21,15 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.ox.store.abstr.AbstractOpenPgpTrustStore;
+import org.jivesoftware.smackx.ox.util.FileUtils;
 import org.jivesoftware.smackx.ox.util.Util;
 
 import org.jxmpp.jid.BareJid;
@@ -50,7 +54,9 @@ public class FileBasedOpenPgpTrustStore extends AbstractOpenPgpTrustStore {
         File file = getTrustPath(owner, fingerprint);
         BufferedReader reader = null;
         try {
-            reader = Files.newBufferedReader(file.toPath(), Util.UTF8);
+            InputStream inputStream = FileUtils.prepareFileInputStream(file);
+            InputStreamReader isr = new InputStreamReader(inputStream, Util.UTF8);
+            reader = new BufferedReader(isr);
 
             Trust trust = null;
             String line; int lineNr = 0;
@@ -98,7 +104,10 @@ public class FileBasedOpenPgpTrustStore extends AbstractOpenPgpTrustStore {
 
         BufferedWriter writer = null;
         try {
-            writer = Files.newBufferedWriter(file.toPath(), Util.UTF8);
+            OutputStream outputStream = FileUtils.prepareFileOutputStream(file);
+            OutputStreamWriter osw = new OutputStreamWriter(outputStream, Util.UTF8);
+            writer = new BufferedWriter(osw);
+
             writer.write(trust.toString());
             writer.flush();
             writer.close();

@@ -65,7 +65,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         }
 
         EncryptionStream cipherStream = PGPainless.createEncryptor().onOutputStream(cipherText)
-                .toRecipients(recipientKeys.toArray(new PGPPublicKeyRingCollection[]{}))
+                .toRecipients(recipientKeys.toArray(new PGPPublicKeyRingCollection[] {}))
                 .andToSelf(self.getAnnouncedPublicKeys())
                 .usingSecureAlgorithms()
                 .signWith(store.getKeyRingProtector(), self.getSigningKeyRing())
@@ -115,7 +115,7 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
         }
 
         EncryptionStream cipherStream = PGPainless.createEncryptor().onOutputStream(cipherText)
-                .toRecipients(recipientKeys.toArray(new PGPPublicKeyRingCollection[]{}))
+                .toRecipients(recipientKeys.toArray(new PGPPublicKeyRingCollection[] {}))
                 .andToSelf(self.getAnnouncedPublicKeys())
                 .usingSecureAlgorithms()
                 .doNotSign()

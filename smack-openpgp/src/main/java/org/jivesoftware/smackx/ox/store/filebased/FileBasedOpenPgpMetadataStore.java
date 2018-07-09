@@ -20,7 +20,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,9 +32,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jivesoftware.smackx.ox.store.abstr.AbstractOpenPgpMetadataStore;
+import org.jivesoftware.smackx.ox.util.FileUtils;
 import org.jivesoftware.smackx.ox.util.Util;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.util.XmppDateTime;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
@@ -68,7 +71,9 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
 
         BufferedReader reader = null;
         try {
-            reader = Files.newBufferedReader(source.toPath(), Util.UTF8);
+            InputStream inputStream = FileUtils.prepareFileInputStream(source);
+            InputStreamReader isr = new InputStreamReader(inputStream, Util.UTF8);
+            reader = new BufferedReader(isr);
             Map<OpenPgpV4Fingerprint, Date> fingerprintDateMap = new HashMap<>();
 
             String line; int lineNr = 0;
@@ -86,7 +91,7 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
                     OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(split[0]);
                     Date date = XmppDateTime.parseXEP0082Date(split[1]);
                     fingerprintDateMap.put(fingerprint, date);
-                } catch (PGPException | ParseException e) {
+                } catch (IllegalArgumentException | ParseException e) {
                     LOGGER.log(Level.WARNING, "Error parsing fingerprint/date touple in line " + lineNr +
                             " of file " + source.getAbsolutePath(), e);
                 }
@@ -127,7 +132,9 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
 
         BufferedWriter writer = null;
         try {
-            writer = Files.newBufferedWriter(destination.toPath(), Util.UTF8);
+            OutputStream outputStream = FileUtils.prepareFileOutputStream(destination);
+            OutputStreamWriter osw = new OutputStreamWriter(outputStream, Util.UTF8);
+            writer = new BufferedWriter(osw);
             for (OpenPgpV4Fingerprint fingerprint : data.keySet()) {
                 Date date = data.get(fingerprint);
                 String line = fingerprint.toString() + " " +
