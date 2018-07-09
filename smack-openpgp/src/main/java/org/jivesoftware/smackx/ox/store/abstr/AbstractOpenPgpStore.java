@@ -64,12 +64,11 @@ public abstract class AbstractOpenPgpStore extends Observable implements OpenPgp
     @Override
     public OpenPgpContact getOpenPgpContact(BareJid jid) {
         OpenPgpContact contact = contacts.get(jid);
-        if (contact != null) {
-            return contact;
+        if (contact == null) {
+            contact = new OpenPgpContact(jid, this);
+            contacts.put(jid, contact);
         }
-
-        // TODO
-        return null;
+        return contact;
     }
 
     @Override

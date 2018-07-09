@@ -29,7 +29,7 @@ public class FileUtils {
 
             // Create parent directory
             File parent = file.getParentFile();
-            if (!parent.mkdirs()) {
+            if (!parent.exists() && !parent.mkdirs()) {
                 throw new IOException("Cannot create directory " + parent.getAbsolutePath());
             }
 

@@ -38,6 +38,7 @@ import org.jxmpp.jid.BareJid;
 import org.pgpainless.pgpainless.PGPainless;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.pgpainless.util.BCUtil;
 
 public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
 
@@ -88,12 +89,17 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
 
         PGPSecretKeyRingCollection secretKeyRings = getSecretKeysOf(owner);
         try {
-            secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, secretKeys);
+            if (secretKeyRings != null) {
+                secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, secretKeys);
+            } else {
+                secretKeyRings = BCUtil.keyRingsToKeyRingCollection(secretKeys);
+            }
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.INFO, "Skipping secret key ring " + Long.toHexString(secretKeys.getPublicKey().getKeyID()) +
                     " as it is already in the key ring of " + owner.toString());
         }
         this.secretKeyRingCollections.put(owner, secretKeyRings);
+        importPublicKey(owner, BCUtil.publicKeyRingFromSecretKeyRing(secretKeys));
         writeSecretKeysOf(owner, secretKeyRings);
     }
 
@@ -106,7 +112,11 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
 
         PGPPublicKeyRingCollection publicKeyRings = getPublicKeysOf(owner);
         try {
-            publicKeyRings = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRings, publicKeys);
+            if (publicKeyRings != null) {
+                publicKeyRings = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRings, publicKeys);
+            } else {
+                publicKeyRings = BCUtil.keyRingsToKeyRingCollection(publicKeys);
+            }
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.INFO, "Skipping public key ring " + Long.toHexString(publicKeys.getPublicKey().getKeyID()) +
                     " as it is already in the key ring of " + owner.toString());

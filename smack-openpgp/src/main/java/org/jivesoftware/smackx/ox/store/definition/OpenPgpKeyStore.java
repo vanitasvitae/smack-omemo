@@ -33,8 +33,6 @@ import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public interface OpenPgpKeyStore {
 
-
-
     PGPPublicKeyRingCollection getPublicKeysOf(BareJid owner) throws IOException, PGPException;
 
     PGPSecretKeyRingCollection getSecretKeysOf(BareJid owner) throws IOException, PGPException;

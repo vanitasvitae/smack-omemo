@@ -62,6 +62,10 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
     }
 
     private Map<OpenPgpV4Fingerprint, Date> readFingerprintsAndDates(File source) throws IOException {
+        if (!source.exists() || source.isDirectory()) {
+            return new HashMap<>();
+        }
+
         BufferedReader reader = null;
         try {
             reader = Files.newBufferedReader(source.toPath(), Util.UTF8);
@@ -105,6 +109,21 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
 
     private void writeFingerprintsAndDates(Map<OpenPgpV4Fingerprint, Date> data, File destination)
             throws IOException {
+
+        if (!destination.exists()) {
+            File parent = destination.getParentFile();
+            if (!parent.exists() && !parent.mkdirs()) {
+                throw new IOException("Cannot create directory " + parent.getAbsolutePath());
+            }
+
+            if (!destination.createNewFile()) {
+                throw new IOException("Cannot create file " + destination.getAbsolutePath());
+            }
+        }
+
+        if (destination.isDirectory()) {
+            throw new IOException("File " + destination.getAbsolutePath() + " is a directory.");
+        }
 
         BufferedWriter writer = null;
         try {

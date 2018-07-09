@@ -110,7 +110,7 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         OpenPgpContact bobForAlice = aliceOpenPgp.getOpenPgpContact(bob.asEntityBareJidIfPossible());
         OpenPgpContact aliceForBob = bobOpenPgp.getOpenPgpContact(alice.asEntityBareJidIfPossible());
 
-        // TODO: Update keys
+        bobForAlice.updateKeys(aliceConnection);
 
         aliceInstantMessaging.sendOxMessage(bobForAlice, body);
 
