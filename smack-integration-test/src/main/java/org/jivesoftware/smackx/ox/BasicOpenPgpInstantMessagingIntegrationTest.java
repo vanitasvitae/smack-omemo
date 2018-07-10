@@ -75,8 +75,8 @@ public class BasicOpenPgpInstantMessagingIntegrationTest extends AbstractOpenPgp
         FileBasedOpenPgpStore bobStore = new FileBasedOpenPgpStore(bobStorePath);
         bobStore.setKeyRingProtector(new UnprotectedKeysProtector());
 
-        PainlessOpenPgpProvider aliceProvider = new PainlessOpenPgpProvider(aliceStore);
-        PainlessOpenPgpProvider bobProvider = new PainlessOpenPgpProvider(bobStore);
+        PainlessOpenPgpProvider aliceProvider = new PainlessOpenPgpProvider(aliceConnection, aliceStore);
+        PainlessOpenPgpProvider bobProvider = new PainlessOpenPgpProvider(bobConnection, bobStore);
 
         OpenPgpManager aliceOpenPgp = OpenPgpManager.getInstanceFor(aliceConnection);
         OpenPgpManager bobOpenPgp = OpenPgpManager.getInstanceFor(bobConnection);

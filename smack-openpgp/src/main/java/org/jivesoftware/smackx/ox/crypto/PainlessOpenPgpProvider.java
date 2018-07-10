@@ -21,7 +21,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.OpenPgpContact;
 import org.jivesoftware.smackx.ox.OpenPgpMessage;
@@ -31,6 +36,7 @@ import org.jivesoftware.smackx.ox.element.OpenPgpElement;
 import org.jivesoftware.smackx.ox.element.SignElement;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.store.definition.OpenPgpStore;
+import org.jivesoftware.smackx.pubsub.PubSubException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -42,9 +48,13 @@ import org.pgpainless.pgpainless.encryption_signing.EncryptionStream;
 
 public class PainlessOpenPgpProvider implements OpenPgpProvider {
 
+    private static final Logger LOGGER = Logger.getLogger(PainlessOpenPgpProvider.class.getName());
+
+    private final XMPPConnection connection;
     private final OpenPgpStore store;
 
-    public PainlessOpenPgpProvider(OpenPgpStore store) {
+    public PainlessOpenPgpProvider(XMPPConnection connection, OpenPgpStore store) {
+        this.connection = connection;
         this.store = store;
     }
 
@@ -136,6 +146,16 @@ public class PainlessOpenPgpProvider implements OpenPgpProvider {
     public OpenPgpMessage decryptAndOrVerify(OpenPgpElement element, OpenPgpSelf self, OpenPgpContact sender) throws IOException, PGPException {
         ByteArrayOutputStream plainText = new ByteArrayOutputStream();
         InputStream cipherText = element.toInputStream();
+
+        PGPPublicKeyRingCollection announcedPublicKeys = sender.getAnnouncedPublicKeys();
+        if (announcedPublicKeys == null) {
+            try {
+                sender.updateKeys(connection);
+                announcedPublicKeys = sender.getAnnouncedPublicKeys();
+            } catch (InterruptedException | PubSubException.NotAPubSubNodeException | PubSubException.NotALeafNodeException | XMPPException.XMPPErrorException | SmackException.NoResponseException | SmackException.NotConnectedException e) {
+                LOGGER.log(Level.WARNING, "Error fetching keys of " + sender.getJid(), e);
+            }
+        }
 
         DecryptionStream cipherStream = PGPainless.createDecryptor().onInputStream(cipherText)
                 .decryptWith(store.getKeyRingProtector(), self.getSecretKeys())

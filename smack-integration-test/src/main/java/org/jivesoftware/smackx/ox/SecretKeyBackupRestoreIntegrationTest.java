@@ -100,7 +100,7 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
 
         OpenPgpStore beforeStore = new FileBasedOpenPgpStore(beforePath);
         beforeStore.setKeyRingProtector(new UnprotectedKeysProtector());
-        PainlessOpenPgpProvider beforeProvider = new PainlessOpenPgpProvider(beforeStore);
+        PainlessOpenPgpProvider beforeProvider = new PainlessOpenPgpProvider(aliceConnection, beforeStore);
         OpenPgpManager openPgpManager = OpenPgpManager.getInstanceFor(aliceConnection);
         openPgpManager.setOpenPgpProvider(beforeProvider);
 
@@ -130,7 +130,7 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
 
         FileBasedOpenPgpStore afterStore = new FileBasedOpenPgpStore(afterPath);
         afterStore.setKeyRingProtector(new UnprotectedKeysProtector());
-        PainlessOpenPgpProvider afterProvider = new PainlessOpenPgpProvider(afterStore);
+        PainlessOpenPgpProvider afterProvider = new PainlessOpenPgpProvider(aliceConnection, afterStore);
         openPgpManager.setOpenPgpProvider(afterProvider);
 
         self = openPgpManager.getOpenPgpSelf();

@@ -17,6 +17,7 @@
 package org.jivesoftware.smackx.ox;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,7 +74,7 @@ public class OpenPgpContact {
         BareJidUserId.PubRingSelectionStrategy userIdFilter = new BareJidUserId.PubRingSelectionStrategy();
         AnnouncedKeys.PubKeyRingSelectionStrategy announcedFilter = new AnnouncedKeys.PubKeyRingSelectionStrategy();
 
-        for (PGPPublicKeyRing ring : anyKeys) {
+        for (PGPPublicKeyRing ring : (anyKeys != null ? anyKeys : Collections.<PGPPublicKeyRing>emptyList())) {
 
             if (!userIdFilter.accept(getJid(), ring)) {
                 LOGGER.log(Level.WARNING, "Ignore key " + Long.toHexString(ring.getPublicKey().getKeyID()) +
