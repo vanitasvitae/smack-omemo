@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.openpgp;
+package org.jivesoftware.smackx.ox;
 
 import java.io.File;
 import java.util.logging.Level;
@@ -24,9 +24,6 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.ox.OXInstantMessagingManager;
-import org.jivesoftware.smackx.ox.OpenPgpContact;
-import org.jivesoftware.smackx.ox.OpenPgpManager;
 import org.jivesoftware.smackx.ox.crypto.PainlessOpenPgpProvider;
 import org.jivesoftware.smackx.ox.element.SigncryptElement;
 import org.jivesoftware.smackx.ox.listener.OxMessageListener;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.openpgp;
+package org.jivesoftware.smackx.ox;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -34,8 +34,6 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.util.FileUtils;
 import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.ox.OpenPgpManager;
-import org.jivesoftware.smackx.ox.OpenPgpSelf;
 import org.jivesoftware.smackx.ox.callback.backup.AskForBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.backup.DisplayBackupCodeCallback;
 import org.jivesoftware.smackx.ox.callback.backup.SecretKeyBackupSelectionCallback;

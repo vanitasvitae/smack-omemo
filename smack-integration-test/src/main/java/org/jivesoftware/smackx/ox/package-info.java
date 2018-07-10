@@ -21,4 +21,4 @@
  * @see <a href="https://xmpp.org/extensions/xep-0374.html">
  *     XEP-0374: OpenPGP for XMPP: Instant Messaging</a>
  */
-package org.jivesoftware.smackx.openpgp;
+package org.jivesoftware.smackx.ox;
