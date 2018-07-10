@@ -150,6 +150,8 @@ public class SecretKeyBackupRestoreIntegrationTest extends AbstractOpenPgpIntegr
             }
         });
 
+        assertEquals(keyFingerprint, fingerprint);
+
         assertTrue(self.getSecretKeys().contains(keyFingerprint.getKeyId()));
 
         assertEquals(keyFingerprint, self.getSigningKeyFingerprint());
