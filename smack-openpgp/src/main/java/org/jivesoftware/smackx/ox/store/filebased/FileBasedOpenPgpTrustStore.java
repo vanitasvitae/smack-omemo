@@ -92,6 +92,10 @@ public class FileBasedOpenPgpTrustStore extends AbstractOpenPgpTrustStore {
     protected void writeTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) throws IOException {
         File file = getTrustPath(owner, fingerprint);
 
+        File parent = file.getParentFile();
+        if (!parent.exists() && !parent.mkdirs()) {
+            throw new IOException("Cannot create directory " + parent.getAbsolutePath());
+        }
         if (!file.exists()) {
             if (!file.createNewFile()) {
                 throw new IOException("Cannot create file " + file.getAbsolutePath());

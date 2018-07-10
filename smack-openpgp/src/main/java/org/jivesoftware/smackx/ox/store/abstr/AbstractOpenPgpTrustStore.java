@@ -57,7 +57,7 @@ public abstract class AbstractOpenPgpTrustStore implements OpenPgpTrustStore {
     @Override
     public void setTrust(BareJid owner, OpenPgpV4Fingerprint fingerprint, Trust trust) throws IOException {
         Map<OpenPgpV4Fingerprint, Trust> trustMap = trustCache.get(owner);
-        if (trust == null) {
+        if (trustMap == null) {
             trustMap = new HashMap<>();
             trustCache.put(owner, trustMap);
         }

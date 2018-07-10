@@ -140,6 +140,7 @@ public class FileBasedOpenPgpMetadataStore extends AbstractOpenPgpMetadataStore 
                 String line = fingerprint.toString() + " " +
                         (date != null ? XmppDateTime.formatXEP0082Date(date) : XmppDateTime.formatXEP0082Date(new Date()));
                 writer.write(line);
+                writer.newLine();
             }
             writer.flush();
             writer.close();
