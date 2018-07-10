@@ -49,6 +49,17 @@ public class FileBasedOpenPgpKeyStore extends AbstractOpenPgpKeyStore {
     @Override
     public void writePublicKeysOf(BareJid owner, PGPPublicKeyRingCollection publicKeys) throws IOException {
         File file = getPublicKeyRingPath(owner);
+
+        if (publicKeys == null) {
+            if (!file.exists()) {
+                return;
+            }
+            if (!file.delete()) {
+                throw new IOException("Could not delete file " + file.getAbsolutePath());
+            }
+            return;
+        }
+
         OutputStream outputStream = null;
         try {
             outputStream = prepareFileOutputStream(file);
@@ -69,6 +80,17 @@ public class FileBasedOpenPgpKeyStore extends AbstractOpenPgpKeyStore {
     @Override
     public void writeSecretKeysOf(BareJid owner, PGPSecretKeyRingCollection secretKeys) throws IOException {
         File file = getSecretKeyRingPath(owner);
+
+        if (secretKeys == null) {
+            if (!file.exists()) {
+                return;
+            }
+            if (!file.delete()) {
+                throw new IOException("Could not delete file " + file.getAbsolutePath());
+            }
+            return;
+        }
+
         OutputStream outputStream = null;
         try {
             outputStream = prepareFileOutputStream(file);

@@ -42,6 +42,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.jxmpp.jid.BareJid;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 
 public abstract class AbstractOpenPgpStore extends Observable implements OpenPgpStore {
 
@@ -50,8 +51,18 @@ public abstract class AbstractOpenPgpStore extends Observable implements OpenPgp
     protected final OpenPgpTrustStore trustStore;
 
     protected SecretKeyPassphraseCallback secretKeyPassphraseCallback;
-    protected SecretKeyRingProtector unlocker;
+    protected SecretKeyRingProtector unlocker = new UnprotectedKeysProtector();
     protected final Map<BareJid, OpenPgpContact> contacts = new HashMap<>();
+
+    @Override
+    public void deletePublicKeyRing(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException, PGPException {
+        keyStore.deletePublicKeyRing(owner, fingerprint);
+    }
+
+    @Override
+    public void deleteSecretKeyRing(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException, PGPException {
+        keyStore.deleteSecretKeyRing(owner, fingerprint);
+    }
 
     protected AbstractOpenPgpStore(OpenPgpKeyStore keyStore,
                                    OpenPgpMetadataStore metadataStore,

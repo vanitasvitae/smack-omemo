@@ -148,6 +148,32 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
     }
 
     @Override
+    public void deletePublicKeyRing(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException, PGPException {
+        PGPPublicKeyRingCollection publicKeyRings = getPublicKeysOf(owner);
+        if (publicKeyRings.contains(fingerprint.getKeyId())) {
+            publicKeyRings = PGPPublicKeyRingCollection.removePublicKeyRing(publicKeyRings, publicKeyRings.getPublicKeyRing(fingerprint.getKeyId()));
+            if (!publicKeyRings.iterator().hasNext()) {
+                publicKeyRings = null;
+            }
+            this.publicKeyRingCollections.put(owner, publicKeyRings);
+            writePublicKeysOf(owner, publicKeyRings);
+        }
+    }
+
+    @Override
+    public void deleteSecretKeyRing(BareJid owner, OpenPgpV4Fingerprint fingerprint) throws IOException, PGPException {
+        PGPSecretKeyRingCollection secretKeyRings = getSecretKeysOf(owner);
+        if (secretKeyRings.contains(fingerprint.getKeyId())) {
+            secretKeyRings = PGPSecretKeyRingCollection.removeSecretKeyRing(secretKeyRings, secretKeyRings.getSecretKeyRing(fingerprint.getKeyId()));
+            if (!secretKeyRings.iterator().hasNext()) {
+                secretKeyRings = null;
+            }
+            this.secretKeyRingCollections.put(owner, secretKeyRings);
+            writeSecretKeysOf(owner, secretKeyRings);
+        }
+    }
+
+    @Override
     public PGPSecretKeyRing generateKeyRing(BareJid owner)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return PGPainless.generateKeyRing().simpleRsaKeyRing("xmpp:" + owner.toString(), RsaLength._4096);
