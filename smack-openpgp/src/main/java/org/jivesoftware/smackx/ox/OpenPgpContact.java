@@ -31,7 +31,6 @@ import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.ox.element.PubkeyElement;
 import org.jivesoftware.smackx.ox.element.PublicKeysListElement;
 import org.jivesoftware.smackx.ox.exception.MissingUserIdOnKeyException;
-import org.jivesoftware.smackx.ox.selection_strategy.AnnouncedKeys;
 import org.jivesoftware.smackx.ox.selection_strategy.BareJidUserId;
 import org.jivesoftware.smackx.ox.store.definition.OpenPgpStore;
 import org.jivesoftware.smackx.ox.util.PubSubDelegate;
@@ -43,6 +42,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.jxmpp.jid.BareJid;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.pgpainless.util.BCUtil;
 
 public class OpenPgpContact {
 
@@ -69,26 +69,29 @@ public class OpenPgpContact {
         PGPPublicKeyRingCollection anyKeys = getAnyPublicKeys();
         Map<OpenPgpV4Fingerprint, Date> announced = store.getAnnouncedFingerprintsOf(jid);
 
-        PGPPublicKeyRingCollection announcedKeysCollection = anyKeys;
-
         BareJidUserId.PubRingSelectionStrategy userIdFilter = new BareJidUserId.PubRingSelectionStrategy();
-        AnnouncedKeys.PubKeyRingSelectionStrategy announcedFilter = new AnnouncedKeys.PubKeyRingSelectionStrategy();
 
-        for (PGPPublicKeyRing ring : (anyKeys != null ? anyKeys : Collections.<PGPPublicKeyRing>emptyList())) {
+        PGPPublicKeyRingCollection announcedKeysCollection = null;
+        for (OpenPgpV4Fingerprint announcedFingerprint : announced.keySet()) {
+            PGPPublicKeyRing ring = anyKeys.getPublicKeyRing(announcedFingerprint.getKeyId());
+
+            if (ring == null) continue;
+
+            ring = BCUtil.removeUnassociatedKeysFromKeyRing(ring, ring.getPublicKey(announcedFingerprint.getKeyId()));
 
             if (!userIdFilter.accept(getJid(), ring)) {
                 LOGGER.log(Level.WARNING, "Ignore key " + Long.toHexString(ring.getPublicKey().getKeyID()) +
                         " as it lacks the user-id \"xmpp" + getJid().toString() + "\"");
-                announcedKeysCollection = PGPPublicKeyRingCollection.removePublicKeyRing(announcedKeysCollection, ring);
                 continue;
             }
 
-            if (!announcedFilter.accept(announced, ring)) {
-                LOGGER.log(Level.WARNING, "Ignore key " + Long.toHexString(ring.getPublicKey().getKeyID()) +
-                        " as it is not announced by " + getJid().toString());
-                announcedKeysCollection = PGPPublicKeyRingCollection.removePublicKeyRing(announcedKeysCollection, ring);
+            if (announcedKeysCollection == null) {
+                announcedKeysCollection = new PGPPublicKeyRingCollection(Collections.singleton(ring));
+            } else {
+                announcedKeysCollection = PGPPublicKeyRingCollection.addPublicKeyRing(announcedKeysCollection, ring);
             }
         }
+
         return announcedKeysCollection;
     }
 

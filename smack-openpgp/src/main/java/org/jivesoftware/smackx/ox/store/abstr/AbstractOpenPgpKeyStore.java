@@ -37,7 +37,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.jxmpp.jid.BareJid;
 import org.pgpainless.pgpainless.PGPainless;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.pgpainless.util.BCUtil;
 
 public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
@@ -87,15 +86,17 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
             throw new MissingUserIdOnKeyException(owner, secretKeys.getPublicKey().getKeyID());
         }
 
+        PGPSecretKeyRing importKeys = BCUtil.removeUnassociatedKeysFromKeyRing(secretKeys, secretKeys.getPublicKey());
+
         PGPSecretKeyRingCollection secretKeyRings = getSecretKeysOf(owner);
         try {
             if (secretKeyRings != null) {
-                secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, secretKeys);
+                secretKeyRings = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRings, importKeys);
             } else {
-                secretKeyRings = BCUtil.keyRingsToKeyRingCollection(secretKeys);
+                secretKeyRings = BCUtil.keyRingsToKeyRingCollection(importKeys);
             }
         } catch (IllegalArgumentException e) {
-            LOGGER.log(Level.INFO, "Skipping secret key ring " + Long.toHexString(secretKeys.getPublicKey().getKeyID()) +
+            LOGGER.log(Level.INFO, "Skipping secret key ring " + Long.toHexString(importKeys.getPublicKey().getKeyID()) +
                     " as it is already in the key ring of " + owner.toString());
         }
         this.secretKeyRingCollections.put(owner, secretKeyRings);
@@ -110,15 +111,17 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
             throw new MissingUserIdOnKeyException(owner, publicKeys.getPublicKey().getKeyID());
         }
 
+        PGPPublicKeyRing importKeys = BCUtil.removeUnassociatedKeysFromKeyRing(publicKeys, publicKeys.getPublicKey());
+
         PGPPublicKeyRingCollection publicKeyRings = getPublicKeysOf(owner);
         try {
             if (publicKeyRings != null) {
-                publicKeyRings = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRings, publicKeys);
+                publicKeyRings = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRings, importKeys);
             } else {
-                publicKeyRings = BCUtil.keyRingsToKeyRingCollection(publicKeys);
+                publicKeyRings = BCUtil.keyRingsToKeyRingCollection(importKeys);
             }
         } catch (IllegalArgumentException e) {
-            LOGGER.log(Level.INFO, "Skipping public key ring " + Long.toHexString(publicKeys.getPublicKey().getKeyID()) +
+            LOGGER.log(Level.INFO, "Skipping public key ring " + Long.toHexString(importKeys.getPublicKey().getKeyID()) +
                     " as it is already in the key ring of " + owner.toString());
         }
         this.publicKeyRingCollections.put(owner, publicKeyRings);
@@ -176,6 +179,6 @@ public abstract class AbstractOpenPgpKeyStore implements OpenPgpKeyStore {
     @Override
     public PGPSecretKeyRing generateKeyRing(BareJid owner)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        return PGPainless.generateKeyRing().simpleRsaKeyRing("xmpp:" + owner.toString(), RsaLength._4096);
+        return PGPainless.generateKeyRing().simpleEcKeyRing("xmpp:" + owner.toString());
     }
 }

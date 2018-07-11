@@ -21,7 +21,6 @@ import static org.jivesoftware.smackx.ox.util.PubSubDelegate.PEP_NODE_PUBLIC_KEY
 import static org.jivesoftware.smackx.ox.util.PubSubDelegate.publishPublicKey;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -79,12 +78,10 @@ import org.jivesoftware.smackx.pubsub.PubSubFeature;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
-import org.pgpainless.pgpainless.PGPainless;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -412,18 +409,41 @@ public final class OpenPgpManager extends Manager {
     };
 
     private void processPublicKeysListElement(BareJid contact, PublicKeysListElement listElement) {
-
+        OpenPgpContact openPgpContact = getOpenPgpContact(contact.asEntityBareJidIfPossible());
+        // TODO: Quick and dirty. Do it properly!!!
         try {
-            PGPPublicKeyRingCollection contactsKeys = provider.getStore().getPublicKeysOf(contact);
+            openPgpContact.updateKeys(connection());
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Could not update contacts keys", e);
+        }
+        /*
+        try {
+            PGPPublicKeyRingCollection contactsKeys = openPgpContact.getAnyPublicKeys();
             for (OpenPgpV4Fingerprint fingerprint : listElement.getMetadata().keySet()) {
                 PGPPublicKeyRing key = contactsKeys.getPublicKeyRing(fingerprint.getKeyId());
                 if (key == null) {
+                    try {
+                        PubkeyElement pubkeyElement = PubSubDelegate.fetchPubkey(connection(), contact, fingerprint);
 
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (XMPPException.XMPPErrorException e) {
+                        e.printStackTrace();
+                    } catch (PubSubException.NotAPubSubNodeException e) {
+                        e.printStackTrace();
+                    } catch (PubSubException.NotALeafNodeException e) {
+                        e.printStackTrace();
+                    } catch (SmackException.NotConnectedException e) {
+                        e.printStackTrace();
+                    } catch (SmackException.NoResponseException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         } catch (PGPException | IOException e) {
             LOGGER.log(Level.WARNING, "Could not read public keys of " + contact, e);
         }
+        */
     }
 
     private final IncomingChatMessageListener incomingOpenPgpMessageListener =
@@ -479,22 +499,6 @@ public final class OpenPgpManager extends Manager {
      */
 
     /**
-     * Process a {@link PubkeyElement}. This includes unpacking the key from the element and importing it.
-     *
-     * @param pubkeyElement {@link PubkeyElement} containing the key
-     * @param owner owner of the key
-     * @throws MissingUserIdOnKeyException if the key does not have an OpenPGP user-id of the form
-     * "xmpp:juliet@capulet.lit" with the owners {@link BareJid}
-     * @throws IOException row, row, row your byte gently down the {@link InputStream}
-     */
-    private void processPublicKey(PubkeyElement pubkeyElement, BareJid owner)
-            throws MissingUserIdOnKeyException, IOException, PGPException {
-        byte[] base64 = pubkeyElement.getDataElement().getB64Data();
-        PGPPublicKeyRing keyRing = PGPainless.readKeyRing().publicKeyRing(Base64.decode(base64));
-        provider.getStore().importPublicKey(owner, keyRing);
-    }
-
-    /**
      * Create a {@link PubkeyElement} which contains the OpenPGP public key of {@code owner} which belongs to
      * the {@link OpenPgpV4Fingerprint} {@code fingerprint}.
      *
@@ -509,13 +513,10 @@ public final class OpenPgpManager extends Manager {
                                               OpenPgpV4Fingerprint fingerprint,
                                               Date date)
             throws MissingOpenPgpPublicKeyException, IOException, PGPException {
-        PGPPublicKeyRingCollection publicKeyRingCollection = provider.getStore().getPublicKeysOf(owner);
-        if (publicKeyRingCollection != null) {
-            PGPPublicKeyRing keys = publicKeyRingCollection.getPublicKeyRing(fingerprint.getKeyId());
-            if (keys != null) {
-                byte[] keyBytes = keys.getEncoded(true);
-                return createPubkeyElement(keyBytes, date);
-            }
+        PGPPublicKeyRing ring = provider.getStore().getPublicKeyRing(owner, fingerprint);
+        if (ring != null) {
+            byte[] keyBytes = ring.getEncoded(true);
+            return createPubkeyElement(keyBytes, date);
         }
         throw new MissingOpenPgpPublicKeyException(owner, fingerprint);
     }
