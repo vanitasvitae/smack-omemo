@@ -97,6 +97,11 @@ public class SignalOmemoKeyUtil extends OmemoKeyUtil<IdentityKeyPair, IdentityKe
     }
 
     @Override
+    public int lengthOfSessionSendingChain(SessionRecord session) {
+        return session.getSessionState().getSenderChainKey().getIndex();
+    }
+
+    @Override
     public IdentityKeyPair identityKeyPairFromBytes(byte[] data) throws CorruptedOmemoKeyException {
         if (data == null) return null;
         try {

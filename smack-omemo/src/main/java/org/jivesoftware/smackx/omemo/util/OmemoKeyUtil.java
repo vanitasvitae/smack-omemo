@@ -388,4 +388,13 @@ public abstract class OmemoKeyUtil<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, 
             return value + added;
         }
     }
+
+    /**
+     * Returns the length of the sessions sending chain.
+     * This number equals the number of messages that we sent without receiving an answer.
+     *
+     * @param session session
+     * @return length of sending chain
+     */
+    public abstract int lengthOfSessionSendingChain(T_Sess session);
 }

@@ -19,7 +19,6 @@ package org.jivesoftware.smackx.omemo;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
-import java.util.Date;
 import java.util.HashSet;
 
 import org.jivesoftware.smack.test.util.SmackTestSuite;
@@ -31,9 +30,6 @@ import org.jxmpp.stringprep.XmppStringprepException;
 
 public class OmemoServiceTest extends SmackTestSuite {
 
-    private static final long ONE_HOUR = 1000L * 60 * 60;
-    private static final int DELETE_STALE = OmemoConfiguration.getDeleteStaleDevicesAfterHours();
-
     @Test(expected = IllegalStateException.class)
     public void getInstanceFailsWhenNullTest() {
         OmemoService.getInstance();
@@ -42,28 +38,6 @@ public class OmemoServiceTest extends SmackTestSuite {
     @Test
     public void isServiceRegisteredTest() {
         assertFalse(OmemoService.isServiceRegistered());
-    }
-
-    /**
-     * Test correct functionality of isStale method.
-     * @throws XmppStringprepException
-     */
-    @Test
-    public void isStaleDeviceTest() throws XmppStringprepException {
-        OmemoDevice user = new OmemoDevice(JidCreate.bareFrom("alice@wonderland.lit"), 123);
-        OmemoDevice other = new OmemoDevice(JidCreate.bareFrom("bob@builder.tv"), 444);
-
-        Date now = new Date();
-        Date deleteMe = new Date(now.getTime() - ((DELETE_STALE + 1) * ONE_HOUR));
-
-        // Devices one hour "older" than max ages are stale
-        assertTrue(OmemoService.isStale(user, other, deleteMe, DELETE_STALE));
-
-        // Own device is never stale, no matter how old
-        assertFalse(OmemoService.isStale(user, user, deleteMe, DELETE_STALE));
-
-        // Always return false if date is null.
-        assertFalse(OmemoService.isStale(user, other, null, DELETE_STALE));
     }
 
     @Test
@@ -76,8 +50,8 @@ public class OmemoServiceTest extends SmackTestSuite {
 
         assertTrue(devices.contains(a));
         assertTrue(devices.contains(b));
-        OmemoService.removeOurDevice(a, devices);
 
+        devices.remove(a);
         assertFalse(devices.contains(a));
         assertTrue(devices.contains(b));
     }

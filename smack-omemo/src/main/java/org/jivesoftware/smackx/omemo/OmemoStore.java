@@ -32,6 +32,7 @@ import org.jivesoftware.smackx.omemo.element.OmemoDeviceListElement;
 import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.NoIdentityKeyException;
+import org.jivesoftware.smackx.omemo.exceptions.NoRawSessionException;
 import org.jivesoftware.smackx.omemo.internal.OmemoCachedDeviceList;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.trust.OmemoFingerprint;
@@ -289,27 +290,6 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
      * @param contactsDevice device of which we want to delete the identityKey.
      */
     public abstract void removeOmemoIdentityKey(OmemoDevice userDevice, OmemoDevice contactsDevice);
-
-    /**
-     * Store the number of messages we sent to a device since we last received a message back.
-     * This counter gets reset to 0 whenever we receive a message from the contacts device.
-     *
-     * @param userDevice our omemoDevice.
-     * @param contactsDevice device of which we want to set the message counter.
-     * @param counter counter value.
-     */
-    public abstract void storeOmemoMessageCounter(OmemoDevice userDevice, OmemoDevice contactsDevice, int counter);
-
-    /**
-     * Return the current value of the message counter.
-     * This counter represents the number of message we sent to the contactsDevice without getting a reply back.
-     * The default value for this counter is 0.
-     *
-     * @param userDevice our omemoDevice
-     * @param contactsDevice device of which we want to get the message counter.
-     * @return counter value.
-     */
-    public abstract int loadOmemoMessageCounter(OmemoDevice userDevice, OmemoDevice contactsDevice);
 
     /**
      * Set the date of the last message that was received from a device.
@@ -645,5 +625,23 @@ public abstract class OmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigPreKey, T_
         }
 
         return keyUtil().getFingerprintOfIdentityKey(identityKey);
+    }
+
+    /**
+     * Return the length of the sending chain of the session between userDevice and contactsDevice.
+     * This number corresponds to the number of messages that userDevice sent to contactsDevice without receiving an
+     * answer.
+     *
+     * @param userDevice our device
+     * @param contactsDevice contacts device
+     * @return length of sending chain
+     * @throws NoRawSessionException if no raw session exists between userDevice and contactsDevice
+     */
+    public int getLengthOfSessionSendingChain(OmemoDevice userDevice, OmemoDevice contactsDevice) throws NoRawSessionException {
+        T_Sess session = loadRawSession(userDevice, contactsDevice);
+        if (session == null) {
+            throw new NoRawSessionException(contactsDevice, new NullPointerException());
+        }
+        return keyUtil().lengthOfSessionSendingChain(session);
     }
 }

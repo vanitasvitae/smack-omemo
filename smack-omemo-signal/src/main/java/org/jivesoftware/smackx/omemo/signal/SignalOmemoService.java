@@ -22,11 +22,13 @@ package org.jivesoftware.smackx.omemo.signal;
 
 import java.util.logging.Level;
 
+import org.jivesoftware.smackx.omemo.OmemoConfiguration;
 import org.jivesoftware.smackx.omemo.OmemoManager;
 import org.jivesoftware.smackx.omemo.OmemoService;
 import org.jivesoftware.smackx.omemo.OmemoStore;
 import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
+import org.jivesoftware.smackx.omemo.util.StalenessStrategy;
 
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
@@ -85,6 +87,19 @@ public final class SignalOmemoService
 
     private SignalOmemoService() {
         super();
+    }
+
+    /**
+     * Return a {@link StalenessStrategy} which is used to determine, whether or not an OMEMO session is stale or not.
+     * Staleness is used in order to stop encrypting messages to read-only devices after a certain amount of time
+     * or unanswered messages.
+     *
+     * @return strategy
+     */
+    @Override
+    protected StalenessStrategy getStalenessStrategy() {
+        return new SignalChainKeyIndexStalenessStrategy(getOmemoStoreBackend(),
+                OmemoConfiguration.getMaxReadOnlyMessageCount());
     }
 
     public static void acknowledgeLicense() {

@@ -20,9 +20,14 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import java.security.NoSuchAlgorithmException;
+
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smackx.omemo.exceptions.CannotEstablishOmemoSessionException;
+import org.jivesoftware.smackx.omemo.exceptions.CorruptedOmemoKeyException;
 import org.jivesoftware.smackx.omemo.exceptions.CryptoFailedException;
+import org.jivesoftware.smackx.omemo.exceptions.NoRawSessionException;
 import org.jivesoftware.smackx.omemo.exceptions.ReadOnlyDeviceException;
 import org.jivesoftware.smackx.omemo.exceptions.UndecidedOmemoIdentityException;
 
@@ -37,36 +42,42 @@ public class ReadOnlyDeviceIntegrationTest extends AbstractTwoUsersOmemoIntegrat
     }
 
     @SmackIntegrationTest
-    public void test() throws InterruptedException, SmackException.NoResponseException, SmackException.NotLoggedInException, SmackException.NotConnectedException, CryptoFailedException, UndecidedOmemoIdentityException {
+    public void test() throws InterruptedException, SmackException.NoResponseException, SmackException.NotLoggedInException, SmackException.NotConnectedException, CryptoFailedException, UndecidedOmemoIdentityException, CorruptedOmemoKeyException, NoSuchAlgorithmException, CannotEstablishOmemoSessionException, NoRawSessionException {
+        int allowedChainLength = 5;
         boolean prevIgnoreReadOnlyConf = OmemoConfiguration.getIgnoreReadOnlyDevices();
         int prevMaxMessageCounter = OmemoConfiguration.getMaxReadOnlyMessageCount();
 
         OmemoConfiguration.setIgnoreReadOnlyDevices(true);
         // Set the maxReadOnlyMessageCount to ridiculously low threshold of 5.
         // This means that Alice will be able to encrypt 5 messages for Bob, while the 6th will not be encrypted for Bob.
-        OmemoConfiguration.setMaxReadOnlyMessageCount(5);
+        OmemoConfiguration.setMaxReadOnlyMessageCount(allowedChainLength);
 
         // Reset counter to begin test
-        alice.getOmemoService().getOmemoStoreBackend().storeOmemoMessageCounter(alice.getOwnDevice(), bob.getOwnDevice(), 0);
+        alice.getOmemoService().buildFreshSessionWithDevice(alice.getConnection(), alice.getOwnDevice(), bob.getOwnDevice());
+        assertChainLengthEquals(alice, bob, 0);
 
-        // Since the max threshold is 5, we must be able to encrypt 5 messages for Bob.
-        for (int i = 0; i < 5; i++) {
-            assertEquals(i, alice.getOmemoService().getOmemoStoreBackend().loadOmemoMessageCounter(alice.getOwnDevice(), bob.getOwnDevice()));
+        // Since the max threshold is allowedChainLength, we must be able to encrypt as many messages for Bob.
+        for (int i = 0; i < allowedChainLength; i++) {
             OmemoMessage.Sent message = alice.encrypt(bob.getOwnJid(), "Hello World!");
             assertFalse(message.getSkippedDevices().containsKey(bob.getOwnDevice()));
+            assertChainLengthEquals(alice, bob, i + 1);
         }
 
         // Now the message counter must be too high and Bobs device must be skipped.
         OmemoMessage.Sent message = alice.encrypt(bob.getOwnJid(), "Hello World!");
+        assertChainLengthEquals(alice, bob, allowedChainLength);
+        assertTrue(message.getSkippedDevices().containsKey(bob.getOwnDevice()));
         Throwable exception = message.getSkippedDevices().get(bob.getOwnDevice());
         assertTrue(exception instanceof ReadOnlyDeviceException);
         assertEquals(bob.getOwnDevice(), ((ReadOnlyDeviceException) exception).getDevice());
 
-        // Reset the message counter
-        alice.getOmemoService().getOmemoStoreBackend().storeOmemoMessageCounter(alice.getOwnDevice(), bob.getOwnDevice(), 0);
-
         // Reset the configuration to previous values
         OmemoConfiguration.setMaxReadOnlyMessageCount(prevMaxMessageCounter);
         OmemoConfiguration.setIgnoreReadOnlyDevices(prevIgnoreReadOnlyConf);
+    }
+
+    private void assertChainLengthEquals(OmemoManager sender, OmemoManager receiver, int length) throws NoRawSessionException {
+        assertEquals(length, sender.getOmemoService().getOmemoStoreBackend()
+                .getLengthOfSessionSendingChain(sender.getOwnDevice(), receiver.getOwnDevice()));
     }
 }

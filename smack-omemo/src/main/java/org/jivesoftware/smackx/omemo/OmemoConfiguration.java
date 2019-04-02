@@ -24,7 +24,7 @@ package org.jivesoftware.smackx.omemo;
 public final class OmemoConfiguration {
 
     private static boolean IGNORE_READ_ONLY_DEVICES = true;
-    private static int MAX_READ_ONLY_MESSAGE_COUNT = 400;
+    private static int MAX_READ_ONLY_MESSAGE_COUNT = 750;
 
     /**
      * Set to true, in order to ignore read-only devices.

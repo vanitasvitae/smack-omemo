@@ -24,7 +24,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -353,24 +352,6 @@ public abstract class FileBasedOmemoStore<T_IdKeyPair, T_IdKey, T_PreKey, T_SigP
     public boolean containsRawSession(OmemoDevice userDevice, OmemoDevice contactsDevice) {
         File session = hierarchy.getContactsSessionPath(userDevice, contactsDevice);
         return session.exists();
-    }
-
-    @Override
-    public void storeOmemoMessageCounter(OmemoDevice userDevice, OmemoDevice contactsDevice, int counter) {
-        File messageCounterFile = hierarchy.getDevicesMessageCounterPath(userDevice, contactsDevice);
-        writeIntegers(messageCounterFile, Collections.singleton(counter));
-    }
-
-    @Override
-    public int loadOmemoMessageCounter(OmemoDevice userDevice, OmemoDevice contactsDevice) {
-        File messageCounterFile = hierarchy.getDevicesMessageCounterPath(userDevice, contactsDevice);
-        Set<Integer> integers = readIntegers(messageCounterFile);
-
-        if (integers == null || integers.isEmpty()) {
-            return 0;
-        }
-
-        return integers.iterator().next();
     }
 
     @Override
