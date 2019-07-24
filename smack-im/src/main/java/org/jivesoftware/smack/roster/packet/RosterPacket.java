@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smack.roster.RosterItemRecord;
 import org.jivesoftware.smack.util.EqualsUtil;
 import org.jivesoftware.smack.util.HashCode;
 import org.jivesoftware.smack.util.Objects;
@@ -112,7 +113,7 @@ public final class RosterPacket extends IQ {
      * the groups the roster item belongs to.
      */
     // TODO Make this class immutable.
-    public static final class Item implements NamedElement {
+    public static final class Item implements NamedElement, RosterItemRecord {
 
         /**
          * The constant value "{@value}".
@@ -179,6 +180,7 @@ public final class RosterPacket extends IQ {
          *
          * @return the JID.
          */
+        @Override
         public BareJid getJid() {
             return jid;
         }
@@ -188,6 +190,7 @@ public final class RosterPacket extends IQ {
          *
          * @return the user's name.
          */
+        @Override
         public String getName() {
             return name;
         }
@@ -206,6 +209,7 @@ public final class RosterPacket extends IQ {
          *
          * @return the roster item type.
          */
+        @Override
         public ItemType getItemType() {
             return itemType;
         }
@@ -223,6 +227,7 @@ public final class RosterPacket extends IQ {
             this.subscriptionPending = subscriptionPending;
         }
 
+        @Override
         public boolean isSubscriptionPending() {
             return subscriptionPending;
         }
@@ -232,6 +237,7 @@ public final class RosterPacket extends IQ {
          *
          * @return the pre-approval state.
          */
+        @Override
         public boolean isApproved() {
             return approved;
         }
@@ -251,6 +257,7 @@ public final class RosterPacket extends IQ {
          *
          * @return an unmodifiable set of the group names.
          */
+        @Override
         public Set<String> getGroupNames() {
             return Collections.unmodifiableSet(groupNames);
         }

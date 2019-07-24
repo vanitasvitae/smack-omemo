@@ -19,7 +19,7 @@ package org.jivesoftware.smack.roster.rosterstore;
 import java.util.Collection;
 import java.util.List;
 
-import org.jivesoftware.smack.roster.packet.RosterPacket;
+import org.jivesoftware.smack.roster.RosterItemRecord;
 
 import org.jxmpp.jid.Jid;
 
@@ -28,22 +28,22 @@ import org.jxmpp.jid.Jid;
  * roster versioning as per RFC 6121.
  */
 
-public interface RosterStore {
+public interface RosterStore<I extends RosterItemRecord> {
 
     /**
      * This method returns a list of all roster items contained in this store. If there was an error while loading the store, then <code>null</code> is returned.
      *
-     * @return List of {@link org.jivesoftware.smack.roster.RosterEntry} or <code>null</code>.
+     * @return List of {@link RosterItemRecord} or <code>null</code>.
      */
-    List<RosterPacket.Item> getEntries();
+    List<I> getEntries();
 
     /**
      * This method returns the roster item in this store for the given JID.
      *
      * @param bareJid The bare JID of the RosterEntry
-     * @return The {@link org.jivesoftware.smack.roster.RosterEntry} which belongs to that user
+     * @return The {@link RosterItemRecord} which belongs to that user
      */
-    RosterPacket.Item getEntry(Jid bareJid);
+    I getEntry(Jid bareJid);
 
     /**
      * This method returns the version number as specified by the "ver" attribute
@@ -60,7 +60,7 @@ public interface RosterStore {
      * @param version the new roster version
      * @return True if successful
      */
-    boolean addEntry(RosterPacket.Item item, String version);
+    boolean addEntry(I item, String version);
 
     /**
      * This method updates the store so that it contains only the given entries.
@@ -69,7 +69,7 @@ public interface RosterStore {
      * @param version the new roster version
      * @return True if successful
      */
-    boolean resetEntries(Collection<RosterPacket.Item> items, String version);
+    boolean resetEntries(Collection<I> items, String version);
 
     /**
      * Removes an entry from the store.

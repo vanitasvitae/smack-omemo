@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jivesoftware.smack.roster.packet.RosterPacket;
 import org.jivesoftware.smack.roster.packet.RosterPacket.Item;
 import org.jivesoftware.smack.roster.provider.RosterPacketProvider;
 import org.jivesoftware.smack.util.FileUtils;
@@ -47,7 +48,7 @@ import org.jxmpp.jid.Jid;
  * @author Fabian Schuetz
  * @author Florian Schmaus
  */
-public final class DirectoryRosterStore implements RosterStore {
+public final class DirectoryRosterStore implements RosterStore<RosterPacket.Item> {
 
     private final File fileDir;
 
@@ -182,7 +183,7 @@ public final class DirectoryRosterStore implements RosterStore {
 
     @Override
     public void resetStore() {
-        resetEntries(Collections.<Item>emptyList(), "");
+        resetEntries(Collections.emptyList(), "");
     }
 
     @SuppressWarnings("DefaultCharset")

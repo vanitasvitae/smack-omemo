@@ -45,7 +45,7 @@ import org.jxmpp.jid.BareJid;
  */
 public final class RosterEntry extends Manager {
 
-    private RosterPacket.Item item;
+    private RosterItemRecord item;
     private final Roster roster;
 
     /**
@@ -55,7 +55,7 @@ public final class RosterEntry extends Manager {
      * @param roster The Roster managing this entry.
      * @param connection a connection to the XMPP server.
      */
-    RosterEntry(RosterPacket.Item item, Roster roster, XMPPConnection connection) {
+    RosterEntry(RosterItemRecord item, Roster roster, XMPPConnection connection) {
         super(connection);
         this.item = item;
         this.roster = roster;
@@ -114,7 +114,7 @@ public final class RosterEntry extends Manager {
         connection().createStanzaCollectorAndSend(packet).nextResultOrThrow();
 
         // We have received a result response to the IQ set, the name was successfully changed
-        item.setName(name);
+        this.item = toRosterItem(this, name);
     }
 
     /**
@@ -122,7 +122,7 @@ public final class RosterEntry extends Manager {
      *
      * @param item new item
      */
-    void updateItem(RosterPacket.Item item) {
+    void updateItem(RosterItemRecord item) {
         assert (item != null);
         this.item = item;
     }

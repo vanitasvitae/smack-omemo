@@ -63,6 +63,7 @@ import org.jivesoftware.smack.roster.packet.RosterPacket;
 import org.jivesoftware.smack.roster.packet.RosterPacket.Item;
 import org.jivesoftware.smack.roster.packet.RosterVer;
 import org.jivesoftware.smack.roster.packet.SubscriptionPreApproval;
+import org.jivesoftware.smack.roster.rosterstore.DirectoryRosterStore;
 import org.jivesoftware.smack.roster.rosterstore.RosterStore;
 import org.jivesoftware.smack.util.ExceptionCallback;
 import org.jivesoftware.smack.util.Objects;
@@ -148,7 +149,7 @@ public final class Roster extends Manager {
 
     private static int defaultNonRosterPresenceMapMaxSize = INITIAL_DEFAULT_NON_ROSTER_PRESENCE_MAP_SIZE;
 
-    private RosterStore rosterStore;
+    private RosterStore<RosterItemRecord> rosterStore;
     private final Map<String, RosterGroup> groups = new ConcurrentHashMap<>();
 
     /**
@@ -168,7 +169,7 @@ public final class Roster extends Manager {
     private final Map<BareJid, Map<Resourcepart, Presence>> presenceMap = new ConcurrentHashMap<>();
 
     /**
-     * Like {@link presenceMap} but for presences of entities not in our Roster.
+     * Like presenceMap but for presences of entities not in our Roster.
      */
     // TODO Ideally we want here to use a LRU cache like Map which will evict all superfluous items
     // if their maximum size is lowered below the current item count. LruCache does not provide
@@ -182,7 +183,7 @@ public final class Roster extends Manager {
     private final Set<RosterLoadedListener> rosterLoadedListeners = new LinkedHashSet<>();
 
     /**
-     * Mutually exclude roster listener invocation and changing the {@link entries} map. Also used
+     * Mutually exclude roster listener invocation and changing the entries map. Also used
      * to synchronize access to either the roster listeners or the entries map.
      */
     private final Object rosterListenersAndEntriesLock = new Object();
@@ -491,6 +492,7 @@ public final class Roster extends Manager {
      * @return true if the roster reload was initiated, false otherwise.
      * @since 4.1
      */
+    @SuppressWarnings({"unchecked", "rawtype"})
     public boolean setRosterStore(RosterStore rosterStore) {
         this.rosterStore = rosterStore;
         try {
@@ -1344,7 +1346,7 @@ public final class Roster extends Manager {
     }
 
     private void addUpdateEntry(Collection<Jid> addedEntries, Collection<Jid> updatedEntries,
-                    Collection<Jid> unchangedEntries, RosterPacket.Item item, RosterEntry entry) {
+                    Collection<Jid> unchangedEntries, RosterItemRecord item, RosterEntry entry) {
         RosterEntry oldEntry;
         synchronized (rosterListenersAndEntriesLock) {
             oldEntry = entries.put(item.getJid(), entry);
@@ -1691,14 +1693,14 @@ public final class Roster extends Manager {
                 RosterPacket rosterPacket = (RosterPacket) packet;
 
                 // Ignore items without valid subscription type
-                ArrayList<Item> validItems = new ArrayList<>();
+                ArrayList<RosterItemRecord> validItems = new ArrayList<>();
                 for (RosterPacket.Item item : rosterPacket.getRosterItems()) {
                     if (hasValidSubscriptionType(item)) {
                         validItems.add(item);
                     }
                 }
 
-                for (RosterPacket.Item item : validItems) {
+                for (RosterItemRecord item : validItems) {
                     RosterEntry entry = new RosterEntry(item, Roster.this, connection);
                     addUpdateEntry(addedEntries, updatedEntries, unchangedEntries, item, entry);
                 }
@@ -1727,7 +1729,7 @@ public final class Roster extends Manager {
                 // means that rosterver was used and the roster hasn't changed (much) since the
                 // version we presented the server. So we simply load the roster from the store and
                 // await possible further roster pushes.
-                List<RosterPacket.Item> storedItems = rosterStore.getEntries();
+                List<RosterItemRecord> storedItems = rosterStore.getEntries();
                 if (storedItems == null) {
                     // The roster store was corrupted. Reset the store and reload the roster without using a roster version.
                     rosterStore.resetStore();
@@ -1741,7 +1743,7 @@ public final class Roster extends Manager {
                     }
                     return;
                 }
-                for (RosterPacket.Item item : storedItems) {
+                for (RosterItemRecord item : storedItems) {
                     RosterEntry entry = new RosterEntry(item, Roster.this, connection);
                     addUpdateEntry(addedEntries, updatedEntries, unchangedEntries, item, entry);
                 }

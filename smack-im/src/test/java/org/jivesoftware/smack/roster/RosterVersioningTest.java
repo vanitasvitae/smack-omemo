@@ -60,6 +60,7 @@ public class RosterVersioningTest {
 
     private DummyConnection connection;
     private Roster roster;
+    private DirectoryRosterStore store;
     private TestRosterListener rosterListener;
 
     @Rule
@@ -67,7 +68,7 @@ public class RosterVersioningTest {
 
     @Before
     public void setUp() throws Exception {
-        DirectoryRosterStore store = DirectoryRosterStore.init(tmpFolder.newFolder("store"));
+        store = DirectoryRosterStore.init(tmpFolder.newFolder("store"));
         populateStore(store);
 
         connection = new DummyConnection();
@@ -163,7 +164,6 @@ public class RosterVersioningTest {
         assertNotNull("Roster contains vaglaf entry", entry);
         assertEquals("vaglaf entry in roster equals the sent entry", vaglafItem, RosterEntry.toRosterItem(entry));
 
-        RosterStore store = roster.getRosterStore();
         assertEquals("Size of store", 1, store.getEntries().size());
         Item item = store.getEntry(vaglafItem.getJid());
         assertNotNull("Store contains vaglaf entry", item);
@@ -178,8 +178,6 @@ public class RosterVersioningTest {
     public void testRosterVersioningWithCachedRosterAndPushes() throws Throwable {
         answerWithEmptyRosterResult();
         rosterListener.waitAndReset();
-
-        RosterStore store = roster.getRosterStore();
 
         // Simulate a roster push adding vaglaf
         {
