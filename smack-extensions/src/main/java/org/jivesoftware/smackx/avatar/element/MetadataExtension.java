@@ -1,6 +1,6 @@
 /**
  *
- * Copyright 2017 Fernando Ramirez
+ * Copyright 2017 Fernando Ramirez, 2019 Paul Schaub
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.jivesoftware.smackx.avatar.UserAvatarManager;
  * This class contains metadata about published avatars.
  *
  * @author Fernando Ramirez
+ * @author Paul Schaub
  * @see <a href="https://xmpp.org/extensions/xep-0084.html">XEP-0084: User
  *      Avatar</a>
  */
@@ -110,55 +111,58 @@ public class MetadataExtension implements ExtensionElement {
     }
 
     private void appendInfoElements(XmlStringBuilder xml) {
-        if (infos != null) {
-            xml.rightAngleBracket();
+        if (infos == null) {
+            return;
+        }
 
-            for (MetadataInfo info : infos) {
-                xml.halfOpenElement("info");
-                xml.attribute("id", info.getId());
-                xml.attribute("bytes", info.getBytes().longValue());
-                xml.attribute("type", info.getType());
-                xml.optAttribute("url", info.getUrl());
+        xml.rightAngleBracket();
 
-                if (info.getHeight().nativeRepresentation() > 0) {
-                    xml.attribute("height", info.getHeight().nativeRepresentation());
-                }
+        for (MetadataInfo info : infos) {
+            xml.halfOpenElement("info");
+            xml.attribute("id", info.getId());
+            xml.attribute("bytes", info.getBytes().longValue());
+            xml.attribute("type", info.getType());
+            xml.optAttribute("url", info.getUrl());
 
-                if (info.getWidth().nativeRepresentation() > 0) {
-                    xml.attribute("width", info.getWidth().nativeRepresentation());
-                }
-
-                xml.closeEmptyElement();
+            if (info.getHeight().nativeRepresentation() > 0) {
+                xml.attribute("height", info.getHeight().nativeRepresentation());
             }
+
+            if (info.getWidth().nativeRepresentation() > 0) {
+                xml.attribute("width", info.getWidth().nativeRepresentation());
+            }
+
+            xml.closeEmptyElement();
         }
     }
 
     private void appendPointerElements(XmlStringBuilder xml) {
-        if (pointers != null) {
+        if (pointers == null) {
+            return;
+        }
 
-            for (MetadataPointer pointer : pointers) {
-                xml.openElement("pointer");
-                xml.halfOpenElement("x");
+        for (MetadataPointer pointer : pointers) {
+            xml.openElement("pointer");
+            xml.halfOpenElement("x");
 
-                String namespace = pointer.getNamespace();
-                if (namespace != null) {
-                    xml.xmlnsAttribute(namespace);
-                }
-
-                xml.rightAngleBracket();
-
-                Map<String, Object> fields = pointer.getFields();
-                if (fields != null) {
-                    for (Map.Entry<String, Object> pair : fields.entrySet()) {
-                        xml.escapedElement(pair.getKey(), String.valueOf(pair.getValue()));
-                    }
-                }
-
-                xml.closeElement("x");
-                xml.closeElement("pointer");
+            String namespace = pointer.getNamespace();
+            if (namespace != null) {
+                xml.xmlnsAttribute(namespace);
             }
 
+            xml.rightAngleBracket();
+
+            Map<String, Object> fields = pointer.getFields();
+            if (fields != null) {
+                for (Map.Entry<String, Object> pair : fields.entrySet()) {
+                    xml.escapedElement(pair.getKey(), String.valueOf(pair.getValue()));
+                }
+            }
+
+            xml.closeElement("x");
+            xml.closeElement("pointer");
         }
+
     }
 
     private void closeElement(XmlStringBuilder xml) {
