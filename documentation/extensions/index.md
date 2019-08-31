@@ -80,6 +80,7 @@ Smack Extensions and currently supported XEPs of smack-extensions
 | [Group Chat Invitations](invitation.md)     | n/a                                                    | n/a       | Send invitations to other users to join a group chat room. |
 | [Jive Properties](properties.md)            | n/a                                                    | n/a       | TODO |
 
+
 Experimental Smack Extensions and currently supported XEPs of smack-experimental
 --------------------------------------------------------------------------------
 
