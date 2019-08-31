@@ -46,37 +46,36 @@ public class MetadataProvider extends ExtensionElementProvider<MetadataExtension
         List<MetadataInfo> metadataInfos = null;
         List<MetadataPointer> pointers = null;
 
-        while (true) {
-            XmlPullParser.Event eventType = parser.next();
+        outerloop: while (true) {
+            XmlPullParser.TagEvent eventType = parser.nextTag();
 
-            if (eventType == XmlPullParser.Event.START_ELEMENT) {
+            switch (eventType) {
+                case START_ELEMENT:
+                    if (parser.getName().equals("info")) {
+                        if (metadataInfos == null) {
+                            metadataInfos = new ArrayList<>();
+                        }
 
-                if (parser.getName().equals("info")) {
-                    if (metadataInfos == null) {
-                        metadataInfos = new ArrayList<>();
+                        MetadataInfo info = parseInfo(parser);
+                        if (info.getId() != null) {
+                            metadataInfos.add(info);
+                        }
                     }
 
-                    MetadataInfo info = parseInfo(parser);
-                    if (info.getId() != null) {
-                        metadataInfos.add(info);
+                    if (parser.getName().equals("pointer")) {
+                        if (pointers == null) {
+                            pointers = new ArrayList<>();
+                        }
+
+                        pointers.add(parsePointer(parser));
                     }
-                }
-
-                if (parser.getName().equals("pointer")) {
-                    if (pointers == null) {
-                        pointers = new ArrayList<>();
-                    }
-
-                    pointers.add(parsePointer(parser));
-                }
-
-            } else if (eventType == XmlPullParser.Event.END_ELEMENT) {
-                if (parser.getDepth() == initialDepth) {
                     break;
-                }
+                case END_ELEMENT:
+                    if (parser.getDepth() == initialDepth) {
+                        break outerloop;
+                    }
             }
         }
-
         return new MetadataExtension(metadataInfos, pointers);
     }
 
@@ -126,25 +125,28 @@ public class MetadataProvider extends ExtensionElementProvider<MetadataExtension
         String namespace = null;
         HashMap<String, Object> fields = null;
 
-        while (true) {
-            XmlPullParser.Event eventType2 = parser.next();
+        outperloop: while (true) {
+            XmlPullParser.TagEvent tag = parser.nextTag();
 
-            if (eventType2 == XmlPullParser.Event.START_ELEMENT) {
-                if (parser.getName().equals("x")) {
-                    namespace = parser.getNamespace();
-                } else {
-                    if (fields == null) {
-                        fields = new HashMap<>();
+            switch (tag) {
+                case START_ELEMENT:
+                    if (parser.getName().equals("x")) {
+                        namespace = parser.getNamespace();
+                    } else {
+                        if (fields == null) {
+                            fields = new HashMap<>();
+                        }
+
+                        String name = parser.getName();
+                        Object value = parser.nextText();
+                        fields.put(name, value);
                     }
-
-                    String name = parser.getName();
-                    Object value = parser.nextText();
-                    fields.put(name, value);
-                }
-            } else if (eventType2 == XmlPullParser.Event.END_ELEMENT) {
-                if (parser.getDepth() == pointerDepth) {
                     break;
-                }
+
+                case END_ELEMENT:
+                    if (parser.getDepth() == pointerDepth) {
+                        break outperloop;
+                    }
             }
         }
 
