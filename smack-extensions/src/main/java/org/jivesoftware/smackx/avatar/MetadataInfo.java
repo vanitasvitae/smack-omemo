@@ -55,6 +55,9 @@ public class MetadataInfo {
     public MetadataInfo(String id, URL url, long bytes, String type, int pixelsHeight, int pixelsWidth) {
         this.id = StringUtils.requireNotNullNorEmpty(id, "ID is required.");
         this.url = url;
+        if (bytes <= 0) {
+            throw new IllegalArgumentException("Number of bytes MUST be greater than 0.");
+        }
         this.bytes = UInt32.from(bytes);
         this.type = StringUtils.requireNotNullNorEmpty(type, "Content Type is required.");
         if (pixelsHeight < 0 || pixelsHeight > MAX_HEIGHT) {
