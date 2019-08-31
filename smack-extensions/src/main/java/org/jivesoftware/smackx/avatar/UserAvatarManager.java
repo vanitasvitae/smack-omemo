@@ -55,8 +55,35 @@ import org.jivesoftware.smackx.pubsub.PubSubManager;
 import org.jxmpp.jid.EntityBareJid;
 
 /**
- * User Avatar manager class.
- *
+ * <h1>User Avatar manager class.</h1>
+ * This manager allows publication of user avatar images via PubSub, as well as publication of
+ * {@link MetadataExtension MetadataExtensions} containing {@link MetadataInfo} elements for avatars
+ * available via PubSub, HTTP or external third-party services via {@link MetadataPointer} elements.
+ * <p>
+ * The easiest way to publish a PNG avatar (support for PNG files is REQUIRED), is to use
+ * {@link #publishPNGAvatar(File, int, int)} which will publish the image data to PubSub and inform
+ * any subscribers via a metadata update.
+ * <p>
+ * Publishing avatars via HTTP is not in the scope of this manager (you could use Smacks
+ * HTTPFileUploadManager from smack-experimental for that), but publishing metadata updates pointing
+ * to HTTP resources is supported. Use {@link #publishHttpPNGAvatarMetadata(String, URL, long, int, int)} for that.
+ * <p>
+ * By calling {@link #enable()}, the {@link UserAvatarManager} will start receiving metadata updates from
+ * contacts and other entities. If you want to get informed about those updates, you can register listeners
+ * by calling {@link #addAvatarListener(AvatarListener)}.
+ * <p>
+ * If you store avatars locally, it is recommended to also set an {@link AvatarMetadataStore}, which is responsible
+ * for keeping track of which avatar files are locally available. If you register such a store via
+ * {@link #setAvatarMetadataStore(AvatarMetadataStore)}, your registered {@link AvatarListener AvatarListeners}
+ * will only inform you about those avatars that are not yet locally available.
+ * <p>
+ * To fetch an avatar from PubSub, use {@link #fetchAvatarFromPubSub(EntityBareJid, MetadataInfo)} which will
+ * retrieve the avatar data from PubSub and mark the avatar as locally available in the {@link AvatarMetadataStore}
+ * if one is registered.
+ * <p>
+ * Fetching avatars published via HTTP is out of scope of this manager. If you do implement it, remember to mark the
+ * avatar as locally available in your {@link AvatarMetadataStore} after you retrieved it.
+ * 
  * @author Fernando Ramirez
  * @author Paul Schaub
  * @see <a href="http://xmpp.org/extensions/xep-0084.html">XEP-0084: User
