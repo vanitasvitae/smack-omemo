@@ -204,6 +204,24 @@ public final class UserAvatarManager extends Manager {
     }
 
     /**
+     * Publish a PNG avatar and its metadata to PubSub.
+     * If you know what the dimensions of the image are, use {@link #publishPNGAvatar(byte[], int, int)} instead.
+     *
+     * @param data raw bytes of the avatar
+     *
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws PubSubException.NotALeafNodeException if either the metadata node or the data node is not a
+     *                                               {@link LeafNode}
+     * @throws NotConnectedException if the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
+     * @throws NoResponseException if the server does not respond
+     */
+    public void publishPNGAvatar(byte[] data) throws XMPPErrorException, PubSubException.NotALeafNodeException,
+            NotConnectedException, InterruptedException, NoResponseException {
+        publishPNGAvatar(data, 0, 0);
+    }
+
+    /**
      * Publish a PNG Avatar and its metadata to PubSub.
      *
      * @param data raw bytes of the avatar
@@ -222,6 +240,25 @@ public final class UserAvatarManager extends Manager {
             InterruptedException, NoResponseException {
         String id = publishPNGAvatarData(data);
         publishPNGAvatarMetadata(id, data.length, height, width);
+    }
+
+    /**
+     * Publish a PNG avatar and its metadata to PubSub.
+     * If you know the dimensions of the image, use {@link #publishPNGAvatar(File, int, int)} instead.
+     *
+     * @param pngFile PNG File
+     *
+     * @throws IOException if an {@link IOException} occurs while reading the file
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws PubSubException.NotALeafNodeException if either the metadata node or the data node is not a valid
+     * {@link LeafNode}
+     * @throws NotConnectedException if the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
+     * @throws NoResponseException if the server does not respond
+     */
+    public void publishPNGAvatar(File pngFile) throws NotConnectedException, InterruptedException,
+            PubSubException.NotALeafNodeException, NoResponseException, IOException, XMPPErrorException {
+        publishPNGAvatar(pngFile, 0, 0);
     }
 
     /**
@@ -298,7 +335,8 @@ public final class UserAvatarManager extends Manager {
     }
 
     private String publishPNGAvatarData(byte[] data)
-            throws NoResponseException, NotConnectedException, XMPPErrorException, InterruptedException, PubSubException.NotALeafNodeException {
+            throws NoResponseException, NotConnectedException, XMPPErrorException, InterruptedException,
+            PubSubException.NotALeafNodeException {
         String itemId = Base64.encodeToString(SHA1.bytes(data));
         publishAvatarData(data, itemId);
         return itemId;
