@@ -83,7 +83,7 @@ import org.jxmpp.jid.EntityBareJid;
  * <p>
  * Fetching avatars published via HTTP is out of scope of this manager. If you do implement it, remember to mark the
  * avatar as locally available in your {@link AvatarMetadataStore} after you retrieved it.
- * 
+ *
  * @author Fernando Ramirez
  * @author Paul Schaub
  * @see <a href="http://xmpp.org/extensions/xep-0084.html">XEP-0084: User

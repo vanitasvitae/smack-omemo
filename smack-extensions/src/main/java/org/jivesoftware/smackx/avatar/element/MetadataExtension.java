@@ -102,7 +102,7 @@ public class MetadataExtension implements ExtensionElement {
 
     @Override
     public CharSequence toXML(XmlEnvironment xmlEnvironment) {
-        XmlStringBuilder xml = new XmlStringBuilder(this);
+        XmlStringBuilder xml = new XmlStringBuilder(this, xmlEnvironment);
         appendInfoElements(xml);
         appendPointerElements(xml);
         closeElement(xml);

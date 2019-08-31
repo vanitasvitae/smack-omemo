@@ -92,7 +92,7 @@ public class DataExtension implements ExtensionElement {
 
     @Override
     public CharSequence toXML(XmlEnvironment xmlEnvironment) {
-        XmlStringBuilder xml = new XmlStringBuilder(this);
+        XmlStringBuilder xml = new XmlStringBuilder(this, xmlEnvironment);
         xml.rightAngleBracket();
         xml.escape(this.getDataAsString());
         xml.closeElement(this);
