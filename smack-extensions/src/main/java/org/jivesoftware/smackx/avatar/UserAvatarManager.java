@@ -70,6 +70,10 @@ public final class UserAvatarManager extends Manager {
 
     private static final Map<XMPPConnection, UserAvatarManager> INSTANCES = new WeakHashMap<>();
 
+    public static final String TYPE_PNG = "image/png";
+    public static final String TYPE_GIF = "image/gif";
+    public static final String TYPE_JPEG = "image/jpeg";
+
     private final PepManager pepManager;
     private final ServiceDiscoveryManager serviceDiscoveryManager;
 
@@ -107,10 +111,10 @@ public final class UserAvatarManager extends Manager {
      *
      * @see <a href="https://xmpp.org/extensions/xep-0163.html">XEP-0163: Personal Eventing Protocol</a>
      *
-     * @throws NoResponseException
-     * @throws XMPPErrorException
-     * @throws NotConnectedException
-     * @throws InterruptedException
+     * @throws NoResponseException if the server does not respond
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws NotConnectedException if the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
      */
     public boolean isSupportedByServer()
             throws NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException {
@@ -162,31 +166,11 @@ public final class UserAvatarManager extends Manager {
         return avatarListeners.remove(listener);
     }
 
-    /**
-     * Get the data node.
-     * This node contains the avatar image data.
-     *
-     * @return the data node
-     * @throws NoResponseException
-     * @throws NotConnectedException
-     * @throws InterruptedException
-     * @throws XMPPErrorException
-     */
     private LeafNode getOrCreateDataNode()
             throws NoResponseException, NotConnectedException, InterruptedException, XMPPErrorException, PubSubException.NotALeafNodeException {
         return pepManager.getPepPubSubManager().getOrCreateLeafNode(DATA_NAMESPACE);
     }
 
-    /**
-     * Get the metadata node.
-     * This node contains lightweight metadata information about the data in the data node.
-     *
-     * @return the metadata node
-     * @throws NoResponseException
-     * @throws NotConnectedException
-     * @throws InterruptedException
-     * @throws XMPPErrorException
-     */
     private LeafNode getOrCreateMetadataNode()
             throws NoResponseException, NotConnectedException, InterruptedException, XMPPErrorException, PubSubException.NotALeafNodeException {
         return pepManager.getPepPubSubManager().getOrCreateLeafNode(METADATA_NAMESPACE);
@@ -195,20 +179,22 @@ public final class UserAvatarManager extends Manager {
     /**
      * Publish a PNG Avatar and its metadata to PubSub.
      *
-     * @param data
-     * @param height
-     * @param width
-     * @throws XMPPErrorException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws NotConnectedException
-     * @throws InterruptedException
-     * @throws NoResponseException
+     * @param data raw bytes of the avatar
+     * @param height height of the image in pixels
+     * @param width width of the image in pixels
+     *
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws PubSubException.NotALeafNodeException if either the metadata node or the data node is not a
+     *                                               {@link LeafNode}
+     * @throws NotConnectedException if the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
+     * @throws NoResponseException if the server does not respond
      */
-    public void publishAvatar(byte[] data, int height, int width)
+    public void publishPNGAvatar(byte[] data, int height, int width)
             throws XMPPErrorException, PubSubException.NotALeafNodeException, NotConnectedException,
             InterruptedException, NoResponseException {
-        String id = publishAvatarData(data);
-        publishAvatarMetadata(id, data.length, "image/png", height, width);
+        String id = publishPNGAvatarData(data);
+        publishPNGAvatarMetadata(id, data.length, height, width);
     }
 
     /**
@@ -218,14 +204,15 @@ public final class UserAvatarManager extends Manager {
      * @param height height of the image
      * @param width width of the image
      *
-     * @throws IOException
-     * @throws XMPPErrorException
-     * @throws PubSubException.NotALeafNodeException
-     * @throws NotConnectedException
-     * @throws InterruptedException
-     * @throws NoResponseException
+     * @throws IOException if an {@link IOException} occurs while reading the file
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws PubSubException.NotALeafNodeException if either the metadata node or the data node is not a valid
+     * {@link LeafNode}
+     * @throws NotConnectedException if the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
+     * @throws NoResponseException if the server does not respond
      */
-    public void publishAvatar(File pngFile, int height, int width)
+    public void publishPNGAvatar(File pngFile, int height, int width)
             throws IOException, XMPPErrorException, PubSubException.NotALeafNodeException, NotConnectedException,
             InterruptedException, NoResponseException {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream((int) pngFile.length());
@@ -236,68 +223,139 @@ public final class UserAvatarManager extends Manager {
                 out.write(buffer, 0, read);
             }
             byte[] bytes = out.toByteArray();
-            publishAvatar(bytes, height, width);
+            publishPNGAvatar(bytes, height, width);
         }
     }
 
+    /**
+     * Fetch a published user avatar from their PubSub service.
+     *
+     * @param from {@link EntityBareJid} of the avatars owner
+     * @param metadataInfo {@link MetadataInfo} of the avatar that shall be fetched
+     *
+     * @return bytes of the avatar
+     *
+     * @throws InterruptedException if the thread gets interrupted
+     * @throws PubSubException.NotALeafNodeException if the data node is not a {@link LeafNode}
+     * @throws NoResponseException if the server does not respond
+     * @throws NotConnectedException if the connection is not connected
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws PubSubException.NotAPubSubNodeException if the data node is not a valid PubSub node
+     * @throws UserAvatarException.AvatarMetadataMismatchException if the data in the data node does not match whats
+     * promised by the {@link MetadataInfo} element
+     * @throws UserAvatarException.NotAPubSubAvatarInfoElementException if the user tries to fetch the avatar using an
+     * info element that points to a HTTP resource
+     */
     public byte[] fetchAvatarFromPubSub(EntityBareJid from, MetadataInfo metadataInfo)
             throws InterruptedException, PubSubException.NotALeafNodeException, NoResponseException,
-            NotConnectedException, XMPPErrorException, PubSubException.NotAPubSubNodeException {
+            NotConnectedException, XMPPErrorException, PubSubException.NotAPubSubNodeException,
+            UserAvatarException.AvatarMetadataMismatchException {
+        if (metadataInfo.getUrl() != null) {
+            throw new UserAvatarException.NotAPubSubAvatarInfoElementException("Provided MetadataInfo element points to " +
+                    "a HTTP resource, not to a PubSub item.");
+        }
         LeafNode dataNode = PubSubManager.getInstanceFor(connection(), from)
-                        .getLeafNode(DATA_NAMESPACE);
+                .getLeafNode(DATA_NAMESPACE);
 
         List<PayloadItem<DataExtension>> dataItems = dataNode.getItems(1, metadataInfo.getId());
-        DataExtension extension = dataItems.get(0).getPayload();
+        DataExtension data = dataItems.get(0).getPayload();
+        if (data.getData().length != metadataInfo.getBytes().intValue()) {
+            throw new UserAvatarException.AvatarMetadataMismatchException("Avatar Data with itemId '" + metadataInfo.getId() +
+                    "' of " + from.asUnescapedString() + " does not match the Metadata (metadata promises " +
+                    metadataInfo.getBytes().intValue() + " bytes, data contains " + data.getData().length + " bytes)");
+        }
         if (metadataStore != null) {
             metadataStore.setAvatarAvailable(from, metadataInfo.getId());
         }
-        return extension.getData();
+        return data.getData();
     }
 
-    private String publishAvatarData(byte[] data)
+    private String publishPNGAvatarData(byte[] data)
             throws NoResponseException, NotConnectedException, XMPPErrorException, InterruptedException, PubSubException.NotALeafNodeException {
         String itemId = Base64.encodeToString(SHA1.bytes(data));
         publishAvatarData(data, itemId);
         return itemId;
     }
 
-    private void publishAvatarData(byte[] data, String itemId)
+    /**
+     * Publish some avatar image data to PubSub.
+     * Note, that if the image is an image of type {@link #TYPE_PNG}, the itemId MUST be the SHA-1 sum of that image.
+     * If however the image is not of type {@link #TYPE_PNG}, the itemId MUST be the SHA-1 sum of the PNG encoded
+     * representation of this image (an avatar can be published in several image formats, but at least one of them
+     * must be of type {@link #TYPE_PNG}).
+     *
+     * @param data raw bytes of the image
+     * @param itemId SHA-1 sum of the PNG encoded representation of this image.
+     *
+     * @throws NoResponseException if the server does not respond
+     * @throws NotConnectedException if the connection is not connected
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws InterruptedException if the thread is interrupted
+     * @throws PubSubException.NotALeafNodeException if the data node is not a {@link LeafNode}.
+     */
+    public void publishAvatarData(byte[] data, String itemId)
             throws NoResponseException, NotConnectedException, XMPPErrorException, InterruptedException, PubSubException.NotALeafNodeException {
         DataExtension dataExtension = new DataExtension(data);
         getOrCreateDataNode().publish(new PayloadItem<>(itemId, dataExtension));
     }
 
     /**
-     * Publish metadata about an avatar to the metadata node.
+     * Publish metadata about an avatar of type {@link #TYPE_PNG} to the metadata node.
      *
-     * @param itemId SHA-1 sum of the image of type image/png
+     * @param itemId SHA-1 sum of the image of type {@link #TYPE_PNG}
      * @param info info element containing metadata of the file
-     * @param pointers list of metadata pointer elements
+     * @param pointers optional list of metadata pointer elements
      *
-     * @throws NoResponseException
-     * @throws XMPPErrorException
-     * @throws NotConnectedException
-     * @throws InterruptedException
+     * @throws NoResponseException if the server does not respond
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws NotConnectedException of the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
+     * @throws PubSubException.NotALeafNodeException if the metadata node is not a {@link LeafNode}
+     * @throws UserAvatarException.AvatarMetadataMissingPNGInfoException if the info element does not point to an
+     * avatar image of type {@link #TYPE_PNG} available in PubSub.
      */
-    public void publishAvatarMetadata(String itemId, MetadataInfo info, List<MetadataPointer> pointers)
+    public void publishPNGAvatarMetadata(String itemId, MetadataInfo info, List<MetadataPointer> pointers)
             throws NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException, PubSubException.NotALeafNodeException {
         publishAvatarMetadata(itemId, Collections.singletonList(info), pointers);
     }
 
     /**
      * Publish avatar metadata.
+     * The list of {@link MetadataInfo} elements can contain info about several image data types. However, there must
+     * be at least one {@link MetadataInfo} element about an image of type {@link #TYPE_PNG} which is destined to
+     * publication in PubSub. Its id MUST equal the itemId parameter.
      *
-     * @param itemId SHA-1 sum of the avatar image representation of type image/png
+     * @param itemId SHA-1 sum of the avatar image representation of type {@link #TYPE_PNG}
      * @param infos list of metadata elements
-     * @param pointers list of pointer elements
+     * @param pointers optional list of pointer elements
      *
-     * @throws NoResponseException
-     * @throws XMPPErrorException
-     * @throws NotConnectedException
-     * @throws InterruptedException
+     * @throws NoResponseException if the server does not respond
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws NotConnectedException if the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
+     * @throws PubSubException.NotALeafNodeException if the metadata node is not a {@link LeafNode}
+     * @throws UserAvatarException.AvatarMetadataMissingPNGInfoException if the list of {@link MetadataInfo} elements
+     * does not contain at least one PNG image
+     *
+     * @see <a href="https://xmpp.org/extensions/xep-0084.html#proto-info">
+     *     §4.2.1 Info Element - About the restriction that at least one info element must describe a PNG image.</a>
      */
     public void publishAvatarMetadata(String itemId, List<MetadataInfo> infos, List<MetadataPointer> pointers)
             throws NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException, PubSubException.NotALeafNodeException {
+        // Check if metadata extension contains at least one png image available in PubSub
+        boolean containsPng = false;
+        for (MetadataInfo info : infos) {
+            if (TYPE_PNG.equals(info.getType())) {
+                containsPng = true;
+                break;
+            }
+        }
+        if (!containsPng) {
+            throw new UserAvatarException.AvatarMetadataMissingPNGInfoException(
+                    "The MetadataExtension must contain at least one info element describing an image of type " +
+                            "\"" + TYPE_PNG + "\"");
+        }
+
         MetadataExtension metadataExtension = new MetadataExtension(infos, pointers);
         getOrCreateMetadataNode().publish(new PayloadItem<>(itemId, metadataExtension));
 
@@ -309,46 +367,46 @@ public final class UserAvatarManager extends Manager {
     }
 
     /**
-     * Publish metadata about an avatar available via HTTP.
+     * Publish metadata about a PNG avatar available via HTTP.
      * This method can be used together with HTTP File Upload as an alternative to PubSub for avatar publishing.
      *
      * @param itemId SHA-1 sum of the avatar image file.
      * @param url HTTP(S) Url of the image file.
      * @param bytes size of the file in bytes
-     * @param type content type of the file
      * @param pixelsHeight height of the image file in pixels
      * @param pixelsWidth width of the image file in pixels
      *
-     * @throws NoResponseException
-     * @throws XMPPErrorException
-     * @throws NotConnectedException
-     * @throws InterruptedException
+     * @throws NoResponseException if the server does not respond
+     * @throws XMPPErrorException of a protocol level error occurs
+     * @throws NotConnectedException if the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
+     * @throws PubSubException.NotALeafNodeException if the metadata node is not a {@link LeafNode}
      */
-    public void publishHttpAvatarMetadata(String itemId, URL url, long bytes, String type,
+    public void publishHttpPNGAvatarMetadata(String itemId, URL url, long bytes,
                                           int pixelsHeight, int pixelsWidth)
             throws NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException, PubSubException.NotALeafNodeException {
-        MetadataInfo info = new MetadataInfo(itemId, url, bytes, type, pixelsHeight, pixelsWidth);
-        publishAvatarMetadata(itemId, info, null);
+        MetadataInfo info = new MetadataInfo(itemId, url, bytes, TYPE_PNG, pixelsHeight, pixelsWidth);
+        publishPNGAvatarMetadata(itemId, info, null);
     }
 
     /**
-     * Publish avatar metadata with its size in pixels.
+     * Publish avatar metadata about a PNG avatar with its size in pixels.
      *
-     * @param itemId
-     * @param bytes
-     * @param type
-     * @param pixelsHeight
-     * @param pixelsWidth
-     * @throws NoResponseException
-     * @throws XMPPErrorException
-     * @throws NotConnectedException
-     * @throws InterruptedException
+     * @param itemId SHA-1 hash of the PNG encoded image
+     * @param bytes number of bytes of this particular image data array
+     * @param pixelsHeight height of this image in pixels
+     * @param pixelsWidth width of this image in pixels
+     *
+     * @throws NoResponseException if the server does not respond
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws NotConnectedException if the connection is not connected
+     * @throws PubSubException.NotALeafNodeException if the metadata node is not a {@link LeafNode}
+     * @throws InterruptedException if the thread is interrupted
      */
-    public void publishAvatarMetadata(String itemId, long bytes, String type, int pixelsHeight,
-                                      int pixelsWidth)
+    public void publishPNGAvatarMetadata(String itemId, long bytes, int pixelsHeight, int pixelsWidth)
             throws NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException, PubSubException.NotALeafNodeException {
-        MetadataInfo info = new MetadataInfo(itemId, null, bytes, type, pixelsHeight, pixelsWidth);
-        publishAvatarMetadata(itemId, info, null);
+        MetadataInfo info = new MetadataInfo(itemId, null, bytes, TYPE_PNG, pixelsHeight, pixelsWidth);
+        publishPNGAvatarMetadata(itemId, info, null);
     }
 
     /**
@@ -356,10 +414,11 @@ public final class UserAvatarManager extends Manager {
      *
      * @see <a href="https://xmpp.org/extensions/xep-0084.html#proto-meta">§4.2 Metadata Element</a>
      *
-     * @throws NoResponseException
-     * @throws XMPPErrorException
-     * @throws NotConnectedException
-     * @throws InterruptedException
+     * @throws NoResponseException if the server does not respond
+     * @throws XMPPErrorException if a protocol level error occurs
+     * @throws NotConnectedException if the connection is not connected
+     * @throws InterruptedException if the thread is interrupted
+     * @throws PubSubException.NotALeafNodeException if the metadata node is not a {@link LeafNode}
      */
     public void unpublishAvatar()
             throws NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException, PubSubException.NotALeafNodeException {

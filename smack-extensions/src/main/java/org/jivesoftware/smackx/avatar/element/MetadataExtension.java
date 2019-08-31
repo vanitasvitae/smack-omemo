@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.jivesoftware.smack.packet.ExtensionElement;
-import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.packet.XmlEnvironment;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 import org.jivesoftware.smackx.avatar.MetadataInfo;
@@ -47,7 +46,7 @@ public class MetadataExtension implements ExtensionElement {
     /**
      * Metadata Extension constructor.
      *
-     * @param infos
+     * @param infos list of {@link MetadataInfo} elements.
      */
     public MetadataExtension(List<MetadataInfo> infos) {
         this(infos, null);
@@ -56,8 +55,8 @@ public class MetadataExtension implements ExtensionElement {
     /**
      * Metadata Extension constructor.
      *
-     * @param infos
-     * @param pointers
+     * @param infos list of {@link MetadataInfo} elements
+     * @param pointers optional list of {@link MetadataPointer} elements
      */
     public MetadataExtension(List<MetadataInfo> infos, List<MetadataPointer> pointers) {
         this.infos = infos;
@@ -80,6 +79,15 @@ public class MetadataExtension implements ExtensionElement {
      */
     public List<MetadataPointer> getPointerElements() {
         return (pointers == null) ? null : Collections.unmodifiableList(pointers);
+    }
+
+    /**
+     * Return true, if this {@link MetadataExtension} is to be interpreted as Avatar unpublishing.
+     *
+     * @return true if unpublishing, false otherwise
+     */
+    public boolean isDisablingPublishing() {
+        return getInfoElements().isEmpty();
     }
 
     @Override
@@ -160,14 +168,4 @@ public class MetadataExtension implements ExtensionElement {
             xml.closeEmptyElement();
         }
     }
-
-    /**
-     * Return true, if this {@link MetadataExtension} is to be interpreted as Avatar unpublishing.
-     *
-     * @return true if unpublishing, false otherwise
-     */
-    public boolean isDisablingPublishing() {
-        return getInfoElements().isEmpty();
-    }
-
 }
