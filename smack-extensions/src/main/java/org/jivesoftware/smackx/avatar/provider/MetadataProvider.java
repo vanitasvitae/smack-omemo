@@ -79,7 +79,7 @@ public class MetadataProvider extends ExtensionElementProvider<MetadataExtension
         return new MetadataExtension(metadataInfos, pointers);
     }
 
-    private MetadataInfo parseInfo(XmlPullParser parser) throws XmlPullParserException {
+    private static MetadataInfo parseInfo(XmlPullParser parser) throws XmlPullParserException {
         String id;
         URL url = null;
         long bytes = 0;
@@ -120,7 +120,7 @@ public class MetadataProvider extends ExtensionElementProvider<MetadataExtension
         }
     }
 
-    private MetadataPointer parsePointer(XmlPullParser parser) throws XmlPullParserException, IOException {
+    private static MetadataPointer parsePointer(XmlPullParser parser) throws XmlPullParserException, IOException {
         int pointerDepth = parser.getDepth();
         String namespace = null;
         HashMap<String, Object> fields = null;
