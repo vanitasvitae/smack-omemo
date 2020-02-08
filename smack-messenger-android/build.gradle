@@ -1,0 +1,7 @@
+dependencies {
+    implementation project(":smack-messenger")
+    implementation project(":smack-android-extensions")
+
+    // Add the Android jar to the Eclipse .classpath.
+    compileOnly files(androidBootClasspath)
+}

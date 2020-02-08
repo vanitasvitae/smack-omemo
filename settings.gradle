@@ -29,6 +29,8 @@ include 'smack-core',
 		'smack-omemo-signal-integration-test',
 		'smack-repl',
 		'smack-openpgp',
+		'smack-messenger',
+		'smack-messenger-android',
 		'smack-xmlparser',
 		'smack-xmlparser-stax',
 		'smack-xmlparser-xpp3'

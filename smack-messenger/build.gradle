@@ -1,0 +1,7 @@
+dependencies {
+    implementation project(":smack-core")
+    implementation project(":smack-tcp")
+    implementation project(":smack-im")
+    implementation project(":smack-extensions")
+    implementation project(":smack-experimental")
+}
