@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jivesoftware.smack.AbstractConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
@@ -51,6 +52,21 @@ public class Messenger implements ClientStateListener {
 
         offlineAccountSetup(xmppAccount);
 
+        connection.addConnectionListener(new AbstractConnectionListener() {
+            @Override
+            public void authenticated(XMPPConnection connection, boolean resumed) {
+                if (resumed) {
+                    return;
+                }
+
+                try {
+                    onlineAccountSetup(xmppAccount);
+                } catch (InterruptedException | XMPPException | SmackException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         return xmppAccount;
     }
 
@@ -61,11 +77,12 @@ public class Messenger implements ClientStateListener {
 
     private void onlineAccountSetup(XmppAccount account)
             throws InterruptedException, XMPPException, SmackException {
-        if (CarbonManager.getInstanceFor(account.getConnection()).isSupportedByServer()) {
-            CarbonManager.getInstanceFor(account.getConnection()).enableCarbons();
-        }
 
-        
+        // Enable Carbons
+        CarbonManager carbonManager = CarbonManager.getInstanceFor(account.getConnection());
+        if (carbonManager.isSupportedByServer()) {
+            carbonManager.enableCarbons();
+        }
     }
 
     @Override
