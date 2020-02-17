@@ -9,17 +9,22 @@ import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.caps.EntityCapsManager;
 import org.jivesoftware.smackx.carbons.CarbonManager;
 import org.jivesoftware.smackx.csi.ClientStateIndicationManager;
+import org.jivesoftware.smackx.iqlast.LastActivityManager;
 import org.jivesoftware.smackx.iqversion.VersionManager;
 import org.jivesoftware.smackx.messenger.connection.ConnectionFactory;
 import org.jivesoftware.smackx.messenger.connection.XmppTcpConnectionFactory;
 import org.jivesoftware.smackx.messenger.csi.ClientStateListener;
 import org.jivesoftware.smackx.messenger.store.MessengerStore;
 import org.jivesoftware.smackx.messenger.store.roster.RosterStoreAdapter;
+import org.jivesoftware.smackx.muc.bookmarkautojoin.MucBookmarkAutojoinManager;
+import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
 import org.jivesoftware.smackx.sid.StableUniqueStanzaIdManager;
+import org.jivesoftware.smackx.time.EntityTimeManager;
 
 import org.jxmpp.stringprep.XmppStringprepException;
 
@@ -41,6 +46,11 @@ public class Messenger implements ClientStateListener {
         ReconnectionManager.setEnabledPerDefault(true);
         StableUniqueStanzaIdManager.setEnabledByDefault(true);
         VersionManager.setAutoAppendSmackVersion(false);
+        DeliveryReceiptManager.setDefaultAutoReceiptMode(
+                DeliveryReceiptManager.AutoReceiptMode.ifIsSubscribed);
+        EntityTimeManager.setAutoEnable(true);
+        LastActivityManager.setEnabledPerDefault(true);
+        MucBookmarkAutojoinManager.setAutojoinPerDefault(true);
     }
 
     public XmppAccount addAccount(UUID accountId, String username, String password, String serviceName)
@@ -77,12 +87,16 @@ public class Messenger implements ClientStateListener {
 
     private void onlineAccountSetup(XmppAccount account)
             throws InterruptedException, XMPPException, SmackException {
+        XMPPConnection connection = account.getConnection();
 
         // Enable Carbons
-        CarbonManager carbonManager = CarbonManager.getInstanceFor(account.getConnection());
+        CarbonManager carbonManager = CarbonManager.getInstanceFor(connection);
         if (carbonManager.isSupportedByServer()) {
             carbonManager.enableCarbons();
         }
+
+        // Disable XHTML-IM
+        ChatManager.getInstanceFor(connection).setXhmtlImEnabled(false);
     }
 
     @Override
