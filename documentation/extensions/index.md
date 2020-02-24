@@ -33,7 +33,7 @@ Smack Extensions and currently supported XEPs of smack-extensions
 | Flexible Offline Message Retrieval          | [XEP-0013](https://xmpp.org/extensions/xep-0013.html)  | n/a       | Extension for flexible, POP3-like handling of offline messages. |
 | [Privacy Lists](privacy.md)                 | [XEP-0016](https://xmpp.org/extensions/xep-0016.html)  | n/a       | Enabling or disabling communication with other entities. |
 | [Service Discovery](disco.md)               | [XEP-0030](https://xmpp.org/extensions/xep-0030.html)  | n/a       | Allows to discover services in XMPP entities. |
-| Extended Stanza Addressing                  | [XEP-0033](https://xmpp.org/extensions/xep-0033.html)  | n/a       | Allows to include headers in stanzas in order to specifiy multiple recipients or sub-addresses. |
+| Extended Stanza Addressing                  | [XEP-0033](https://xmpp.org/extensions/xep-0033.html)  | n/a       | Allows to include headers in stanzas in order to specify multiple recipients or sub-addresses. |
 | [Multi User Chat](muc.md)                   | [XEP-0045](https://xmpp.org/extensions/xep-0045.html)  | n/a       | Allows configuration of, participation in, and administration of individual text-based conference rooms. |
 | In-Band Bytestreams                         | [XEP-0047](https://xmpp.org/extensions/xep-0047.html)  | n/a       | Enables any two entities to establish a one-to-one bytestream between themselves using plain XMPP. |
 | Bookmarks                                   | [XEP-0048](https://xmpp.org/extensions/xep-0048.html)  | n/a       | Bookmarks, for e.g. MUC and web pages. |
@@ -75,7 +75,7 @@ Smack Extensions and currently supported XEPs of smack-extensions
 | Best Practices for Resource Locking         | [XEP-0296](https://xmpp.org/extensions/xep-0296.html)  | n/a       | Specifies best practices to be followed by Jabber/XMPP clients about when to lock into, and unlock away from, resources. |
 | Last Message Correction                     | [XEP-0308](https://xmpp.org/extensions/xep-0308.html)  | n/a       | Provides a method for indicating that a message is a correction of the last sent message. |
 | Last User Interaction in Presence           | [XEP-0319](https://xmpp.org/extensions/xep-0319.html)  | n/a       | Communicate time of last user interaction via XMPP presence notifications. |
-| Data Forms Geolocation Element              | [XEP-0350](https://xmpp.org/extensions/xep-0350.html)  | n/a       | Allows to include XEP-0080 gelocation data in XEP-0004 data forms.  |
+| Data Forms Geolocation Element              | [XEP-0350](https://xmpp.org/extensions/xep-0350.html)  | n/a       | Allows to include XEP-0080 geolocation data in XEP-0004 data forms.  |
 | [Group Chat Invitations](invitation.md)     | n/a                                                    | n/a       | Send invitations to other users to join a group chat room. |
 | [Jive Properties](properties.md)            | n/a                                                    | n/a       | TODO |
 
