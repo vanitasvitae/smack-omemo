@@ -16,23 +16,31 @@
  */
 package org.jivesoftware.smackx.mix.core.provider;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.IOException;
 
-import org.jivesoftware.smack.packet.XmlEnvironment;
 import org.jivesoftware.smack.parsing.SmackParsingException;
-import org.jivesoftware.smack.provider.ExtensionElementProvider;
+import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smack.xml.XmlPullParser;
 import org.jivesoftware.smack.xml.XmlPullParserException;
-import org.jivesoftware.smackx.mix.core.element.LeaveElement;
+import org.jivesoftware.smackx.mix.core.element.DestroyChannelElement;
 
-public abstract class LeaveElementProvider<E extends LeaveElement> extends ExtensionElementProvider<E> {
+import org.junit.jupiter.api.Test;
 
-    public static class V1 extends LeaveElementProvider<LeaveElement.V1> {
+public class DestroyChannelElementProviderTest {
 
-        @Override
-        public LeaveElement.V1 parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment)
-                throws XmlPullParserException, IOException, SmackParsingException {
-            return new LeaveElement.V1();
-        }
+    @Test
+    public void v1ProviderTest() throws XmlPullParserException, IOException, SmackParsingException {
+        String xml = "<destroy channel='coven' xmlns='urn:xmpp:mix:core:1'/>";
+        String channel = "coven";
+        DestroyChannelElementProvider.V1 provider = new DestroyChannelElementProvider.V1();
+        XmlPullParser parser = TestUtils.getParser(xml);
+
+        DestroyChannelElement.V1 element = provider.parse(parser);
+
+        assertNotNull(element);
+        assertEquals(channel, element.getChannel());
     }
 }

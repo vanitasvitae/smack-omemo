@@ -23,16 +23,17 @@ import org.jivesoftware.smack.parsing.SmackParsingException;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
 import org.jivesoftware.smack.xml.XmlPullParser;
 import org.jivesoftware.smack.xml.XmlPullParserException;
-import org.jivesoftware.smackx.mix.core.element.LeaveElement;
+import org.jivesoftware.smackx.mix.core.element.DestroyChannelElement;
 
-public abstract class LeaveElementProvider<E extends LeaveElement> extends ExtensionElementProvider<E> {
+public abstract class DestroyChannelElementProvider<E extends DestroyChannelElement> extends ExtensionElementProvider<E> {
 
-    public static class V1 extends LeaveElementProvider<LeaveElement.V1> {
+    public static class V1 extends DestroyChannelElementProvider<DestroyChannelElement.V1> {
 
         @Override
-        public LeaveElement.V1 parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment)
+        public DestroyChannelElement.V1 parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment)
                 throws XmlPullParserException, IOException, SmackParsingException {
-            return new LeaveElement.V1();
+            String channel = parser.getAttributeValue("", DestroyChannelElement.ATTR_CHANNEL);
+            return new DestroyChannelElement.V1(channel);
         }
     }
 }

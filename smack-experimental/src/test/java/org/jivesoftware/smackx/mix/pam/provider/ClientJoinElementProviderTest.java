@@ -14,24 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.mix.pam.element;
+package org.jivesoftware.smackx.mix.pam.provider;
 
-import static org.jivesoftware.smack.test.util.XmlUnitUtils.assertXmlSimilar;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
+import org.jivesoftware.smack.parsing.SmackParsingException;
+import org.jivesoftware.smack.test.util.TestUtils;
+import org.jivesoftware.smack.xml.XmlPullParser;
+import org.jivesoftware.smack.xml.XmlPullParserException;
 import org.jivesoftware.smackx.mix.core.MixNodes;
-import org.jivesoftware.smackx.mix.core.element.JoinElement;
+import org.jivesoftware.smackx.mix.core.element.SubscribeElement;
+import org.jivesoftware.smackx.mix.pam.element.ClientJoinElement;
 
 import org.junit.jupiter.api.Test;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 
-public class ClientJoinElementTest {
+public class ClientJoinElementProviderTest {
 
     @Test
-    public void v2Test() {
-        String expectedXml = "" +
+    public void v2ProviderTest() throws XmlPullParserException, IOException, SmackParsingException {
+        String xml = "" +
                 "<client-join xmlns='urn:xmpp:mix:pam:2' channel='coven@mix.shakespeare.example'>\n" +
                 "  <join xmlns='urn:xmpp:mix:core:1'>\n" +
                 "    <subscribe node='urn:xmpp:mix:nodes:messages'/>\n" +
@@ -40,11 +48,18 @@ public class ClientJoinElementTest {
                 "    <subscribe node='urn:xmpp:mix:nodes:info'/>\n" +
                 "  </join>\n" +
                 "</client-join>";
-
         EntityBareJid channel = JidCreate.entityBareFromOrThrowUnchecked("coven@mix.shakespeare.example");
-        JoinElement.V1 join = new JoinElement.V1(Arrays.asList(MixNodes.NODE_MESSAGES, MixNodes.NODE_PRESENCE, MixNodes.NODE_PARTICIPANTS, MixNodes.NODE_INFO));
-        ClientJoinElement element = new ClientJoinElement.V2(channel, join);
+        List<SubscribeElement> subscribeElements = Arrays.asList(
+                MixNodes.NODE_MESSAGES, MixNodes.NODE_PRESENCE, MixNodes.NODE_PARTICIPANTS, MixNodes.NODE_INFO);
+        ClientJoinElementProvider.V2 provider = new ClientJoinElementProvider.V2();
+        XmlPullParser parser = TestUtils.getParser(xml);
 
-        assertXmlSimilar(expectedXml, element.toXML());
+        ClientJoinElement.V2 element = provider.parse(parser);
+
+        assertEquals(channel, element.getChannel());
+        assertEquals(4, element.getJoin().getNodeSubscriptions().size());
+        assertNull(element.getJoin().getId());
+        assertNull(element.getJoin().getNick());
+        assertEquals(subscribeElements, element.getJoin().getNodeSubscriptions());
     }
 }

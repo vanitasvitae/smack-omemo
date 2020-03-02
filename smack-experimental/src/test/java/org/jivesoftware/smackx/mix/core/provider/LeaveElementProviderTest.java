@@ -16,23 +16,30 @@
  */
 package org.jivesoftware.smackx.mix.core.provider;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 
-import org.jivesoftware.smack.packet.XmlEnvironment;
 import org.jivesoftware.smack.parsing.SmackParsingException;
-import org.jivesoftware.smack.provider.ExtensionElementProvider;
+import org.jivesoftware.smack.test.util.TestUtils;
 import org.jivesoftware.smack.xml.XmlPullParser;
 import org.jivesoftware.smack.xml.XmlPullParserException;
 import org.jivesoftware.smackx.mix.core.element.LeaveElement;
 
-public abstract class LeaveElementProvider<E extends LeaveElement> extends ExtensionElementProvider<E> {
+import org.junit.jupiter.api.Test;
 
-    public static class V1 extends LeaveElementProvider<LeaveElement.V1> {
+public class LeaveElementProviderTest {
 
-        @Override
-        public LeaveElement.V1 parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment)
-                throws XmlPullParserException, IOException, SmackParsingException {
-            return new LeaveElement.V1();
-        }
+    @Test
+    public void v1ProviderTest() throws XmlPullParserException, IOException, SmackParsingException {
+        String xml = "<leave xmlns='urn:xmpp:mix:core:1'/>";
+        LeaveElementProvider.V1 provider = new LeaveElementProvider.V1();
+        XmlPullParser parser = TestUtils.getParser(xml);
+
+        LeaveElement element = provider.parse(parser);
+
+        assertNotNull(element);
+        assertTrue(element instanceof LeaveElement.V1);
     }
 }
