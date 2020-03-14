@@ -17,7 +17,6 @@
 package org.jivesoftware.smackx.mix.core.provider;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
@@ -40,6 +39,5 @@ public class LeaveElementProviderTest {
         LeaveElement element = provider.parse(parser);
 
         assertNotNull(element);
-        assertTrue(element instanceof LeaveElement.V1);
     }
 }
