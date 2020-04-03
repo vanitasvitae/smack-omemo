@@ -48,8 +48,6 @@ public class MixCoreConstants {
      */
     public static final String NODE_PARTICIPANTS = MIX_NODES + ":participants";
 
-    public static final String NODE_PRESENCE = MIX_NODES + ":presence";
-
     /**
      * For storing general channel information, such as description.
      */
