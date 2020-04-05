@@ -9,12 +9,22 @@ import org.junit.jupiter.api.Test;
 public class RegisterElementTest {
 
     @Test
-    public void v0testSerialization() {
+    public void testV0Serialization() {
         RegisterElement register = new RegisterElement.V0(new NickElement("thirdwitch"));
         String expectedXml = "" +
-                "<register xmlns='urn:xmpp:mix:misc:0'>\n" +
-                "  <nick>thirdwitch</nick>\n" +
-                "</register>\n";
+                "<register xmlns='urn:xmpp:mix:misc:0'>" +
+                "  <nick>thirdwitch</nick>" +
+                "</register>";
+
+        assertXmlSimilar(expectedXml, register.toXML());
+    }
+
+    @Test
+    public void testV0NoNickSerialization() {
+        RegisterElement register = new RegisterElement.V0();
+        String expectedXml = "" +
+                "<register xmlns='urn:xmpp:mix:misc:0'>" +
+                "</register>";
 
         assertXmlSimilar(expectedXml, register.toXML());
     }

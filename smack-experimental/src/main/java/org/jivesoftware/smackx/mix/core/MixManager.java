@@ -32,12 +32,12 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.disco.packet.DiscoverInfo;
 import org.jivesoftware.smackx.disco.packet.DiscoverItems;
-import org.jivesoftware.smackx.mam.MamManager;
 import org.jivesoftware.smackx.mam.element.MamElements;
+import org.jivesoftware.smackx.mix.core.element.iq.ClientJoinIQ;
+import org.jivesoftware.smackx.mix.core.element.iq.ClientJoinIQBuilder;
 import org.jivesoftware.smackx.mix.core.exception.NotAMixChannelOrNoPermissionToSubscribeException;
 import org.jivesoftware.smackx.mix.core.exception.NotAMixServiceException;
 import org.jivesoftware.smackx.pubsub.packet.PubSub;
-import org.jivesoftware.smackx.pubsub.packet.PubSubNamespace;
 
 import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
@@ -172,7 +172,12 @@ public final class MixManager extends Manager {
             throws XMPPException.XMPPErrorException, NotAMixChannelOrNoPermissionToSubscribeException,
             SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
         MixChannel channel = discoverMixChannelInformation(channelAddress);
-
+        ClientJoinIQ iq = new ClientJoinIQBuilder(connection())
+                .setNickname(nick)
+                .setChannelAddress(channelAddress)
+                .addMixNodeSubscription(MixNodes.NODE_MESSAGES)
+                .addMixNodeSubscription(MixNodes.NODE_PRESENCE)
+                .build();
         return null;
     }
 }

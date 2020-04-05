@@ -27,7 +27,7 @@ public abstract class RegisterElementProvider<E extends RegisterElement> extends
                         nickElement = new NickElement(parser.nextText());
                     }
                 } else if (tagEvent == XmlPullParser.TagEvent.END_ELEMENT) {
-                    if (SetNickElement.ELEMENT.equals(name)) {
+                    if (RegisterElement.ELEMENT.equals(name)) {
                         return new RegisterElement.V0(nickElement);
                     }
                 }
