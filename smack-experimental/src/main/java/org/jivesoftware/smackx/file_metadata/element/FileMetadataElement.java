@@ -250,6 +250,11 @@ public final class FileMetadataElement implements ExtensionElement {
             return this;
         }
 
+        public Builder addOtherChildElement(ExtensionElement element) {
+            children.add(element);
+            return this;
+        }
+
         public FileMetadataElement build() {
             return new FileMetadataElement(children);
         }

@@ -20,7 +20,9 @@ import java.io.IOException;
 
 import org.jivesoftware.smack.packet.XmlEnvironment;
 import org.jivesoftware.smack.parsing.SmackParsingException;
+import org.jivesoftware.smack.parsing.StandardExtensionElementProvider;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
+import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smack.xml.XmlPullParser;
 import org.jivesoftware.smack.xml.XmlPullParserException;
@@ -78,6 +80,12 @@ public class FileMetadataElementProvider extends ExtensionElementProvider<FileMe
                 case HashElement.ELEMENT:
                     builder.addHash(HashElementProvider.INSTANCE.parse(parser, parser.getDepth(), xmlEnvironment));
                     break;
+                default:
+                    ExtensionElementProvider<?> provider = ProviderManager.getExtensionProvider(name, parser.getNamespace());
+                    if (provider == null) {
+                        provider = StandardExtensionElementProvider.INSTANCE;
+                    }
+                    builder.addOtherChildElement(provider.parse(parser, parser.getDepth(), xmlEnvironment));
             }
         } while (parser.getDepth() != initialDepth);
         return builder.build();
