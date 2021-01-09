@@ -21,34 +21,42 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
 
-import org.jivesoftware.smack.parsing.SmackParsingException;
 import org.jivesoftware.smack.test.util.SmackTestSuite;
-import org.jivesoftware.smack.test.util.TestUtils;
-import org.jivesoftware.smack.xml.XmlPullParserException;
+import org.jivesoftware.smack.test.util.SmackTestUtil;
 import org.jivesoftware.smackx.file_metadata.element.FileMetadataElement;
-import org.jivesoftware.smackx.file_metadata.element.child.DescElement;
-import org.jivesoftware.smackx.file_metadata.element.child.DimensionsElement;
-import org.jivesoftware.smackx.file_metadata.element.child.LengthElement;
-import org.jivesoftware.smackx.file_metadata.element.child.MediaTypeElement;
-import org.jivesoftware.smackx.file_metadata.element.child.NameElement;
-import org.jivesoftware.smackx.file_metadata.element.child.SizeElement;
 import org.jivesoftware.smackx.file_metadata.provider.FileMetadataElementProvider;
 import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.jxmpp.util.XmppDateTime;
 
 public class FileMetadataElementTest extends SmackTestSuite {
 
-    @Test
-    public void testSerialization() throws ParseException, XmlPullParserException, IOException, SmackParsingException {
-        Date date = XmppDateTime.parseDate("2015-07-26T21:46:00+01:00");
-        FileMetadataElement metadataElement = FileMetadataElement.builder()
+    private static Date date;
+    private static FileMetadataElement metadataElement;
+    private static final String expectedXml = "<file xmlns='urn:xmpp:file:metadata:0'>" +
+            "<date>2015-07-26T20:46:00.000+00:00</date>" +
+            "<dimensions>1920x1080</dimensions>" +
+            "<desc>Picture of 24th XSF Summit</desc>" +
+            "<desc xml:lang='de'>Foto vom 24. XSF Summit</desc>" +
+            "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=</hash>" +
+            "<length>63000</length>" +
+            "<media-type>text/plain</media-type>" +
+            "<name>text.txt</name>" +
+            "<size>6144</size>" +
+            "</file>";
+
+    @BeforeAll
+    public static void setup() throws ParseException {
+        date = XmppDateTime.parseDate("2015-07-26T21:46:00+01:00");
+        metadataElement = FileMetadataElement.builder()
                 .setModificationDate(date)
                 .setDimensions("1920x1080")
                 .addDescription("Picture of 24th XSF Summit")
@@ -59,64 +67,60 @@ public class FileMetadataElementTest extends SmackTestSuite {
                 .setName("text.txt")
                 .setSize(6144)
                 .build();
+    }
 
-        // Test serialization
-        final String expectedXml = "<file xmlns='urn:xmpp:file:metadata:0'>" +
-                "<date>2015-07-26T20:46:00.000+00:00</date>" +
-                "<dimensions>1920x1080</dimensions>" +
-                "<desc>Picture of 24th XSF Summit</desc>" +
-                "<desc xml:lang='de'>Foto vom 24. XSF Summit</desc>" +
-                "<hash xmlns='urn:xmpp:hashes:2' algo='sha-256'>2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=</hash>" +
-                "<length>63000</length>" +
-                "<media-type>text/plain</media-type>" +
-                "<name>text.txt</name>" +
-                "<size>6144</size>" +
-                "</file>";
+
+    @Test
+    public void testSerialization() {
         assertXmlSimilar(expectedXml, metadataElement.toXML().toString());
+    }
 
-        // Test deserialization
-        FileMetadataElement parsed = FileMetadataElementProvider.TEST_INSTANCE.parse(TestUtils.getParser(expectedXml));
+    @ParameterizedTest
+    @EnumSource(SmackTestUtil.XmlPullParserKind.class)
+    public void testParsing(SmackTestUtil.XmlPullParserKind parserKind) throws Exception {
+        FileMetadataElement parsed = SmackTestUtil.parse(expectedXml, FileMetadataElementProvider.class, parserKind);
+
         assertEquals(metadataElement, parsed);
     }
 
     @Test
     public void nameIsEscaped() {
-        NameElement nameElement = new NameElement("/etc/passwd");
-        assertEquals("%2Fetc%2Fpasswd", nameElement.getName());
+        FileMetadataElement e = FileMetadataElement.builder().setName("/etc/passwd").build();
+        assertEquals("%2Fetc%2Fpasswd", e.getName());
     }
 
     @Test
     public void rejectNegativeSize() {
-        assertThrows(IllegalArgumentException.class, () -> new SizeElement(-1));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().setSize(-1));
     }
 
     @Test
     public void rejectNegativeLength() {
-        assertThrows(IllegalArgumentException.class, () -> new LengthElement(-1));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().setLength(-1));
     }
 
     @Test
     public void rejectEmptyDescription() {
-        assertThrows(IllegalArgumentException.class, () -> new DescElement(""));
-        assertThrows(IllegalArgumentException.class, () -> new DescElement(null));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().addDescription(""));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().addDescription(null));
     }
 
     @Test
     public void rejectEmptyDimensions() {
-        assertThrows(IllegalArgumentException.class, () -> new DimensionsElement(""));
-        assertThrows(IllegalArgumentException.class, () -> new DimensionsElement(null));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().setDimensions(""));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().setDimensions(null));
     }
 
     @Test
     public void rejectEmptyNameElement() {
-        assertThrows(IllegalArgumentException.class, () -> new NameElement(""));
-        assertThrows(IllegalArgumentException.class, () -> new NameElement(null));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().setName(""));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().setName(null));
     }
 
     @Test
     public void rejectEmptyMediaTypeElement() {
-        assertThrows(IllegalArgumentException.class, () -> new MediaTypeElement(""));
-        assertThrows(IllegalArgumentException.class, () -> new MediaTypeElement(null));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().setMediaType(""));
+        assertThrows(IllegalArgumentException.class, () -> FileMetadataElement.builder().setMediaType(null));
     }
 
     @Test
@@ -127,11 +131,11 @@ public class FileMetadataElementTest extends SmackTestSuite {
                 .addDescription("Bag", "en")
                 .build();
 
-        assertEquals("Foo", metadataElement.getDescElement("br").getDescription());
-        assertEquals("Baz", metadataElement.getDescElement(null).getDescription());
-        assertEquals("Baz", metadataElement.getDescElement().getDescription());
-        assertEquals("Bag", metadataElement.getDescElement("en").getDescription());
-        assertNull(metadataElement.getDescElement("null"));
-        assertEquals(3, metadataElement.getDescElements().size());
+        assertEquals("Foo", metadataElement.getDescription("br"));
+        assertEquals("Baz", metadataElement.getDescription(null));
+        assertEquals("Baz", metadataElement.getDescription());
+        assertEquals("Bag", metadataElement.getDescription("en"));
+        assertNull(metadataElement.getDescription("null"));
+        assertEquals(3, metadataElement.getDescriptions().size());
     }
 }

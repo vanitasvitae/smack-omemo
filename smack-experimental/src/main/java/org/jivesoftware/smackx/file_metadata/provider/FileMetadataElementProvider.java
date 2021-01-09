@@ -27,13 +27,6 @@ import org.jivesoftware.smack.util.ParserUtils;
 import org.jivesoftware.smack.xml.XmlPullParser;
 import org.jivesoftware.smack.xml.XmlPullParserException;
 import org.jivesoftware.smackx.file_metadata.element.FileMetadataElement;
-import org.jivesoftware.smackx.file_metadata.element.child.DateElement;
-import org.jivesoftware.smackx.file_metadata.element.child.DescElement;
-import org.jivesoftware.smackx.file_metadata.element.child.DimensionsElement;
-import org.jivesoftware.smackx.file_metadata.element.child.LengthElement;
-import org.jivesoftware.smackx.file_metadata.element.child.MediaTypeElement;
-import org.jivesoftware.smackx.file_metadata.element.child.NameElement;
-import org.jivesoftware.smackx.file_metadata.element.child.SizeElement;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 import org.jivesoftware.smackx.hashes.provider.HashElementProvider;
 
@@ -55,37 +48,37 @@ public class FileMetadataElementProvider extends ExtensionElementProvider<FileMe
                 case FileMetadataElement.ELEMENT:
                     parser.next();
                     break;
-                case DateElement.ELEMENT:
+                case FileMetadataElement.ELEM_DATE:
                     builder.setModificationDate(ParserUtils.getDateFromNextText(parser));
                     break;
-                case DescElement.ELEMENT:
+                case FileMetadataElement.ELEM_DESC:
                     String lang = ParserUtils.getXmlLang(parser);
                     builder.addDescription(ParserUtils.getRequiredNextText(parser), lang);
                     break;
-                case DimensionsElement.ELEMENT:
+                case FileMetadataElement.ELEM_DIMENSIONS:
                     builder.setDimensions(ParserUtils.getRequiredNextText(parser));
                     break;
-                case LengthElement.ELEMENT:
+                case FileMetadataElement.ELEM_LENGTH:
                     builder.setLength(Long.parseLong(ParserUtils.getRequiredNextText(parser)));
                     break;
-                case MediaTypeElement.ELEMENT:
+                case FileMetadataElement.ELEM_MEDIA_TYPE:
                     builder.setMediaType(ParserUtils.getRequiredNextText(parser));
                     break;
-                case NameElement.ELEMENT:
+                case FileMetadataElement.ELEM_NAME:
                     builder.setName(ParserUtils.getRequiredNextText(parser));
                     break;
-                case SizeElement.ELEMENT:
+                case FileMetadataElement.ELEM_SIZE:
                     builder.setSize(Long.parseLong(ParserUtils.getRequiredNextText(parser)));
                     break;
                 case HashElement.ELEMENT:
                     builder.addHash(HashElementProvider.INSTANCE.parse(parser, parser.getDepth(), xmlEnvironment));
                     break;
-                default:
+                case FileMetadataElement.ELEM_THUMBNAIL:
                     ExtensionElementProvider<?> provider = ProviderManager.getExtensionProvider(name, parser.getNamespace());
                     if (provider == null) {
                         provider = StandardExtensionElementProvider.INSTANCE;
                     }
-                    builder.addOtherChildElement(provider.parse(parser, parser.getDepth(), xmlEnvironment));
+                    builder.addThumbnail(provider.parse(parser, parser.getDepth(), xmlEnvironment));
             }
         } while (parser.getDepth() != initialDepth);
         return builder.build();

@@ -16,29 +16,20 @@
  */
 package org.jivesoftware.smackx.file_metadata.element;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.jivesoftware.smack.packet.Element;
 import org.jivesoftware.smack.packet.ExtensionElement;
-import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.packet.XmlEnvironment;
 import org.jivesoftware.smack.util.EqualsUtil;
 import org.jivesoftware.smack.util.HashCode;
-import org.jivesoftware.smack.util.Objects;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smack.util.XmlStringBuilder;
-import org.jivesoftware.smackx.file_metadata.element.child.DateElement;
-import org.jivesoftware.smackx.file_metadata.element.child.DescElement;
-import org.jivesoftware.smackx.file_metadata.element.child.DimensionsElement;
-import org.jivesoftware.smackx.file_metadata.element.child.LengthElement;
-import org.jivesoftware.smackx.file_metadata.element.child.MediaTypeElement;
-import org.jivesoftware.smackx.file_metadata.element.child.NameElement;
-import org.jivesoftware.smackx.file_metadata.element.child.SizeElement;
 import org.jivesoftware.smackx.hashes.HashManager;
 import org.jivesoftware.smackx.hashes.element.HashElement;
 
@@ -51,21 +42,61 @@ public final class FileMetadataElement implements ExtensionElement {
 
     public static final String ELEMENT = "file";
     public static final String NAMESPACE = "urn:xmpp:file:metadata:0";
+    public static final String ELEM_DATE = "date";
+    public static final String ELEM_DIMENSIONS = "dimensions";
+    public static final String ELEM_DESC = "desc";
+    public static final String ELEM_LENGTH = "length";
+    public static final String ELEM_MEDIA_TYPE = "media-type";
+    public static final String ELEM_NAME = "name";
+    public static final String ELEM_SIZE = "size";
+    public static final String ELEM_THUMBNAIL = "thumbnail";
 
-    private final Set<NamedElement> children = new HashSet<>();
 
-    private FileMetadataElement(Collection<NamedElement> childElements) {
-        this.children.addAll(childElements);
+    private final Date date;
+    private final String dimensions;
+    private final Map<String, String> descriptions = new ConcurrentHashMap<>();
+    private final Map<HashManager.ALGORITHM, HashElement> hashElements = new ConcurrentHashMap<>();
+    private final Long length;
+    private final String mediaType;
+    private final String name;
+    private final Long size;
+    private final Set<ExtensionElement> otherElements = new HashSet<>();
+
+    private FileMetadataElement(Date date, String dimensions, Map<String, String> descriptions,
+                               Map<HashManager.ALGORITHM, HashElement> hashElements, Long length,
+                               String mediaType, String name, Long size,
+                               Set<ExtensionElement> otherElements) {
+        this.date = date;
+        this.dimensions = dimensions;
+        this.descriptions.putAll(descriptions);
+        this.hashElements.putAll(hashElements);
+        this.length = length;
+        this.mediaType = mediaType;
+        this.name = name;
+        this.size = size;
+        this.otherElements.addAll(otherElements);
     }
 
     @Override
     public XmlStringBuilder toXML(XmlEnvironment xmlEnvironment) {
-        XmlStringBuilder sb = new XmlStringBuilder(this).rightAngleBracket();
-        for (Element child : children) {
-            sb.append(child);
+        XmlStringBuilder sb = new XmlStringBuilder(this)
+                .rightAngleBracket()
+                .optElement(ELEM_DATE, date)
+                .optElement(ELEM_DIMENSIONS, dimensions);
+        for (String key : descriptions.keySet()) {
+            sb.halfOpenElement(ELEM_DESC)
+                    .optXmlLangAttribute(key)
+                    .rightAngleBracket()
+                    .append(descriptions.get(key))
+                    .closeElement(ELEM_DESC);
         }
-        sb.closeElement(this);
-        return sb;
+        sb.append(hashElements.values())
+                .optElement(ELEM_LENGTH, length != null ? Long.toString(length) : null)
+                .optElement(ELEM_MEDIA_TYPE, mediaType)
+                .optElement(ELEM_NAME, name)
+                .optElement(ELEM_SIZE, size != null ? Long.toString(size) : null)
+                .append(otherElements);
+        return sb.closeElement(this);
     }
 
     @Override
@@ -78,98 +109,74 @@ public final class FileMetadataElement implements ExtensionElement {
         return ELEMENT;
     }
 
-    public Set<NamedElement> getAllChildren() {
-        return Collections.unmodifiableSet(children);
+    public Date getDate() {
+        return date;
     }
 
-    private NamedElement getChildElement(String name, String namespace) {
-        for (NamedElement element : getAllChildren()) {
-            if (!element.getElementName().equals(name)) {
-                continue;
-            }
-
-            if (namespace == null && !(element instanceof ExtensionElement)) {
-                return element;
-            }
-
-            ExtensionElement extensionElement = (ExtensionElement) element;
-            if (extensionElement.getNamespace().equals(namespace)) {
-                return extensionElement;
-            }
-        }
-        return null;
+    public String getDimensions() {
+        return dimensions;
     }
 
-    public DateElement getDateElement() {
-        return (DateElement) getChildElement(DateElement.ELEMENT, null);
+    public Map<String, String> getDescriptions() {
+        return new ConcurrentHashMap<>(descriptions);
     }
 
-    public DimensionsElement getDimensionsElement() {
-        return (DimensionsElement) getChildElement(DimensionsElement.ELEMENT, null);
+    public String getDescription() {
+        return getDescription(getLanguage());
     }
 
-    public List<DescElement> getDescElements() {
-        List<DescElement> elements = new ArrayList<>();
-        for (NamedElement e : children) {
-            if (e instanceof DescElement) {
-                elements.add((DescElement) e);
-            }
-        }
-        return elements;
+    public String getDescription(String lang) {
+        return descriptions.get(lang != null ? lang : "");
     }
 
-    public DescElement getDescElement() {
-        return getDescElement(getLanguage());
-    }
-
-    public DescElement getDescElement(String lang) {
-        List<DescElement> descElements = getDescElements();
-        for (DescElement e : descElements) {
-            if (Objects.equals(lang, e.getLanguage())) {
-                return e;
-            }
-        }
-        return null;
-    }
-
-    public List<HashElement> getHashElements() {
-        List<HashElement> hashElements = new ArrayList<>();
-        for (NamedElement e : children) {
-            if (e instanceof HashElement) {
-                hashElements.add((HashElement) e);
-            }
-        }
-        return hashElements;
+    public Map<HashManager.ALGORITHM, HashElement> getHashElements() {
+        return new ConcurrentHashMap<>(hashElements);
     }
 
     public HashElement getHashElement(HashManager.ALGORITHM algorithm) {
-        List<HashElement> hashElements = getHashElements();
-        for (HashElement e : hashElements) {
-            if (e.getAlgorithm() == algorithm) {
-                return e;
+        return hashElements.get(algorithm);
+    }
+
+    public Long getLength() {
+        return length;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    /**
+     * Return the name of the file.
+     *
+     * @return escaped name
+     */
+    public String getName() {
+        if (name == null) {
+            return null;
+        }
+        try {
+            return URLEncoder.encode(name, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError(e); // UTF-8 MUST be supported
+        }
+    }
+
+    public String getRawName() {
+        return name;
+    }
+
+    public Long getSize() {
+        return size;
+    }
+
+    public Set<ExtensionElement> getThumbnails() {
+        Set<ExtensionElement> thumbnails = new HashSet<>();
+        for (ExtensionElement e : otherElements) {
+            if (isThumbnail(e)) {
+                thumbnails.add(e);
             }
         }
-        return null;
-    }
-
-    public LengthElement getLengthElement() {
-        return (LengthElement) getChildElement(LengthElement.ELEMENT, null);
-    }
-
-    public MediaTypeElement getMediaTypeElement() {
-        return (MediaTypeElement) getChildElement(MediaTypeElement.ELEMENT, null);
-    }
-
-    public NameElement getNameElement() {
-        return (NameElement) getChildElement(NameElement.ELEMENT, null);
-    }
-
-    public SizeElement getSizeElement() {
-        return (SizeElement) getChildElement(SizeElement.ELEMENT, null);
-    }
-
-    public NamedElement getThumbnailElement() {
-        return getChildElement("thumbnail", "urn:xmpp:thumbs:1");
+        return thumbnails;
     }
 
     @Override
@@ -177,7 +184,15 @@ public final class FileMetadataElement implements ExtensionElement {
         return HashCode.builder()
                 .append(getElementName())
                 .append(getNamespace())
-                .append(getAllChildren())
+                .append(getDate())
+                .append(getDescriptions())
+                .append(getDimensions())
+                .append(getHashElements())
+                .append(getLength())
+                .append(getMediaType())
+                .append(getRawName())
+                .append(getSize())
+                .append(getThumbnails())
                 .build();
     }
 
@@ -186,7 +201,15 @@ public final class FileMetadataElement implements ExtensionElement {
         return EqualsUtil.equals(this, other, (equalsBuilder, o) -> equalsBuilder
                 .append(getElementName(), o.getElementName())
                 .append(getNamespace(), o.getNamespace())
-                .append(getAllChildren(), o.getAllChildren()));
+                .append(getDate(), o.getDate())
+                .append(getDescriptions(), o.getDescriptions())
+                .append(getDimensions(), o.getDimensions())
+                .append(getHashElements(), o.getHashElements())
+                .append(getLength(), o.getLength())
+                .append(getMediaType(), o.getMediaType())
+                .append(getRawName(), o.getRawName())
+                .append(getSize(), o.getSize())
+                .append(getThumbnails(), o.getThumbnails()));
     }
 
     public static Builder builder() {
@@ -194,10 +217,19 @@ public final class FileMetadataElement implements ExtensionElement {
     }
 
     public static class Builder {
-        private final Set<NamedElement> children = new HashSet<>();
+
+        private Date date;
+        private String dimensions;
+        private Map<String, String> descriptions = new ConcurrentHashMap<>();
+        private Map<HashManager.ALGORITHM, HashElement> hashElements = new ConcurrentHashMap<>();
+        private Long length;
+        private String mediaType;
+        private String name;
+        private Long size;
+        private Set<ExtensionElement> thumbnails = new HashSet<>();
 
         public Builder setModificationDate(Date date) {
-            children.add(new DateElement(date));
+            this.date = date;
             return this;
         }
 
@@ -212,7 +244,7 @@ public final class FileMetadataElement implements ExtensionElement {
         }
 
         public Builder setDimensions(String dimenString) {
-            children.add(new DimensionsElement(dimenString));
+            this.dimensions = StringUtils.requireNotNullNorEmpty(dimenString, "Dimensions MUST NOT be null nor empty.");
             return this;
         }
 
@@ -221,42 +253,56 @@ public final class FileMetadataElement implements ExtensionElement {
         }
 
         public Builder addDescription(String description, String language) {
-            children.add(new DescElement(description, language));
+            this.descriptions.put(language != null ? language : "", StringUtils.requireNotNullNorEmpty(description, "Description MUST NOT be null nor empty"));
             return this;
         }
 
         public Builder addHash(HashElement hashElement) {
-            children.add(Objects.requireNonNull(hashElement));
+            hashElements.put(hashElement.getAlgorithm(), hashElement);
             return this;
         }
 
         public Builder setLength(long length) {
-            children.add(new LengthElement(length));
+            if (length < 0) {
+                throw new IllegalArgumentException("Length cannot be negative.");
+            }
+            this.length = length;
             return this;
         }
 
         public Builder setMediaType(String mediaType) {
-            children.add(new MediaTypeElement(mediaType));
+            this.mediaType = StringUtils.requireNotNullNorEmpty(mediaType, "Media-Type MUST NOT be null nor empty");
             return this;
         }
 
         public Builder setName(String name) {
-            children.add(new NameElement(name));
+            this.name = StringUtils.requireNotNullNorEmpty(name, "Name MUST NOT be null nor empty");
             return this;
         }
 
         public Builder setSize(long size) {
-            children.add(new SizeElement(size));
+            if (size < 0) {
+                throw new IllegalArgumentException("Size MUST NOT be negative.");
+            }
+            this.size = size;
             return this;
         }
 
-        public Builder addOtherChildElement(ExtensionElement element) {
-            children.add(element);
+        public Builder addThumbnail(ExtensionElement element) {
+            if (!isThumbnail(element)) {
+                throw new IllegalArgumentException("Element must be a thumbnail element with namespace 'urn:xmpp:thumbs:1'.");
+            }
+            thumbnails.add(element);
             return this;
         }
 
         public FileMetadataElement build() {
-            return new FileMetadataElement(children);
+            return new FileMetadataElement(date, dimensions, descriptions, hashElements, length,
+                    mediaType, name, size, thumbnails);
         }
+    }
+
+    private static boolean isThumbnail(ExtensionElement element) {
+        return element.getElementName().equals(ELEM_THUMBNAIL) && element.getNamespace().equals("urn:xmpp:thumbs:1");
     }
 }
